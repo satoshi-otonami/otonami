@@ -475,7 +475,7 @@ function Landing({onArtist, onCurator}) {
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"1rem",marginBottom:"3rem"}}>
-        {[["70+","ILCJ提携レーベル"],["7日","フィードバック保証"],["¥0","キュレーター登録無料"],["AI","英語ピッチ自動生成"]].map(([n,l],i) =>
+        {[["6","登録キュレーター"],["7日","フィードバック保証"],["¥0","キュレーター登録無料"],["AI","英語ピッチ自動生成"]].map(([n,l],i) =>
           <div key={i} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:16,padding:"1.5rem",textAlign:"center"}}>
             <div style={{fontSize:"1.8rem",fontWeight:800,background:"linear-gradient(135deg,#a78bfa,#06b6d4)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{n}</div>
             <div style={{fontSize:"0.78rem",color:"#94a3b8",marginTop:4}}>{l}</div>
@@ -503,7 +503,7 @@ function Landing({onArtist, onCurator}) {
       </div>
 
       <div style={{textAlign:"center",padding:"2rem 0",borderTop:"1px solid rgba(255,255,255,0.05)"}}>
-        <div style={{fontSize:"0.75rem",color:"#475569"}}>Powered by ILCJ × Anthropic Claude AI</div>
+        <div style={{fontSize:"0.75rem",color:"#475569"}}>Powered by TYCompany合同会社 × Anthropic Claude AI</div>
       </div>
     </div>
   </div>;
@@ -781,33 +781,32 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     return null;
   };
 
-  // ── Auto-detect on quick URL input change ──
+  // ── Quick URL input — only assign on Enter or blur, never auto-clear while typing ──
   const handleQuickUrlChange = (val) => {
     setQuickUrl(val);
-    // Auto-detect when it looks like a complete URL or known pattern
-    const trimmed = val.trim();
+  };
+
+  const commitQuickUrl = () => {
+    const trimmed = quickUrl.trim();
     if (!trimmed) return;
     const platform = detectPlatform(trimmed);
-    if (platform && (trimmed.includes("http") || trimmed.includes(".com") || trimmed.includes(".be"))) {
+    if (platform) {
       setL(platform, trimmed);
       setQuickUrl("");
       notify("✅ " + ({spotify:"Spotify",apple:"Apple Music",youtube:"YouTube",soundcloud:"SoundCloud",instagram:"Instagram",twitter:"X",facebook:"Facebook",website:"Website"}[platform] || platform) + " に追加しました");
+    } else if (trimmed.startsWith("http")) {
+      setL("website", trimmed);
+      setQuickUrl("");
+      notify("✅ Websiteに追加しました");
+    } else {
+      notify("⚠️ URLを認識できません。https://で始まるURLを入力してください");
     }
   };
 
   // ── Enter to confirm quick URL ──
   const handleQuickUrlKey = (e) => {
     if (e.key !== "Enter") return;
-    const trimmed = quickUrl.trim();
-    if (!trimmed) return;
-    const platform = detectPlatform(trimmed);
-    if (platform) {
-      setL(platform, trimmed);
-    } else {
-      setL("website", trimmed);
-    }
-    setQuickUrl("");
-    notify("✅ リンクを追加しました");
+    commitQuickUrl();
   };
 
   // ── Normalize @handle to URL on blur ──
@@ -872,17 +871,22 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       const result = await API.fetchFollowers(links);
       if (result.followers) {
         const f = result.followers;
-        setFollowers(prev => ({
-          ...prev,
-          ...(f.youtube ? { youtube: f.youtube } : {}),
-          ...(f.spotify ? { spotify: f.spotify } : {}),
-          ...(f.soundcloud ? { soundcloud: f.soundcloud } : {}),
-        }));
-        const found = [f.youtube && "YouTube", f.spotify && "Spotify", f.soundcloud && "SoundCloud"].filter(Boolean);
-        notify("✅ " + (found.length > 0 ? found.join(", ") + " のフォロワー数を取得しました" : "取得可能なデータがありませんでした"));
+        const updates = {};
+        if (f.youtube) updates.youtube = f.youtube;
+        if (f.spotify) updates.spotify = f.spotify;
+        if (f.soundcloud) updates.soundcloud = f.soundcloud;
+        if (Object.keys(updates).length > 0) {
+          setFollowers(prev => ({...prev, ...updates}));
+          const found = [f.youtube && "YouTube", f.spotify && "Spotify", f.soundcloud && "SoundCloud"].filter(Boolean);
+          notify("✅ " + found.join(", ") + " のフォロワー数を取得しました");
+        } else if (result.errors?._note) {
+          notify("⚠️ " + result.errors._note);
+        } else {
+          notify("⚠️ フォロワー数を取得できませんでした。右の欄に手動で入力してください。");
+        }
       }
     } catch (err) {
-      notify("フォロワー取得に失敗: " + err.message);
+      notify("⚠️ 自動取得失敗。右の欄に手動で入力してください: " + err.message);
     }
     setFetchingFollowers(false);
   };
@@ -1031,6 +1035,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
               value={quickUrl}
               onChange={e => handleQuickUrlChange(e.target.value)}
               onKeyDown={handleQuickUrlKey}
+              onBlur={commitQuickUrl}
             />
             {quickUrl && <div style={{fontSize:"0.6rem",color:"#7c3aed",marginTop:2}}>⏎ Enterで確定{detectPlatform(quickUrl) ? " → " + detectPlatform(quickUrl) + "に追加" : ""}</div>}
           </div>

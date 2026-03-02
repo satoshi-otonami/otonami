@@ -25,104 +25,102 @@ async function fetchYouTubeFollowers(url) {
   throw new Error('Channel not found');
 }
 
-// ── Spotify: API first, then scrape fallback ──
+// ── Spotify: Try 3 methods ──
 async function fetchSpotifyData(url) {
   const artistMatch = url.match(/artist\/([a-zA-Z0-9]+)/);
   if (!artistMatch) throw new Error('No artist ID in URL');
   const artistId = artistMatch[1];
 
-  // Method 1: Official API
-  const apiResult = await trySpotifyAPI(artistId);
-  if (apiResult) return apiResult;
+  const errors = [];
 
-  // Method 2: Scrape public artist page
-  const scrapeResult = await trySpotifyScrape(artistId);
-  if (scrapeResult) return scrapeResult;
-
-  throw new Error('Both API and scrape methods failed');
-}
-
-async function trySpotifyAPI(artistId) {
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  if (!clientId || !clientSecret) return null;
-
+  // Method 1: Anonymous web token (what Spotify's web player uses)
   try {
-    const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
-      },
-      body: 'grant_type=client_credentials',
-    });
-    if (!tokenRes.ok) return null;
-    const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) return null;
-
-    const artistRes = await fetch(
-      `https://api.spotify.com/v1/artists/${artistId}`,
-      { headers: { 'Authorization': `Bearer ${tokenData.access_token}` } }
-    );
-    if (!artistRes.ok) return null;
-
-    const d = await artistRes.json();
-    return {
-      followers: d.followers?.total || 0,
-      genres: d.genres || [],
-      popularity: d.popularity || null,
-      name: d.name || null,
-    };
-  } catch { return null; }
-}
-
-async function trySpotifyScrape(artistId) {
-  try {
-    // Spotify's internal API used by the web embed
-    const res = await fetch(`https://open.spotify.com/artist/${artistId}`, {
+    const tokenRes = await fetch('https://open.spotify.com/get_access_token?reason=transport&productType=web_player', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept': 'application/json',
       },
     });
-    const html = await res.text();
-
-    // Try multiple patterns for follower count
-    let followers = null;
-    let name = null;
-
-    // Pattern 1: JSON-LD or meta data
-    const followerPatterns = [
-      /"followers"\s*:\s*\{\s*"total"\s*:\s*(\d+)/,
-      /followers.*?(\d[\d,]+)/i,
-      /"followerCount"\s*:\s*(\d+)/,
-      /interactionCount.*?(\d+)/,
-    ];
-    for (const p of followerPatterns) {
-      const m = html.match(p);
-      if (m) { followers = parseInt(m[1].replace(/,/g, '')); break; }
+    if (tokenRes.ok) {
+      const tokenData = await tokenRes.json();
+      if (tokenData.accessToken) {
+        const artistRes = await fetch(`https://api.spotify.com/v1/artists/${artistId}`, {
+          headers: { 'Authorization': `Bearer ${tokenData.accessToken}` },
+        });
+        if (artistRes.ok) {
+          const d = await artistRes.json();
+          return { followers: d.followers?.total || 0, genres: d.genres || [], popularity: d.popularity, name: d.name, method: 'anon_token' };
+        }
+        errors.push('anon_token artist: ' + artistRes.status);
+      }
     }
+  } catch (e) { errors.push('anon_token: ' + e.message); }
 
-    // Get name
-    const nameMatch = html.match(/<title>([^<]+?)(?:\s*[-–|]|\s*on Spotify)/i) ||
-                       html.match(/"name"\s*:\s*"([^"]+)"/);
-    if (nameMatch) name = nameMatch[1].trim();
-
-    if (followers !== null) {
-      return { followers, genres: [], popularity: null, name };
+  // Method 2: Official API with client credentials
+  try {
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+    if (clientId && clientSecret) {
+      const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
+        },
+        body: 'grant_type=client_credentials',
+      });
+      if (tokenRes.ok) {
+        const tokenData = await tokenRes.json();
+        if (tokenData.access_token) {
+          const artistRes = await fetch(`https://api.spotify.com/v1/artists/${artistId}`, {
+            headers: { 'Authorization': `Bearer ${tokenData.access_token}` },
+          });
+          if (artistRes.ok) {
+            const d = await artistRes.json();
+            return { followers: d.followers?.total || 0, genres: d.genres || [], popularity: d.popularity, name: d.name, method: 'client_cred' };
+          }
+          errors.push('client_cred artist: ' + artistRes.status);
+        }
+      }
     }
+  } catch (e) { errors.push('client_cred: ' + e.message); }
 
-    // Pattern 2: Try Spotify's oEmbed for at least the name
-    const oembedRes = await fetch(`https://open.spotify.com/oembed?url=https://open.spotify.com/artist/${artistId}`);
-    if (oembedRes.ok) {
-      const oembedData = await oembedRes.json();
-      // oEmbed doesn't have followers, but confirms artist exists
-      return { followers: 0, genres: [], popularity: null, name: oembedData.title || null, note: 'followers unavailable via scrape' };
+  // Method 3: Spotify embed page parse
+  try {
+    const embedRes = await fetch(`https://open.spotify.com/embed/artist/${artistId}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+    });
+    if (embedRes.ok) {
+      const html = await embedRes.text();
+      // Look for __NEXT_DATA__ or similar JSON blob
+      const jsonMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>([^<]+)<\/script>/);
+      if (jsonMatch) {
+        const pageData = JSON.parse(jsonMatch[1]);
+        // Navigate the data structure
+        const state = pageData?.props?.pageProps;
+        if (state?.state?.data?.entity) {
+          const entity = state.state.data.entity;
+          return {
+            followers: entity.stats?.followers || entity.stats?.monthlyListeners || 0,
+            name: entity.name || null,
+            genres: [],
+            popularity: null,
+            method: 'embed_parse'
+          };
+        }
+      }
+      // Fallback: look for any follower/listener patterns in HTML
+      const fMatch = html.match(/"followers"\s*:\s*(\d+)/) || html.match(/"followerCount"\s*:\s*(\d+)/);
+      const nMatch = html.match(/"name"\s*:\s*"([^"]+)"/);
+      if (fMatch) {
+        return { followers: parseInt(fMatch[1]), name: nMatch?.[1] || null, genres: [], popularity: null, method: 'embed_regex' };
+      }
     }
+  } catch (e) { errors.push('embed: ' + e.message); }
 
-    return null;
-  } catch { return null; }
+  throw new Error('All 3 methods failed: ' + errors.join(' | '));
 }
 
 // ── SoundCloud ──
@@ -158,7 +156,7 @@ export async function POST(request) {
           if (v.genres?.length) results.spotifyGenres = v.genres;
           if (v.popularity) results.spotifyPopularity = v.popularity;
           if (v.name) results.spotifyName = v.name;
-          if (v.note) results.spotifyNote = v.note;
+          results.spotifyMethod = v.method;
         }
       }).catch(e => { errors.spotify = e.message; }));
     }
@@ -171,5 +169,5 @@ export async function POST(request) {
 }
 
 export async function GET() {
-  return NextResponse.json({ status: 'ok', timestamp: new Date().toISOString() });
+  return NextResponse.json({ status: 'ok', methods: ['anon_token', 'client_credentials', 'embed_parse'] });
 }

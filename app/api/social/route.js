@@ -1,121 +1,75 @@
 import { NextResponse } from 'next/server';
 
-// ── YouTube: Try API first, fallback to page scrape ──
+// ── YouTube: Use forHandle for accurate lookup ──
 async function fetchYouTubeFollowers(url) {
   const apiKey = process.env.YOUTUBE_API_KEY;
-  if (apiKey) {
-    try {
-      let channelParam = '';
-      const handleMatch = url.match(/youtube\.com\/@([^/?]+)/);
-      const channelMatch = url.match(/youtube\.com\/channel\/([^/?]+)/);
-      if (handleMatch) {
-        const searchRes = await fetch(
-          `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(handleMatch[1])}&key=${apiKey}`
-        );
-        const searchData = await searchRes.json();
-        if (searchData.items?.[0]) channelParam = `id=${searchData.items[0].snippet.channelId}`;
-      } else if (channelMatch) {
-        channelParam = `id=${channelMatch[1]}`;
-      }
-      if (channelParam) {
-        const res = await fetch(
-          `https://www.googleapis.com/youtube/v3/channels?part=statistics&${channelParam}&key=${apiKey}`
-        );
-        const data = await res.json();
-        const count = data.items?.[0]?.statistics?.subscriberCount;
-        if (count) return parseInt(count);
-      }
-    } catch (e) {
-      console.log('YouTube API error:', e.message);
-    }
-  }
+  if (!apiKey) return null;
 
-  // Fallback: scrape page
   try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-    });
-    const html = await res.text();
-    const patterns = [
-      /"subscriberCountText":\s*\{\s*"simpleText":\s*"([^"]+)"/,
-      /"subscriberCountText":\s*\{\s*"accessibility":\s*\{\s*"accessibilityData":\s*\{\s*"label":\s*"([^"]+)"/,
-    ];
-    for (const pattern of patterns) {
-      const match = html.match(pattern);
-      if (match) {
-        const text = match[1];
-        const numMatch = text.match(/([\d.]+)\s*([KMBkm])?/i);
-        if (numMatch) {
-          let num = parseFloat(numMatch[1]);
-          const suffix = (numMatch[2] || '').toUpperCase();
-          if (suffix === 'K') num *= 1000;
-          else if (suffix === 'M') num *= 1000000;
-          else if (suffix === 'B') num *= 1000000000;
-          return Math.round(num);
-        }
-      }
+    let channelParam = '';
+    const handleMatch = url.match(/youtube\.com\/@([^/?]+)/);
+    const channelMatch = url.match(/youtube\.com\/channel\/([^/?]+)/);
+
+    if (handleMatch) {
+      // Use forHandle for exact match (not search which can return wrong results)
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=statistics&forHandle=${encodeURIComponent(handleMatch[1])}&key=${apiKey}`
+      );
+      const data = await res.json();
+      const count = data.items?.[0]?.statistics?.subscriberCount;
+      if (count) return parseInt(count);
+    } else if (channelMatch) {
+      channelParam = `id=${channelMatch[1]}`;
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=statistics&${channelParam}&key=${apiKey}`
+      );
+      const data = await res.json();
+      const count = data.items?.[0]?.statistics?.subscriberCount;
+      if (count) return parseInt(count);
     }
   } catch (e) {
-    console.log('YouTube scrape failed:', e.message);
+    console.log('YouTube API error:', e.message);
   }
   return null;
 }
 
-// ── Spotify: API or scrape ──
-async function fetchSpotifyFollowers(url) {
+// ── Spotify: API ──
+async function fetchSpotifyData(url) {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  if (clientId && clientSecret) {
-    try {
-      const artistMatch = url.match(/artist\/([a-zA-Z0-9]+)/);
-      if (artistMatch) {
-        const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
-          },
-          body: 'grant_type=client_credentials',
-        });
-        const tokenData = await tokenRes.json();
-        if (tokenData.access_token) {
-          const artistRes = await fetch(
-            `https://api.spotify.com/v1/artists/${artistMatch[1]}`,
-            { headers: { 'Authorization': `Bearer ${tokenData.access_token}` } }
-          );
-          const artistData = await artistRes.json();
-          return {
-            followers: artistData.followers?.total || null,
-            genres: artistData.genres || [],
-            popularity: artistData.popularity || null,
-            image: artistData.images?.[0]?.url || null,
-          };
-        }
-      }
-    } catch (e) {
-      console.log('Spotify API error:', e.message);
-    }
-  }
+  if (!clientId || !clientSecret) return null;
 
-  // Fallback: scrape
   try {
-    const res = await fetch(url, {
+    const artistMatch = url.match(/artist\/([a-zA-Z0-9]+)/);
+    if (!artistMatch) return null;
+
+    const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
       },
+      body: 'grant_type=client_credentials',
     });
-    const html = await res.text();
-    const listenersMatch = html.match(/([\d,]+)\s*monthly listeners/i);
-    const followersMatch = html.match(/"followers":\s*\{\s*"total":\s*(\d+)/);
-    if (followersMatch) return { followers: parseInt(followersMatch[1]) };
-    if (listenersMatch) return { followers: parseInt(listenersMatch[1].replace(/,/g, '')) };
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) return null;
+
+    const artistRes = await fetch(
+      `https://api.spotify.com/v1/artists/${artistMatch[1]}`,
+      { headers: { 'Authorization': `Bearer ${tokenData.access_token}` } }
+    );
+    const artistData = await artistRes.json();
+    return {
+      followers: artistData.followers?.total || 0,
+      genres: artistData.genres || [],
+      popularity: artistData.popularity || null,
+      image: artistData.images?.[0]?.url || null,
+      name: artistData.name || null,
+    };
   } catch (e) {
-    console.log('Spotify scrape failed:', e.message);
+    console.log('Spotify API error:', e.message);
+    return null;
   }
-  return null;
 }
 
 // ── SoundCloud: scrape ──
@@ -148,13 +102,14 @@ export async function POST(request) {
     }
     if (links.spotify) {
       tasks.push(
-        fetchSpotifyFollowers(links.spotify)
+        fetchSpotifyData(links.spotify)
           .then(v => {
             if (v) {
               results.spotify = v.followers;
               if (v.genres?.length) results.spotifyGenres = v.genres;
               if (v.popularity) results.spotifyPopularity = v.popularity;
               if (v.image) results.spotifyImage = v.image;
+              if (v.name) results.spotifyName = v.name;
             }
           })
           .catch(e => { errors.spotify = e.message; })
@@ -176,7 +131,7 @@ export async function POST(request) {
       if (links.youtube && !process.env.YOUTUBE_API_KEY) missingKeys.push('YOUTUBE_API_KEY');
       if (links.spotify && !process.env.SPOTIFY_CLIENT_ID) missingKeys.push('SPOTIFY_CLIENT_ID/SECRET');
       if (missingKeys.length > 0) {
-        errors._note = 'APIキー未設定のため自動取得できませんでした。手動入力するか、Vercel環境変数に追加してください: ' + missingKeys.join(', ');
+        errors._note = 'APIキー未設定: ' + missingKeys.join(', ');
       }
     }
 

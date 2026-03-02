@@ -73,7 +73,7 @@ const PE = {
     if (!fol) return "";
     const fmt = (n) => { if (!n || n <= 0) return ""; if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,"") + "M"; if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,"") + "K"; return String(n); };
     const parts = [];
-    if (fol.spotify && lnk.spotify) parts.push(fmt(fol.spotify) + " Spotify listeners");
+    if (fol.spotify && lnk.spotify) parts.push(fmt(fol.spotify) + " Spotify followers");
     if (fol.youtube && lnk.youtube) parts.push(fmt(fol.youtube) + " YouTube subscribers");
     if (fol.instagram && lnk.instagram) parts.push(fmt(fol.instagram) + " Instagram followers");
     if (fol.twitter && lnk.twitter) parts.push(fmt(fol.twitter) + " followers on X");
@@ -84,7 +84,7 @@ const PE = {
     return `Their online presence includes ${parts.join(", ")} — a growing, engaged community.`;
   },
   cta: {
-    playlist: (a, lnk) => `Give "${a.songTitle||"their latest"}" a listen${lnk.spotify ? ": " + lnk.spotify : lnk.songLink ? ": " + lnk.songLink : ""}. If it fits, a playlist add would mean the world.`,
+    playlist: (a, lnk) => `Give "${a.songTitle||"their latest"}" a listen${lnk.songLink ? ": " + lnk.songLink : lnk.spotify ? ": " + lnk.spotify : ""}. If it fits, a playlist add would mean the world.`,
     blog: (a, lnk) => `Would you be open to checking out "${a.songTitle||"their latest"}"${lnk.songLink || lnk.spotify ? " (" + (lnk.songLink||lnk.spotify) + ")" : ""}? Happy to arrange an interview or provide assets for a feature.`,
     radio: (a, lnk) => `Their track "${a.songTitle||"latest release"}" is ready for airplay${lnk.songLink || lnk.spotify ? " — " + (lnk.songLink||lnk.spotify) : ""}. It would be an honor to hear it on your show.`,
     label: (a, lnk) => `I'd welcome the chance to discuss ${a.nameEn||a.name}'s potential${lnk.songLink || lnk.spotify ? ". Start here: " + (lnk.songLink||lnk.spotify) : ""}.`,
@@ -99,7 +99,7 @@ const PE = {
     const fmt = (n) => { if (!n || n <= 0) return ""; if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,"") + "M"; if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,"") + "K"; return String(n); };
     const f = fol || {};
     const items = [];
-    if (lnk.spotify) items.push("🎧 Spotify: " + lnk.spotify + (f.spotify ? " (" + fmt(f.spotify) + " listeners)" : ""));
+    if (lnk.spotify) items.push("🎧 Spotify: " + lnk.spotify + (f.spotify ? " (" + fmt(f.spotify) + " followers)" : ""));
     if (lnk.apple) items.push("🍎 Apple Music: " + lnk.apple);
     if (lnk.youtube) items.push("▶️ YouTube: " + lnk.youtube + (f.youtube ? " (" + fmt(f.youtube) + " subscribers)" : ""));
     if (lnk.soundcloud) items.push("☁️ SoundCloud: " + lnk.soundcloud + (f.soundcloud ? " (" + fmt(f.soundcloud) + " followers)" : ""));
@@ -132,7 +132,7 @@ const PE = {
     if (artist.influences) e += "For fans of: " + artist.influences + "\n";
     // Social with followers
     const ll = [];
-    if (lnk.spotify) ll.push("Spotify: " + lnk.spotify + (f.spotify ? " (" + fmt(f.spotify) + " listeners)" : ""));
+    if (lnk.spotify) ll.push("Spotify: " + lnk.spotify + (f.spotify ? " (" + fmt(f.spotify) + " followers)" : ""));
     if (lnk.apple) ll.push("Apple Music: " + lnk.apple);
     if (lnk.youtube) ll.push("YouTube: " + lnk.youtube + (f.youtube ? " (" + fmt(f.youtube) + " subs)" : ""));
     if (lnk.soundcloud) ll.push("SoundCloud: " + lnk.soundcloud + (f.soundcloud ? " (" + fmt(f.soundcloud) + ")" : ""));
@@ -1009,6 +1009,14 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         <div><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>代表曲</label><input style={css.input} value={artist.songTitle} onChange={e=>setF("songTitle",e.target.value)} placeholder="Crossroad"/></div>
         <div><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>類似アーティスト</label><input style={css.input} value={artist.influences} onChange={e=>setF("influences",e.target.value)} placeholder="Snarky Puppy, WONK"/></div>
       </div>
+
+      {/* ── Pitch Track URL ── */}
+      <div style={{marginTop:8,background:"linear-gradient(135deg,#fefce8,#ecfdf5)",borderRadius:10,padding:"0.7rem",border:"1px solid #d9f99d"}}>
+        <label style={{fontSize:"0.72rem",color:"#4d7c0f",fontWeight:700}}>🎵 ピッチ楽曲URL（キュレーターに聴いてもらう曲）</label>
+        <div style={{fontSize:"0.6rem",color:"#65a30d",marginBottom:4}}>Spotify, YouTube, SoundCloud等の楽曲URLを入力</div>
+        <input style={{...css.input,border:"1px solid #bef264",background:"#fefce8"}} value={artist.songLink||""} onChange={e=>setF("songLink",e.target.value)} placeholder="https://open.spotify.com/track/... or https://youtube.com/watch?v=..."/>
+        {artist.songLink && <div style={{fontSize:"0.6rem",color:"#4d7c0f",marginTop:2}}>✅ ピッチメールに楽曲リンクとして自動挿入されます</div>}
+      </div>
       <div style={{marginTop:5}}><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>主な実績・数値</label><input style={css.input} value={artist.achievements} onChange={e=>setF("achievements",e.target.value)} placeholder="SXSW 10年連続出演, Spotify月間50万再生"/></div>
       <div style={{marginTop:4}}><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>紹介文 *（日本語OK）</label><textarea style={{...css.input,minHeight:60,resize:"vertical"}} value={artist.description} onChange={e=>setF("description",e.target.value)} placeholder="音楽性、特徴、ユニークなポイント"/></div>
 
@@ -1043,7 +1051,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           {/* Individual platform rows: Link + Followers side by side */}
           <div style={{display:"flex",flexDirection:"column",gap:5}}>
             {[
-              {key:"spotify",icon:"🎧",label:"Spotify",ph:"URL or spotify:artist:...",fLabel:"月間リスナー"},
+              {key:"spotify",icon:"🎧",label:"Spotify（アーティスト）",ph:"https://open.spotify.com/artist/...",fLabel:"フォロワー"},
               {key:"apple",icon:"🍎",label:"Apple Music",ph:"https://music.apple.com/...",fLabel:""},
               {key:"youtube",icon:"▶️",label:"YouTube",ph:"@channel名 or URL",fLabel:"登録者数"},
               {key:"soundcloud",icon:"☁️",label:"SoundCloud",ph:"@user or URL",fLabel:"フォロワー"},
@@ -1073,7 +1081,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           </div>}
           {folCount > 0 && <div style={{marginTop:8,padding:"0.4rem 0.6rem",background:"#ede9fe",borderRadius:8,fontSize:"0.68rem",color:"#5b21b6"}}>
             <strong>👥 ピッチに反映:</strong> {[
-              followers.spotify ? fmtK(followers.spotify) + " Spotify listeners" : "",
+              followers.spotify ? fmtK(followers.spotify) + " Spotify followers" : "",
               followers.youtube ? fmtK(followers.youtube) + " YouTube subscribers" : "",
               followers.instagram ? fmtK(followers.instagram) + " IG followers" : "",
               followers.twitter ? fmtK(followers.twitter) + " X followers" : "",

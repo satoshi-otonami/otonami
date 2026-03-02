@@ -25,39 +25,54 @@ async function fetchYouTubeFollowers(url) {
     if (data.error) throw new Error(data.error.message || 'YouTube API error');
     const count = data.items?.[0]?.statistics?.subscriberCount;
     if (count) return parseInt(count);
-    throw new Error('Channel not found for ID: ' + channelMatch[1]);
+    throw new Error('Channel not found');
   }
   throw new Error('Could not parse YouTube URL');
 }
 
-// ── Spotify: API ──
+// ── Spotify: API with proper error handling ──
 async function fetchSpotifyData(url) {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  if (!clientId || !clientSecret) throw new Error('SPOTIFY_CLIENT_ID/SECRET not set');
+  if (!clientId || !clientSecret) throw new Error('SPOTIFY credentials not set');
 
-  // Support both /artist/ID and /intl-XX/artist/ID formats
   const artistMatch = url.match(/artist\/([a-zA-Z0-9]+)/);
-  if (!artistMatch) throw new Error('Artist ID not found in URL: ' + url.substring(0, 80));
+  if (!artistMatch) throw new Error('No artist ID in URL');
 
+  // Step 1: Get token
+  const authString = `${clientId}:${clientSecret}`;
   const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
+      'Authorization': 'Basic ' + Buffer.from(authString).toString('base64'),
     },
     body: 'grant_type=client_credentials',
   });
-  const tokenData = await tokenRes.json();
-  if (!tokenData.access_token) throw new Error('Spotify token failed: ' + JSON.stringify(tokenData).substring(0, 100));
 
+  // Check if response is OK before parsing
+  if (!tokenRes.ok) {
+    const errText = await tokenRes.text();
+    throw new Error(`Spotify token error (${tokenRes.status}): ${errText.substring(0, 150)}`);
+  }
+
+  const tokenData = await tokenRes.json();
+  if (!tokenData.access_token) {
+    throw new Error('No access_token in response: ' + JSON.stringify(tokenData).substring(0, 150));
+  }
+
+  // Step 2: Get artist
   const artistRes = await fetch(
     `https://api.spotify.com/v1/artists/${artistMatch[1]}`,
     { headers: { 'Authorization': `Bearer ${tokenData.access_token}` } }
   );
-  const artistData = await artistRes.json();
-  if (artistData.error) throw new Error('Spotify artist error: ' + (artistData.error.message || artistData.error.status));
 
+  if (!artistRes.ok) {
+    const errText = await artistRes.text();
+    throw new Error(`Spotify artist error (${artistRes.status}): ${errText.substring(0, 150)}`);
+  }
+
+  const artistData = await artistRes.json();
   return {
     followers: artistData.followers?.total || 0,
     genres: artistData.genres || [],
@@ -74,7 +89,7 @@ async function fetchSoundCloudFollowers(url) {
   const html = await res.text();
   const followerMatch = html.match(/"followers_count"\s*:\s*(\d+)/);
   if (followerMatch) return parseInt(followerMatch[1]);
-  throw new Error('Could not find follower count on page');
+  throw new Error('Could not find follower count');
 }
 
 export async function POST(request) {
@@ -116,9 +131,24 @@ export async function POST(request) {
     }
 
     await Promise.all(tasks);
-
     return NextResponse.json({ followers: results, errors });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+}
+
+// GET endpoint for diagnostics
+export async function GET() {
+  const spotifyId = process.env.SPOTIFY_CLIENT_ID || '';
+  const spotifySecret = process.env.SPOTIFY_CLIENT_SECRET || '';
+  const youtubeKey = process.env.YOUTUBE_API_KEY || '';
+  return NextResponse.json({
+    spotify_id_set: !!spotifyId,
+    spotify_id_length: spotifyId.length,
+    spotify_id_preview: spotifyId.substring(0, 6) + '...',
+    spotify_secret_set: !!spotifySecret,
+    spotify_secret_length: spotifySecret.length,
+    youtube_key_set: !!youtubeKey,
+    youtube_key_length: youtubeKey.length,
+  });
 }

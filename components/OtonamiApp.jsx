@@ -877,16 +877,27 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         if (f.soundcloud) updates.soundcloud = f.soundcloud;
         if (Object.keys(updates).length > 0) {
           setFollowers(prev => ({...prev, ...updates}));
-          const found = [f.youtube && "YouTube", f.spotify && "Spotify", f.soundcloud && "SoundCloud"].filter(Boolean);
-          notify("✅ " + found.join(", ") + " のフォロワー数を取得しました");
-        } else if (result.errors?._note) {
-          notify("⚠️ " + result.errors._note);
-        } else {
-          notify("⚠️ フォロワー数を取得できませんでした。右の欄に手動で入力してください。");
         }
+        // Build detailed status message
+        const succeeded = [];
+        const failed = [];
+        if (links.youtube) { f.youtube ? succeeded.push("YouTube: " + f.youtube) : failed.push("YouTube"); }
+        if (links.spotify) { f.spotify ? succeeded.push("Spotify: " + f.spotify) : failed.push("Spotify"); }
+        if (links.soundcloud) { f.soundcloud ? succeeded.push("SoundCloud: " + f.soundcloud) : failed.push("SoundCloud"); }
+        let msg = "";
+        if (succeeded.length > 0) msg += "✅ 取得: " + succeeded.join(", ");
+        if (failed.length > 0) {
+          if (msg) msg += " | ";
+          msg += "⚠️ 未取得: " + failed.join(", ");
+          if (result.errors && Object.keys(result.errors).length > 0) {
+            const errDetails = Object.entries(result.errors).filter(([k]) => k !== "_note").map(([k,v]) => k + ": " + v).join("; ");
+            if (errDetails) msg += " (" + errDetails + ")";
+          }
+        }
+        notify(msg || "取得可能なデータがありませんでした");
       }
     } catch (err) {
-      notify("⚠️ 自動取得失敗。右の欄に手動で入力してください: " + err.message);
+      notify("⚠️ 自動取得失敗: " + err.message);
     }
     setFetchingFollowers(false);
   };

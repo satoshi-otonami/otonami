@@ -1,40 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// ── Spotify Token Cache (reuse for 1 hour) ──
-let spotifyTokenCache = { token: null, expiresAt: 0 };
-
-async function getSpotifyToken() {
-  const now = Date.now();
-  if (spotifyTokenCache.token && spotifyTokenCache.expiresAt > now) {
-    return spotifyTokenCache.token;
-  }
-
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  if (!clientId || !clientSecret) throw new Error('SPOTIFY credentials not set');
-
-  const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
-    },
-    body: 'grant_type=client_credentials',
-  });
-
-  if (!tokenRes.ok) {
-    const errText = await tokenRes.text();
-    throw new Error(`Token error (${tokenRes.status}): ${errText.substring(0, 120)}`);
-  }
-
-  const data = await tokenRes.json();
-  if (!data.access_token) throw new Error('No access_token in response');
-
-  // Cache for 50 minutes (token lasts 60 min)
-  spotifyTokenCache = { token: data.access_token, expiresAt: now + 50 * 60 * 1000 };
-  return data.access_token;
-}
-
 // ── YouTube ──
 async function fetchYouTubeFollowers(url) {
   const apiKey = process.env.YOUTUBE_API_KEY;
@@ -60,53 +25,104 @@ async function fetchYouTubeFollowers(url) {
   throw new Error('Channel not found');
 }
 
-// ── Spotify: single token, retry only artist call ──
+// ── Spotify: API first, then scrape fallback ──
 async function fetchSpotifyData(url) {
   const artistMatch = url.match(/artist\/([a-zA-Z0-9]+)/);
   if (!artistMatch) throw new Error('No artist ID in URL');
+  const artistId = artistMatch[1];
 
-  const token = await getSpotifyToken();
+  // Method 1: Official API
+  const apiResult = await trySpotifyAPI(artistId);
+  if (apiResult) return apiResult;
 
-  // Retry only the artist endpoint (not token)
-  for (let attempt = 0; attempt < 3; attempt++) {
+  // Method 2: Scrape public artist page
+  const scrapeResult = await trySpotifyScrape(artistId);
+  if (scrapeResult) return scrapeResult;
+
+  throw new Error('Both API and scrape methods failed');
+}
+
+async function trySpotifyAPI(artistId) {
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return null;
+
+  try {
+    const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
+      },
+      body: 'grant_type=client_credentials',
+    });
+    if (!tokenRes.ok) return null;
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) return null;
+
     const artistRes = await fetch(
-      `https://api.spotify.com/v1/artists/${artistMatch[1]}`,
-      { headers: { 'Authorization': `Bearer ${token}` } }
+      `https://api.spotify.com/v1/artists/${artistId}`,
+      { headers: { 'Authorization': `Bearer ${tokenData.access_token}` } }
     );
+    if (!artistRes.ok) return null;
 
-    if (artistRes.ok) {
-      const artistData = await artistRes.json();
-      return {
-        followers: artistData.followers?.total || 0,
-        genres: artistData.genres || [],
-        popularity: artistData.popularity || null,
-        name: artistData.name || null,
-      };
+    const d = await artistRes.json();
+    return {
+      followers: d.followers?.total || 0,
+      genres: d.genres || [],
+      popularity: d.popularity || null,
+      name: d.name || null,
+    };
+  } catch { return null; }
+}
+
+async function trySpotifyScrape(artistId) {
+  try {
+    // Spotify's internal API used by the web embed
+    const res = await fetch(`https://open.spotify.com/artist/${artistId}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    });
+    const html = await res.text();
+
+    // Try multiple patterns for follower count
+    let followers = null;
+    let name = null;
+
+    // Pattern 1: JSON-LD or meta data
+    const followerPatterns = [
+      /"followers"\s*:\s*\{\s*"total"\s*:\s*(\d+)/,
+      /followers.*?(\d[\d,]+)/i,
+      /"followerCount"\s*:\s*(\d+)/,
+      /interactionCount.*?(\d+)/,
+    ];
+    for (const p of followerPatterns) {
+      const m = html.match(p);
+      if (m) { followers = parseInt(m[1].replace(/,/g, '')); break; }
     }
 
-    // If 429 (rate limited), wait and retry
-    if (artistRes.status === 429) {
-      const retryAfter = parseInt(artistRes.headers.get('retry-after') || '3');
-      await new Promise(r => setTimeout(r, retryAfter * 1000));
-      continue;
+    // Get name
+    const nameMatch = html.match(/<title>([^<]+?)(?:\s*[-–|]|\s*on Spotify)/i) ||
+                       html.match(/"name"\s*:\s*"([^"]+)"/);
+    if (nameMatch) name = nameMatch[1].trim();
+
+    if (followers !== null) {
+      return { followers, genres: [], popularity: null, name };
     }
 
-    // If 403, wait longer and retry (Spotify dev mode throttle)
-    if (artistRes.status === 403) {
-      if (attempt < 2) {
-        await new Promise(r => setTimeout(r, (attempt + 1) * 2000));
-        continue;
-      }
-      // Final attempt failed - clear token cache and throw
-      spotifyTokenCache = { token: null, expiresAt: 0 };
-      const errText = await artistRes.text();
-      throw new Error(`Spotify 403 after ${attempt + 1} attempts: ${errText.substring(0, 100)}`);
+    // Pattern 2: Try Spotify's oEmbed for at least the name
+    const oembedRes = await fetch(`https://open.spotify.com/oembed?url=https://open.spotify.com/artist/${artistId}`);
+    if (oembedRes.ok) {
+      const oembedData = await oembedRes.json();
+      // oEmbed doesn't have followers, but confirms artist exists
+      return { followers: 0, genres: [], popularity: null, name: oembedData.title || null, note: 'followers unavailable via scrape' };
     }
 
-    // Other errors
-    const errText = await artistRes.text();
-    throw new Error(`Spotify error (${artistRes.status}): ${errText.substring(0, 100)}`);
-  }
+    return null;
+  } catch { return null; }
 }
 
 // ── SoundCloud ──
@@ -127,68 +143,33 @@ export async function POST(request) {
 
     const results = {};
     const errors = {};
+    const tasks = [];
 
-    // Run YouTube and SoundCloud in parallel, Spotify separately to reduce rate limit pressure
-    const parallelTasks = [];
     if (links.youtube) {
-      parallelTasks.push(fetchYouTubeFollowers(links.youtube).then(v => { results.youtube = v; }).catch(e => { errors.youtube = e.message; }));
+      tasks.push(fetchYouTubeFollowers(links.youtube).then(v => { results.youtube = v; }).catch(e => { errors.youtube = e.message; }));
     }
     if (links.soundcloud) {
-      parallelTasks.push(fetchSoundCloudFollowers(links.soundcloud).then(v => { results.soundcloud = v; }).catch(e => { errors.soundcloud = e.message; }));
+      tasks.push(fetchSoundCloudFollowers(links.soundcloud).then(v => { results.soundcloud = v; }).catch(e => { errors.soundcloud = e.message; }));
     }
-    await Promise.all(parallelTasks);
-
-    // Spotify after others to give it breathing room
     if (links.spotify) {
-      try {
-        const v = await fetchSpotifyData(links.spotify);
+      tasks.push(fetchSpotifyData(links.spotify).then(v => {
         if (v) {
           results.spotify = v.followers;
           if (v.genres?.length) results.spotifyGenres = v.genres;
           if (v.popularity) results.spotifyPopularity = v.popularity;
           if (v.name) results.spotifyName = v.name;
+          if (v.note) results.spotifyNote = v.note;
         }
-      } catch (e) {
-        errors.spotify = e.message;
-      }
+      }).catch(e => { errors.spotify = e.message; }));
     }
 
+    await Promise.all(tasks);
     return NextResponse.json({ followers: results, errors });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// Diagnostics
 export async function GET() {
-  const sid = process.env.SPOTIFY_CLIENT_ID || '';
-  const ss = process.env.SPOTIFY_CLIENT_SECRET || '';
-  const yk = process.env.YOUTUBE_API_KEY || '';
-
-  // Test Spotify token
-  let tokenTest = 'not tested';
-  let artistTest = 'not tested';
-  try {
-    const token = await getSpotifyToken();
-    tokenTest = 'OK (token obtained)';
-    // Test with a known artist (Spotify itself)
-    const testRes = await fetch('https://api.spotify.com/v1/artists/0LyfQWJT6nXafLPZqxe9Of', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    artistTest = `${testRes.status} ${testRes.statusText}`;
-    if (testRes.ok) {
-      const d = await testRes.json();
-      artistTest = `OK - ${d.name} (${d.followers?.total} followers)`;
-    }
-  } catch (e) {
-    tokenTest = 'ERROR: ' + e.message;
-  }
-
-  return NextResponse.json({
-    spotify_id_set: !!sid, spotify_id_len: sid.length, spotify_id_preview: sid.substring(0,6)+'...',
-    spotify_secret_set: !!ss, spotify_secret_len: ss.length,
-    youtube_key_set: !!yk, youtube_key_len: yk.length,
-    spotify_token_test: tokenTest,
-    spotify_artist_test: artistTest,
-  });
+  return NextResponse.json({ status: 'ok', timestamp: new Date().toISOString() });
 }

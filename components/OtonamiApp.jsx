@@ -440,7 +440,7 @@ const saveCredits = async (c) => {
   };
 
   // ─── Landing ───
-  if (page === "landing" && !user) return <Landing onArtist={() => { setMode("artist"); setPage("auth"); }} onCurator={() => { setMode("curator"); setPage("auth"); }} />;
+  if (page === "landing" && !user) return <Landing onArtist={() => { setMode("artist"); setPage("auth"); }} onCurator={() => { window.location.href = '/curator'; }}
 
   // ─── Auth ───
   if (page === "auth" && !user) return <Auth mode={mode} curators={curators} onLogin={(u) => { setUser(u); setPage(mode === "artist" ? "dashboard" : "curator-inbox"); }} onBack={() => setPage("landing")} onRegisterCurator={async (c) => { const nc = [...curators, c]; await saveCurators(nc); setUser(c); setPage("curator-inbox"); notify("キュレーター登録完了！"); }} />;

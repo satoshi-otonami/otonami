@@ -292,10 +292,6 @@ const scheduleAutoProgress = (pitchId, updateFn, notifyFn, curatorName, acceptBo
 };
 
 // ─── Storage helpers ───
-const S = {
-  async get(k) { try { const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; } catch { return null; } },
-  async set(k, v) { try { await window.storage.set(k, JSON.stringify(v)); } catch {} },
-};
 
 // ─── Email Notification System (simulated) ───
 const EMAIL_TEMPLATES = {
@@ -377,13 +373,17 @@ export default function App() {
   // Load data from storage
   useEffect(() => {
     (async () => {
-      const savedCurators = await S.get("otonami-curators");
-      const merged = savedCurators ? [...SEED_CURATORS.filter(s=>!savedCurators.find(c=>c.id===s.id)), ...savedCurators] : [...SEED_CURATORS];
-      setCurators(merged);
-      const savedPitches = await S.get("otonami-pitches-v7");
-      if (savedPitches) setPitches(savedPitches);
-      const savedCredits = await S.get("otonami-credits");
-      if (savedCredits !== null) setCredits(savedCredits);
+const dbCurators = await loadCurators();
+if (dbCurators && dbCurators.length > 0) {
+  setCurators(dbCurators);
+} else {
+  setCurators([...SEED_CURATORS]);
+}
+await initSession();
+const savedCredits = await loadCredits();
+setCredits(savedCredits ?? 20);
+const savedPitches = await loadPitches();
+if (savedPitches?.length) setPitches(savedPitches);
     })();
     const s = document.createElement("style");
     s.textContent = `@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}*{box-sizing:border-box}`;
@@ -392,10 +392,20 @@ export default function App() {
   }, []);
 
   // Save helpers
-  const savePitches = async (p) => { setPitches(p); await S.set("otonami-pitches-v7", p.slice(0,300)); };
-  const saveCurators = async (c) => { setCurators(c); await S.set("otonami-curators", c); };
-  const saveCredits = async (c) => { setCredits(c); await S.set("otonami-credits", c); };
-
+const savePitches = async (p) => {
+  setPitches(p);
+  await savePitchesToDB(p);
+};
+const saveCurators = async (c) => {
+  setCurators(c);
+  for (const curator of c) {
+    if (!curator.isSeed) await saveCuratorToDB(curator);
+  }
+};
+const saveCredits = async (c) => {
+  setCredits(c);
+  await saveCreditsDB(c);
+};
   // Check for expired pitches (7-day deadline) and refund credits
   useEffect(() => {
     if (pitches.length === 0) return;

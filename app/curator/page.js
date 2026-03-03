@@ -45,20 +45,26 @@ export default function CuratorRegistrationPage() {
   };
 
   const handleSubmit = async () => {
-    if (!form.name || !form.email || !form.outletName) {
-      setError('Name, email, and outlet name are required.');
-      return;
-    }
-    setStatus('loading');
-    setError('');
-    try {
-      await registerCurator(form);
-      setStatus('success');
-    } catch (e) {
-      setError(e.message);
-      setStatus('error');
-    }
-  };
+  if (!form.name || !form.email || !form.outletName) {
+    setError('Name, email, and outlet name are required.');
+    return;
+  }
+  setStatus('loading');
+  setError('');
+  try {
+    const res = await fetch('/api/curator', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Registration failed');
+    setStatus('success');
+  } catch (e) {
+    setError(e.message);
+    setStatus('error');
+  }
+};
 
   const inputStyle = {
     width: '100%', padding: '10px 14px', borderRadius: 8,

@@ -48,7 +48,7 @@ export async function POST(request) {
     // 2. Satoshiへの通知メール
     await resend.emails.send({
       from: 'OTONAMI <onboarding@resend.dev>',
-      to: 'satoshi@otonami.jp',
+      to: 'satoshiy339@gmail.com',
       subject: `【OTONAMI】新規キュレーター登録: ${form.name}`,
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">

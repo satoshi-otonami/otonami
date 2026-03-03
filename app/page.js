@@ -1,6 +1,6 @@
 'use client';
 
-// importからregisterCuratorを削除（API経由に変更）
+import { registerCurator } from '@/lib/db';
 
 export default function Page() {
   return <OtonamiApp />;

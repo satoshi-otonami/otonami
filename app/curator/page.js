@@ -121,7 +121,7 @@ export default function CuratorRegistrationPage() {
                  onChange={e => set('name', e.target.value)} />
 
           <label style={labelStyle}>Email Address *</label>
-          <input style={inputStyle} type="email" value={form.email}
+          <input style={inputStyle} type="text" value={form.email}
                  placeholder="curator@example.com"
                  onChange={e => set('email', e.target.value)} />
 
@@ -139,9 +139,9 @@ export default function CuratorRegistrationPage() {
           </select>
 
           <label style={labelStyle}>Website / Playlist URL</label>
-          <input style={inputStyle} value={form.url}
-                 placeholder="https://..."
-                 onChange={e => set('url', e.target.value)} />
+          <input style={inputStyle} type="text" value={form.url}
+       placeholder="https://your-site.com"
+       onChange={e => set('url', e.target.value)} />
 
           <label style={labelStyle}>Follower / Subscriber Count</label>
           <input style={inputStyle} type="number" value={form.followers}

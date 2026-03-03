@@ -1,6 +1,6 @@
 'use client';
 
-import { registerCurator } from '@/lib/db';
+import OtonamiApp from '@/components/OtonamiApp';
 
 export default function Page() {
   return <OtonamiApp />;

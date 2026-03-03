@@ -35,7 +35,8 @@ export async function POST(request) {
         bio: form.bio || null,
         followers: parseInt(form.followers) || 0,
         region: form.region || 'Global',
-        accepts: form.accepts || [],
+        paypal_email: form.paypalEmail || null,
+        tags: ['pending_review'],
         tags: ['pending_review'],
         tier: 3,
         is_seed: false,
@@ -76,6 +77,9 @@ export async function POST(request) {
                 <td style="padding:8px;">${(form.genres || []).join(', ') || '-'}</td></tr>
             <tr><td style="padding:8px;color:#666;">Bio</td>
                 <td style="padding:8px;">${form.bio || '-'}</td></tr>
+            <tr style="background:#f9f9f9;">
+                <td style="padding:8px;color:#666;">PayPal</td>
+                <td style="padding:8px;">${form.paypalEmail || '未設定'}</td></tr>
           </table>
           <p style="margin-top:24px;color:#888;font-size:13px;">
             Supabaseで確認:

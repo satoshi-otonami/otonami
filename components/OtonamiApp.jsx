@@ -483,7 +483,7 @@ function Landing({onArtist, onCurator}) {
         </p>
         <div style={{display:"flex",gap:"0.8rem",justifyContent:"center",flexWrap:"wrap"}}>
           <button onClick={onArtist} style={{padding:"0.85rem 2rem",background:"linear-gradient(135deg,#7c3aed,#06b6d4)",color:"#fff",border:"none",borderRadius:12,fontSize:"1rem",fontWeight:700,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 20px rgba(124,58,237,0.3)"}}>🎵 アーティスト / レーベルとして始める</button>
-          <button onClick={onCurator} style={{padding:"0.85rem 2rem",background:"rgba(255,255,255,0.05)",color:"#e2e8f0",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,fontSize:"1rem",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>🎧 キュレーターとして登録</button>
+          <button onClick={() => { window.location.href = '/curator'; }} style={{padding:"0.85rem 2rem",background:"rgba(255,255,255,0.05)",color:"#e2e8f0",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,fontSize:"1rem",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>🎧 キュレーターとして登録</button>
         </div>
       </div>
 
@@ -546,7 +546,8 @@ function Auth({mode, curators, onLogin, onBack, onRegisterCurator}) {
     if (!name.trim() || !email.trim()) return;
     if (mode === "curator") {
       const found = curators.find(c => c.email.toLowerCase() === email.toLowerCase());
-      if (found) { onLogin(found); return; }
+if (found) { onLogin(found); return; }
+// パスワード認証は現在Supabase未対応のためメールのみで認証
     }
     onLogin({ id: "u_" + Date.now(), name, email, type: mode });
   };
@@ -583,7 +584,7 @@ function Auth({mode, curators, onLogin, onBack, onRegisterCurator}) {
         {["login","register"].map(t => <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"0.6rem",background:tab===t?"rgba(167,139,250,0.15)":"transparent",border:tab===t?"1px solid rgba(167,139,250,0.3)":"1px solid rgba(255,255,255,0.06)",color:tab===t?"#a78bfa":"#64748b",borderRadius:10,cursor:"pointer",fontSize:"0.82rem",fontWeight:600,fontFamily:"inherit"}}>{t==="login"?"ログイン":"新規登録"}</button>)}
       </div>}
 
-      <input value={name} onChange={e=>setName(e.target.value)} placeholder="名前" style={css.authInput}/>
+      <input value={name} onChange={e=>setName(e.target.value)} placeholder="名前 / Your Name" style={css.authInput}/>
       <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="メールアドレス" type="email" style={css.authInput}/>
 
       {isCuratorMode && tab === "register" && <>

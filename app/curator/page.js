@@ -1,11 +1,23 @@
 "use client";
 import { useState } from 'react';
-import { registerCurator } from '@/lib/db';
+// importからregisterCuratorを削除（API経由に変更）
 
 const GENRE_OPTIONS = [
-  'J-Pop','J-Rock','Indie Rock','Indie Pop','Electronic','City Pop',
-  'Jazz','Fusion','Anime','Shoegaze','Post Rock','Noise','Folk',
-  'Hip-Hop','R&B','Metal','Visual Kei','Vocaloid','Experimental',
+  // Japanese
+  'J-Pop','J-Rock','City Pop','Anime','Visual Kei','Vocaloid','Enka','Kayokyoku',
+  // Rock & Alternative
+  'Indie Rock','Indie Pop','Shoegaze','Post Rock','Noise','Garage Rock',
+  'Post Punk','Math Rock','Emo','Alt Rock','Dream Pop','Lo-Fi',
+  // Electronic
+  'Electronic','Ambient','IDM','Techno','House','Club','Synth Pop','Chillout',
+  // Jazz & Soul
+  'Jazz','Fusion','City Jazz','Soul','Funk','R&B','Neo Soul',
+  // Hip-Hop
+  'Hip-Hop','Trap','J-Hip-Hop','Boom Bap',
+  // Folk & Acoustic
+  'Folk','Acoustic','Singer-Songwriter','Americana',
+  // World & Other
+  'Experimental','Avant-garde','Classical','Metal','Punk','Hardcore',
 ];
 
 const TYPE_OPTIONS = [

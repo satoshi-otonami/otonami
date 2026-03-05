@@ -33,130 +33,82 @@ export async function POST(request) {
     // ── ログイン ──
     if (action === 'login') {
       if (!email || !password) {
-        return NextResponse.json(
-          { error: 'Email and password are required' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
       }
 
-      const { data: curator, error } = await db
+      const { data: pwData, error: pwErr } = await db.rpc('get_curator_password', { curator_email: email });
+
+      if (pwErr || !pwData || pwData.length === 0) {
+        return NextResponse.json({ error: 'Curator not found. Please register first.' }, { status: 404 });
+      }
+
+      const { curator_id, curator_name, hash } = pwData[0];
+
+      if (!hash) {
+        return NextResponse.json({
+          error: 'Password not set. Please register to set your password.',
+          needsPasswordSetup: true,
+        }, { status: 403 });
+      }
+
+      const valid = await bcrypt.compare(password, hash);
+      if (!valid) {
+        return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
+      }
+
+      const { data: curator } = await db
         .from('curators')
-        .select('*')
-        .eq('email', email)
+        .select('id, name, email, type, playlist, url, genres, followers, region, icon')
+        .eq('id', curator_id)
         .single();
 
-      if (error || !curator) {
-        return NextResponse.json(
-          { error: 'Curator not found. Please register first.' },
-          { status: 404 }
-        );
-      }
-
-      if (!curator.password_hash) {
-        return NextResponse.json(
-          {
-            error: 'Password not set. Please use the registration form to set your password.',
-            needsPasswordSetup: true,
-            curatorId: curator.id,
-          },
-          { status: 403 }
-        );
-      }
-
-      const valid = await bcrypt.compare(password, curator.password_hash);
-      if (!valid) {
-        return NextResponse.json(
-          { error: 'Invalid password' },
-          { status: 401 }
-        );
-      }
-
-      const token = await signToken({
-        id: curator.id,
-        email: curator.email,
-        name: curator.name,
-        role: 'curator',
-      });
+      const token = await signToken({ id: curator_id, email, name: curator_name, role: 'curator' });
 
       await db.from('sessions').insert({
-        curator_id: curator.id,
+        curator_id,
         token: token.slice(-16),
         ip_address: request.headers.get('x-forwarded-for') || 'unknown',
         user_agent: request.headers.get('user-agent') || 'unknown',
-      });
+      }).catch(() => {});
 
-      return NextResponse.json({
-        curator: {
-          id: curator.id,
-          name: curator.name,
-          email: curator.email,
-          type: curator.type,
-          playlist: curator.playlist,
-          url: curator.url,
-          genres: curator.genres,
-          followers: curator.followers,
-          region: curator.region,
-        },
-        token,
-      });
+      return NextResponse.json({ curator, token });
     }
 
-    // ── 新規登録 ──
+    // ── 新規登録 / パスワード設定 ──
     if (action === 'register') {
       const { name, type, playlist, url, genres, bio, followers, region, accepts } = body;
 
       if (!email || !password || !name) {
-        return NextResponse.json(
-          { error: 'Name, email, and password are required' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Name, email, and password are required' }, { status: 400 });
       }
-
       if (password.length < 6) {
-        return NextResponse.json(
-          { error: 'Password must be at least 6 characters' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
       }
 
-      // 既存チェック
-      const { data: existing } = await db
-        .from('curators')
-        .select('id, password_hash, name')
-        .eq('email', email)
-        .single();
+      const { data: existing } = await db.rpc('get_curator_password', { curator_email: email });
 
-      // シードキュレーターがパスワード未設定 → パスワードを設定
-      if (existing && !existing.password_hash) {
+      if (existing && existing.length > 0 && !existing[0].hash) {
         const hash = await bcrypt.hash(password, 10);
-        await db
-          .from('curators')
-          .update({ password_hash: hash, updated_at: new Date().toISOString() })
-          .eq('id', existing.id);
+        await db.rpc('set_curator_password', { curator_email: email, new_hash: hash });
 
         const token = await signToken({
-          id: existing.id,
+          id: existing[0].curator_id,
           email,
-          name: existing.name,
+          name: existing[0].curator_name,
           role: 'curator',
         });
 
         return NextResponse.json({
           message: 'Password set successfully. Welcome!',
-          curator: { id: existing.id, email, name: existing.name },
+          curator: { id: existing[0].curator_id, name: existing[0].curator_name, email },
           token,
         });
       }
 
-      // 既にパスワード設定済み
-      if (existing && existing.password_hash) {
-        return NextResponse.json(
-          { error: 'This email is already registered. Please log in.' },
-          { status: 409 }
-        );
+      if (existing && existing.length > 0 && existing[0].hash) {
+        return NextResponse.json({ error: 'This email is already registered. Please log in.' }, { status: 409 });
       }
 
-      // 完全新規登録
       const hash = await bcrypt.hash(password, 10);
       const { data: newCurator, error: insertErr } = await db
         .from('curators')
@@ -177,14 +129,11 @@ export async function POST(request) {
           tier: 2,
           is_seed: false,
         })
-        .select()
+        .select('id, name, email, type')
         .single();
 
       if (insertErr) {
-        return NextResponse.json(
-          { error: insertErr.message },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: insertErr.message }, { status: 500 });
       }
 
       const token = await signToken({
@@ -194,66 +143,14 @@ export async function POST(request) {
         role: 'curator',
       });
 
-      await db.from('sessions').insert({
-        curator_id: newCurator.id,
-        token: token.slice(-16),
-        ip_address: request.headers.get('x-forwarded-for') || 'unknown',
-        user_agent: request.headers.get('user-agent') || 'unknown',
-      });
-
       return NextResponse.json({
         message: 'Registration successful!',
-        curator: {
-          id: newCurator.id,
-          name: newCurator.name,
-          email: newCurator.email,
-          type: newCurator.type,
-        },
+        curator: newCurator,
         token,
       });
     }
 
-    // ── パスワード設定（シードキュレーター用）──
-    if (action === 'set_password') {
-      const { curatorId } = body;
-
-      if (!curatorId || !password) {
-        return NextResponse.json(
-          { error: 'Curator ID and password required' },
-          { status: 400 }
-        );
-      }
-
-      const hash = await bcrypt.hash(password, 10);
-      const { data: updated, error: updateErr } = await db
-        .from('curators')
-        .update({ password_hash: hash, updated_at: new Date().toISOString() })
-        .eq('id', curatorId)
-        .select('id, name, email')
-        .single();
-
-      if (updateErr || !updated) {
-        return NextResponse.json(
-          { error: 'Curator not found' },
-          { status: 404 }
-        );
-      }
-
-      const token = await signToken({
-        id: updated.id,
-        email: updated.email,
-        name: updated.name,
-        role: 'curator',
-      });
-
-      return NextResponse.json({
-        message: 'Password set successfully!',
-        curator: updated,
-        token,
-      });
-    }
-
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid action. Use "login" or "register"' }, { status: 400 });
   } catch (error) {
     console.error('Curator login error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

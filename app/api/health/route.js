@@ -19,11 +19,11 @@ export async function GET() {
   try {
     const db = getServiceSupabase();
 
-    // 1. curators テーブル確認
+    // 1. curators テーブル
     const { data: curators, error: curErr } = await db
       .from('curators')
-      .select('id, name, email, type, platform')
-      .order('created_at', { ascending: true });
+      .select('id, name, email, type, playlist, url, is_seed')
+      .order('name', { ascending: true });
 
     if (curErr) {
       checks.tables.curators = { ok: false, error: curErr.message };
@@ -31,46 +31,36 @@ export async function GET() {
       checks.tables.curators = {
         ok: true,
         count: curators.length,
-        names: curators.map((c) => c.name),
+        seed: curators.filter((c) => c.is_seed).length,
+        list: curators.map((c) => `${c.name} (${c.type})`),
       };
     }
 
-    // 2. sessions テーブル確認
+    // 2. sessions テーブル
     const { count: sessCount, error: sessErr } = await db
       .from('sessions')
       .select('*', { count: 'exact', head: true });
+    checks.tables.sessions = sessErr
+      ? { ok: false, error: sessErr.message }
+      : { ok: true, count: sessCount };
 
-    if (sessErr) {
-      checks.tables.sessions = { ok: false, error: sessErr.message };
-    } else {
-      checks.tables.sessions = { ok: true, count: sessCount };
-    }
-
-    // 3. pitches テーブル確認
+    // 3. pitches テーブル
     const { count: pitchCount, error: pitchErr } = await db
       .from('pitches')
       .select('*', { count: 'exact', head: true });
+    checks.tables.pitches = pitchErr
+      ? { ok: false, error: pitchErr.message }
+      : { ok: true, count: pitchCount };
 
-    if (pitchErr) {
-      checks.tables.pitches = { ok: false, error: pitchErr.message };
-    } else {
-      checks.tables.pitches = { ok: true, count: pitchCount };
-    }
-
-    // 4. email_log テーブル確認
+    // 4. email_log テーブル
     const { count: emailCount, error: emailErr } = await db
       .from('email_log')
       .select('*', { count: 'exact', head: true });
+    checks.tables.email_log = emailErr
+      ? { ok: false, error: emailErr.message }
+      : { ok: true, count: emailCount };
 
-    if (emailErr) {
-      checks.tables.email_log = { ok: false, error: emailErr.message };
-    } else {
-      checks.tables.email_log = { ok: true, count: emailCount };
-    }
-
-    // 全テーブルOKならsupabase接続OK
     checks.supabase = Object.values(checks.tables).every((t) => t.ok);
-
     return NextResponse.json(checks, { status: checks.supabase ? 200 : 500 });
   } catch (error) {
     checks.supabase = false;

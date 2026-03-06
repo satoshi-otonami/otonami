@@ -36,15 +36,32 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
       }
 
-      // pw_hash を含めて直接select
-      const { data: curator, error } = await db
+      // まずpw_hashなしでselectしてキュレーターが存在するか確認
+      const { data: basicCheck, error: basicErr } = await db
+        .from('curators')
+        .select('id, name, email')
+        .eq('email', email)
+        .single();
+
+      if (basicErr || !basicCheck) {
+        return NextResponse.json({
+          error: 'Curator not found. Please register first.',
+          debug: { email_searched: email, supabase_error: basicErr?.message || 'no match' }
+        }, { status: 404 });
+      }
+
+      // pw_hashを含めてselect
+      const { data: curator, error: pwErr } = await db
         .from('curators')
         .select('id, name, email, type, playlist, url, genres, followers, region, icon, pw_hash')
         .eq('email', email)
         .single();
 
-      if (error || !curator) {
-        return NextResponse.json({ error: 'Curator not found. Please register first.' }, { status: 404 });
+      if (pwErr) {
+        return NextResponse.json({
+          error: 'Failed to fetch curator with pw_hash',
+          debug: { supabase_error: pwErr.message, curator_exists: true, curator_id: basicCheck.id }
+        }, { status: 500 });
       }
 
       if (!curator.pw_hash) {
@@ -57,8 +74,6 @@ export async function POST(request) {
       }
 
       const token = await signToken({ id: curator.id, email, name: curator.name, role: 'curator' });
-
-      // pw_hashをレスポンスから除外
       const { pw_hash, ...curatorData } = curator;
       return NextResponse.json({ curator: curatorData, token });
     }
@@ -74,32 +89,47 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
       }
 
-      // 既存チェック
-      const { data: existing } = await db
+      // 既存チェック（pw_hashなしで検索）
+      const { data: existing, error: existErr } = await db
         .from('curators')
-        .select('id, name, email, pw_hash')
+        .select('id, name, email')
         .eq('email', email)
         .single();
 
-      // シードキュレーター（パスワード未設定）→ パスワードを設定
-      if (existing && !existing.pw_hash) {
-        const hash = await bcrypt.hash(password, 10);
-        await db
+      if (existing) {
+        // pw_hashを別途取得
+        const { data: pwData } = await db
           .from('curators')
-          .update({ pw_hash: hash, updated_at: new Date().toISOString() })
-          .eq('id', existing.id);
+          .select('pw_hash')
+          .eq('id', existing.id)
+          .single();
 
-        const token = await signToken({ id: existing.id, email, name: existing.name, role: 'curator' });
+        const hasPw = pwData && pwData.pw_hash;
 
-        return NextResponse.json({
-          message: 'Password set successfully. Welcome!',
-          curator: { id: existing.id, name: existing.name, email },
-          token,
-        });
-      }
+        // パスワード未設定 → 設定
+        if (!hasPw) {
+          const hash = await bcrypt.hash(password, 10);
+          const { error: updateErr } = await db
+            .from('curators')
+            .update({ pw_hash: hash, updated_at: new Date().toISOString() })
+            .eq('id', existing.id);
 
-      // 既にパスワード設定済み
-      if (existing && existing.pw_hash) {
+          if (updateErr) {
+            return NextResponse.json({
+              error: 'Failed to set password',
+              debug: { supabase_error: updateErr.message }
+            }, { status: 500 });
+          }
+
+          const token = await signToken({ id: existing.id, email, name: existing.name, role: 'curator' });
+          return NextResponse.json({
+            message: 'Password set successfully. Welcome!',
+            curator: { id: existing.id, name: existing.name, email },
+            token,
+          });
+        }
+
+        // パスワード設定済み
         return NextResponse.json({ error: 'This email is already registered. Please log in.' }, { status: 409 });
       }
 
@@ -108,46 +138,30 @@ export async function POST(request) {
       const { data: newCurator, error: insertErr } = await db
         .from('curators')
         .insert({
-          name,
-          email,
-          pw_hash: hash,
-          type: type || 'playlist',
-          playlist: playlist || '',
-          url: url || '',
-          genres: genres || [],
-          bio: bio || '',
-          followers: followers || 0,
-          region: region || '',
-          icon: '🎵',
-          accepts: [],
-          tags: ['new'],
-          tier: 2,
-          is_seed: false,
+          name, email, pw_hash: hash,
+          type: type || 'playlist', playlist: playlist || '', url: url || '',
+          genres: genres || [], bio: bio || '', followers: followers || 0,
+          region: region || '', icon: '🎵', accepts: [], tags: ['new'], tier: 2, is_seed: false,
         })
         .select('id, name, email, type')
         .single();
 
       if (insertErr) {
-        return NextResponse.json({ error: insertErr.message }, { status: 500 });
+        return NextResponse.json({ error: insertErr.message, debug: { step: 'insert' } }, { status: 500 });
       }
 
       const token = await signToken({ id: newCurator.id, email, name: newCurator.name, role: 'curator' });
-
-      return NextResponse.json({
-        message: 'Registration successful!',
-        curator: newCurator,
-        token,
-      });
+      return NextResponse.json({ message: 'Registration successful!', curator: newCurator, token });
     }
 
     return NextResponse.json({ error: 'Invalid action. Use "login" or "register"' }, { status: 400 });
   } catch (error) {
     console.error('Curator login error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, debug: { stack: error.stack?.slice(0, 200) } }, { status: 500 });
   }
 }
 
-// GET /api/curators/login — トークン検証
+// GET /api/curators/login
 export async function GET(request) {
   try {
     const auth = request.headers.get('authorization');
@@ -158,14 +172,12 @@ export async function GET(request) {
     if (!payload) {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
-
     const db = getServiceSupabase();
     const { data: curator } = await db
       .from('curators')
       .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon')
       .eq('id', payload.id)
       .single();
-
     if (!curator) {
       return NextResponse.json({ error: 'Curator not found' }, { status: 404 });
     }

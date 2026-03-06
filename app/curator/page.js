@@ -64,6 +64,7 @@ export default function CuratorRegistrationPage() {
       localStorage.setItem('curator_token', data.token);
       setLoggedInCurator(data.curator);
       setLoginStatus('success');
+      window.location.href = '/curator/dashboard';
     } catch (e) {
       setLoginError(e.message);
       setLoginStatus('error');

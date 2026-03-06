@@ -368,19 +368,30 @@ export default function CuratorDashboard() {
                 </div>
 
                 {/* ── ピッチ本文（展開時） ── */}
-                {isExpanded && pitch.body && (
+                {isExpanded && (
                   <div style={{
                     marginTop: 18, paddingTop: 18, borderTop: '1px solid #1e1e3a',
                   }}>
-                    <pre style={{
-                      color: '#ccc', fontSize: 13, lineHeight: 1.8,
-                      whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                      margin: 0, background: '#0d0d1f', borderRadius: 10,
-                      padding: '16px 18px', border: '1px solid #1e1e3a',
-                    }}>
-                      {pitch.body}
-                    </pre>
+                    {pitch.body ? (
+                      <pre style={{
+                        color: '#ccc', fontSize: 13, lineHeight: 1.8,
+                        whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                        margin: 0, background: '#0d0d1f', borderRadius: 10,
+                        padding: '16px 18px', border: '1px solid #1e1e3a',
+                      }}>
+                        {pitch.body}
+                      </pre>
+                    ) : (
+                      <p style={{
+                        color: '#555', fontSize: 13, textAlign: 'center',
+                        padding: '20px', background: '#0d0d1f', borderRadius: 10,
+                        border: '1px solid #1e1e3a', margin: 0,
+                      }}>
+                        Pitch content not stored for this entry.<br />
+                        <span style={{ fontSize: 11 }}>このピッチの本文データは保存されていません。</span>
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

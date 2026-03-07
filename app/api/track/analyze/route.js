@@ -139,25 +139,37 @@ async function fetchSoundNetFeatures(songName, artistName) {
   if (!rapidApiKey) throw new Error('RAPIDAPI_KEY not set');
 
   const params = new URLSearchParams({ song: songName, artist: artistName });
-  const res = await fetch(
-    `https://track-analysis.p.rapidapi.com/pktx/rapid?${params}`,
-    {
-      method: 'GET',
-      headers: {
-        'x-rapidapi-host': 'track-analysis.p.rapidapi.com',
-        'x-rapidapi-key': rapidApiKey,
-      },
-    }
-  );
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `SoundNet API error: ${res.status}`);
+  // Try endpoints in order: key-bpm (confirmed) → query (Track Analysis by Query)
+  const endpoints = ['/pktx/key-bpm', '/pktx/query'];
+  let raw = null;
+  let lastError = '';
+
+  for (const endpoint of endpoints) {
+    const res = await fetch(
+      `https://track-analysis.p.rapidapi.com${endpoint}?${params}`,
+      {
+        method: 'GET',
+        headers: {
+          'x-rapidapi-host': 'track-analysis.p.rapidapi.com',
+          'x-rapidapi-key': rapidApiKey,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      lastError = err.message || `SoundNet API error: ${res.status}`;
+      continue;
+    }
+
+    raw = await res.json();
+    break;
   }
 
-  const raw = await res.json();
+  if (!raw) throw new Error(lastError || 'All SoundNet endpoints failed');
 
-  // Normalize 0-100 → 0-1 where needed (SoundNet returns 0-100 scale)
+  // Normalize 0-100 → 0-1 (SoundNet returns 0-100 scale for most features)
   const normalize = (v) => (v != null ? Math.min(1, Math.max(0, v / 100)) : null);
 
   return {
@@ -166,9 +178,10 @@ async function fetchSoundNetFeatures(songName, artistName) {
     acousticness:     normalize(raw.acousticness),
     instrumentalness: normalize(raw.instrumentalness),
     valence:          normalize(raw.valence),
-    tempo:            raw.tempo ?? null,        // BPM — keep as-is
+    tempo:            raw.tempo ?? raw.bpm ?? null,   // BPM — keep as-is
+    key:              raw.key ?? null,
     loudness:         raw.loudness ?? null,
-    _raw: raw,
+    _raw: raw,   // 全フィールドを返して確認できるようにする
   };
 }
 

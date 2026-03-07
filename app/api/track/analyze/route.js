@@ -141,7 +141,7 @@ async function fetchSoundNetFeatures(songName, artistName) {
   const params = new URLSearchParams({ song: songName, artist: artistName });
 
   // Try endpoints in order: key-bpm (confirmed) → query (Track Analysis by Query)
-  const endpoints = ['/pktx/key-bpm', '/pktx/query'];
+  const endpoints = ['/pktx/query', '/pktx/key-bpm'];
   let raw = null;
   let lastError = '';
 

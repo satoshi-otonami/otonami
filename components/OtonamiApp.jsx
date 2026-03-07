@@ -4,8 +4,10 @@ import { initSession, loadCurators, loadPitches, loadCredits,
          logEmail } from '@/lib/db';
 
 import API from '@/lib/api-client';
+import { analyzeTrack } from '@/lib/api-track';
+import { getMatchLabel, rankCurators } from '@/lib/match-score';
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 // ─── Constants ───
 const GENRES = ["Jazz","Fusion","Funk","City Pop","Lo-Fi","Electronic","Indie Rock","Alt Rock","Pop","Math Rock","Shoegaze","J-Rock","Hip-Hop","R&B","Experimental","Noise","Metal","Post Rock","Dream Pop","Neo-Soul","Soul","Instrumental","Prog","Punk","Visual Kei","World"];
@@ -622,6 +624,7 @@ if (found) { onLogin(found); return; }
 // ═══════════════════════════════════════
 function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, saveCredits, notify, updatePitch, startAutoProgress}) {
   const [selected, setSelected] = useState([]);
+  const [trackData, setTrackData] = useState(null);
   const myPitches = pitches.filter(p => p.artistId === user.id || p.artistEmail === user.email);
 
   const navItems = [
@@ -645,8 +648,8 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     </nav>
     <main style={css.main}>
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify}/>}
-      {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage}/>}
-      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} startAutoProgress={startAutoProgress}/>}
+      {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData}/>}
+      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} startAutoProgress={startAutoProgress} setTrackData={setTrackData}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches}/>}
       {page==="shop" && <CreditShop user={user} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage}/>}
@@ -715,21 +718,42 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
 }
 
 // ─── Curator Browser ───
-function CuratorBrowser({curators, selected, setSelected, setPage}) {
+function CuratorBrowser({curators, selected, setSelected, setPage, trackData}) {
   const [q, setQ] = useState(""); const [genre, setGenre] = useState(""); const [type, setType] = useState("");
-  const list = curators.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||c.platform.toLowerCase().includes(q.toLowerCase())).filter(c=>!genre||c.genres.includes(genre)).filter(c=>!type||c.type===type);
+  const [sortByMatch, setSortByMatch] = useState(false);
+
+  const ranked = useMemo(() => {
+    if (!trackData || !sortByMatch) return curators;
+    return rankCurators(curators, trackData);
+  }, [curators, trackData, sortByMatch]);
+
+  const list = ranked.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||c.platform.toLowerCase().includes(q.toLowerCase())).filter(c=>!genre||c.genres.includes(genre)).filter(c=>!type||c.type===type);
   const toggle = id => setSelected(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
+
+  const matchColor = (score) => score >= 85 ? "#16a34a" : score >= 70 ? "#2563eb" : score >= 50 ? "#7c3aed" : score >= 30 ? "#d97706" : "#dc2626";
+
   return <div>
-    <div style={{marginBottom:"1.5rem"}}><h1 style={{fontSize:"1.4rem",fontWeight:800,margin:0}}>キュレーター</h1><p style={{color:"#64748b",fontSize:"0.85rem",margin:"0.3rem 0 0"}}>{curators.length}人のキュレーター・プロ {selected.length > 0 && <span style={{color:"#7c3aed",fontWeight:600}}>· {selected.length}人選択中</span>}</p></div>
+    <div style={{marginBottom:"1.5rem"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+        <h1 style={{fontSize:"1.4rem",fontWeight:800,margin:0}}>キュレーター</h1>
+        {trackData && <span style={{fontSize:"0.7rem",background:"linear-gradient(135deg,#7c3aed,#2563eb)",color:"#fff",padding:"0.2rem 0.6rem",borderRadius:10,fontWeight:700}}>Match Score ON</span>}
+      </div>
+      <p style={{color:"#64748b",fontSize:"0.85rem",margin:"0.3rem 0 0"}}>{curators.length}人のキュレーター・プロ {selected.length > 0 && <span style={{color:"#7c3aed",fontWeight:600}}>· {selected.length}人選択中</span>}</p>
+    </div>
     <div style={{display:"flex",gap:8,marginBottom:"1rem",flexWrap:"wrap"}}>
       <input style={css.filterInput} placeholder="検索..." value={q} onChange={e=>setQ(e.target.value)}/>
       <select style={css.filterSelect} value={genre} onChange={e=>setGenre(e.target.value)}><option value="">全ジャンル</option>{GENRES.map(g=><option key={g}>{g}</option>)}</select>
       <select style={css.filterSelect} value={type} onChange={e=>setType(e.target.value)}><option value="">全タイプ</option>{CURATOR_TYPES.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>
+      {trackData && <button onClick={()=>setSortByMatch(p=>!p)} style={{...css.btnSm,background:sortByMatch?"linear-gradient(135deg,#7c3aed,#2563eb)":"#f1f5f9",color:sortByMatch?"#fff":"#64748b",border:"1px solid "+(sortByMatch?"#7c3aed":"#e2e8f0"),fontWeight:600,whiteSpace:"nowrap"}}>
+        {sortByMatch ? "🎯 マッチ順" : "🎯 マッチ順"}
+      </button>}
     </div>
     {selected.length > 0 && <div style={{background:"#f5f3ff",border:"1px solid #ddd6fe",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#7c3aed",fontWeight:600}}>{selected.length}人選択中 · 合計{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}cr (¥{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)*160})</span><div style={{display:"flex",gap:6}}><button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem"}}>🚀 ピッチ作成へ</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
       {list.map(c => {
         const on = selected.includes(c.id);
+        const ms = c.matchScore;
+        const ml = ms != null ? getMatchLabel(ms) : null;
         return <div key={c.id} onClick={()=>toggle(c.id)} style={{background:on?"#faf5ff":"#fff",border:on?"1px solid #a78bfa":"1px solid #f1f5f9",borderRadius:16,padding:"1rem 1.2rem",cursor:"pointer",transition:"all 0.12s"}}>
           <div style={{display:"flex",alignItems:"center",gap:"0.75rem"}}>
             <div style={{width:44,height:44,borderRadius:12,background:on?"linear-gradient(135deg,#7c3aed,#06b6d4)":"#f1f5f9",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.2rem",flexShrink:0}}>{c.avatar}</div>
@@ -737,9 +761,11 @@ function CuratorBrowser({curators, selected, setSelected, setPage}) {
               <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                 <span style={{fontWeight:700,fontSize:"0.9rem"}}>{c.name}</span>
                 {c.badges?.map(b => <span key={b} style={{fontSize:"0.6rem",padding:"0.1rem 0.4rem",borderRadius:6,background:b==="verified"?"#dcfce7":"#eff6ff",color:b==="verified"?"#16a34a":"#2563eb"}}>{BADGES[b]}</span>)}
+                {ml && <span style={{fontSize:"0.62rem",padding:"0.15rem 0.5rem",borderRadius:8,background:"#f8f4ff",color:matchColor(ms),fontWeight:700,border:"1px solid "+matchColor(ms)+"40"}}>{ml.emoji} {ms}%</span>}
               </div>
               <div style={{fontSize:"0.75rem",color:"#64748b"}}>{c.platform} · {c.audience>=1000?(c.audience/1000).toFixed(1)+"K":c.audience} · <span style={{color:"#f59e0b",fontWeight:600}}>{c.creditCost||2}cr</span></div>
               {c.bio && <div style={{fontSize:"0.72rem",color:"#94a3b8",marginTop:3}}>{c.bio.length>80?c.bio.substring(0,80)+"…":c.bio}</div>}
+              {ml && c.matchReasons?.length > 0 && <div style={{fontSize:"0.62rem",color:"#7c3aed",marginTop:3}}>{c.matchReasons.slice(0,2).join(" · ")}</div>}
             </div>
             <div style={{display:"flex",gap:8,alignItems:"center",flexShrink:0}}>
               {c.offers?.slice(0,2).map(o => <span key={o} style={{fontSize:"0.62rem",padding:"0.15rem 0.4rem",borderRadius:5,background:"#f0fdf4",color:"#16a34a"}}>{o}</span>)}
@@ -761,7 +787,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage}) {
 }
 
 // ─── Pitch Creator (Template Engine + Social Links + Followers) ───
-function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, startAutoProgress}) {
+function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, startAutoProgress, setTrackData}) {
   const [artist, setArtist] = useState({name:"",nameEn:"",genre:"",mood:"",description:"",songTitle:"",songLink:"",influences:"",achievements:"",sns:""});
   const [links, setLinks] = useState({spotify:"",apple:"",youtube:"",soundcloud:"",instagram:"",twitter:"",facebook:"",website:""});
   const [followers, setFollowers] = useState({spotify:0,youtube:0,soundcloud:0,instagram:0,twitter:0,facebook:0});
@@ -872,6 +898,23 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const fmtK = (n) => { if (!n) return ""; if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,"") + "M"; if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,"") + "K"; return String(n); };
   const [aiLoading, setAiLoading] = useState(false);
   const [fetchingFollowers, setFetchingFollowers] = useState(false);
+  const [analyzeLoading, setAnalyzeLoading] = useState(false);
+  const [audioFeatures, setAudioFeatures] = useState(null);
+
+  const analyzeTrackFn = async () => {
+    const url = artist.songLink?.trim();
+    if (!url) { notify("⚠️ 楽曲URLを入力してください"); return; }
+    setAnalyzeLoading(true);
+    try {
+      const result = await analyzeTrack({ trackUrl: url, songName: artist.songTitle, artistName: artist.nameEn || artist.name });
+      setAudioFeatures(result.audioFeatures);
+      if (setTrackData) setTrackData({ ...result, genre: artist.genre, mood: artist.mood });
+      notify("✅ 楽曲分析完了！キュレーター画面でMatch Scoreを確認できます");
+    } catch (e) {
+      notify("⚠️ 楽曲分析失敗: " + e.message);
+    }
+    setAnalyzeLoading(false);
+  };
 
   // ── Auto-fetch followers from API ──
   const autoFetchFollowers = async () => {
@@ -1038,8 +1081,26 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       <div style={{marginTop:8,background:"linear-gradient(135deg,#fefce8,#ecfdf5)",borderRadius:10,padding:"0.7rem",border:"1px solid #d9f99d"}}>
         <label style={{fontSize:"0.72rem",color:"#4d7c0f",fontWeight:700}}>🎵 ピッチ楽曲URL（キュレーターに聴いてもらう曲）</label>
         <div style={{fontSize:"0.6rem",color:"#65a30d",marginBottom:4}}>Spotify, YouTube, SoundCloud等の楽曲URLを入力</div>
-        <input style={{...css.input,border:"1px solid #bef264",background:"#fefce8"}} value={artist.songLink||""} onChange={e=>setF("songLink",e.target.value)} placeholder="https://open.spotify.com/track/... or https://youtube.com/watch?v=..."/>
-        {artist.songLink && <div style={{fontSize:"0.6rem",color:"#4d7c0f",marginTop:2}}>✅ ピッチメールに楽曲リンクとして自動挿入されます</div>}
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          <input style={{...css.input,border:"1px solid #bef264",background:"#fefce8",flex:1}} value={artist.songLink||""} onChange={e=>setF("songLink",e.target.value)} placeholder="https://open.spotify.com/track/... or https://youtube.com/watch?v=..."/>
+          <button onClick={analyzeTrackFn} disabled={analyzeLoading||!artist.songLink} style={{...css.btnSm,background:analyzeLoading?"#e2e8f0":"linear-gradient(135deg,#7c3aed,#2563eb)",color:analyzeLoading?"#94a3b8":"#fff",border:"none",fontWeight:700,whiteSpace:"nowrap",flexShrink:0,opacity:(!artist.songLink)?0.5:1}}>
+            {analyzeLoading ? "分析中…" : "🎯 分析"}
+          </button>
+        </div>
+        {artist.songLink && !audioFeatures && <div style={{fontSize:"0.6rem",color:"#4d7c0f",marginTop:2}}>✅ ピッチメールに楽曲リンクとして自動挿入されます · 「🎯 分析」でキュレーターのMatch Scoreを計算できます</div>}
+        {audioFeatures && <div style={{marginTop:8,padding:"0.5rem",background:"#fff",borderRadius:8,border:"1px solid #bef264"}}>
+          <div style={{fontSize:"0.62rem",fontWeight:700,color:"#4d7c0f",marginBottom:4}}>🎵 Audio Features</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"3px 12px"}}>
+            {[["Energy",audioFeatures.energy],["Danceability",audioFeatures.danceability],["Acousticness",audioFeatures.acousticness],["Valence",audioFeatures.valence],["Instrumental",audioFeatures.instrumentalness]].map(([label,val])=>val!=null&&(
+              <div key={label} style={{display:"flex",alignItems:"center",gap:4}}>
+                <span style={{fontSize:"0.58rem",color:"#64748b",width:70,flexShrink:0}}>{label}</span>
+                <div style={{flex:1,height:4,borderRadius:2,background:"#e2e8f0"}}><div style={{height:4,borderRadius:2,background:"linear-gradient(90deg,#7c3aed,#06b6d4)",width:(val*100)+"%"}}/></div>
+                <span style={{fontSize:"0.58rem",color:"#4d7c0f",width:26,textAlign:"right"}}>{Math.round(val*100)}%</span>
+              </div>
+            ))}
+            {audioFeatures.tempo!=null && <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:"0.58rem",color:"#64748b",width:70,flexShrink:0}}>Tempo</span><span style={{fontSize:"0.58rem",color:"#4d7c0f",fontWeight:600}}>{Math.round(audioFeatures.tempo)} BPM</span></div>}
+          </div>
+        </div>}
       </div>
       <div style={{marginTop:5}}><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>主な実績・数値</label><input style={css.input} value={artist.achievements} onChange={e=>setF("achievements",e.target.value)} placeholder="SXSW 10年連続出演, Spotify月間50万再生"/></div>
       <div style={{marginTop:4}}><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>紹介文 *（日本語OK）</label><textarea style={{...css.input,minHeight:60,resize:"vertical"}} value={artist.description} onChange={e=>setF("description",e.target.value)} placeholder="音楽性、特徴、ユニークなポイント"/></div>

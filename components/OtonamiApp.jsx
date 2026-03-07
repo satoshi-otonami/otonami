@@ -622,9 +622,33 @@ if (found) { onLogin(found); return; }
 // ═══════════════════════════════════════
 // ARTIST APP
 // ═══════════════════════════════════════
+const EMPTY_ARTIST   = {name:"",nameEn:"",genre:"",mood:"",description:"",songTitle:"",songLink:"",influences:"",achievements:"",sns:""};
+const EMPTY_LINKS    = {spotify:"",apple:"",youtube:"",soundcloud:"",instagram:"",twitter:"",facebook:"",website:""};
+const EMPTY_FOLLOWERS = {spotify:0,youtube:0,soundcloud:0,instagram:0,twitter:0,facebook:0};
+
+function loadArtistDraft() {
+  try { const r = sessionStorage.getItem("otonami_artist_draft"); return r ? JSON.parse(r) : null; } catch { return null; }
+}
+
 function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, saveCredits, notify, updatePitch, startAutoProgress}) {
   const [selected, setSelected] = useState([]);
   const [trackData, setTrackData] = useState(null);
+
+  // ── Persistent artist form state (survives page navigation) ──
+  const _draft = useMemo(() => loadArtistDraft(), []);
+  const [artist,    setArtist]    = useState(_draft?.artist    || EMPTY_ARTIST);
+  const [links,     setLinks]     = useState(_draft?.links     || EMPTY_LINKS);
+  const [followers, setFollowers] = useState(_draft?.followers || EMPTY_FOLLOWERS);
+
+  useEffect(() => {
+    try { sessionStorage.setItem("otonami_artist_draft", JSON.stringify({artist, links, followers})); } catch {}
+  }, [artist, links, followers]);
+
+  const clearArtistDraft = () => {
+    setArtist(EMPTY_ARTIST); setLinks(EMPTY_LINKS); setFollowers(EMPTY_FOLLOWERS);
+    try { sessionStorage.removeItem("otonami_artist_draft"); } catch {}
+  };
+
   const myPitches = pitches.filter(p => p.artistId === user.id || p.artistEmail === user.email);
 
   const navItems = [
@@ -649,7 +673,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     <main style={css.main}>
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify}/>}
       {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify}/>}
-      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} startAutoProgress={startAutoProgress} setTrackData={setTrackData} trackData={trackData}/>}
+      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} startAutoProgress={startAutoProgress} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches}/>}
       {page==="shop" && <CreditShop user={user} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage}/>}
@@ -866,10 +890,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 }
 
 // ─── Pitch Creator (Template Engine + Social Links + Followers) ───
-function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, startAutoProgress, setTrackData, trackData}) {
-  const [artist, setArtist] = useState({name:"",nameEn:"",genre:"",mood:"",description:"",songTitle:"",songLink:"",influences:"",achievements:"",sns:""});
-  const [links, setLinks] = useState({spotify:"",apple:"",youtube:"",soundcloud:"",instagram:"",twitter:"",facebook:"",website:""});
-  const [followers, setFollowers] = useState({spotify:0,youtube:0,soundcloud:0,instagram:0,twitter:0,facebook:0});
+function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, startAutoProgress, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft}) {
   const [pitchText, setPitchText] = useState("");
   const [epk, setEpk] = useState("");
   const [step, setStep] = useState(0);
@@ -1135,9 +1156,17 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         </div>
       )}
 
-      {/* Samples */}
-      <div style={{display:"flex",justifyContent:"flex-end",marginBottom:"0.3rem"}}>
-        <button style={css.btnSm} onClick={()=>setShowSamples(!showSamples)}>📋 サンプル</button>
+      {/* Samples + Clear */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.3rem"}}>
+        {artist.name || artist.songLink ? (
+          <span style={{fontSize:"0.62rem",color:"#10b981",fontWeight:600}}>✅ 入力内容を保持中（画面移動しても消えません）</span>
+        ) : <span/>}
+        <div style={{display:"flex",gap:6}}>
+          <button style={css.btnSm} onClick={()=>setShowSamples(!showSamples)}>📋 サンプル</button>
+          {(artist.name || artist.songLink || links.spotify || links.youtube) && (
+            <button style={{...css.btnSm,color:"#ef4444",border:"1px solid #fecaca"}} onClick={()=>{if(window.confirm("入力内容をクリアしますか？"))clearArtistDraft();}}>クリア</button>
+          )}
+        </div>
       </div>
       {showSamples && <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:"0.8rem"}}>
         {DEMO_ARTISTS.map(a => <button key={a.id} style={{display:"flex",alignItems:"center",gap:6,padding:"0.4rem",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:8,cursor:"pointer",fontFamily:"inherit",textAlign:"left"}} onClick={()=>{useSample(a);setShowSamples(false);}}><span style={{fontSize:"1rem"}}>{a.image}</span><div><div style={{fontWeight:600,fontSize:"0.75rem"}}>{a.name}</div><div style={{fontSize:"0.62rem",color:"#94a3b8"}}>{a.genre}</div></div></button>)}

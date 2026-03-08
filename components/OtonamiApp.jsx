@@ -832,7 +832,8 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 
     {/* ── Track Analysis Section ── */}
     <div style={{background:"linear-gradient(135deg,#f5f3ff,#eff6ff)",borderRadius:14,padding:"0.9rem",marginBottom:"1rem",border:"1px solid #ddd6fe"}}>
-      <div style={{fontSize:"0.82rem",fontWeight:700,color:"#5b21b6",marginBottom:8}}>🎵 楽曲分析 → キュレーターマッチスコア</div>
+      <div style={{fontSize:"0.82rem",fontWeight:700,color:"#5b21b6",marginBottom:4}}>🎵 ピッチしたい楽曲を入力 → キュレーターマッチスコア</div>
+      <div style={{fontSize:"0.62rem",color:"#7c3aed",marginBottom:6}}>ピッチしたい楽曲の曲名とアーティスト名を入力してください。ジャンルに基づいて各キュレーターとのマッチ度を自動計算します</div>
       {/* Input row — always visible so user can re-enter */}
       <div style={{display:"flex",gap:6,marginBottom:6,alignItems:"center"}}>
         <input style={{...css.input,border:"1px solid #c4b5fd",background:"#fff",flex:1,fontSize:"0.78rem"}} placeholder="曲名" value={detectedSong} onChange={e=>setDetectedSong(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAnalyze()}/>

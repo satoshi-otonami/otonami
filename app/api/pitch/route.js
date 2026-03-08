@@ -26,6 +26,8 @@ export async function POST(request) {
     if (followers?.soundcloud) socialLines.push(`${followers.soundcloud.toLocaleString()} SoundCloud followers`);
 
     const linkLines = [];
+    // songLink is the primary pitch track URL — always listed first as the listen link
+    if (links?.songLink) linkLines.push(`Listen (Primary): ${links.songLink}`);
     if (links?.spotify) linkLines.push(`Spotify: ${links.spotify}`);
     if (links?.apple) linkLines.push(`Apple Music: ${links.apple}`);
     if (links?.youtube) linkLines.push(`YouTube: ${links.youtube}`);
@@ -62,7 +64,7 @@ ${style === 'casual' ? 'Warm, personal tone — like messaging a fellow music fa
 2. Greeting: "Hi ${curator?.name || '[Curator Name]'},"
 3. Hook: ${style === 'storytelling' ? 'Vivid sensory description of the sound' : style === 'casual' ? 'Personal connection to curator\'s work' : 'Strongest credential or unique angle'}
 4. Body: Describe the SOUND with vivid language. Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}
-5. Listen link: Include the primary streaming link
+5. Listen link: Use the "Listen (Primary)" URL from the Links section below. Write it as "Listen: <url>" or "Stream: <url>". If no primary link, use the first available streaming link.
 6. CTA: Clear ask appropriate for curator type (${curator?.type || 'blog'})
 7. Links section: List all available platform links with follower counts
 8. Sign-off: "${userName || 'OTONAMI Team'}" via OTONAMI

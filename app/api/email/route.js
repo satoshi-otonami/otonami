@@ -71,10 +71,18 @@ export async function POST(request) {
       }
     }
 
+    // ── Test mode: redirect all emails to developer ──
+    const testMode = process.env.EMAIL_TEST_MODE === 'true';
+    const sendTo = testMode ? 'satoshiy339@gmail.com' : toEmail;
+    const sendSubject = testMode ? `[TEST] ${emailSubject || 'OTONAMI Notification'}` : (emailSubject || 'OTONAMI Notification');
+    if (testMode) {
+      htmlBody = `<p style="background:#fef9c3;border:1px solid #fbbf24;padding:10px 14px;border-radius:6px;font-size:12px;color:#92400e;margin-bottom:16px;">⚠️ <strong>TEST MODE</strong> — Original recipient: ${toEmail}</p>` + htmlBody;
+    }
+
     const { data, error } = await resend.emails.send({
       from: `OTONAMI <${FROM}>`,
-      to: [toEmail],
-      subject: emailSubject || 'OTONAMI Notification',
+      to: [sendTo],
+      subject: sendSubject,
       html: htmlBody,
     });
 

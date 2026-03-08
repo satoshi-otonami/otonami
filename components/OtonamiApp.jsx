@@ -758,32 +758,26 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   const [sortByMatch, setSortByMatch] = useState(false);
   // Auto-enable match sorting when artist genre is already filled
   useEffect(() => { if (artist?.genre) setSortByMatch(true); }, [artist?.genre]);
-  const [analyzeUrl, setAnalyzeUrl] = useState("");
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [detectedSong, setDetectedSong] = useState(trackData?.songName || "");
   const [detectedArtist, setDetectedArtist] = useState(trackData?.artistName || "");
 
   const doAnalyze = async () => {
-    const url = analyzeUrl.trim();
-    if (!url) { notify("⚠️ 楽曲URLを入力してください"); return; }
+    const song = detectedSong.trim();
+    if (!song) { notify("⚠️ 曲名を入力してください"); return; }
     setAnalyzeLoading(true);
     try {
-      const result = await analyzeTrack({ trackUrl: url });
-      const song = result.songName || "";
-      const artist = result.artistName || "";
-      setDetectedSong(song);
-      setDetectedArtist(artist);
-      setTrackData(result);
+      const result = await analyzeTrack({ songName: song, artistName: detectedArtist.trim() });
+      setTrackData({ ...result, songName: song, artistName: detectedArtist.trim() });
       setSortByMatch(true);
       notify("✅ 楽曲分析完了！マッチスコアを確認してください");
     } catch (e) {
-      notify("⚠️ 楽曲分析失敗: " + e.message);
+      // Fallback: no audio features — genre+mood scoring still works
+      setTrackData({ songName: song, artistName: detectedArtist.trim(), audioFeatures: null, source: 'manual' });
+      setSortByMatch(true);
+      notify("⚠️ 音楽特徴の取得に失敗。ジャンル+ムードでスコア計算します");
     }
     setAnalyzeLoading(false);
-  };
-
-  const updateTrackMeta = () => {
-    if (trackData) setTrackData({ ...trackData, songName: detectedSong, artistName: detectedArtist });
   };
 
   // Build effective track: merge artist genre/mood into trackData (or use artist alone for initial ranking)
@@ -813,8 +807,6 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 
   const matchColor = (score) => score >= 85 ? "#16a34a" : score >= 70 ? "#2563eb" : score >= 50 ? "#7c3aed" : score >= 30 ? "#d97706" : "#dc2626";
 
-  const sourceLabel = trackData?.source === "spotify" ? "Spotify" : trackData?.source === "youtube" ? "YouTube" : trackData?.source ? trackData.source : "";
-
   return <div>
     <div style={{marginBottom:"1rem"}}>
       <h1 style={{fontSize:"1.4rem",fontWeight:800,margin:0}}>キュレーター</h1>
@@ -825,30 +817,25 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
     <div style={{background:"linear-gradient(135deg,#f5f3ff,#eff6ff)",borderRadius:14,padding:"0.9rem",marginBottom:"1rem",border:"1px solid #ddd6fe"}}>
       <div style={{fontSize:"0.82rem",fontWeight:700,color:"#5b21b6",marginBottom:6}}>🎵 楽曲分析 → キュレーターマッチスコア</div>
       {!trackData ? <>
-        <div style={{fontSize:"0.62rem",color:"#7c3aed",marginBottom:6}}>Spotify or YouTube URLを入力して分析 → 各キュレーターへのマッチ度を自動計算します</div>
-        <div style={{display:"flex",gap:6}}>
-          <input style={{...css.input,border:"1px solid #c4b5fd",background:"#fff",flex:1,fontSize:"0.78rem"}} placeholder="https://open.spotify.com/track/... or https://youtube.com/watch?v=..." value={analyzeUrl} onChange={e=>setAnalyzeUrl(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAnalyze()}/>
-          <button onClick={doAnalyze} disabled={analyzeLoading||!analyzeUrl} style={{...css.btnSm,background:analyzeLoading?"#e2e8f0":"linear-gradient(135deg,#7c3aed,#2563eb)",color:analyzeLoading?"#94a3b8":"#fff",border:"none",fontWeight:700,whiteSpace:"nowrap",flexShrink:0,opacity:!analyzeUrl?0.5:1}}>
-            {analyzeLoading ? "分析中…" : "🎵 分析"}
-          </button>
+        <div style={{fontSize:"0.62rem",color:"#7c3aed",marginBottom:6}}>曲名・アーティスト名を入力して「分析する」→ SoundNetで音楽特徴を取得し、各キュレーターへのマッチ度を計算します</div>
+        {artist?.genre && <div style={{fontSize:"0.62rem",color:"#10b981",marginBottom:6}}>✅ ジャンル設定済み（{artist.genre}）— 分析なしでもスコア表示中</div>}
+        <div style={{display:"flex",gap:6,marginBottom:6}}>
+          <input style={{...css.input,border:"1px solid #c4b5fd",background:"#fff",flex:1,fontSize:"0.78rem"}} placeholder="曲名 *" value={detectedSong} onChange={e=>setDetectedSong(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAnalyze()}/>
+          <input style={{...css.input,border:"1px solid #c4b5fd",background:"#fff",flex:1,fontSize:"0.78rem"}} placeholder="アーティスト名" value={detectedArtist} onChange={e=>setDetectedArtist(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAnalyze()}/>
         </div>
+        <button onClick={doAnalyze} disabled={analyzeLoading||!detectedSong} style={{...css.btnSm,background:analyzeLoading?"#e2e8f0":"linear-gradient(135deg,#7c3aed,#2563eb)",color:analyzeLoading?"#94a3b8":"#fff",border:"none",fontWeight:700,whiteSpace:"nowrap",opacity:!detectedSong?0.5:1}}>
+          {analyzeLoading ? "分析中…" : "🎵 分析する"}
+        </button>
       </> : <>
         {/* Analysis result card */}
         <div style={{background:"#fff",borderRadius:10,padding:"0.6rem 0.8rem",border:"1px solid #c4b5fd",marginBottom:6}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontSize:"0.62rem",color:"#7c3aed",fontWeight:600,marginBottom:3}}>
-                検出: {sourceLabel && <span style={{background:"#ede9fe",padding:"0.05rem 0.4rem",borderRadius:4,marginLeft:2}}>{sourceLabel}</span>}
+                {trackData.audioFeatures ? "✅ SoundNet分析済み" : "📊 ジャンル+ムードでスコア計算中"}
               </div>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:4}}>
-                <div style={{flex:1,minWidth:120}}>
-                  <div style={{fontSize:"0.6rem",color:"#64748b"}}>曲名</div>
-                  <input style={{...css.input,padding:"0.2rem 0.4rem",fontSize:"0.78rem",fontWeight:700}} value={detectedSong} onChange={e=>setDetectedSong(e.target.value)} onBlur={updateTrackMeta} placeholder="曲名"/>
-                </div>
-                <div style={{flex:1,minWidth:100}}>
-                  <div style={{fontSize:"0.6rem",color:"#64748b"}}>アーティスト</div>
-                  <input style={{...css.input,padding:"0.2rem 0.4rem",fontSize:"0.78rem"}} value={detectedArtist} onChange={e=>setDetectedArtist(e.target.value)} onBlur={updateTrackMeta} placeholder="アーティスト名"/>
-                </div>
+              <div style={{fontSize:"0.78rem",fontWeight:700,marginBottom:4}}>
+                {trackData.songName}{trackData.artistName && <span style={{fontWeight:400,color:"#64748b"}}> — {trackData.artistName}</span>}
               </div>
               {trackData.audioFeatures && (() => {
                 const af = trackData.audioFeatures;
@@ -864,11 +851,11 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
                 </div>;
               })()}
             </div>
-            <button onClick={()=>{setTrackData(null);setAnalyzeUrl("");setDetectedSong("");setDetectedArtist("");setSortByMatch(false);}} style={{fontSize:"0.62rem",color:"#94a3b8",background:"none",border:"1px solid #e2e8f0",borderRadius:6,padding:"0.2rem 0.4rem",cursor:"pointer",flexShrink:0}}>再分析</button>
+            <button onClick={()=>{setTrackData(null);setDetectedSong("");setDetectedArtist("");setSortByMatch(false);}} style={{fontSize:"0.62rem",color:"#94a3b8",background:"none",border:"1px solid #e2e8f0",borderRadius:6,padding:"0.2rem 0.4rem",cursor:"pointer",flexShrink:0}}>再分析</button>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <span style={{fontSize:"0.62rem",color:"#7c3aed"}}>✅ マッチスコアを計算中 — キュレーターカードに表示されます</span>
+          <span style={{fontSize:"0.62rem",color:"#7c3aed"}}>✅ マッチスコア計算中 — キュレーターカードに表示されます</span>
           <button onClick={()=>setSortByMatch(p=>!p)} style={{...css.btnSm,background:sortByMatch?"linear-gradient(135deg,#7c3aed,#2563eb)":"#f1f5f9",color:sortByMatch?"#fff":"#64748b",border:"1px solid "+(sortByMatch?"#7c3aed":"#e2e8f0"),fontWeight:600,fontSize:"0.68rem"}}>
             {sortByMatch ? "🎯 マッチ順" : "🎯 マッチ順で並べる"}
           </button>
@@ -1043,19 +1030,32 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     setCustomGenre('');
   };
 
-  const analyzeTrackFn = async () => {
-    const url = artist.songLink?.trim();
-    if (!url) { notify("⚠️ 楽曲URLを入力してください"); return; }
+  const analyzeTrackFn = async (songName, artistName) => {
+    if (!songName?.trim()) return;
     setAnalyzeLoading(true);
     try {
-      const result = await analyzeTrack({ trackUrl: url, songName: artist.songTitle, artistName: artist.nameEn || artist.name });
+      const result = await analyzeTrack({ songName: songName.trim(), artistName: (artistName || '').trim() });
       if (setTrackData) setTrackData({ ...result, genre: artist.genre, mood: artist.mood });
-      notify("✅ 楽曲分析完了！キュレーター画面でMatch Scoreを確認できます");
     } catch (e) {
-      notify("⚠️ 楽曲分析失敗: " + e.message);
+      console.warn('Track analyze:', e.message);
     }
     setAnalyzeLoading(false);
   };
+
+  // Auto-analyze when songTitle + artist name are filled (1.5s debounce)
+  const lastAnalyzedKeyRef = useRef('');
+  useEffect(() => {
+    const song = artist.songTitle?.trim();
+    const name = (artist.nameEn || artist.name)?.trim();
+    if (!song || !name) return;
+    const key = song + '|' + name;
+    if (key === lastAnalyzedKeyRef.current) return;
+    const timer = setTimeout(() => {
+      lastAnalyzedKeyRef.current = key;
+      analyzeTrackFn(song, name);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [artist.songTitle, artist.nameEn, artist.name]);
 
   // ── Auto-fetch followers from API ──
   const autoFetchFollowers = async () => {
@@ -1240,21 +1240,18 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       {/* ── Pitch Track URL ── */}
       <div style={{marginTop:8,background:"linear-gradient(135deg,#fefce8,#ecfdf5)",borderRadius:10,padding:"0.7rem",border:"1px solid #d9f99d"}}>
         <label style={{fontSize:"0.72rem",color:"#4d7c0f",fontWeight:700}}>🎵 ピッチ楽曲URL（キュレーターに聴いてもらう曲）</label>
-        <div style={{fontSize:"0.6rem",color:"#65a30d",marginBottom:4}}>Spotify, YouTube, SoundCloud等の楽曲URLを入力</div>
+        <div style={{fontSize:"0.6rem",color:"#65a30d",marginBottom:4}}>Spotify, YouTube, SoundCloud等のURLを入力 — ピッチメールに自動挿入されます</div>
         <input style={{...css.input,border:"1px solid #bef264",background:"#fefce8"}} value={artist.songLink||""} onChange={e=>setF("songLink",e.target.value)} placeholder="https://open.spotify.com/track/... or https://youtube.com/watch?v=..."/>
-        {trackData ? (
-          // Inherited from curator screen analysis
+        {/* Auto-analysis status — triggered by songTitle + artistName inputs above */}
+        {analyzeLoading && (
+          <div style={{marginTop:4,fontSize:"0.62rem",color:"#7c3aed"}}>🔍 SoundNet分析中…</div>
+        )}
+        {!analyzeLoading && trackData?.audioFeatures && (
           <div style={{marginTop:6,padding:"0.5rem",background:"#fff",borderRadius:8,border:"1px solid #bef264"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-              <span style={{fontSize:"0.62rem",fontWeight:700,color:"#4d7c0f"}}>
-                ✅ 分析済み: {trackData.songName && <strong>{trackData.songName}</strong>}{trackData.artistName && <span style={{color:"#64748b"}}> — {trackData.artistName}</span>}
-                {trackData.source && <span style={{fontSize:"0.56rem",background:"#dcfce7",color:"#15803d",padding:"0.05rem 0.35rem",borderRadius:4,marginLeft:6}}>{trackData.source}</span>}
-              </span>
-              <button onClick={analyzeTrackFn} disabled={analyzeLoading||!artist.songLink} style={{fontSize:"0.6rem",color:"#7c3aed",background:"none",border:"1px solid #c4b5fd",borderRadius:5,padding:"0.15rem 0.4rem",cursor:"pointer"}}>
-                {analyzeLoading ? "分析中…" : "再分析"}
-              </button>
+            <div style={{fontSize:"0.62rem",fontWeight:700,color:"#4d7c0f",marginBottom:4}}>
+              ✅ SoundNet分析済み: {trackData.songName && <strong>{trackData.songName}</strong>}{trackData.artistName && <span style={{color:"#64748b"}}> — {trackData.artistName}</span>}
             </div>
-            {trackData.audioFeatures && (() => {
+            {(() => {
               const af = trackData.audioFeatures;
               return <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"3px 12px"}}>
                 {[["Energy",af.energy],["Danceability",af.danceability],["Acousticness",af.acousticness],["Valence",af.valence],["Instrumental",af.instrumentalness]].map(([label,val])=>val!=null&&(
@@ -1267,14 +1264,6 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
                 {af.tempo!=null && <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:"0.58rem",color:"#64748b",width:70,flexShrink:0}}>Tempo</span><span style={{fontSize:"0.58rem",color:"#4d7c0f",fontWeight:600}}>{Math.round(af.tempo)} BPM</span></div>}
               </div>;
             })()}
-          </div>
-        ) : (
-          // Not yet analyzed
-          <div style={{marginTop:4,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            {artist.songLink && <div style={{fontSize:"0.6rem",color:"#4d7c0f"}}>✅ ピッチメールに自動挿入されます</div>}
-            <button onClick={analyzeTrackFn} disabled={analyzeLoading||!artist.songLink} style={{...css.btnSm,background:analyzeLoading?"#e2e8f0":"linear-gradient(135deg,#7c3aed,#2563eb)",color:analyzeLoading?"#94a3b8":"#fff",border:"none",fontWeight:700,whiteSpace:"nowrap",opacity:!artist.songLink?0.5:1,marginLeft:"auto"}}>
-              {analyzeLoading ? "分析中…" : "🎵 分析してMatch Scoreを表示"}
-            </button>
           </div>
         )}
       </div>

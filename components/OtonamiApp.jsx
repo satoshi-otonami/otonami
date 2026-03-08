@@ -952,6 +952,9 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 // ─── Pitch Creator (Template Engine + Social Links + Followers) ───
 function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, startAutoProgress, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft}) {
   const [pitchText, setPitchText] = useState("");
+  const [pitchJa, setPitchJa] = useState("");
+  const [pitchTab, setPitchTab] = useState("ja"); // "en" | "ja"
+  const [translating, setTranslating] = useState(false);
   const [epk, setEpk] = useState("");
   const [step, setStep] = useState(0);
   const [savedArtists, setSavedArtists] = useState([]);
@@ -1165,6 +1168,27 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     setFetchingFollowers(false);
   };
 
+  // ── Translate helpers ──
+  const translateToJa = async (enText) => {
+    setTranslating(true);
+    try {
+      const res = await fetch('/api/pitch/translate', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ text: enText }) });
+      const data = await res.json();
+      if (data.translated) setPitchJa(data.translated);
+    } catch (e) { console.warn('Translate EN→JA:', e.message); }
+    setTranslating(false);
+  };
+
+  const translateToEn = async () => {
+    setTranslating(true);
+    try {
+      const res = await fetch('/api/pitch/translate', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ text: pitchJa, reverse: true }) });
+      const data = await res.json();
+      if (data.translated) setPitchText(data.translated);
+    } catch (e) { console.warn('Translate JA→EN:', e.message); }
+    setTranslating(false);
+  };
+
   // ── AI Pitch generation (server-side Anthropic) ──
   const generateAIPitch = async () => {
     setAiLoading(true);
@@ -1174,8 +1198,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       const result = await API.generatePitch(artist, rep, pitchStyle, lnk, followers, user.name);
       setPitchText(result.pitch);
       setEpk(result.epk);
+      setPitchTab("ja");
       setStep(2);
-      notify("✅ AIピッチ生成完了！");
+      notify("✅ AIピッチ生成完了！日本語訳を生成中...");
+      translateToJa(result.pitch);
     } catch (err) {
       notify("AI生成失敗 → テンプレートで代替: " + err.message);
       generatePitch(); // Fallback to template
@@ -1187,9 +1213,13 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const generatePitch = () => {
     const lnk = {...links, songLink: getSongLink()};
     const rep = targets[0] || {name:"Curator",type:"blog",platform:"Music Platform"};
-    setPitchText(PE.generate(artist, rep, pitchStyle, lnk, user.name, followers));
+    const generated = PE.generate(artist, rep, pitchStyle, lnk, user.name, followers);
+    setPitchText(generated);
     setEpk(PE.epk(artist, lnk, followers));
+    setPitchJa("");
+    setPitchTab("ja");
     setStep(2);
+    translateToJa(generated);
   };
 
   const sendAll = async () => {
@@ -1222,7 +1252,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     notify("✅ " + newPitches.length + "件送信完了！");
   };
 
-  const resetForm = () => { setSelected([]); setStep(0); setPitchText(""); setEpk(""); };
+  const resetForm = () => { setSelected([]); setStep(0); setPitchText(""); setPitchJa(""); setEpk(""); };
   const useSample = (s) => { setArtist({name:s.name,nameEn:s.nameEn,genre:s.genre,mood:s.mood,description:s.description,songTitle:s.songTitle,songLink:s.songLink,influences:s.influences,achievements:s.achievements,sns:""}); setLinks({spotify:s.songLink||"",apple:"",youtube:"",soundcloud:"",instagram:"",twitter:"",facebook:"",website:""}); setFollowers({spotify:0,youtube:0,soundcloud:0,instagram:0,twitter:0,facebook:0}); };
 
   if (targets.length === 0 && step === 0) {
@@ -1440,11 +1470,39 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     {/* ═══ STEP 2 ═══ */}
     {step === 2 && <div>
       <h2 style={{fontSize:"1.1rem",fontWeight:800,marginBottom:"0.4rem"}}>ピッチレビュー</h2>
-      <div style={{fontSize:"0.68rem",color:"#64748b",marginBottom:6}}>✏️ 編集可。送信時は各キュレーターに自動最適化。</div>
-      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:12,padding:"0.8rem",marginBottom:"0.8rem"}}>
-        <textarea value={pitchText} onChange={e=>setPitchText(e.target.value)} style={{width:"100%",minHeight:240,border:"none",fontFamily:"inherit",fontSize:"0.82rem",lineHeight:1.6,color:"#334155",outline:"none",resize:"vertical"}}/>
+      <div style={{fontSize:"0.68rem",color:"#64748b",marginBottom:"0.7rem"}}>✏️ 編集可。送信時は英語版が使われます。</div>
+
+      {/* Tab bar */}
+      <div style={{display:"flex",gap:0,marginBottom:0,borderRadius:"10px 10px 0 0",overflow:"hidden",border:"1px solid #e2e8f0",borderBottom:"none"}}>
+        {[{id:"ja",label:"🇯🇵 日本語",sub:"確認用"},{id:"en",label:"🇬🇧 English",sub:"送信版"}].map(t => (
+          <button key={t.id} onClick={()=>setPitchTab(t.id)} style={{flex:1,padding:"0.5rem 0.4rem",background:pitchTab===t.id?"#fff":"#f8fafc",border:"none",borderRight:t.id==="ja"?"1px solid #e2e8f0":"none",cursor:"pointer",fontFamily:"inherit",textAlign:"center",borderBottom:pitchTab===t.id?"2px solid #7c3aed":"none"}}>
+            <div style={{fontSize:"0.78rem",fontWeight:700,color:pitchTab===t.id?"#5b21b6":"#64748b"}}>{t.label}</div>
+            <div style={{fontSize:"0.6rem",color:pitchTab===t.id?"#7c3aed":"#94a3b8"}}>{t.sub}</div>
+          </button>
+        ))}
       </div>
-      {epk && <details style={{marginBottom:"0.8rem"}}><summary style={{cursor:"pointer",fontSize:"0.78rem",fontWeight:600,color:"#7c3aed"}}>📄 EPK</summary><pre style={{whiteSpace:"pre-wrap",fontFamily:"inherit",fontSize:"0.74rem",background:"#f8fafc",padding:"0.7rem",borderRadius:8,marginTop:6}}>{epk}</pre></details>}
+
+      {/* English tab */}
+      {pitchTab === "en" && <div style={{background:"#fff",border:"1px solid #e2e8f0",borderTop:"none",borderRadius:"0 0 12px 12px",padding:"0.8rem",marginBottom:"0.8rem"}}>
+        <div style={{fontSize:"0.68rem",color:"#059669",fontWeight:600,marginBottom:6}}>📨 この英語版が送信されます</div>
+        <textarea value={pitchText} onChange={e=>setPitchText(e.target.value)} style={{width:"100%",minHeight:220,border:"none",fontFamily:"inherit",fontSize:"0.82rem",lineHeight:1.6,color:"#334155",outline:"none",resize:"vertical",boxSizing:"border-box"}}/>
+        <button onClick={()=>{ translateToJa(pitchText); setPitchTab("ja"); }} disabled={translating} style={{marginTop:6,padding:"0.3rem 0.8rem",background:"#f5f3ff",border:"1px solid #ddd6fe",borderRadius:8,cursor:"pointer",fontFamily:"inherit",fontSize:"0.72rem",color:"#5b21b6",fontWeight:600}}>{translating ? "反映中..." : "🔄 日本語に反映"}</button>
+        <div style={{fontSize:"0.58rem",color:"#94a3b8",marginTop:3}}>Claude AIで翻訳されます</div>
+      </div>}
+
+      {/* Japanese tab */}
+      {pitchTab === "ja" && <div style={{background:"#fff",border:"1px solid #e2e8f0",borderTop:"none",borderRadius:"0 0 12px 12px",padding:"0.8rem",marginBottom:"0.8rem"}}>
+        <div style={{fontSize:"0.68rem",color:"#94a3b8",fontWeight:600,marginBottom:6}}>👀 確認用の日本語訳です（送信されません）</div>
+        {translating && !pitchJa ? (
+          <div style={{minHeight:120,display:"flex",alignItems:"center",justifyContent:"center",color:"#94a3b8",fontSize:"0.8rem"}}>🤖 日本語訳を生成中...</div>
+        ) : (
+          <textarea value={pitchJa} onChange={e=>setPitchJa(e.target.value)} style={{width:"100%",minHeight:220,border:"none",fontFamily:"inherit",fontSize:"0.82rem",lineHeight:1.6,color:"#334155",outline:"none",resize:"vertical",boxSizing:"border-box"}}/>
+        )}
+        <button onClick={()=>{ translateToEn(); setPitchTab("en"); }} disabled={translating || !pitchJa} style={{marginTop:6,padding:"0.3rem 0.8rem",background:"#f5f3ff",border:"1px solid #ddd6fe",borderRadius:8,cursor:"pointer",fontFamily:"inherit",fontSize:"0.72rem",color:"#5b21b6",fontWeight:600}}>{translating ? "反映中..." : "🔄 英語に反映"}</button>
+        <div style={{fontSize:"0.58rem",color:"#94a3b8",marginTop:3}}>Claude AIで翻訳されます</div>
+      </div>}
+
+      {epk && <details style={{marginBottom:"0.8rem"}}><summary style={{cursor:"pointer",fontSize:"0.78rem",fontWeight:600,color:"#7c3aed"}}>📄 EPK（英語・確認用）</summary><pre style={{whiteSpace:"pre-wrap",fontFamily:"inherit",fontSize:"0.74rem",background:"#f8fafc",padding:"0.7rem",borderRadius:8,marginTop:6}}>{epk}</pre></details>}
       <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(1)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} onClick={()=>setStep(3)}>送信へ →</button><button style={css.btnGhost} onClick={generatePitch}>🔄</button></div>
     </div>}
 

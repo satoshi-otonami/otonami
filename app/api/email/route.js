@@ -7,7 +7,8 @@ const FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
 export async function POST(request) {
   try {
-    const { type, pitchId, toEmail, toName, subject, pitchText, epk, artistName, curatorName } = await request.json();
+    const { type, pitchId, toEmail: _toEmail, toName, subject, pitchText, epk, artistName, curatorName } = await request.json();
+    let toEmail = _toEmail;
 
     if (!toEmail || !type) {
       return NextResponse.json({ error: 'toEmail and type required' }, { status: 400 });

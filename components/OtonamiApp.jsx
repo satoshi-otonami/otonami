@@ -763,15 +763,26 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   const [detectedArtist, setDetectedArtist] = useState(trackData?.artistName || "");
   const [analyzeUrl, setAnalyzeUrl] = useState("");
 
+  const resolveGenreMood = (artistName) => {
+    if (artist?.genre) return { genre: artist.genre, mood: artist.mood || '' };
+    const demo = DEMO_ARTISTS.find(d =>
+      d.name.toLowerCase() === (artistName||'').toLowerCase() ||
+      d.nameEn?.toLowerCase() === (artistName||'').toLowerCase()
+    );
+    if (demo) return { genre: demo.genre, mood: demo.mood || '' };
+    return { genre: '', mood: '' };
+  };
+
   const runAnalyze = async (song, artistName) => {
     setAnalyzeLoading(true);
+    const fallback = resolveGenreMood(artistName);
     try {
       const result = await analyzeTrack({ songName: song, artistName });
-      setTrackData({ ...result, songName: song, artistName, notInDb: false, listeningUrl: analyzeUrl.trim() || null });
+      setTrackData({ ...result, songName: song, artistName, notInDb: false, listeningUrl: analyzeUrl.trim() || null, genre: result.genre || fallback.genre, mood: result.mood || fallback.mood });
       setSortByMatch(true);
     } catch (e) {
       // Not in SoundNet DB — fall back to genre+mood scoring
-      setTrackData({ songName: song, artistName, audioFeatures: null, notInDb: true, source: 'manual', listeningUrl: analyzeUrl.trim() || null });
+      setTrackData({ songName: song, artistName, audioFeatures: null, notInDb: true, source: 'manual', listeningUrl: analyzeUrl.trim() || null, genre: fallback.genre, mood: fallback.mood });
       setSortByMatch(true);
     }
     setAnalyzeLoading(false);
@@ -844,20 +855,30 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
         </button>
       </div>
       <input style={{...css.input,border:"1px solid #c4b5fd",background:"#fff",fontSize:"0.78rem",marginBottom:6}} placeholder="楽曲URL（YouTube / Spotify）— キュレーターへの試聴リンクとして保存" value={analyzeUrl} onChange={e=>setAnalyzeUrl(e.target.value)}/>
+      {trackData && !trackData.audioFeatures && !trackData.genre && !artist?.genre && (
+        <div style={{display:"flex",gap:6,marginBottom:6,alignItems:"center"}}>
+          <input style={{...css.input,border:"1px solid #f59e0b",background:"#fffbeb",flex:1,fontSize:"0.78rem"}} placeholder="ジャンル（例: Jazz, Funk, Latin）" onKeyDown={e=>{
+            if(e.key==="Enter"&&e.target.value.trim()){
+              setTrackData(prev=>({...prev, genre:e.target.value.trim()}));
+            }
+          }}/>
+          <span style={{fontSize:"0.62rem",color:"#92400e",flexShrink:0}}>Enter で確定</span>
+        </div>
+      )}
       {/* Result line */}
       {analyzeLoading && <div style={{fontSize:"0.72rem",color:"#7c3aed"}}>🔍 SoundNet検索中…</div>}
       {!analyzeLoading && trackData && (() => {
         const af = trackData.audioFeatures;
         const level = v => v >= 0.67 ? '高' : v >= 0.33 ? '中' : '低';
-        const genres = artist?.genre || '';
+        const genres = trackData.genre || artist?.genre || '';
         return <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
           {af ? (
             <span style={{fontSize:"0.72rem",color:"#15803d",fontWeight:600}}>
               ✅ SoundNet分析完了: {af.tempo!=null && `Tempo ${Math.round(af.tempo)}BPM`}{af.energy!=null && ` / Energy ${level(af.energy)}`}{af.danceability!=null && ` / Danceability ${level(af.danceability)}`}
             </span>
           ) : (
-            <span style={{fontSize:"0.72rem",color:"#b45309",fontWeight:600}}>
-              ⚠️ DBに未登録 — {genres ? `ジャンル(${genres})でスコア計算中` : 'ジャンル+ムードでスコア計算中'}
+            <span style={{fontSize:"0.72rem",color:genres?"#15803d":"#b45309",fontWeight:600}}>
+              {genres ? `✅ ジャンル(${genres})でマッチスコア計算中` : '⚠️ DBに未登録 — ピッチ作成画面でジャンルを入力するとマッチスコアが計算されます'}
             </span>
           )}
           <div style={{display:"flex",gap:6,flexShrink:0}}>

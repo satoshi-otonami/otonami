@@ -70,21 +70,26 @@ export async function PATCH(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { pitchId, status } = await request.json();
+    const { pitchId, status, feedback, rating } = await request.json();
 
-    if (!pitchId || !['accepted', 'rejected'].includes(status)) {
+    if (!pitchId || !['accepted', 'rejected', 'feedback', 'sent'].includes(status)) {
       return NextResponse.json(
-        { error: 'pitchId and status ("accepted" or "rejected") are required' },
+        { error: 'pitchId and valid status required' },
         { status: 400 }
       );
     }
 
     const db = getServiceSupabase();
 
+    const updateData = { status };
+    if (feedback != null) updateData.feedback = feedback;
+    if (rating != null) updateData.rating = rating;
+    if (feedback != null || rating != null) updateData.feedback_at = new Date().toISOString();
+
     // curator_id が一致するピッチのみ更新（他のキュレーターのピッチを変更不可）
     const { data, error } = await db
       .from('pitches')
-      .update({ status })
+      .update(updateData)
       .eq('id', pitchId)
       .eq('curator_id', curator.id)
       .select('id, status')

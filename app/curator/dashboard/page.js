@@ -22,6 +22,8 @@ export default function CuratorDashboard() {
   const [authError, setAuthError] = useState('');
   const [expanded, setExpanded] = useState(null);
   const [updating, setUpdating] = useState(null); // pitchId being updated
+  const [feedbackDraft, setFeedbackDraft] = useState({}); // { [pitchId]: { text, rating } }
+  const [toast, setToast] = useState('');
 
   // ── 認証 + 初期データ取得 ──
   useEffect(() => {
@@ -72,26 +74,41 @@ export default function CuratorDashboard() {
       .then(d => setPitches(d.pitches || []));
   }, [filter, curator]);
 
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 3000);
+  };
+
   const handleAction = async (pitchId, status) => {
     const token = localStorage.getItem('curator_token');
+    const draft = feedbackDraft[pitchId] || {};
     setUpdating(pitchId);
     try {
+      const body = { pitchId, status };
+      if (draft.text?.trim()) body.feedback = draft.text.trim();
+      if (draft.rating) body.rating = draft.rating;
       const res = await fetch('/api/curator/dashboard', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ pitchId, status }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
       });
       if (!res.ok) return;
-      setPitches(prev =>
-        prev.map(p => p.id === pitchId ? { ...p, status } : p)
-      );
+      setPitches(prev => prev.map(p => p.id === pitchId ? { ...p, status, feedback: body.feedback, rating: body.rating } : p));
+      setFeedbackDraft(prev => { const n = {...prev}; delete n[pitchId]; return n; });
+      showToast('✅ Feedback submitted');
     } finally {
       setUpdating(null);
     }
   };
+
+  const handleFeedbackOnly = async (pitchId) => {
+    const draft = feedbackDraft[pitchId] || {};
+    if (!draft.text?.trim() && !draft.rating) return;
+    await handleAction(pitchId, 'feedback');
+  };
+
+  const setDraft = (pitchId, key, val) =>
+    setFeedbackDraft(prev => ({ ...prev, [pitchId]: { ...(prev[pitchId] || {}), [key]: val } }));
 
   const handleLogout = () => {
     localStorage.removeItem('curator_token');
@@ -150,8 +167,28 @@ export default function CuratorDashboard() {
     rejected: pitches.filter(p => p.status === 'rejected').length,
   };
 
+  // Render pitch body with clickable URLs
+  const renderBody = (text) => {
+    if (!text) return null;
+    const parts = text.split(/(https?:\/\/[^\s]+)/g);
+    return parts.map((part, i) =>
+      /^https?:\/\//.test(part)
+        ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: '#a78bfa', wordBreak: 'break-all' }}>{part}</a>
+        : part
+    );
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a18', padding: '0 0 80px' }}>
+      {/* ── Toast ── */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          background: '#1a3a2a', border: '1px solid #4ade80', borderRadius: 10,
+          padding: '10px 22px', color: '#4ade80', fontWeight: 700, fontSize: 14,
+          zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+        }}>{toast}</div>
+      )}
 
       {/* ── Header ── */}
       <div style={{
@@ -367,31 +404,122 @@ export default function CuratorDashboard() {
                   </div>
                 </div>
 
-                {/* ── ピッチ本文（展開時） ── */}
+                {/* ── ピッチ本文 + フィードバックUI（展開時） ── */}
                 {isExpanded && (
-                  <div style={{
-                    marginTop: 18, paddingTop: 18, borderTop: '1px solid #1e1e3a',
-                  }}>
+                  <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid #1e1e3a' }}>
+                    {/* Pitch body */}
                     {pitch.body ? (
                       <pre style={{
                         color: '#ccc', fontSize: 13, lineHeight: 1.8,
                         whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                        margin: 0, background: '#0d0d1f', borderRadius: 10,
+                        margin: '0 0 20px', background: '#0d0d1f', borderRadius: 10,
                         padding: '16px 18px', border: '1px solid #1e1e3a',
                       }}>
-                        {pitch.body}
+                        {renderBody(pitch.body)}
                       </pre>
                     ) : (
                       <p style={{
                         color: '#555', fontSize: 13, textAlign: 'center',
                         padding: '20px', background: '#0d0d1f', borderRadius: 10,
-                        border: '1px solid #1e1e3a', margin: 0,
+                        border: '1px solid #1e1e3a', margin: '0 0 20px',
                       }}>
                         Pitch content not stored for this entry.<br />
                         <span style={{ fontSize: 11 }}>このピッチの本文データは保存されていません。</span>
                       </p>
                     )}
+
+                    {/* ── Feedback UI ── */}
+                    <div style={{
+                      background: '#0d0d1f', border: '1px solid #1e1e3a',
+                      borderRadius: 12, padding: '16px 18px',
+                    }}>
+                      <div style={{ color: '#888', fontSize: 12, fontWeight: 700, marginBottom: 12 }}>
+                        FEEDBACK / フィードバック
+                      </div>
+
+                      {/* Star rating */}
+                      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                        {[1,2,3,4,5].map(star => (
+                          <button
+                            key={star}
+                            onClick={() => setDraft(pitch.id, 'rating', star === (feedbackDraft[pitch.id]?.rating) ? 0 : star)}
+                            style={{
+                              fontSize: 22, background: 'none', border: 'none',
+                              cursor: 'pointer', padding: '2px 3px',
+                              color: star <= (feedbackDraft[pitch.id]?.rating || 0) ? '#facc15' : '#333',
+                              filter: star <= (feedbackDraft[pitch.id]?.rating || 0) ? 'none' : 'grayscale(1)',
+                            }}
+                          >★</button>
+                        ))}
+                        {feedbackDraft[pitch.id]?.rating > 0 && (
+                          <span style={{ color: '#facc15', fontSize: 12, alignSelf: 'center' }}>
+                            {feedbackDraft[pitch.id].rating}/5
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Feedback textarea */}
+                      <textarea
+                        value={feedbackDraft[pitch.id]?.text || ''}
+                        onChange={e => setDraft(pitch.id, 'text', e.target.value)}
+                        placeholder="Share your thoughts on this track..."
+                        rows={4}
+                        style={{
+                          width: '100%', background: '#0a0a18', border: '1px solid #2a2a4a',
+                          borderRadius: 8, color: '#ccc', fontSize: 13, lineHeight: 1.6,
+                          padding: '10px 12px', resize: 'vertical', fontFamily: 'inherit',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+
+                      {/* Action buttons with feedback */}
+                      <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                        {pitch.status === 'sent' || pitch.status === 'feedback' ? (
+                          <>
+                            <button
+                              onClick={() => handleAction(pitch.id, 'accepted')}
+                              disabled={isBusy}
+                              style={{
+                                padding: '8px 16px', border: '1px solid rgba(74,222,128,0.3)',
+                                borderRadius: 8, background: 'rgba(74,222,128,0.15)',
+                                color: '#4ade80', fontSize: 12, fontWeight: 700,
+                                cursor: isBusy ? 'not-allowed' : 'pointer',
+                              }}
+                            >{isBusy ? '...' : 'Accept / 承認'}</button>
+                            <button
+                              onClick={() => handleAction(pitch.id, 'rejected')}
+                              disabled={isBusy}
+                              style={{
+                                padding: '8px 16px', border: '1px solid rgba(248,113,113,0.3)',
+                                borderRadius: 8, background: 'rgba(248,113,113,0.1)',
+                                color: '#f87171', fontSize: 12, fontWeight: 700,
+                                cursor: isBusy ? 'not-allowed' : 'pointer',
+                              }}
+                            >{isBusy ? '...' : 'Reject / 却下'}</button>
+                          </>
+                        ) : null}
+                        <button
+                          onClick={() => handleFeedbackOnly(pitch.id)}
+                          disabled={isBusy || (!feedbackDraft[pitch.id]?.text?.trim() && !feedbackDraft[pitch.id]?.rating)}
+                          style={{
+                            padding: '8px 16px', border: '1px solid #2a2a4a',
+                            borderRadius: 8, background: 'rgba(124,58,237,0.15)',
+                            color: '#a78bfa', fontSize: 12, fontWeight: 700,
+                            cursor: 'pointer', opacity: (!feedbackDraft[pitch.id]?.text?.trim() && !feedbackDraft[pitch.id]?.rating) ? 0.4 : 1,
+                          }}
+                        >Submit Feedback</button>
+                      </div>
+
+                      {/* Existing feedback display */}
+                      {pitch.feedback && (
+                        <div style={{ marginTop: 14, padding: '10px 14px', background: '#131328', borderRadius: 8, border: '1px solid #1e1e3a' }}>
+                          <div style={{ fontSize: 11, color: '#555', marginBottom: 4 }}>Previous feedback / 過去のフィードバック</div>
+                          <div style={{ color: '#aaa', fontSize: 13 }}>{pitch.feedback}</div>
+                          {pitch.rating && <div style={{ color: '#facc15', fontSize: 13, marginTop: 4 }}>{'★'.repeat(pitch.rating)}{'☆'.repeat(5 - pitch.rating)}</div>}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

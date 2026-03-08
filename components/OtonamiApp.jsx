@@ -11,7 +11,8 @@ import { useState, useEffect, useRef, useMemo } from "react";
 
 // ─── Constants ───
 const GENRES = ["Jazz","Fusion","Funk","City Pop","Lo-Fi","Electronic","Indie Rock","Alt Rock","Pop","Math Rock","Shoegaze","J-Rock","Hip-Hop","R&B","Experimental","Noise","Metal","Post Rock","Dream Pop","Neo-Soul","Soul","Instrumental","Prog","Punk","Visual Kei","World"];
-const CURATOR_TYPES = [{id:"playlist",label:"Playlist Curator",icon:"🎧"},{id:"blog",label:"Blog / Media",icon:"📝"},{id:"radio",label:"Radio / Podcast",icon:"📻"},{id:"label",label:"Record Label",icon:"💿"},{id:"booker",label:"Booker / Venue",icon:"🎤"},{id:"advisor",label:"Advisor / Mentor",icon:"🎓"}];
+const CURATOR_TYPES = [{id:"playlist",label:"プレイリスト",icon:"🎧"},{id:"label",label:"レコードレーベル",icon:"💿"},{id:"management",label:"マネジメント",icon:"🤝"},{id:"publisher",label:"出版社・パブリッシャー",icon:"📚"},{id:"blog",label:"ブログ・メディア",icon:"📝"},{id:"radio",label:"ラジオ・ポッドキャスト",icon:"📻"}];
+const ARTIST_GENRES = ["Jazz","Funk","Latin","Soul","R&B","Pop","Indie Rock","Alt Rock","Electronic","Ambient","Hip-Hop","Classical","Folk","Country","Metal","Punk","J-Pop","J-Rock","K-Pop","Anime","Experimental","World Music","Reggae","Blues"];
 const BADGES = {high_answer:"🟢 高回答率",high_accept:"⭐ 高採用率",selective:"💎 厳選",quality_fb:"📖 良質FB",verified:"✅ 認証済"};
 
 // ─── Seed Curators (pre-registered, real-data based) ───
@@ -22,7 +23,7 @@ const SEED_CURATORS = [
   {id:"c_aind",name:"A-indie (yabori)",email:"belong.media@gmail.com",type:"blog",platform:"A-indie Media",platformUrl:"https://a-indie.com/",genres:["Indie Rock","J-Pop","Alternative","Experimental"],bio:"BELONG Media運営。2012年開始の日英バイリンガル・インディー音楽メディア。",audience:6000,region:"JP/Global",avatar:"🎸",offers:["Review","Feature","Interview"],badges:["verified","high_answer"],stats:{received:0,responded:0,accepted:0},joined:"2026-02-01",creditCost:2,audioProfile:{energy:0.65,danceability:0.50,acousticness:0.40,instrumentalness:0.35,valence:0.50},preferredMoods:["Dreamy","Energetic","Nostalgic","Indie"]},
   {id:"c_mrk",name:"mMarukudeibu",email:"marukudeibu@spotify.com",type:"playlist",platform:"Japanese Jazz Fusion (Spotify)",platformUrl:"https://open.spotify.com/playlist/3MzC0teQrDwCkyUJhd3YBd",genres:["Jazz","Fusion","Funk","City Pop"],bio:"Spotify最大級の日本ジャズフュージョンプレイリスト。34,800+ saves。",audience:34800,region:"Global",avatar:"🎷",offers:["Playlist Add"],badges:["high_accept"],stats:{received:0,responded:0,accepted:0},joined:"2026-02-05",creditCost:3,audioProfile:{energy:0.65,danceability:0.75,acousticness:0.45,instrumentalness:0.60,valence:0.70},preferredMoods:["Groovy","Sophisticated","Smooth","Energetic"]},
   {id:"c_jame",name:"JaME World",email:"info@jame-world.com",type:"blog",platform:"JaME - Japanese Music Entertainment",platformUrl:"https://jame-world.com/en",genres:["J-Pop","J-Rock","Visual Kei","Anime"],bio:"多言語対応の日本音楽エンターテイメントメディア。インタビュー、レビュー、ニュース。",audience:16400,region:"Global",avatar:"🌐",offers:["Review","Interview","News Feature"],badges:["high_answer"],stats:{received:0,responded:0,accepted:0},joined:"2026-02-10",creditCost:3,audioProfile:{energy:0.72,danceability:0.55,acousticness:0.30,instrumentalness:0.25,valence:0.55},preferredMoods:["Energetic","Dramatic","Heavy","Indie"]},
-  {id:"c_yama",name:"Yamashita Satoshi",email:"yamashita@otonami.jp",type:"playlist",platform:"Jazz & Funk Japan (Spotify)",platformUrl:"https://open.spotify.com/",genres:["Jazz","Funk","Latin","Soul","Fusion"],bio:"東京のジャズ・ファンク・ラテン専門プレイリストキュレーター。SXSW常連アーティストを中心に厳選。",audience:8500,region:"JP/Global",avatar:"🎺",offers:["Playlist Add","Feature"],badges:["high_accept","verified"],stats:{received:0,responded:0,accepted:0},joined:"2026-03-01",creditCost:2,audioProfile:{energy:0.70,danceability:0.78,acousticness:0.40,instrumentalness:0.55,valence:0.72},preferredMoods:["Groovy","Energetic","Latin","Soulful"]},
+  {id:"c_yama",name:"Yamashita Satoshi",email:"yamashita@otonami.jp",type:"label",platform:"Jazz & Funk Japan (Spotify)",platformUrl:"https://open.spotify.com/",genres:["Jazz","Funk","Latin","Soul","Fusion"],bio:"東京のジャズ・ファンク・ラテン専門プレイリストキュレーター。SXSW常連アーティストを中心に厳選。",audience:8500,region:"JP/Global",avatar:"🎺",offers:["Playlist Add","Feature"],badges:["high_accept","verified"],stats:{received:0,responded:0,accepted:0},joined:"2026-03-01",creditCost:2,audioProfile:{energy:0.70,danceability:0.78,acousticness:0.40,instrumentalness:0.55,valence:0.72},preferredMoods:["Groovy","Energetic","Latin","Soulful"]},
 ];
 
 // ─── Demo Artists ───
@@ -1019,6 +1020,19 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const [aiLoading, setAiLoading] = useState(false);
   const [fetchingFollowers, setFetchingFollowers] = useState(false);
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
+  const [customGenre, setCustomGenre] = useState("");
+  const parseGenreTags = (str) => (str||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const toggleGenreTag = (tag) => {
+    const curr = parseGenreTags(artist.genre);
+    setF('genre', (curr.includes(tag) ? curr.filter(t=>t!==tag) : [...curr, tag]).join(', '));
+  };
+  const applyCustomGenre = () => {
+    const g = customGenre.trim();
+    if (!g) return;
+    const curr = parseGenreTags(artist.genre);
+    if (!curr.includes(g)) setF('genre', [...curr, g].join(', '));
+    setCustomGenre('');
+  };
 
   const analyzeTrackFn = async () => {
     const url = artist.songLink?.trim();
@@ -1197,10 +1211,21 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
         <div><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>アーティスト名 *</label><input style={css.input} value={artist.name} onChange={e=>setF("name",e.target.value)} placeholder="ROUTE14band"/></div>
         <div><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>English Name *</label><input style={css.input} value={artist.nameEn} onChange={e=>setF("nameEn",e.target.value)} placeholder="ROUTE14band"/></div>
-        <div><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>ジャンル *</label><input style={css.input} value={artist.genre} onChange={e=>setF("genre",e.target.value)} placeholder="Jazz, Funk, Latin"/></div>
         <div><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>ムード</label><input style={css.input} value={artist.mood} onChange={e=>setF("mood",e.target.value)} placeholder="Energetic, Groovy"/></div>
         <div><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>代表曲</label><input style={css.input} value={artist.songTitle} onChange={e=>setF("songTitle",e.target.value)} placeholder="Crossroad"/></div>
-        <div><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>類似アーティスト</label><input style={css.input} value={artist.influences} onChange={e=>setF("influences",e.target.value)} placeholder="Snarky Puppy, WONK"/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>類似アーティスト</label><input style={css.input} value={artist.influences} onChange={e=>setF("influences",e.target.value)} placeholder="Snarky Puppy, WONK"/></div>
+      </div>
+      {/* ── Genre Tag Selector ── */}
+      <div style={{marginTop:4}}>
+        <label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>ジャンル *（複数選択可）</label>
+        <div style={{display:"flex",flexWrap:"wrap",gap:4,margin:"5px 0 6px"}}>
+          {ARTIST_GENRES.map(g => {
+            const sel = parseGenreTags(artist.genre).includes(g);
+            return <button key={g} type="button" onClick={()=>toggleGenreTag(g)} style={{padding:"0.18rem 0.5rem",borderRadius:6,fontSize:"0.7rem",cursor:"pointer",fontFamily:"inherit",background:sel?"linear-gradient(135deg,#7c3aed,#2563eb)":"#f1f5f9",color:sel?"#fff":"#64748b",border:sel?"none":"1px solid #e2e8f0",fontWeight:sel?600:400}}>{g}</button>;
+          })}
+        </div>
+        {artist.genre && <div style={{fontSize:"0.62rem",color:"#7c3aed",marginBottom:4}}>選択中: {artist.genre}</div>}
+        <input style={{...css.input,fontSize:"0.78rem",marginBottom:0}} value={customGenre} onChange={e=>setCustomGenre(e.target.value)} onBlur={applyCustomGenre} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();applyCustomGenre();}}} placeholder="カスタムジャンルを追加（Enterで確定）"/>
       </div>
 
       {/* ── Pitch Track URL ── */}
@@ -1676,11 +1701,128 @@ function CreditShop({user, credits, saveCredits, notify, setPage}) {
   </div>;
 }
 
+// ─── Pitch Detail Modal ───
+function PitchDetailModal({pitch, curators, savePitches, allPitches, onClose, notify}) {
+  const [activeTab, setActiveTab] = useState('feedback');
+  const [newMessage, setNewMessage] = useState('');
+  const [placementPlatform, setPlacementPlatform] = useState(pitch?.placementPlatform || '');
+  const [placementUrl, setPlacementUrl] = useState(pitch?.placementUrl || '');
+  const [placementDate, setPlacementDate] = useState(pitch?.placementDate || '');
+  const [negotiationStatus, setNegotiationStatus] = useState(pitch?.negotiationStatus || 'none');
+  if (!pitch) return null;
+
+  const curator = curators?.find(c => c.id === pitch.curatorId);
+  const isLabelType = ['label','management','publisher'].includes(curator?.type);
+  const messages = pitch.messages || [];
+
+  const sendMessage = async () => {
+    if (!newMessage.trim()) return;
+    const msg = {from:'artist', text:newMessage.trim(), timestamp:new Date().toISOString()};
+    const updated = (allPitches||[]).map(p => p.id===pitch.id ? {...p, messages:[...messages, msg]} : p);
+    await savePitches(updated);
+    setNewMessage('');
+    notify('💬 メッセージを送信しました');
+  };
+
+  const savePlacement = async () => {
+    const updated = (allPitches||[]).map(p => p.id===pitch.id ? {...p, placementPlatform, placementUrl, placementDate, negotiationStatus} : p);
+    await savePitches(updated);
+    notify('✅ 保存しました');
+  };
+
+  const tabs = [
+    ['feedback','💬 フィードバック'],
+    ['placement','📍 掲載情報'],
+    ['messages',`✉️ メッセージ${messages.length>0?' ('+messages.length+')':''}`],
+    ...(isLabelType ? [['deal','🤝 契約交渉']] : []),
+  ];
+
+  return <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}} onClick={onClose}>
+    <div style={{background:'#fff',borderRadius:20,width:'100%',maxWidth:580,maxHeight:'90vh',overflow:'hidden',display:'flex',flexDirection:'column'}} onClick={e=>e.stopPropagation()}>
+      {/* Header */}
+      <div style={{padding:'1rem 1.4rem',borderBottom:'1px solid #f1f5f9',display:'flex',justifyContent:'space-between',alignItems:'center',background:'linear-gradient(135deg,#f5f3ff,#ecfeff)'}}>
+        <div>
+          <div style={{fontWeight:700,fontSize:'0.95rem'}}>{pitch.curatorName}</div>
+          <div style={{fontSize:'0.72rem',color:'#64748b'}}>"{pitch.songTitle}" · {pitch.artistName}</div>
+        </div>
+        <button onClick={onClose} style={{background:'none',border:'1px solid #e2e8f0',borderRadius:8,padding:'0.3rem 0.6rem',cursor:'pointer',fontSize:'0.78rem',fontFamily:'inherit',color:'#64748b'}}>✕</button>
+      </div>
+      {/* Tabs */}
+      <div style={{display:'flex',borderBottom:'1px solid #f1f5f9',padding:'0 1rem',overflowX:'auto'}}>
+        {tabs.map(([id,label]) => <button key={id} onClick={()=>setActiveTab(id)} style={{padding:'0.65rem 0.9rem',background:'none',border:'none',borderBottom:activeTab===id?'2px solid #7c3aed':'2px solid transparent',color:activeTab===id?'#7c3aed':'#64748b',fontSize:'0.75rem',fontWeight:activeTab===id?700:400,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>{label}</button>)}
+      </div>
+      {/* Body */}
+      <div style={{flex:1,overflowY:'auto',padding:'1.2rem 1.4rem'}}>
+        {activeTab==='feedback' && <div>
+          {pitch.feedback ? <>
+            <div style={{fontWeight:700,fontSize:'0.82rem',marginBottom:8,color:'#334155'}}>{pitch.curatorName}からのフィードバック</div>
+            <div style={{background:'#f8fafc',borderRadius:12,padding:'1rem',fontSize:'0.85rem',lineHeight:1.7,color:'#475569',marginBottom:10}}>{pitch.feedback}</div>
+            {pitch.rating>0 && <div style={{fontSize:'0.85rem',color:'#f59e0b',marginBottom:10}}>{"★".repeat(pitch.rating)}{"☆".repeat(5-pitch.rating)}</div>}
+            {pitch.actionType && <div style={{background:'#ecfdf5',borderRadius:10,padding:'0.8rem',border:'1px solid #bbf7d0',fontSize:'0.82rem',color:'#16a34a',fontWeight:600}}>
+              {ACTION_TYPES.find(a=>a.id===pitch.actionType)?.icon} {ACTION_TYPES.find(a=>a.id===pitch.actionType)?.label}
+              {pitch.actionNote && <div style={{fontWeight:400,color:'#15803d',marginTop:4}}>{pitch.actionNote}</div>}
+            </div>}
+          </> : <div style={{textAlign:'center',padding:'2.5rem',color:'#94a3b8',fontSize:'0.85rem'}}>まだフィードバックがありません<br/>キュレーターのレビュー待ちです</div>}
+        </div>}
+
+        {activeTab==='placement' && <div>
+          <div style={{fontWeight:700,fontSize:'0.82rem',marginBottom:12}}>📍 掲載情報を記録</div>
+          <label style={{fontSize:'0.7rem',color:'#64748b',fontWeight:600}}>掲載プラットフォーム</label>
+          <select value={placementPlatform} onChange={e=>setPlacementPlatform(e.target.value)} style={{...css.input}}>
+            <option value="">選択してください</option>
+            {[['youtube','YouTube'],['spotify','Spotify Playlist'],['blog','ブログ記事'],['apple_music','Apple Music'],['instagram','Instagram'],['other','その他']].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+          <label style={{fontSize:'0.7rem',color:'#64748b',fontWeight:600}}>掲載URL</label>
+          <input value={placementUrl} onChange={e=>setPlacementUrl(e.target.value)} placeholder="https://..." style={{...css.input}}/>
+          <label style={{fontSize:'0.7rem',color:'#64748b',fontWeight:600}}>掲載日</label>
+          <input type="date" value={placementDate} onChange={e=>setPlacementDate(e.target.value)} style={{...css.input}}/>
+          <button onClick={savePlacement} style={{...css.btnPrimary,width:'100%',marginTop:4}}>💾 保存</button>
+          {pitch.placementUrl && <div style={{marginTop:10,padding:'0.7rem',background:'#f0fdf4',borderRadius:10,border:'1px solid #bbf7d0',fontSize:'0.78rem'}}>
+            <div style={{fontWeight:600,color:'#16a34a',marginBottom:4}}>✅ 掲載済み</div>
+            <a href={pitch.placementUrl} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb',fontSize:'0.75rem'}}>{pitch.placementUrl}</a>
+          </div>}
+        </div>}
+
+        {activeTab==='messages' && <div>
+          <div style={{fontWeight:700,fontSize:'0.82rem',marginBottom:10}}>メッセージスレッド</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:14,minHeight:120,maxHeight:280,overflowY:'auto',padding:'0.5rem',background:'#f8fafc',borderRadius:12,border:'1px solid #f1f5f9'}}>
+            {messages.length===0 && <div style={{textAlign:'center',color:'#94a3b8',fontSize:'0.78rem',padding:'2rem 0'}}>まだメッセージがありません</div>}
+            {messages.map((m,i) => <div key={i} style={{alignSelf:m.from==='artist'?'flex-end':'flex-start',maxWidth:'82%',background:m.from==='artist'?'linear-gradient(135deg,#7c3aed,#2563eb)':'#fff',color:m.from==='artist'?'#fff':'#334155',borderRadius:12,padding:'0.55rem 0.85rem',fontSize:'0.8rem',border:m.from==='artist'?'none':'1px solid #e2e8f0'}}>
+              <div style={{fontSize:'0.6rem',opacity:0.65,marginBottom:2}}>{m.from==='artist'?'あなた':pitch.curatorName} · {new Date(m.timestamp).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+              <div>{m.text}</div>
+            </div>)}
+          </div>
+          <div style={{display:'flex',gap:6}}>
+            <input value={newMessage} onChange={e=>setNewMessage(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}} placeholder="メッセージを入力… (Enterで送信)" style={{...css.input,marginBottom:0,flex:1,fontSize:'0.82rem'}}/>
+            <button onClick={sendMessage} style={{...css.btnPrimary,flexShrink:0,padding:'0.6rem 0.9rem',fontSize:'0.82rem'}}>送信</button>
+          </div>
+        </div>}
+
+        {activeTab==='deal' && <div>
+          <div style={{fontWeight:700,fontSize:'0.82rem',marginBottom:12}}>🤝 契約交渉ステータス</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:16}}>
+            {[['none','交渉なし','#94a3b8'],['in_progress','交渉中','#f59e0b'],['deal_offered','契約提示あり','#3b82f6'],['signed','契約締結','#10b981']].map(([v,l,color]) =>
+              <button key={v} onClick={()=>setNegotiationStatus(v)} style={{padding:'0.8rem 1rem',borderRadius:12,border:negotiationStatus===v?`2px solid ${color}`:'1px solid #e2e8f0',background:negotiationStatus===v?color+'18':'#fff',cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',gap:10,textAlign:'left'}}>
+                <div style={{width:12,height:12,borderRadius:'50%',background:color,flexShrink:0}}/>
+                <span style={{fontWeight:negotiationStatus===v?700:400,color:negotiationStatus===v?color:'#334155',fontSize:'0.85rem'}}>{l}</span>
+                {negotiationStatus===v && <span style={{marginLeft:'auto',fontSize:'0.7rem',color}}>✓ 選択中</span>}
+              </button>
+            )}
+          </div>
+          <button onClick={savePlacement} style={{...css.btnPrimary,width:'100%'}}>💾 保存</button>
+        </div>}
+      </div>
+    </div>
+  </div>;
+}
+
 // ─── Tracking ───
 function Tracking({pitches, curators, notify, savePitches, allPitches}) {
   const [expanded, setExpanded] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
+  const [detailPitchId, setDetailPitchId] = useState(null);
+  const detailPitch = detailPitchId ? (allPitches||pitches).find(p=>p.id===detailPitchId) : null;
   const statusMap = {
     sent:{label:"送信済",color:"#94a3b8",bg:"#f8fafc",icon:"📤",step:1},
     opened:{label:"開封済",color:"#3b82f6",bg:"#eff6ff",icon:"👁",step:2},
@@ -1733,7 +1875,10 @@ function Tracking({pitches, curators, notify, savePitches, allPitches}) {
               <div style={{fontWeight:700,fontSize:"0.88rem"}}>{p.curatorName}</div>
               <div style={{fontSize:"0.72rem",color:"#94a3b8"}}>{p.curatorPlatform} · {p.artistName} "{p.songTitle}"</div>
             </div>
-            <div style={{padding:"0.2rem 0.6rem",borderRadius:8,background:s.bg,color:s.color,fontSize:"0.72rem",fontWeight:600}}>{s.label}</div>
+            <div style={{display:"flex",gap:5,alignItems:"center"}}>
+              <div style={{padding:"0.2rem 0.6rem",borderRadius:8,background:s.bg,color:s.color,fontSize:"0.72rem",fontWeight:600}}>{s.label}</div>
+              <button onClick={e=>{e.stopPropagation();setDetailPitchId(p.id);}} style={{...css.btnSm,fontSize:"0.62rem",padding:"0.12rem 0.4rem",color:"#7c3aed",border:"1px solid #ddd6fe",background:"#f5f3ff"}}>詳細</button>
+            </div>
           </div>
           {/* Progress bar */}
           <div style={{display:"flex",gap:2,marginTop:8}}>
@@ -1796,6 +1941,7 @@ function Tracking({pitches, curators, notify, savePitches, allPitches}) {
         </div>;
       })}
     </div>
+    {detailPitch && <PitchDetailModal pitch={detailPitch} curators={curators} savePitches={savePitches} allPitches={allPitches||pitches} onClose={()=>setDetailPitchId(null)} notify={notify}/>}
   </div>;
 }
 
@@ -1936,13 +2082,25 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
   const [rating, setRating] = useState(0);
   const [actionType, setActionType] = useState(null);
   const [actionNote, setActionNote] = useState("");
-  const [showDecision, setShowDecision] = useState(false); // false=listening, true=decision phase
+  const [showDecision, setShowDecision] = useState(false);
+  const [curatorMessage, setCuratorMessage] = useState("");
   const timerRef = useRef(null);
+
+  const sendCuratorMessage = async () => {
+    if (!curatorMessage.trim() || !activePitch) return;
+    const msg = {from:'curator', text:curatorMessage.trim(), timestamp:new Date().toISOString()};
+    const messages = [...(activePitch.messages||[]), msg];
+    const np = allPitches.map(x => x.id===activePitch.id ? {...x, messages} : x);
+    await savePitches(np);
+    setActivePitch(prev => ({...prev, messages}));
+    setCuratorMessage('');
+    notify('💬 メッセージを送信しました');
+  };
 
   const openPitch = async (p) => {
     setActivePitch(p);
     setFeedback(""); setRating(0); setIsListening(false); setListenTime(0);
-    setActionType(null); setActionNote(""); setShowDecision(false);
+    setActionType(null); setActionNote(""); setShowDecision(false); setCuratorMessage("");
     if (p.status === "sent") {
       const np = allPitches.map(x => x.id === p.id ? {...x, status:"opened", openedAt:new Date().toISOString()} : x);
       await savePitches(np);
@@ -2040,6 +2198,22 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
         <div style={{padding:"1.5rem",borderBottom:"1px solid #f1f5f9"}}>
           <div style={{fontSize:"0.82rem",fontWeight:700,marginBottom:8}}>📝 アーティストからのメッセージ</div>
           <pre style={{whiteSpace:"pre-wrap",fontFamily:"inherit",fontSize:"0.82rem",lineHeight:1.6,color:"#475569",margin:0,background:"#f8fafc",borderRadius:10,padding:"1rem"}}>{activePitch.pitchText}</pre>
+        </div>
+
+        {/* Message Thread */}
+        <div style={{padding:"1rem 1.5rem",borderBottom:"1px solid #f1f5f9"}}>
+          <div style={{fontSize:"0.82rem",fontWeight:700,marginBottom:8}}>💬 メッセージ ({(activePitch.messages||[]).length})</div>
+          <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:10,minHeight:60,maxHeight:200,overflowY:"auto",padding:"0.6rem",background:"#f8fafc",borderRadius:12,border:"1px solid #f1f5f9"}}>
+            {(activePitch.messages||[]).length===0 && <div style={{textAlign:"center",color:"#94a3b8",fontSize:"0.75rem",padding:"0.8rem 0"}}>まだメッセージがありません</div>}
+            {(activePitch.messages||[]).map((m,i) => <div key={i} style={{alignSelf:m.from==="curator"?"flex-end":"flex-start",maxWidth:"80%",background:m.from==="curator"?"linear-gradient(135deg,#7c3aed,#2563eb)":"#fff",color:m.from==="curator"?"#fff":"#334155",borderRadius:10,padding:"0.45rem 0.75rem",fontSize:"0.78rem",border:m.from==="curator"?"none":"1px solid #e2e8f0"}}>
+              <div style={{fontSize:"0.58rem",opacity:0.65,marginBottom:1}}>{m.from==="curator"?"あなた":activePitch.artistName}</div>
+              <div>{m.text}</div>
+            </div>)}
+          </div>
+          <div style={{display:"flex",gap:5}}>
+            <input value={curatorMessage} onChange={e=>setCuratorMessage(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendCuratorMessage();}}} placeholder="アーティストへメッセージ…" style={{...css.input,marginBottom:0,flex:1,fontSize:"0.8rem"}}/>
+            <button onClick={sendCuratorMessage} style={{...css.btnSm,background:"#7c3aed",color:"#fff",border:"none",fontWeight:600,padding:"0.5rem 0.8rem"}}>送信</button>
+          </div>
         </div>
 
         {/* Feedback Form */}

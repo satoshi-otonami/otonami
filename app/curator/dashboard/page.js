@@ -5,6 +5,7 @@ const STATUS_LABELS = {
   sent:     { en: 'Pending',  ja: '未対応',  color: '#facc15', bg: 'rgba(250,204,21,0.1)' },
   accepted: { en: 'Accepted', ja: '承認済み', color: '#4ade80', bg: 'rgba(74,222,128,0.1)' },
   rejected: { en: 'Rejected', ja: '却下済み', color: '#f87171', bg: 'rgba(248,113,113,0.1)' },
+  feedback: { en: 'Feedback', ja: 'FB受信',   color: '#a78bfa', bg: 'rgba(167,139,250,0.1)' },
 };
 
 const FILTER_TABS = [
@@ -463,53 +464,66 @@ export default function CuratorDashboard() {
                       <textarea
                         value={feedbackDraft[pitch.id]?.text || ''}
                         onChange={e => setDraft(pitch.id, 'text', e.target.value)}
-                        placeholder="Share your thoughts on this track..."
+                        placeholder="Share your thoughts on this track... (Required for payment)"
                         rows={4}
                         style={{
-                          width: '100%', background: '#0a0a18', border: '1px solid #2a2a4a',
+                          width: '100%', background: '#0a0a18',
+                          border: `1px solid ${(feedbackDraft[pitch.id]?.text?.trim().length > 0 && feedbackDraft[pitch.id]?.text?.trim().length < 20) ? '#f87171' : '#2a2a4a'}`,
                           borderRadius: 8, color: '#ccc', fontSize: 13, lineHeight: 1.6,
                           padding: '10px 12px', resize: 'vertical', fontFamily: 'inherit',
                           boxSizing: 'border-box',
                         }}
                       />
+                      {feedbackDraft[pitch.id]?.text?.trim().length > 0 && feedbackDraft[pitch.id]?.text?.trim().length < 20 && (
+                        <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>
+                          Minimum 20 characters ({feedbackDraft[pitch.id].text.trim().length}/20)
+                        </div>
+                      )}
 
                       {/* Action buttons with feedback */}
-                      <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-                        {pitch.status === 'sent' || pitch.status === 'feedback' ? (
-                          <>
+                      {(() => {
+                        const draftText = feedbackDraft[pitch.id]?.text?.trim() || '';
+                        const validFeedback = draftText.length >= 20;
+                        const canSubmit = !isBusy && validFeedback;
+                        return (
+                          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                            {(pitch.status === 'sent' || pitch.status === 'feedback') && (
+                              <>
+                                <button
+                                  onClick={() => handleAction(pitch.id, 'accepted')}
+                                  disabled={!canSubmit}
+                                  style={{
+                                    padding: '8px 16px', border: '1px solid rgba(74,222,128,0.3)',
+                                    borderRadius: 8, background: 'rgba(74,222,128,0.15)',
+                                    color: '#4ade80', fontSize: 12, fontWeight: 700,
+                                    cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.4,
+                                  }}
+                                >{isBusy ? '...' : '✅ Accept + Feedback'}</button>
+                                <button
+                                  onClick={() => handleAction(pitch.id, 'rejected')}
+                                  disabled={!canSubmit}
+                                  style={{
+                                    padding: '8px 16px', border: '1px solid rgba(248,113,113,0.3)',
+                                    borderRadius: 8, background: 'rgba(248,113,113,0.1)',
+                                    color: '#f87171', fontSize: 12, fontWeight: 700,
+                                    cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.4,
+                                  }}
+                                >{isBusy ? '...' : '❌ Decline + Feedback'}</button>
+                              </>
+                            )}
                             <button
-                              onClick={() => handleAction(pitch.id, 'accepted')}
-                              disabled={isBusy}
+                              onClick={() => handleFeedbackOnly(pitch.id)}
+                              disabled={!canSubmit}
                               style={{
-                                padding: '8px 16px', border: '1px solid rgba(74,222,128,0.3)',
-                                borderRadius: 8, background: 'rgba(74,222,128,0.15)',
-                                color: '#4ade80', fontSize: 12, fontWeight: 700,
-                                cursor: isBusy ? 'not-allowed' : 'pointer',
+                                padding: '8px 16px', border: '1px solid #2a2a4a',
+                                borderRadius: 8, background: 'rgba(124,58,237,0.15)',
+                                color: '#a78bfa', fontSize: 12, fontWeight: 700,
+                                cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.4,
                               }}
-                            >{isBusy ? '...' : 'Accept / 承認'}</button>
-                            <button
-                              onClick={() => handleAction(pitch.id, 'rejected')}
-                              disabled={isBusy}
-                              style={{
-                                padding: '8px 16px', border: '1px solid rgba(248,113,113,0.3)',
-                                borderRadius: 8, background: 'rgba(248,113,113,0.1)',
-                                color: '#f87171', fontSize: 12, fontWeight: 700,
-                                cursor: isBusy ? 'not-allowed' : 'pointer',
-                              }}
-                            >{isBusy ? '...' : 'Reject / 却下'}</button>
-                          </>
-                        ) : null}
-                        <button
-                          onClick={() => handleFeedbackOnly(pitch.id)}
-                          disabled={isBusy || (!feedbackDraft[pitch.id]?.text?.trim() && !feedbackDraft[pitch.id]?.rating)}
-                          style={{
-                            padding: '8px 16px', border: '1px solid #2a2a4a',
-                            borderRadius: 8, background: 'rgba(124,58,237,0.15)',
-                            color: '#a78bfa', fontSize: 12, fontWeight: 700,
-                            cursor: 'pointer', opacity: (!feedbackDraft[pitch.id]?.text?.trim() && !feedbackDraft[pitch.id]?.rating) ? 0.4 : 1,
-                          }}
-                        >Submit Feedback</button>
-                      </div>
+                            >{isBusy ? '...' : '💬 Feedback Only'}</button>
+                          </div>
+                        );
+                      })()}
 
                       {/* Existing feedback display */}
                       {pitch.feedback && (

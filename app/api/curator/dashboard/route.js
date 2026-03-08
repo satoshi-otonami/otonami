@@ -40,7 +40,7 @@ export async function GET(request) {
 
     let query = db
       .from('pitches')
-      .select('id, artist_name, artist_genre, subject, body, status, sent_at, created_at')
+      .select('id, artist_name, artist_genre, subject, body, status, sent_at, created_at, feedback, rating, feedback_at')
       .eq('curator_id', curator.id)
       .order('created_at', { ascending: false })
       .limit(100);
@@ -81,15 +81,14 @@ export async function PATCH(request) {
 
     const db = getServiceSupabase();
 
-    const updateData = { status };
-    if (feedback != null) updateData.feedback = feedback;
-    if (rating != null) updateData.rating = rating;
-    if (feedback != null || rating != null) updateData.feedback_at = new Date().toISOString();
+    const updates = { status };
+    if (feedback) { updates.feedback = feedback; updates.feedback_at = new Date().toISOString(); }
+    if (rating) updates.rating = rating;
 
     // curator_id が一致するピッチのみ更新（他のキュレーターのピッチを変更不可）
     const { data, error } = await db
       .from('pitches')
-      .update(updateData)
+      .update(updates)
       .eq('id', pitchId)
       .eq('curator_id', curator.id)
       .select('id, status')

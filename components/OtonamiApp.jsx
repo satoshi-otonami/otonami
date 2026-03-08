@@ -788,16 +788,25 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 
   // Build effective track: merge artist genre/mood into trackData (or use artist alone for initial ranking)
   const effectiveTrack = useMemo(() => {
-    const genre = trackData?.genre || artist?.genre || '';
-    const mood  = trackData?.mood  || artist?.mood  || '';
-    if (!genre && !trackData?.audioFeatures) return null;
-    return { ...trackData, genre, mood };
+    const trackGenre = trackData?.genre || artist?.genre || '';
+    const mood       = trackData?.mood  || artist?.mood  || '';
+    if (!trackGenre && !trackData?.audioFeatures) return null;
+    return { ...trackData, genre: trackGenre, mood };
   }, [trackData, artist]);
 
+  // Always score curators when effectiveTrack is available (for badge display)
+  const scoredCurators = useMemo(() => {
+    if (!effectiveTrack) return curators;
+    const scored = rankCurators(curators, effectiveTrack);
+    const byId = Object.fromEntries(scored.map(c => [c.id, c]));
+    return curators.map(c => byId[c.id] || c);
+  }, [curators, effectiveTrack]);
+
+  // sortByMatch controls ORDER only, not score visibility
   const ranked = useMemo(() => {
-    if (!effectiveTrack || !sortByMatch) return curators;
-    return rankCurators(curators, effectiveTrack);
-  }, [curators, effectiveTrack, sortByMatch]);
+    if (!sortByMatch) return scoredCurators;
+    return [...scoredCurators].sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+  }, [scoredCurators, sortByMatch]);
 
   const list = ranked.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||c.platform.toLowerCase().includes(q.toLowerCase())).filter(c=>!genre||c.genres.includes(genre)).filter(c=>!type||c.type===type);
   const toggle = id => setSelected(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);

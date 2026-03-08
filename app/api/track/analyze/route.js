@@ -177,7 +177,7 @@ async function fetchSoundNetFeatures(songName, artistName) {
     danceability:     normalize(raw.danceability),
     acousticness:     normalize(raw.acousticness),
     instrumentalness: normalize(raw.instrumentalness),
-    valence:          normalize(raw.valence),
+    valence:          normalize(raw.valence ?? raw.happiness),
     tempo:            raw.tempo ?? raw.bpm ?? null,   // BPM — keep as-is
     key:              raw.key ?? null,
     loudness:         raw.loudness ?? null,

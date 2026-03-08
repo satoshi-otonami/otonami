@@ -16,12 +16,13 @@ const BADGES = {high_answer:"🟢 高回答率",high_accept:"⭐ 高採用率",s
 
 // ─── Seed Curators (pre-registered, real-data based) ───
 const SEED_CURATORS = [
-  {id:"c_pstm",name:"Patrick St. Michel",email:"patrickstmichel@gmail.com",type:"blog",platform:"Make Believe Melodies",platformUrl:"https://mbmelodies.substack.com/",genres:["Pop","Electronic","Indie Rock","Hip-Hop","Underground"],bio:"東京在住のアメリカ人音楽ライター。2009年よりMake Believe Melodiesを運営。Japan Times, Pitchfork, Bandcamp Daily寄稿。",audience:28000,region:"Global",avatar:"📝",offers:["Review","Feature","Newsletter"],badges:["verified","quality_fb"],stats:{received:0,responded:0,accepted:0},joined:"2026-01-15",creditCost:3},
-  {id:"c_leap",name:"Leap250",email:"leap250@blog.com",type:"blog",platform:"Leap250's Blog",platformUrl:"https://leap250.blog/",genres:["Indie Rock","Alt Rock","Pop","J-Rock","Dream Pop"],bio:"J-Music Monthly Roundup運営。毎月の日本音楽レコメンデーション。Spotify J-Music Playlist Draft主催。",audience:5000,region:"Global",avatar:"✍️",offers:["Review","Playlist Add","Feature"],badges:["high_answer","quality_fb"],stats:{received:0,responded:0,accepted:0},joined:"2026-01-20",creditCost:2},
-  {id:"c_ian",name:"Ian Martin",email:"callandresponse@gmail.com",type:"blog",platform:"Clear And Refreshing",platformUrl:"https://clearandrefreshing.wordpress.com/",genres:["Noise","Experimental","Post-Punk","Indie Rock","Punk"],bio:"東京在住の英国人ライター。Call And Response Records主宰。著書『Quit Your Band』。日本地下音楽シーンに特化。",audience:2500,region:"JP/EN",avatar:"🔊",offers:["Review","Label Interest","Live Booking"],badges:["verified","selective"],stats:{received:0,responded:0,accepted:0},joined:"2026-01-18",creditCost:2},
-  {id:"c_aind",name:"A-indie (yabori)",email:"belong.media@gmail.com",type:"blog",platform:"A-indie Media",platformUrl:"https://a-indie.com/",genres:["Indie Rock","Shoegaze","Alt Rock","Garage Rock","Post Rock"],bio:"BELONG Media運営。2012年開始の日英バイリンガル・インディー音楽メディア。",audience:6000,region:"JP/Global",avatar:"🎸",offers:["Review","Feature","Interview"],badges:["verified","high_answer"],stats:{received:0,responded:0,accepted:0},joined:"2026-02-01",creditCost:2},
-  {id:"c_mrk",name:"mMarukudeibu",email:"marukudeibu@spotify.com",type:"playlist",platform:"Japanese Jazz Fusion (Spotify)",platformUrl:"https://open.spotify.com/playlist/3MzC0teQrDwCkyUJhd3YBd",genres:["Jazz","Fusion","Funk","City Pop"],bio:"Spotify最大級の日本ジャズフュージョンプレイリスト。34,800+ saves。",audience:34800,region:"Global",avatar:"🎷",offers:["Playlist Add"],badges:["high_accept"],stats:{received:0,responded:0,accepted:0},joined:"2026-02-05",creditCost:3},
-  {id:"c_jame",name:"JaME World",email:"info@jame-world.com",type:"blog",platform:"JaME - Japanese Music Entertainment",platformUrl:"https://jame-world.com/en",genres:["J-Rock","Pop","Metal","Visual Kei","Indie Rock"],bio:"多言語対応の日本音楽エンターテイメントメディア。インタビュー、レビュー、ニュース。",audience:16400,region:"Global",avatar:"🌐",offers:["Review","Interview","News Feature"],badges:["high_answer"],stats:{received:0,responded:0,accepted:0},joined:"2026-02-10",creditCost:3},
+  {id:"c_pstm",name:"Patrick St. Michel",email:"patrickstmichel@gmail.com",type:"blog",platform:"Make Believe Melodies",platformUrl:"https://mbmelodies.substack.com/",genres:["Electronic","Jazz","Funk","Ambient","Experimental"],bio:"東京在住のアメリカ人音楽ライター。2009年よりMake Believe Melodiesを運営。Japan Times, Pitchfork, Bandcamp Daily寄稿。",audience:28000,region:"Global",avatar:"📝",offers:["Review","Feature","Newsletter"],badges:["verified","quality_fb"],stats:{received:0,responded:0,accepted:0},joined:"2026-01-15",creditCost:3,audioProfile:{energy:0.65,danceability:0.65,acousticness:0.35,instrumentalness:0.20,valence:0.55},preferredMoods:["Energetic","Groovy","Sophisticated","Experimental"]},
+  {id:"c_leap",name:"Leap250",email:"leap250@blog.com",type:"blog",platform:"Leap250's Blog",platformUrl:"https://leap250.blog/",genres:["J-Rock","Indie Rock","Pop","Dream Pop","J-Pop"],bio:"J-Music Monthly Roundup運営。毎月の日本音楽レコメンデーション。Spotify J-Music Playlist Draft主催。",audience:5000,region:"Global",avatar:"✍️",offers:["Review","Playlist Add","Feature"],badges:["high_answer","quality_fb"],stats:{received:0,responded:0,accepted:0},joined:"2026-01-20",creditCost:2,audioProfile:{energy:0.60,danceability:0.55,acousticness:0.45,instrumentalness:0.30,valence:0.55},preferredMoods:["Dreamy","Nostalgic","Energetic","Indie"]},
+  {id:"c_ian",name:"Ian Martin",email:"callandresponse@gmail.com",type:"blog",platform:"Clear And Refreshing",platformUrl:"https://clearandrefreshing.wordpress.com/",genres:["Noise","Post-Punk","Indie Rock","Experimental","Punk"],bio:"東京在住の英国人ライター。Call And Response Records主宰。著書『Quit Your Band』。日本地下音楽シーンに特化。",audience:2500,region:"JP/EN",avatar:"🔊",offers:["Review","Label Interest","Live Booking"],badges:["verified","selective"],stats:{received:0,responded:0,accepted:0},joined:"2026-01-18",creditCost:2,audioProfile:{energy:0.80,danceability:0.40,acousticness:0.20,instrumentalness:0.40,valence:0.40},preferredMoods:["Aggressive","Experimental","Heavy","Raw"]},
+  {id:"c_aind",name:"A-indie (yabori)",email:"belong.media@gmail.com",type:"blog",platform:"A-indie Media",platformUrl:"https://a-indie.com/",genres:["Indie Rock","J-Pop","Alternative","Experimental"],bio:"BELONG Media運営。2012年開始の日英バイリンガル・インディー音楽メディア。",audience:6000,region:"JP/Global",avatar:"🎸",offers:["Review","Feature","Interview"],badges:["verified","high_answer"],stats:{received:0,responded:0,accepted:0},joined:"2026-02-01",creditCost:2,audioProfile:{energy:0.65,danceability:0.50,acousticness:0.40,instrumentalness:0.35,valence:0.50},preferredMoods:["Dreamy","Energetic","Nostalgic","Indie"]},
+  {id:"c_mrk",name:"mMarukudeibu",email:"marukudeibu@spotify.com",type:"playlist",platform:"Japanese Jazz Fusion (Spotify)",platformUrl:"https://open.spotify.com/playlist/3MzC0teQrDwCkyUJhd3YBd",genres:["Jazz","Fusion","Funk","City Pop"],bio:"Spotify最大級の日本ジャズフュージョンプレイリスト。34,800+ saves。",audience:34800,region:"Global",avatar:"🎷",offers:["Playlist Add"],badges:["high_accept"],stats:{received:0,responded:0,accepted:0},joined:"2026-02-05",creditCost:3,audioProfile:{energy:0.65,danceability:0.75,acousticness:0.45,instrumentalness:0.60,valence:0.70},preferredMoods:["Groovy","Sophisticated","Smooth","Energetic"]},
+  {id:"c_jame",name:"JaME World",email:"info@jame-world.com",type:"blog",platform:"JaME - Japanese Music Entertainment",platformUrl:"https://jame-world.com/en",genres:["J-Pop","J-Rock","Visual Kei","Anime"],bio:"多言語対応の日本音楽エンターテイメントメディア。インタビュー、レビュー、ニュース。",audience:16400,region:"Global",avatar:"🌐",offers:["Review","Interview","News Feature"],badges:["high_answer"],stats:{received:0,responded:0,accepted:0},joined:"2026-02-10",creditCost:3,audioProfile:{energy:0.72,danceability:0.55,acousticness:0.30,instrumentalness:0.25,valence:0.55},preferredMoods:["Energetic","Dramatic","Heavy","Indie"]},
+  {id:"c_yama",name:"Yamashita Satoshi",email:"yamashita@otonami.jp",type:"playlist",platform:"Jazz & Funk Japan (Spotify)",platformUrl:"https://open.spotify.com/",genres:["Jazz","Funk","Latin","Soul","Fusion"],bio:"東京のジャズ・ファンク・ラテン専門プレイリストキュレーター。SXSW常連アーティストを中心に厳選。",audience:8500,region:"JP/Global",avatar:"🎺",offers:["Playlist Add","Feature"],badges:["high_accept","verified"],stats:{received:0,responded:0,accepted:0},joined:"2026-03-01",creditCost:2,audioProfile:{energy:0.70,danceability:0.78,acousticness:0.40,instrumentalness:0.55,valence:0.72},preferredMoods:["Groovy","Energetic","Latin","Soulful"]},
 ];
 
 // ─── Demo Artists ───
@@ -377,7 +378,16 @@ export default function App() {
     (async () => {
 const dbCurators = await loadCurators();
 if (dbCurators && dbCurators.length > 0) {
-  setCurators(dbCurators);
+  // Merge audioProfile / preferredMoods from SEED_CURATORS for known curators
+  const merged = dbCurators.map(c => {
+    const seed = SEED_CURATORS.find(s => s.id === c.id);
+    if (seed) return { ...c, audioProfile: c.audioProfile || seed.audioProfile, preferredMoods: c.preferredMoods?.length ? c.preferredMoods : seed.preferredMoods };
+    return c;
+  });
+  // Add any SEED_CURATORS not yet in DB
+  const dbIds = new Set(merged.map(c => c.id));
+  const seedOnly = SEED_CURATORS.filter(s => !dbIds.has(s.id));
+  setCurators([...merged, ...seedOnly]);
 } else {
   setCurators([...SEED_CURATORS]);
 }
@@ -430,7 +440,7 @@ const saveCredits = async (c) => {
   const updatePitch = async (id, updates) => {
     setPitches(prev => {
       const np = prev.map(p => p.id === id ? {...p, ...updates} : p);
-      S.set("otonami-pitches-v7", np.slice(0,300));
+      savePitchesToDB(np);
       return np;
     });
   };
@@ -672,7 +682,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     </nav>
     <main style={css.main}>
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify}/>}
-      {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify}/>}
+      {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist}/>}
       {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} startAutoProgress={startAutoProgress} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches}/>}
@@ -742,9 +752,11 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
 }
 
 // ─── Curator Browser ───
-function CuratorBrowser({curators, selected, setSelected, setPage, trackData, setTrackData, notify}) {
+function CuratorBrowser({curators, selected, setSelected, setPage, trackData, setTrackData, notify, artist}) {
   const [q, setQ] = useState(""); const [genre, setGenre] = useState(""); const [type, setType] = useState("");
   const [sortByMatch, setSortByMatch] = useState(false);
+  // Auto-enable match sorting when artist genre is already filled
+  useEffect(() => { if (artist?.genre) setSortByMatch(true); }, [artist?.genre]);
   const [analyzeUrl, setAnalyzeUrl] = useState("");
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [detectedSong, setDetectedSong] = useState(trackData?.songName || "");
@@ -773,10 +785,18 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
     if (trackData) setTrackData({ ...trackData, songName: detectedSong, artistName: detectedArtist });
   };
 
+  // Build effective track: merge artist genre/mood into trackData (or use artist alone for initial ranking)
+  const effectiveTrack = useMemo(() => {
+    const genre = trackData?.genre || artist?.genre || '';
+    const mood  = trackData?.mood  || artist?.mood  || '';
+    if (!genre && !trackData?.audioFeatures) return null;
+    return { ...trackData, genre, mood };
+  }, [trackData, artist]);
+
   const ranked = useMemo(() => {
-    if (!trackData || !sortByMatch) return curators;
-    return rankCurators(curators, trackData);
-  }, [curators, trackData, sortByMatch]);
+    if (!effectiveTrack || !sortByMatch) return curators;
+    return rankCurators(curators, effectiveTrack);
+  }, [curators, effectiveTrack, sortByMatch]);
 
   const list = ranked.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||c.platform.toLowerCase().includes(q.toLowerCase())).filter(c=>!genre||c.genres.includes(genre)).filter(c=>!type||c.type===type);
   const toggle = id => setSelected(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);

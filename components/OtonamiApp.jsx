@@ -761,16 +761,17 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [detectedSong, setDetectedSong] = useState(trackData?.songName || "");
   const [detectedArtist, setDetectedArtist] = useState(trackData?.artistName || "");
+  const [analyzeUrl, setAnalyzeUrl] = useState("");
 
   const runAnalyze = async (song, artistName) => {
     setAnalyzeLoading(true);
     try {
       const result = await analyzeTrack({ songName: song, artistName });
-      setTrackData({ ...result, songName: song, artistName, notInDb: false });
+      setTrackData({ ...result, songName: song, artistName, notInDb: false, listeningUrl: analyzeUrl.trim() || null });
       setSortByMatch(true);
     } catch (e) {
       // Not in SoundNet DB — fall back to genre+mood scoring
-      setTrackData({ songName: song, artistName, audioFeatures: null, notInDb: true, source: 'manual' });
+      setTrackData({ songName: song, artistName, audioFeatures: null, notInDb: true, source: 'manual', listeningUrl: analyzeUrl.trim() || null });
       setSortByMatch(true);
     }
     setAnalyzeLoading(false);
@@ -842,6 +843,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
           {analyzeLoading ? "分析中…" : "🎵 分析する"}
         </button>
       </div>
+      <input style={{...css.input,border:"1px solid #c4b5fd",background:"#fff",fontSize:"0.78rem",marginBottom:6}} placeholder="楽曲URL（YouTube / Spotify）— キュレーターへの試聴リンクとして保存" value={analyzeUrl} onChange={e=>setAnalyzeUrl(e.target.value)}/>
       {/* Result line */}
       {analyzeLoading && <div style={{fontSize:"0.72rem",color:"#7c3aed"}}>🔍 SoundNet検索中…</div>}
       {!analyzeLoading && trackData && (() => {

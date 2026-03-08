@@ -762,6 +762,8 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   const [detectedSong, setDetectedSong] = useState(trackData?.songName || "");
   const [detectedArtist, setDetectedArtist] = useState(trackData?.artistName || "");
   const [analyzeUrl, setAnalyzeUrl] = useState("");
+  const analyzeUrlRef = useRef(analyzeUrl);
+  useEffect(() => { analyzeUrlRef.current = analyzeUrl; }, [analyzeUrl]);
 
   const resolveGenreMood = (artistName) => {
     if (artist?.genre) return { genre: artist.genre, mood: artist.mood || '' };
@@ -775,14 +777,15 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 
   const runAnalyze = async (song, artistName) => {
     setAnalyzeLoading(true);
+    const currentUrl = analyzeUrlRef.current.trim() || null;
     const fallback = resolveGenreMood(artistName);
     try {
       const result = await analyzeTrack({ songName: song, artistName });
-      setTrackData({ ...result, songName: song, artistName, notInDb: false, listeningUrl: analyzeUrl.trim() || null, genre: result.genre || fallback.genre, mood: result.mood || fallback.mood });
+      setTrackData({ ...result, songName: song, artistName, notInDb: false, listeningUrl: currentUrl, genre: result.genre || fallback.genre, mood: result.mood || fallback.mood });
       setSortByMatch(true);
     } catch (e) {
       // Not in SoundNet DB — fall back to genre+mood scoring
-      setTrackData({ songName: song, artistName, audioFeatures: null, notInDb: true, source: 'manual', listeningUrl: analyzeUrl.trim() || null, genre: fallback.genre, mood: fallback.mood });
+      setTrackData({ songName: song, artistName, audioFeatures: null, notInDb: true, source: 'manual', listeningUrl: currentUrl, genre: fallback.genre, mood: fallback.mood });
       setSortByMatch(true);
     }
     setAnalyzeLoading(false);
@@ -808,6 +811,15 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
     }, 1500);
     return () => clearTimeout(timer);
   }, [detectedSong, detectedArtist]);
+
+  // Sync analyzeUrl to trackData.listeningUrl in real-time
+  useEffect(() => {
+    if (!trackData) return;
+    const url = analyzeUrl.trim();
+    if (url !== (trackData.listeningUrl || '')) {
+      setTrackData(prev => prev ? {...prev, listeningUrl: url || null} : prev);
+    }
+  }, [analyzeUrl]);
 
   // Build effective track: merge artist genre/mood into trackData (or use artist alone for initial ranking)
   const effectiveTrack = useMemo(() => {

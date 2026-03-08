@@ -1034,6 +1034,29 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   };
   useEffect(() => { loadSaved(); }, []);
 
+  // ── Auto-populate from CuratorBrowser trackData ──
+  useEffect(() => {
+    if (!trackData) return;
+    setArtist(prev => {
+      const updated = {...prev};
+      // songTitle: always use trackData if available (user just analyzed this track)
+      if (trackData.songName) updated.songTitle = trackData.songName;
+      // songLink: use the listening URL from curator analysis
+      if (trackData.listeningUrl) updated.songLink = trackData.listeningUrl;
+      // Artist name: fill if form is empty
+      if (trackData.artistName) {
+        if (!updated.name || !updated.nameEn) {
+          updated.name = updated.name || trackData.artistName;
+          updated.nameEn = updated.nameEn || trackData.artistName;
+        }
+      }
+      // Genre/mood: fill if empty
+      if (!updated.genre && trackData.genre) updated.genre = trackData.genre;
+      if (!updated.mood && trackData.mood) updated.mood = trackData.mood;
+      return updated;
+    });
+  }, []); // Run once on mount
+
   const applyToForm = (p) => {
     setArtist({name:p.name||"",nameEn:p.nameEn||p.name_en||"",genre:p.genre||"",mood:p.mood||"",description:p.description||"",songTitle:p.songTitle||p.song_title||"",songLink:p.songLink||p.song_link||"",influences:p.influences||"",achievements:p.achievements||"",sns:p.sns||""});
     setLinks(p._links || {spotify:"",apple:"",youtube:"",soundcloud:"",instagram:"",twitter:"",facebook:"",website:""});

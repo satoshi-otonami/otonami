@@ -873,8 +873,12 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
             if(e.key==="Enter"&&e.target.value.trim()){
               setTrackData(prev=>({...prev, genre:e.target.value.trim()}));
             }
+          }} onBlur={e=>{
+            if(e.target.value.trim()){
+              setTrackData(prev=>({...prev, genre:e.target.value.trim()}));
+            }
           }}/>
-          <span style={{fontSize:"0.62rem",color:"#92400e",flexShrink:0}}>Enter で確定</span>
+          <span style={{fontSize:"0.62rem",color:"#92400e",flexShrink:0}}>Enter または入力後クリックで確定</span>
         </div>
       )}
       {/* Result line */}
@@ -1058,12 +1062,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       if (trackData.songName) updated.songTitle = trackData.songName;
       // songLink: use the listening URL from curator analysis
       if (trackData.listeningUrl) updated.songLink = trackData.listeningUrl;
-      // Artist name: fill if form is empty
+      // Artist name: always carry over from curator tab analysis
       if (trackData.artistName) {
-        if (!updated.name || !updated.nameEn) {
-          updated.name = updated.name || trackData.artistName;
-          updated.nameEn = updated.nameEn || trackData.artistName;
-        }
+        updated.name = updated.name || trackData.artistName;
+        updated.nameEn = trackData.artistName;
       }
       // Genre/mood: fill if empty
       if (!updated.genre && trackData.genre) updated.genre = trackData.genre;

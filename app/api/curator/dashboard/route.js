@@ -36,28 +36,32 @@ export async function GET(request) {
     const db = getServiceSupabase();
 
     const { searchParams } = new URL(request.url);
-    const filter = searchParams.get('status'); // 'all' | 'sent' | 'accepted' | 'rejected'
+    const filter = searchParams.get('status');
+
+    // curator_idとemailの両方でマッチ（シードキュレーターIDずれ対策）
+    const orFilter = `curator_id.eq.${curator.id},curator_email.eq.${curator.email}`;
 
     let query = db
       .from('pitches')
       .select('id, artist_name, artist_genre, subject, body, status, sent_at, created_at, feedback, rating, feedback_at')
-      .eq('curator_id', curator.id)
+      .or(orFilter)
       .order('created_at', { ascending: false })
       .limit(100);
 
     if (filter && filter !== 'all') {
       query = query.eq('status', filter);
     } else {
-      // デフォルト: sent / accepted / rejected のみ（draft除外）
       query = query.neq('status', 'draft');
     }
 
     const { data, error } = await query;
     if (error) throw new Error(error.message);
 
+    console.log(`[dashboard] curatorId=${curator.id} email=${curator.email} pitchCount=${data?.length ?? 0}`);
+
     return NextResponse.json({ pitches: data || [] });
   } catch (error) {
-    console.error('Dashboard GET error:', error);
+    console.error('[dashboard] GET error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -85,14 +89,27 @@ export async function PATCH(request) {
     if (feedback) { updates.feedback = feedback; updates.feedback_at = new Date().toISOString(); }
     if (rating) updates.rating = rating;
 
-    // curator_id が一致するピッチのみ更新（他のキュレーターのピッチを変更不可）
-    const { data, error } = await db
+    // まず curator_id で試みる
+    let { data, error } = await db
       .from('pitches')
       .update(updates)
       .eq('id', pitchId)
       .eq('curator_id', curator.id)
       .select('id, status')
       .single();
+
+    // curator_id でヒットしなかった場合は curator_email でフォールバック
+    if (!data && curator.email) {
+      const res2 = await db
+        .from('pitches')
+        .update(updates)
+        .eq('id', pitchId)
+        .eq('curator_email', curator.email)
+        .select('id, status')
+        .single();
+      data  = res2.data;
+      error = res2.error;
+    }
 
     if (error) throw new Error(error.message);
     if (!data) {
@@ -101,7 +118,7 @@ export async function PATCH(request) {
 
     return NextResponse.json({ success: true, pitch: data });
   } catch (error) {
-    console.error('Dashboard PATCH error:', error);
+    console.error('[dashboard] PATCH error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

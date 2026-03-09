@@ -25,12 +25,21 @@ export async function GET(request, { params }) {
   if (!curator) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const db = getServiceSupabase();
+  const pitchId = params.id;
+
+  console.log(`[pitch-detail] GET pitchId=${pitchId} curatorId=${curator.id} email=${curator.email}`);
+
+  // curator_id OR curator_email でマッチ
+  const orFilter = `curator_id.eq.${curator.id},curator_email.eq.${curator.email}`;
+
   const { data, error } = await db
     .from('pitches')
     .select('id, artist_name, artist_name_en, artist_genre, subject, body, status, sent_at, created_at, feedback, rating, feedback_at, song_title, song_link')
-    .eq('id', params.id)
-    .eq('curator_id', curator.id)
+    .eq('id', pitchId)
+    .or(orFilter)
     .single();
+
+  console.log(`[pitch-detail] result: found=${!!data} error=${error?.message ?? 'none'}`);
 
   if (error || !data) {
     return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
@@ -50,17 +59,32 @@ export async function PATCH(request, { params }) {
   }
 
   const db = getServiceSupabase();
+  const pitchId = params.id;
   const updates = { status };
   if (feedback) { updates.feedback = feedback; updates.feedback_at = new Date().toISOString(); }
   if (rating)   updates.rating = rating;
 
-  const { data, error } = await db
+  // まず curator_id で試みる
+  let { data, error } = await db
     .from('pitches')
     .update(updates)
-    .eq('id', params.id)
+    .eq('id', pitchId)
     .eq('curator_id', curator.id)
     .select('id, status')
     .single();
+
+  // curator_id でヒットしなかった場合は curator_email でフォールバック
+  if (!data && curator.email) {
+    const res2 = await db
+      .from('pitches')
+      .update(updates)
+      .eq('id', pitchId)
+      .eq('curator_email', curator.email)
+      .select('id, status')
+      .single();
+    data  = res2.data;
+    error = res2.error;
+  }
 
   if (error || !data) {
     return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });

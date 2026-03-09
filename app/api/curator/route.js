@@ -3,6 +3,9 @@ import { getServiceSupabase } from '@/lib/supabase';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
+const FROM = `OTONAMI <${process.env.EMAIL_FROM || 'onboarding@resend.dev'}>`;
+const testMode = process.env.EMAIL_TEST_MODE === 'true';
+const safeEmail = process.env.EMAIL_TEST_REDIRECT || 'satoshiy339@gmail.com';
 
 export async function POST(request) {
   try {
@@ -52,10 +55,11 @@ export async function POST(request) {
     if (error) throw new Error(error.message);
 
     // 2. Satoshiへの通知メール
+    const adminSubject = (testMode ? '[TEST] ' : '') + `【OTONAMI】新規キュレーター登録: ${form.name}`;
     await resend.emails.send({
-      from: 'OTONAMI <onboarding@resend.dev>',
-      to: 'satoshiy339@gmail.com',
-      subject: `【OTONAMI】新規キュレーター登録: ${form.name}`,
+      from: FROM,
+      to: safeEmail,
+      subject: adminSubject,
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
           <h2 style="color:#7c3aed;">新規キュレーター登録通知</h2>
@@ -97,10 +101,12 @@ export async function POST(request) {
     });
 
     // 3. 登録者への自動返信メール
+    const curatorTo = testMode ? safeEmail : form.email;
+    const curatorSubject = (testMode ? `[TEST] (→${form.email}) ` : '') + `Welcome to OTONAMI, ${form.name}! 🎵`;
     await resend.emails.send({
-      from: 'OTONAMI <onboarding@resend.dev>',
-      to: form.email,
-      subject: `Welcome to OTONAMI, ${form.name}! 🎵`,
+      from: FROM,
+      to: curatorTo,
+      subject: curatorSubject,
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;background:#0d0d1a;color:#fff;padding:40px;border-radius:16px;">
           <h1 style="color:#a78bfa;font-size:28px;margin-bottom:8px;">Welcome to OTONAMI!</h1>

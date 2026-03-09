@@ -167,8 +167,8 @@ function PitchView({ pitchId, curator }) {
         if (d.error) setError(d.error);
         else {
           setPitch(d.pitch);
-          if (d.pitch.rating) setRating(d.pitch.rating);
-          if (d.pitch.feedback) setFeedbackText(d.pitch.feedback);
+          if (d.pitch.feedback_rating) setRating(d.pitch.feedback_rating);
+          if (d.pitch.feedback_text) setFeedbackText(d.pitch.feedback_text);
         }
       })
       .catch(() => setError('Failed to load pitch.'))
@@ -185,10 +185,10 @@ function PitchView({ pitchId, curator }) {
       const res = await fetch(`/api/curator/pitch/${pitchId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status, feedback: feedbackText.trim(), rating: rating || undefined }),
+        body: JSON.stringify({ status, feedback_text: feedbackText.trim(), feedback_rating: rating || undefined }),
       });
       if (!res.ok) { showToast('❌ Failed to submit. Please try again.'); return; }
-      setPitch(prev => ({ ...prev, status, feedback: feedbackText.trim(), rating }));
+      setPitch(prev => ({ ...prev, status, feedback_text: feedbackText.trim(), feedback_rating: rating }));
       setDone(true);
       showToast('✅ Feedback submitted!');
     } finally {
@@ -301,20 +301,20 @@ function PitchView({ pitchId, curator }) {
           YOUR FEEDBACK / フィードバック
         </div>
 
-        {done || (alreadyResponded && pitch.feedback) ? (
+        {done || (alreadyResponded && pitch.feedback_text) ? (
           /* 送信済み */
           <div>
             <div style={{ color: S.green, fontWeight: 700, fontSize: 15, marginBottom: 12 }}>
               ✅ Feedback submitted! / フィードバックを送信しました
             </div>
-            {pitch.rating > 0 && (
+            {pitch.feedback_rating > 0 && (
               <div style={{ color: S.yellow, fontSize: 20, marginBottom: 8 }}>
-                {'★'.repeat(pitch.rating)}{'☆'.repeat(5 - pitch.rating)}
+                {'★'.repeat(pitch.feedback_rating)}{'☆'.repeat(5 - pitch.feedback_rating)}
               </div>
             )}
-            {pitch.feedback && (
+            {pitch.feedback_text && (
               <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.7, background: S.sub, borderRadius: 10, padding: '12px 16px', border: `1px solid ${S.cardBorder}` }}>
-                {pitch.feedback}
+                {pitch.feedback_text}
               </div>
             )}
             <a href="/curator/dashboard" style={{

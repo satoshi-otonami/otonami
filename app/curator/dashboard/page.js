@@ -86,15 +86,15 @@ export default function CuratorDashboard() {
     setUpdating(pitchId);
     try {
       const body = { pitchId, status };
-      if (draft.text?.trim()) body.feedback = draft.text.trim();
-      if (draft.rating) body.rating = draft.rating;
+      if (draft.text?.trim()) body.feedback_text = draft.text.trim();
+      if (draft.rating) body.feedback_rating = draft.rating;
       const res = await fetch('/api/curator/dashboard', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
       if (!res.ok) return;
-      setPitches(prev => prev.map(p => p.id === pitchId ? { ...p, status, feedback: body.feedback, rating: body.rating } : p));
+      setPitches(prev => prev.map(p => p.id === pitchId ? { ...p, status, feedback_text: body.feedback_text, feedback_rating: body.feedback_rating } : p));
       setFeedbackDraft(prev => { const n = {...prev}; delete n[pitchId]; return n; });
       showToast('✅ Feedback submitted');
     } finally {
@@ -526,11 +526,11 @@ export default function CuratorDashboard() {
                       })()}
 
                       {/* Existing feedback display */}
-                      {pitch.feedback && (
+                      {pitch.feedback_text && (
                         <div style={{ marginTop: 14, padding: '10px 14px', background: '#131328', borderRadius: 8, border: '1px solid #1e1e3a' }}>
                           <div style={{ fontSize: 11, color: '#555', marginBottom: 4 }}>Previous feedback / 過去のフィードバック</div>
-                          <div style={{ color: '#aaa', fontSize: 13 }}>{pitch.feedback}</div>
-                          {pitch.rating && <div style={{ color: '#facc15', fontSize: 13, marginTop: 4 }}>{'★'.repeat(pitch.rating)}{'☆'.repeat(5 - pitch.rating)}</div>}
+                          <div style={{ color: '#aaa', fontSize: 13 }}>{pitch.feedback_text}</div>
+                          {pitch.feedback_rating && <div style={{ color: '#facc15', fontSize: 13, marginTop: 4 }}>{'★'.repeat(pitch.feedback_rating)}{'☆'.repeat(5 - pitch.feedback_rating)}</div>}
                         </div>
                       )}
                     </div>

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { T } from '@/lib/design-tokens';
 
 /* ── i18n copy ── */
@@ -88,6 +88,8 @@ const COPY = {
 
 export default function HomePage() {
   const [lang, setLang] = useState('ja');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     try {
@@ -98,6 +100,20 @@ export default function HomePage() {
     } catch {}
   }, []);
 
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
+
+  // Prevent body scroll when menu open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [menuOpen]);
+
   const switchLang = (l) => {
     setLang(l);
     try { localStorage.setItem('otonami_locale', l); } catch {}
@@ -105,26 +121,164 @@ export default function HomePage() {
 
   const t = COPY[lang];
 
+  const navItems = [
+    { href: '#how-it-works', label: t.navHow },
+    { href: '/curators',     label: t.navCurators },
+    { href: '/studio',       label: t.navArtists },
+  ];
+
   return (
     <div style={{ minHeight: '100vh', background: T.bg, fontFamily: T.font }}>
       <style>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
-        body { background: ${T.bg}; }
+        body { background: ${T.bg}; overflow-x: hidden; }
         ::selection { background: ${T.accentLight}; color: ${T.accent}; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: ${T.border}; border-radius: 3px; }
+
+        /* ── Desktop defaults ── */
+        .hamburger-btn { display: none; }
+        .mobile-menu-overlay { display: none; }
+
+        /* ── Mobile breakpoint ── */
         @media (max-width: 768px) {
-          .hero-h1 { font-size: 32px !important; }
-          .three-col { grid-template-columns: 1fr !important; }
+          body { overflow-x: hidden; }
+
+          /* Header */
           .nav-links-center { display: none !important; }
-          .artist-grid { grid-template-columns: 1fr !important; }
+          .hamburger-btn {
+            display: flex !important;
+            align-items: center; justify-content: center;
+            background: none; border: 1px solid ${T.border};
+            border-radius: 8px; width: 40px; height: 40px;
+            font-size: 20px; cursor: pointer; color: ${T.text};
+            flex-shrink: 0;
+          }
+          .logo-text { font-size: 18px !important; }
+          .header-pad { padding: 0 16px !important; }
+          .nav-cta-label { display: none; }
+          .nav-cta-short { display: inline !important; }
+          .lang-btn { padding: 5px 8px !important; font-size: 11px !important; }
+          .header-cta { padding: 7px 10px !important; font-size: 12px !important; }
+
+          /* Mobile menu overlay */
+          .mobile-menu-overlay {
+            display: flex !important;
+            position: fixed; inset: 0; z-index: 200;
+            background: #fff;
+            flex-direction: column;
+          }
+
+          /* Hero */
+          .hero-section { padding: 72px 18px 56px !important; }
+          .hero-h1 { font-size: 30px !important; }
+          .hero-sub { font-size: 15px !important; max-width: 100% !important; }
+          .hero-tag { font-size: 12px !important; padding: 5px 14px !important; }
+          .hero-cta-group {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+          }
+          .hero-cta-a {
+            width: 100% !important;
+            min-height: 48px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            padding: 14px 20px !important;
+            font-size: 15px !important;
+          }
+
+          /* Stats */
+          .stats-inner {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 20px 16px !important;
+            justify-items: center;
+          }
+          .stat-num { font-size: 24px !important; }
+
+          /* Why / How cards */
+          .three-col { grid-template-columns: 1fr !important; }
+          .step-card { padding: 24px !important; }
+          .why-card { padding: 24px 20px !important; }
+
+          /* Artist / Industry sections */
+          .artist-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+
+          /* CTA banner */
+          .cta-banner { padding: 48px 18px !important; }
+          .cta-banner-title { font-size: 24px !important; }
+          .cta-banner-sub { font-size: 14px !important; }
+          .cta-banner-btn {
+            display: block !important;
+            width: 100% !important;
+            min-height: 48px !important;
+            line-height: 48px !important;
+            padding: 0 20px !important;
+            font-size: 15px !important;
+          }
+
+          /* Footer */
+          .footer-inner {
+            display: flex; flex-direction: column; gap: 4px;
+            font-size: 12px !important;
+          }
+          .footer-sep { display: block !important; visibility: hidden; height: 0; }
+
+          /* Section headings */
+          .section-h2 { font-size: 26px !important; }
+          .section-pad { padding: 56px 18px !important; }
+
+          /* Images */
+          img { max-width: 100%; height: auto; }
         }
       `}</style>
 
+      {/* ── Mobile Menu Overlay ── */}
+      {menuOpen && (
+        <div className="mobile-menu-overlay" ref={menuRef}>
+          {/* Overlay header */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '0 16px', height: 64, borderBottom: `1px solid ${T.border}`, flexShrink: 0,
+          }}>
+            <a href="/" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 16 }}>O</div>
+              <span style={{ fontFamily: T.fontDisplay, fontSize: 18, fontWeight: 700, color: T.accent }}>OTONAMI</span>
+            </a>
+            <button onClick={() => setMenuOpen(false)} style={{
+              background: 'none', border: `1px solid ${T.border}`, borderRadius: 8,
+              width: 40, height: 40, fontSize: 20, cursor: 'pointer', color: T.text,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>✕</button>
+          </div>
+          {/* Nav links */}
+          <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px 0' }}>
+            {navItems.map(item => (
+              <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{
+                display: 'block', padding: '16px 24px',
+                fontSize: 16, fontWeight: 600, color: T.text,
+                textDecoration: 'none', borderBottom: `1px solid ${T.borderLight}`,
+                fontFamily: T.font,
+              }}>{item.label}</a>
+            ))}
+            <a href="/curator" onClick={() => setMenuOpen(false)} style={{
+              display: 'block', margin: '20px 24px 0',
+              padding: '14px 20px', fontSize: 15, fontWeight: 600,
+              background: T.accent, color: '#fff', borderRadius: T.radius,
+              textDecoration: 'none', fontFamily: T.font, textAlign: 'center',
+              minHeight: 48, lineHeight: '20px',
+            }}>{t.navCta}</a>
+          </nav>
+        </div>
+      )}
+
       {/* ── Header ── */}
-      <header style={{
+      <header className="header-pad" style={{
         position: 'sticky', top: 0, zIndex: 100,
         background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
         borderBottom: `1px solid ${T.border}`,
@@ -135,14 +289,10 @@ export default function HomePage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 17 }}>O</div>
-            <span style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.accent, letterSpacing: -0.3 }}>OTONAMI</span>
+            <span className="logo-text" style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.accent, letterSpacing: -0.3 }}>OTONAMI</span>
           </a>
           <nav className="nav-links-center" style={{ display: 'flex', gap: 4 }}>
-            {[
-              { href: '#how-it-works', label: t.navHow },
-              { href: '/curators',     label: t.navCurators },
-              { href: '/studio',       label: t.navArtists },
-            ].map(item => (
+            {navItems.map(item => (
               <a key={item.href} href={item.href} style={{
                 background: 'transparent', color: T.textSub,
                 padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 500,
@@ -154,10 +304,10 @@ export default function HomePage() {
             ))}
           </nav>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', border: `1px solid ${T.border}` }}>
             {['EN', 'JP'].map(l => (
-              <button key={l} onClick={() => switchLang(l === 'JP' ? 'ja' : 'en')} style={{
+              <button key={l} className="lang-btn" onClick={() => switchLang(l === 'JP' ? 'ja' : 'en')} style={{
                 padding: '6px 12px', fontSize: 12, fontWeight: 600,
                 fontFamily: T.font, border: 'none', cursor: 'pointer', transition: 'all 0.15s',
                 background: (l === 'JP' ? lang === 'ja' : lang === 'en') ? T.text : 'transparent',
@@ -165,19 +315,25 @@ export default function HomePage() {
               }}>{l === 'JP' ? '日本語' : l}</button>
             ))}
           </div>
-          <a href="/curator" style={{
+          <a href="/curator" className="header-cta" style={{
             padding: '8px 16px', fontSize: 13, fontWeight: 600,
             background: T.accent, color: '#fff', borderRadius: T.radius,
             textDecoration: 'none', fontFamily: T.font, transition: 'background 0.15s',
+            whiteSpace: 'nowrap',
           }}
           onMouseEnter={e => e.currentTarget.style.background = T.accentDark}
           onMouseLeave={e => e.currentTarget.style.background = T.accent}
-          >{t.navCta}</a>
+          >
+            <span className="nav-cta-label">{t.navCta}</span>
+            <span className="nav-cta-short" style={{ display: 'none' }}>登録</span>
+          </a>
+          {/* Hamburger — mobile only */}
+          <button className="hamburger-btn" onClick={() => setMenuOpen(true)} aria-label="メニューを開く">☰</button>
         </div>
       </header>
 
       {/* ── Hero ── */}
-      <section style={{
+      <section className="hero-section" style={{
         position: 'relative', overflow: 'hidden',
         textAlign: 'center', padding: '120px 24px 100px',
         backgroundImage: "linear-gradient(180deg, rgba(15,23,42,0.68) 0%, rgba(15,23,42,0.78) 100%), url('/images/hero-sxsw-crowd.jpg')",
@@ -188,7 +344,7 @@ export default function HomePage() {
       }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 100%, rgba(14,165,233,0.12) 0%, transparent 60%)', zIndex: 1 }}/>
         <div style={{ maxWidth: 740, margin: '0 auto', position: 'relative', zIndex: 2 }}>
-          <div style={{
+          <div className="hero-tag" style={{
             display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 18px',
             background: 'rgba(14,165,233,0.15)', borderRadius: 24, fontSize: 13,
             fontWeight: 600, color: '#7dd3fc', marginBottom: 28,
@@ -201,11 +357,11 @@ export default function HomePage() {
             {t.heroH1a}<br/>
             <span style={{ color: '#38bdf8' }}>{t.heroH1b}</span>
           </h1>
-          <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.75, maxWidth: 560, margin: '0 auto 44px', fontFamily: T.font }}>
+          <p className="hero-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.75, maxWidth: 560, margin: '0 auto 44px', fontFamily: T.font }}>
             {t.heroSub}
           </p>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/curator" style={{
+          <div className="hero-cta-group" style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a href="/curator" className="hero-cta-a" style={{
               padding: '16px 36px', fontSize: 16, fontWeight: 600, background: '#10b981', color: '#fff',
               borderRadius: T.radius, textDecoration: 'none', fontFamily: T.font,
               boxShadow: '0 4px 20px rgba(16,185,129,0.35)', transition: 'transform 0.15s, box-shadow 0.15s', display: 'inline-block',
@@ -213,7 +369,7 @@ export default function HomePage() {
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(16,185,129,0.45)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 20px rgba(16,185,129,0.35)'; }}
             >{t.ctaPrimary}</a>
-            <a href="#how-it-works" style={{
+            <a href="#how-it-works" className="hero-cta-a" style={{
               padding: '16px 32px', fontSize: 16, fontWeight: 600, color: '#fff',
               borderRadius: T.radius, textDecoration: 'none', fontFamily: T.font,
               border: '1.5px solid rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.05)',
@@ -228,7 +384,7 @@ export default function HomePage() {
 
       {/* ── Stats bar ── */}
       <section style={{ padding: '36px 24px', background: T.white, borderBottom: `1px solid ${T.border}` }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'center', gap: 64, flexWrap: 'wrap' }}>
+        <div className="stats-inner" style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'center', gap: 64, flexWrap: 'wrap' }}>
           {[
             { n: t.stat1n, l: t.stat1l },
             { n: t.stat2n, l: t.stat2l },
@@ -236,7 +392,7 @@ export default function HomePage() {
             { n: t.stat4n, l: t.stat4l },
           ].map((s, i) => (
             <div key={i} style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.accent }}>{s.n}</div>
+              <div className="stat-num" style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.accent }}>{s.n}</div>
               <div style={{ fontSize: 13, color: T.textMuted, fontFamily: T.font, marginTop: 4 }}>{s.l}</div>
             </div>
           ))}
@@ -244,10 +400,10 @@ export default function HomePage() {
       </section>
 
       {/* ── Why OTONAMI ── */}
-      <section style={{ padding: '80px 24px', background: T.white }}>
+      <section className="section-pad" style={{ padding: '80px 24px', background: T.white }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>{t.whyLabel}</div>
-          <h2 style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.text, marginBottom: 12 }}>{t.whyTitle}</h2>
+          <h2 className="section-h2" style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.text, marginBottom: 12 }}>{t.whyTitle}</h2>
           <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.7, maxWidth: 520, marginBottom: 48, fontFamily: T.font }}>{t.whySub}</p>
           <div className="three-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
             {[
@@ -255,7 +411,7 @@ export default function HomePage() {
               { ic: t.why2ic, title: t.why2t, desc: t.why2d, bg: 'rgba(16,185,129,0.08)' },
               { ic: t.why3ic, title: t.why3t, desc: t.why3d, bg: 'rgba(14,165,233,0.08)' },
             ].map((card, i) => (
-              <div key={i} style={{
+              <div key={i} className="why-card" style={{
                 background: T.bg, borderRadius: T.radiusLg, padding: '32px 28px',
                 border: `1px solid ${T.border}`, transition: 'transform 0.2s, box-shadow 0.2s',
               }}
@@ -272,16 +428,16 @@ export default function HomePage() {
       </section>
 
       {/* ── How It Works ── */}
-      <section id="how-it-works" style={{ padding: '80px 24px', background: T.bg }}>
+      <section id="how-it-works" className="section-pad" style={{ padding: '80px 24px', background: T.bg }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
-          <h2 style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.text, textAlign: 'center', marginBottom: 56 }}>{t.howTitle}</h2>
+          <h2 className="section-h2" style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.text, textAlign: 'center', marginBottom: 56 }}>{t.howTitle}</h2>
           <div className="three-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 28 }}>
             {[
               { ic: t.step1ic, s: t.step1s, title: t.step1t, desc: t.step1d },
               { ic: t.step2ic, s: t.step2s, title: t.step2t, desc: t.step2d },
               { ic: t.step3ic, s: t.step3s, title: t.step3t, desc: t.step3d },
             ].map((item, i) => (
-              <div key={i} style={{
+              <div key={i} className="step-card" style={{
                 background: T.white, borderRadius: T.radiusLg, padding: 36,
                 border: `1px solid ${T.border}`, position: 'relative', overflow: 'hidden',
               }}>
@@ -297,12 +453,12 @@ export default function HomePage() {
       </section>
 
       {/* ── From Japan to the World Stage ── */}
-      <section style={{ padding: '80px 24px', background: T.white }}>
+      <section className="section-pad" style={{ padding: '80px 24px', background: T.white }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>
             {lang === 'ja' ? 'トラックレコード' : 'Track Record'}
           </div>
-          <h2 style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.text, marginBottom: 48 }}>
+          <h2 className="section-h2" style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.text, marginBottom: 48 }}>
             {lang === 'ja' ? '日本から世界のステージへ' : 'From Japan to the World Stage'}
           </h2>
           <div className="three-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
@@ -326,12 +482,12 @@ export default function HomePage() {
       </section>
 
       {/* ── For Artists ── */}
-      <section id="for-artists" style={{ padding: '80px 24px', background: T.bg }}>
+      <section id="for-artists" className="section-pad" style={{ padding: '80px 24px', background: T.bg }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div className="artist-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>{t.artLabel}</div>
-              <h2 style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 16, lineHeight: 1.25 }}>{t.artTitle}</h2>
+              <h2 className="section-h2" style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 16, lineHeight: 1.25 }}>{t.artTitle}</h2>
               <p style={{ fontSize: 15, color: T.textSub, lineHeight: 1.75, marginBottom: 32, fontFamily: T.font }}>{t.artBody}</p>
               <a href="/studio" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -339,6 +495,7 @@ export default function HomePage() {
                 background: '#10b981', color: '#fff', borderRadius: T.radius,
                 textDecoration: 'none', fontFamily: T.font,
                 boxShadow: '0 4px 16px rgba(16,185,129,0.28)', transition: 'transform 0.15s, box-shadow 0.15s',
+                minHeight: 48,
               }}
               onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(16,185,129,0.4)'; }}
               onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,185,129,0.28)'; }}
@@ -357,7 +514,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Backed by the Industry ── */}
-      <section style={{ padding: '80px 24px', background: T.white }}>
+      <section className="section-pad" style={{ padding: '80px 24px', background: T.white }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div className="artist-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
             <div style={{ borderRadius: T.radiusXl, overflow: 'hidden', aspectRatio: '16/10', boxShadow: T.shadowLg }}>
@@ -371,7 +528,7 @@ export default function HomePage() {
               <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>
                 {lang === 'ja' ? '業界の信頼' : 'Industry Backing'}
               </div>
-              <h2 style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 16, lineHeight: 1.25 }}>
+              <h2 className="section-h2" style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 16, lineHeight: 1.25 }}>
                 {lang === 'ja' ? '業界に支持されたネットワーク' : 'Backed by the Industry'}
               </h2>
               <p style={{ fontSize: 15, color: T.textSub, lineHeight: 1.75, marginBottom: 28, fontFamily: T.font }}>
@@ -381,7 +538,7 @@ export default function HomePage() {
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {[
-                  { label: lang === 'ja' ? 'SXSW 連続10年出演' : '10 Years at SXSW', sub: lang === 'ja' ? 'Austin, Texas' : 'Austin, Texas' },
+                  { label: lang === 'ja' ? 'SXSW 連続10年出演' : '10 Years at SXSW', sub: 'Austin, Texas' },
                   { label: lang === 'ja' ? 'ILCJ加盟レーベル70以上' : '70+ ILCJ Member Labels', sub: lang === 'ja' ? '日本最大インディー連合' : "Japan's largest indie coalition" },
                   { label: lang === 'ja' ? 'キュレーター・プロ 3,449名' : '3,449 Curators & Pros', sub: lang === 'ja' ? '世界各国のメディア・プレイリスト' : 'Global media & playlists' },
                 ].map((item, i) => (
@@ -400,10 +557,10 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA Banner ── */}
-      <section style={{ padding: '64px 24px', background: T.accentGrad, textAlign: 'center' }}>
-        <h2 style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.ctaBannerTitle}</h2>
-        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', marginBottom: 36, fontFamily: T.font }}>{t.ctaBannerSub}</p>
-        <a href="/studio" style={{
+      <section className="cta-banner" style={{ padding: '64px 24px', background: T.accentGrad, textAlign: 'center' }}>
+        <h2 className="cta-banner-title" style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.ctaBannerTitle}</h2>
+        <p className="cta-banner-sub" style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', marginBottom: 36, fontFamily: T.font }}>{t.ctaBannerSub}</p>
+        <a href="/studio" className="cta-banner-btn" style={{
           padding: '16px 36px', fontSize: 16, fontWeight: 600,
           background: '#fff', color: T.accent, borderRadius: T.radius,
           textDecoration: 'none', fontFamily: T.font, display: 'inline-block',
@@ -416,7 +573,10 @@ export default function HomePage() {
 
       {/* ── Footer ── */}
       <footer style={{ padding: '32px 24px', background: T.white, borderTop: `1px solid ${T.border}`, textAlign: 'center', fontFamily: T.font, fontSize: 13, color: T.textMuted }}>
-        {t.footerCopy}&nbsp;|&nbsp;{t.footerBy}
+        <div className="footer-inner">
+          <span>{t.footerCopy}</span>
+          <span>{t.footerBy}</span>
+        </div>
       </footer>
     </div>
   );

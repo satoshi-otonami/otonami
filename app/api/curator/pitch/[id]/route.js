@@ -28,13 +28,11 @@ export async function GET(request, { params }) {
   const db = getServiceSupabase();
   const pitchId = params.id;
 
-  console.log(`[pitch-detail] GET pitchId=${pitchId} curatorId=${curator.id} email=${curator.email}`);
-
-  // curator_id OR curator_email でマッチ
+  // curator_id OR curator_name でマッチ
   const cId = String(curator.id || '').trim();
-  const cEmail = String(curator.email || '').trim();
-  const orFilter = `curator_id.eq.${cId},curator_email.eq.${cEmail}`;
-  console.log(`[pitch-detail] orFilter="${orFilter}"`);
+  const cName = String(curator.name || '').trim();
+  const orFilter = `curator_id.eq.${cId},curator_name.eq.${cName}`;
+  console.log(`[pitch-detail] GET pitchId=${pitchId} orFilter="${orFilter}"`);
 
   const { data, error } = await db
     .from('pitches')
@@ -57,7 +55,7 @@ export async function PATCH(request, { params }) {
   const curator = await getAuthCurator(request);
   if (!curator) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { status, feedback_text, feedback_rating } = await request.json();
+  const { status, feedback_message } = await request.json();
   if (!['accepted', 'rejected', 'feedback', 'sent'].includes(status)) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
   }
@@ -65,8 +63,7 @@ export async function PATCH(request, { params }) {
   const db = getServiceSupabase();
   const pitchId = params.id;
   const updates = { status };
-  if (feedback_text) { updates.feedback_text = feedback_text; updates.feedback_at = new Date().toISOString(); }
-  if (feedback_rating) updates.feedback_rating = feedback_rating;
+  if (feedback_message) updates.feedback_message = feedback_message;
 
   // まず curator_id で試みる
   let { data, error } = await db
@@ -77,13 +74,13 @@ export async function PATCH(request, { params }) {
     .select('id, status')
     .single();
 
-  // curator_id でヒットしなかった場合は curator_email でフォールバック
-  if (!data && curator.email) {
+  // curator_id でヒットしなかった場合は curator_name でフォールバック
+  if (!data && curator.name) {
     const res2 = await db
       .from('pitches')
       .update(updates)
       .eq('id', pitchId)
-      .eq('curator_email', curator.email)
+      .eq('curator_name', curator.name)
       .select('id, status')
       .single();
     data  = res2.data;

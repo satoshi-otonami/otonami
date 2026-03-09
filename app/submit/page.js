@@ -1,7 +1,12 @@
 'use client';
 
-import OtonamiApp from '@/components/OtonamiApp';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function SubmitPage() {
-  return <OtonamiApp />;
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('/curators');
+  }, [router]);
+  return null;
 }

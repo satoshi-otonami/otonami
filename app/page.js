@@ -141,7 +141,7 @@ export default function HomePage() {
             {[
               { href: '#how-it-works', label: t.navHow },
               { href: '/curators',     label: t.navCurators },
-              { href: '/submit',       label: t.navArtists },
+              { href: '/curators',     label: t.navArtists },
             ].map(item => (
               <a key={item.href} href={item.href} style={{
                 background: 'transparent', color: T.textSub,
@@ -333,7 +333,7 @@ export default function HomePage() {
               <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>{t.artLabel}</div>
               <h2 style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 16, lineHeight: 1.25 }}>{t.artTitle}</h2>
               <p style={{ fontSize: 15, color: T.textSub, lineHeight: 1.75, marginBottom: 32, fontFamily: T.font }}>{t.artBody}</p>
-              <a href="/submit" style={{
+              <a href="/curators" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 padding: '14px 28px', fontSize: 15, fontWeight: 600,
                 background: '#10b981', color: '#fff', borderRadius: T.radius,
@@ -403,7 +403,7 @@ export default function HomePage() {
       <section style={{ padding: '64px 24px', background: T.accentGrad, textAlign: 'center' }}>
         <h2 style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.ctaBannerTitle}</h2>
         <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', marginBottom: 36, fontFamily: T.font }}>{t.ctaBannerSub}</p>
-        <a href="/submit" style={{
+        <a href="/curators" style={{
           padding: '16px 36px', fontSize: 16, fontWeight: 600,
           background: '#fff', color: T.accent, borderRadius: T.radius,
           textDecoration: 'none', fontFamily: T.font, display: 'inline-block',

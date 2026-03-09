@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 export default function StudioPage() {
   const router = useRouter();
   useEffect(() => {
-    router.replace('/submit');
+    router.replace('/curators');
   }, [router]);
   return null;
 }

@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { T } from '@/lib/design-tokens';
+import { analyzeTrack } from '@/lib/api-track';
 
 /* ── Country flags ── */
 const FL = {
@@ -11,6 +12,14 @@ const FL = {
 
 /* ── Format follower counts ── */
 const fmt = n => n >= 1e6 ? (n/1e6).toFixed(1)+"M" : n >= 1e3 ? (n/1e3).toFixed(1)+"k" : String(n);
+
+/* ── Artist genre picker list ── */
+const ARTIST_GENRES = [
+  "Jazz","Funk","Latin","Soul","R&B","Pop","Indie Rock","Alt Rock","Electronic",
+  "Ambient","Hip-Hop","Classical","Folk","Country","Metal","Punk","J-Pop","J-Rock",
+  "Experimental","World Music","City Pop","Neo-Soul","Instrumental","Fusion",
+  "Shoegaze","Dream Pop",
+];
 
 /* ── Genre list for filter ── */
 const GENRES = [
@@ -30,7 +39,22 @@ const CURATOR_TYPES = [
   "Label/Management",
 ];
 
-/* ── Demo curators (from docs/otonami-redesign.jsx + OTONAMI seeds) ── */
+/* ── Feedback bank for auto-progress simulation ── */
+const FEEDBACK_BANK = {
+  positive: [
+    "Love the sound! Adding to the playlist right away.",
+    "This fits perfectly with our playlist.",
+    "Incredible energy — added immediately!",
+    "Refreshing sound from Japan! Added.",
+  ],
+  negative: [
+    "Good track but doesn't fit our current direction.",
+    "Quality production but not the right match right now.",
+    "Interesting sound, but outside our playlist focus.",
+  ],
+};
+
+/* ── Demo curators ── */
 const DEMO_CURATORS = [
   {
     id:"dc_1", name:"Bizarreland Radio", country:"CL", type:"Playlist Curator", color:"#dc2626",
@@ -226,6 +250,37 @@ const calcMatch = (curator, trackGenres) => {
   return Math.min(100, Math.round(overlap / trackGenres.length * 100 + (curator.shareRate || 0) * 0.5));
 };
 
+/* ── PE Template Engine ── */
+const PE = {
+  generate: (artist, curator, style, userName) => {
+    const curatorName = curator?.name || 'Curator';
+    const typeMap = {
+      playlist: 'playlist',
+      blog: 'blog',
+      radio: 'radio show',
+      label: 'label',
+      'Media Outlet': 'publication',
+      'Playlist Curator': 'playlist',
+    };
+    const curType = typeMap[curator?.type] || 'platform';
+    const genreStr = Array.isArray(artist.genre) ? artist.genre.join(', ') : (artist.genre || 'music');
+    const songTitle = artist.songTitle || 'our latest track';
+    const songLink = artist.songLink ? `\nListen: ${artist.songLink}` : '';
+
+    let body = '';
+    if (style === 'casual') {
+      body = `Hey ${curatorName},\n\nBig fan of what you curate — the sound really resonates with what I'm creating.\n\nI'm ${artist.nameEn || artist.artistName}, a ${genreStr} artist from Japan. My latest track "${songTitle}" has ${artist.description ? artist.description : 'a sound I think your audience would connect with'}.\n\n${artist.influences ? `Influences: ${artist.influences}` : ''}${artist.achievements ? `\n${artist.achievements}` : ''}${songLink}\n\nWould love to have "${songTitle}" considered for your ${curType}. Thanks for all you do!\n\n${userName || 'OTONAMI Team'} via OTONAMI`;
+    } else if (style === 'storytelling') {
+      body = `Hi ${curatorName},\n\nClose your eyes for a moment. ${artist.description || `Imagine a ${genreStr} soundscape that bridges continents — that's the world of ${artist.nameEn || artist.artistName}.`}\n\n"${songTitle}" is a track that captures exactly that feeling. ${artist.influences ? `Drawing from ${artist.influences}, this is music that moves.` : ''} ${artist.achievements ? artist.achievements : ''}\n\nFrom Japan, this is a sound your audience hasn't heard yet.${songLink}\n\nI'd be honored to have this considered for your ${curType}.\n\nWith gratitude,\n${userName || 'OTONAMI Team'} via OTONAMI`;
+    } else {
+      body = `Hi ${curatorName},\n\n${artist.nameEn || artist.artistName} is a ${genreStr} artist from Japan. ${artist.achievements ? artist.achievements + ' ' : ''}${artist.description || ''}\n\nI'm reaching out to submit "${songTitle}" for consideration for your ${curType}.${artist.influences ? ` The track draws from ${artist.influences}.` : ''}${songLink}\n\n${artist.achievements ? `Notable: ${artist.achievements}` : 'We believe this track would resonate with your audience.'}\n\nThank you for your time and consideration.\n\n${userName || 'OTONAMI Team'} via OTONAMI`;
+    }
+
+    const subject = `Subject: ${genreStr} from Japan — ${artist.nameEn || artist.artistName} "${songTitle}"`;
+    return `${subject}\n\n${body}`;
+  },
+};
+
 /* ── Avatar component ── */
 function Avatar({ name, color, size = 48 }) {
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
@@ -298,7 +353,6 @@ function CuratorCard({ c, score, selected, onToggle, onDetail }) {
         transform: hovered ? 'translateY(-2px)' : 'none',
       }}
     >
-      {/* Top row: avatar + name + flag + match score */}
       <div style={{ display: 'flex', gap: 14, marginBottom: 14 }}>
         <Avatar name={c.name} color={c.color} size={52} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -318,7 +372,6 @@ function CuratorCard({ c, score, selected, onToggle, onDetail }) {
         )}
       </div>
 
-      {/* Certified + tags */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
         {c.certified && (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 600, color: T.green, fontFamily: T.font }}>
@@ -332,7 +385,6 @@ function CuratorCard({ c, score, selected, onToggle, onDetail }) {
         ))}
       </div>
 
-      {/* Genre pills */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
         {(c.genres || []).slice(0, 4).map((g, i) => (
           <span key={i} style={{
@@ -352,7 +404,6 @@ function CuratorCard({ c, score, selected, onToggle, onDetail }) {
         )}
       </div>
 
-      {/* Bottom row: followers + add button */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: 12 }}>
           {c.followers?.spotify   && <span style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>♫ {fmt(c.followers.spotify)}</span>}
@@ -409,7 +460,6 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
           overflow: 'hidden',
         }}
       >
-        {/* ── Header ── */}
         <div style={{ padding: '32px 32px 24px', borderBottom: `1px solid ${T.border}`, display: 'flex', gap: 20, flexShrink: 0 }}>
           <Avatar name={c.name} color={c.color} size={72} />
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -439,12 +489,9 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
           >×</button>
         </div>
 
-        {/* ── Scrollable body ── */}
         <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 28, overflowY: 'auto', flex: 1 }}>
-          {/* Bio */}
           <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.75, fontFamily: T.font, margin: 0 }}>{c.bio}</p>
 
-          {/* Share rate + match score */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px', background: T.bg, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
             <span style={{ fontSize: 13, color: T.textSub, fontFamily: T.font }}>Share rate</span>
             <span style={{ fontWeight: 700, fontSize: 22, color: T.accent, fontFamily: T.font }}>{c.shareRate}%</span>
@@ -457,7 +504,6 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
             )}
           </div>
 
-          {/* How well you match */}
           {(c.matchTags || []).length > 0 && (
             <SectionBlock title="How well you match">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -466,14 +512,12 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
             </SectionBlock>
           )}
 
-          {/* Genres accepted */}
           <SectionBlock title="Genres accepted most often">
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {(c.genres || []).map((g, i) => <Tag key={i}>{g}</Tag>)}
             </div>
           </SectionBlock>
 
-          {/* Also open to */}
           {(c.genresOpen || []).length > 0 && (
             <SectionBlock title="Also open to receiving">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -482,7 +526,6 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
             </SectionBlock>
           )}
 
-          {/* Similar to */}
           {(c.similarTo || []).length > 0 && (
             <SectionBlock title="They want music similar to...">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -498,7 +541,6 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
             </SectionBlock>
           )}
 
-          {/* Moods */}
           {(c.moods || []).length > 0 && (
             <SectionBlock title="Moods they love">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -507,7 +549,6 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
             </SectionBlock>
           )}
 
-          {/* Opportunities */}
           {(c.opportunities || []).length > 0 && (
             <SectionBlock title="Main opportunities">
               {c.opportunities.map((op, i) => (
@@ -520,7 +561,6 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
             </SectionBlock>
           )}
 
-          {/* Recently gave opportunities to */}
           {(c.recentArtists || []).length > 0 && (
             <SectionBlock title="Recently gave opportunities to">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -546,7 +586,6 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
           )}
         </div>
 
-        {/* ── Sticky footer ── */}
         <div style={{
           padding: '20px 32px', borderTop: `1px solid ${T.border}`,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -593,40 +632,210 @@ const selStyle = {
   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E")`,
 };
 
-/* ── Main Page ── */
-export default function CuratorsPage() {
-  const [curators, setCurators]   = useState(DEMO_CURATORS);
-  const [selected, setSelected]   = useState(new Set());
-  const [modal, setModal]         = useState(null);
-  const [genreFilter, setGenreFilter] = useState('');
-  const [typeFilter, setTypeFilter]   = useState('');
-  const [searchQ, setSearchQ]         = useState('');
-  const [trackGenres, setTrackGenres] = useState([]);
-  const [lang, setLang]           = useState('ja');
+/* ── Progress Bar ── */
+function ProgressBar({ step }) {
+  const steps = [
+    { n: 1, label: 'Track Info' },
+    { n: 2, label: 'Curators' },
+    { n: 3, label: 'Pitch' },
+    { n: 4, label: 'Sent' },
+  ];
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, marginBottom: 40, padding: '0 16px' }}>
+      {steps.map((s, i) => (
+        <div key={s.n} style={{ display: 'flex', alignItems: 'center', flex: i < steps.length - 1 ? 1 : undefined }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+              background: step >= s.n ? T.accent : T.borderLight,
+              border: `2px solid ${step >= s.n ? T.accent : T.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 700, fontSize: 14, fontFamily: T.font,
+              color: step >= s.n ? '#fff' : T.textMuted,
+              transition: 'all 0.3s',
+            }}>
+              {step > s.n ? '✓' : s.n}
+            </div>
+            <span style={{
+              fontSize: 11, fontFamily: T.font, fontWeight: step === s.n ? 700 : 500,
+              color: step >= s.n ? T.accent : T.textMuted,
+              whiteSpace: 'nowrap',
+            }}>{s.label}</span>
+          </div>
+          {i < steps.length - 1 && (
+            <div style={{
+              flex: 1, height: 2, margin: '0 8px', marginTop: -18,
+              background: step > s.n ? T.accent : T.border,
+              transition: 'background 0.3s',
+            }} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
-  /* Load locale + track data from localStorage */
+/* ── Input field ── */
+function Field({ label, value, onChange, placeholder, type = 'text', multiline = false, rows = 3, required = false }) {
+  const baseStyle = {
+    width: '100%', padding: '11px 14px',
+    border: `1.5px solid ${T.border}`,
+    borderRadius: T.radius, fontSize: 14,
+    fontFamily: T.font, color: T.text,
+    background: T.white, outline: 'none',
+    resize: multiline ? 'vertical' : undefined,
+    transition: 'border-color 0.15s',
+  };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <label style={{ fontSize: 13, fontWeight: 600, color: T.text, fontFamily: T.font }}>
+        {label}{required && <span style={{ color: T.accent, marginLeft: 3 }}>*</span>}
+      </label>
+      {multiline ? (
+        <textarea
+          value={value} onChange={onChange} placeholder={placeholder} rows={rows}
+          style={baseStyle}
+        />
+      ) : (
+        <input
+          type={type} value={value} onChange={onChange} placeholder={placeholder}
+          style={baseStyle}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ── Toast notification ── */
+function Toast({ msg, onDismiss }) {
+  useEffect(() => {
+    if (!msg) return;
+    const t = setTimeout(onDismiss, 3500);
+    return () => clearTimeout(t);
+  }, [msg, onDismiss]);
+
+  if (!msg) return null;
+  return (
+    <div style={{
+      position: 'fixed', top: 24, left: '50%', transform: 'translateX(-50%)',
+      zIndex: 2000, background: T.accent, color: '#fff',
+      padding: '12px 28px', borderRadius: T.radiusLg,
+      fontSize: 14, fontWeight: 600, fontFamily: T.font,
+      boxShadow: '0 8px 24px rgba(14,165,233,0.35)',
+      animation: 'toastIn 0.3s cubic-bezier(0.16,1,0.3,1)',
+    }}>
+      {msg}
+    </div>
+  );
+}
+
+/* ── Status badge ── */
+function StatusBadge({ status }) {
+  const MAP = {
+    sent:     { icon: '📤', label: '送信済',  bg: T.borderLight, color: T.textSub    },
+    opened:   { icon: '👁',  label: '開封済',  bg: T.accentLight, color: T.accent    },
+    listened: { icon: '🎧', label: '試聴済',  bg: '#fffbeb',     color: '#b45309'   },
+    accepted: { icon: '🎉', label: '採用！',  bg: T.greenLight,  color: T.green     },
+    declined: { icon: '📋', label: '不採用',  bg: '#fef2f2',     color: '#dc2626'   },
+  };
+  const m = MAP[status] || MAP.sent;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      padding: '4px 12px', borderRadius: 20, fontSize: 12.5, fontWeight: 600,
+      background: m.bg, color: m.color, fontFamily: T.font,
+    }}>
+      {m.icon} {m.label}
+    </span>
+  );
+}
+
+/* ── Pitch progress bar (5 steps) ── */
+const PITCH_STATUSES = ['sent', 'opened', 'listened', 'accepted', 'declined'];
+function PitchProgress({ status }) {
+  const positiveSteps = ['sent', 'opened', 'listened', 'accepted'];
+  const isDeclined = status === 'declined';
+  const activeSteps = isDeclined ? ['sent', 'opened', 'listened', 'declined'] : positiveSteps;
+  const currentIdx = activeSteps.indexOf(status);
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 8 }}>
+      {positiveSteps.map((st, i) => {
+        const isActive = i <= (isDeclined && st === 'accepted' ? -1 : (isDeclined ? activeSteps.indexOf(status) : currentIdx));
+        const isDeclinedStep = isDeclined && i === 3;
+        return (
+          <div key={st} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+            <div style={{
+              flex: 1, height: 4, borderRadius: 4,
+              background: isDeclinedStep ? '#fca5a5' : isActive ? T.accent : T.border,
+              transition: 'background 0.4s',
+            }} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN PAGE
+═══════════════════════════════════════════════════ */
+export default function CuratorsPage() {
+  /* ── Core step state ── */
+  const [step, setStep] = useState(1); // 1-4
+
+  /* ── Step 1: track info ── */
+  const [artist, setArtist] = useState({
+    artistName: '', songTitle: '', songLink: '',
+    genre: '', mood: '', description: '',
+    influences: '', achievements: '',
+  });
+  const [trackData, setTrackData] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState('');
+  const debounceRef = useRef(null);
+
+  /* ── Step 2: curator selection ── */
+  const [curators, setCurators] = useState(DEMO_CURATORS);
+  const [selected, setSelected] = useState(new Set());
+  const [modal, setModal] = useState(null);
+  const [genreFilter, setGenreFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [searchQ, setSearchQ] = useState('');
+
+  /* ── Step 3: pitch ── */
+  const [pitchStep, setPitchStep] = useState(0); // 0=style, 1=review, 2=confirm
+  const [pitchStyle, setPitchStyle] = useState('professional');
+  const [pitchText, setPitchText] = useState('');
+  const [pitchJa, setPitchJa] = useState('');
+  const [pitchTab, setPitchTab] = useState('ja'); // 'en'|'ja'
+  const [aiLoading, setAiLoading] = useState(false);
+  const [translating, setTranslating] = useState(false);
+
+  /* ── Step 4: sent/tracking ── */
+  const [sentPitches, setSentPitches] = useState([]);
+  const [credits, setCredits] = useState(20);
+
+  /* ── Global UI ── */
+  const [notif, setNotif] = useState(null);
+  const [lang, setLang] = useState('ja');
+  const timersRef = useRef([]);
+
+  /* ── Load locale from localStorage ── */
   useEffect(() => {
     try {
       const saved = localStorage.getItem('otonami_locale');
       if (saved === 'ja' || saved === 'en') setLang(saved);
-      /* Track genre context for match scores */
-      const td = localStorage.getItem('otonami-track-data');
-      if (td) {
-        const parsed = JSON.parse(td);
-        const g = parsed.genre || '';
-        if (g) setTrackGenres(g.split(',').map(s => s.trim()).filter(Boolean));
-      }
     } catch {}
   }, []);
 
-  /* Attempt Supabase fetch and merge */
+  /* ── Attempt Supabase fetch ── */
   useEffect(() => {
     (async () => {
       try {
         const { loadCurators } = await import('@/lib/db');
         const data = await loadCurators();
         if (!data || data.length === 0) return;
-        /* Merge: Supabase curators override demo curators with same id */
         const adapted = data.map(c => ({
           id: c.id,
           name: c.name,
@@ -653,6 +862,48 @@ export default function CuratorsPage() {
     })();
   }, []);
 
+  /* ── Cleanup timers on unmount ── */
+  useEffect(() => {
+    return () => { timersRef.current.forEach(t => clearTimeout(t)); };
+  }, []);
+
+  /* ── Auto-debounce analyze when songTitle + artistName filled ── */
+  useEffect(() => {
+    if (!artist.songTitle || !artist.artistName) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      handleAnalyze();
+    }, 1500);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [artist.songTitle, artist.artistName]); // eslint-disable-line
+
+  /* ── Computed genre array from artist.genre string ── */
+  const trackGenres = useMemo(() => {
+    if (!artist.genre) return [];
+    if (Array.isArray(artist.genre)) return artist.genre;
+    return artist.genre.split(',').map(s => s.trim()).filter(Boolean);
+  }, [artist.genre]);
+
+  /* ── Analyze track ── */
+  const handleAnalyze = useCallback(async () => {
+    if (!artist.songTitle && !artist.songLink) return;
+    setAnalyzing(true);
+    setAnalyzeError('');
+    try {
+      const result = await analyzeTrack({
+        trackUrl: artist.songLink || undefined,
+        songName: artist.songTitle || undefined,
+        artistName: artist.artistName || undefined,
+      });
+      setTrackData(result);
+    } catch (err) {
+      setAnalyzeError(err.message || 'Analysis failed');
+    } finally {
+      setAnalyzing(false);
+    }
+  }, [artist.songTitle, artist.songLink, artist.artistName]);
+
+  /* ── Toggle curator selection ── */
   const toggle = useCallback(id => {
     setSelected(prev => {
       const next = new Set(prev);
@@ -661,8 +912,7 @@ export default function CuratorsPage() {
     });
   }, []);
 
-  const hasFilters = genreFilter || typeFilter || searchQ;
-
+  /* ── Filtered curator list ── */
   const filtered = useMemo(() => {
     return curators
       .filter(c => {
@@ -675,8 +925,246 @@ export default function CuratorsPage() {
       .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
   }, [curators, genreFilter, typeFilter, searchQ, trackGenres]);
 
-  const totalCost = selected.size * 2; // approx
+  /* ── Selected curator objects ── */
+  const selectedCurators = useMemo(() => {
+    return curators.filter(c => selected.has(c.id));
+  }, [curators, selected]);
 
+  /* ── Total credit cost ── */
+  const totalCreditCost = useMemo(() => {
+    return selectedCurators.reduce((sum, c) => sum + (c.creditCost || 2), 0);
+  }, [selectedCurators]);
+
+  /* ── Generate AI pitch ── */
+  const handleAIPitch = useCallback(async () => {
+    setAiLoading(true);
+    try {
+      const firstCurator = selectedCurators[0];
+      const res = await fetch('/api/pitch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          artist: {
+            name: artist.artistName,
+            nameEn: artist.artistName,
+            genre: Array.isArray(artist.genre) ? artist.genre.join(', ') : artist.genre,
+            mood: artist.mood,
+            description: artist.description,
+            songTitle: artist.songTitle,
+            influences: artist.influences,
+            achievements: artist.achievements,
+          },
+          curator: firstCurator ? {
+            name: firstCurator.name,
+            type: firstCurator.type,
+            platform: firstCurator.type,
+            genres: firstCurator.genres,
+          } : null,
+          style: pitchStyle,
+          links: { songLink: artist.songLink },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Pitch generation failed');
+      setPitchText(data.pitch || '');
+      setPitchStep(1);
+      setNotif('AIピッチを生成しました！');
+    } catch (err) {
+      setNotif('AI生成に失敗しました。テンプレートをお試しください。');
+      // Fallback to template
+      const tmpl = PE.generate(
+        { ...artist, nameEn: artist.artistName, genre: Array.isArray(artist.genre) ? artist.genre.join(', ') : artist.genre },
+        selectedCurators[0],
+        pitchStyle,
+        ''
+      );
+      setPitchText(tmpl);
+      setPitchStep(1);
+    } finally {
+      setAiLoading(false);
+    }
+  }, [artist, pitchStyle, selectedCurators]);
+
+  /* ── Generate template pitch ── */
+  const handleTemplatePitch = useCallback(() => {
+    const tmpl = PE.generate(
+      { ...artist, nameEn: artist.artistName, genre: Array.isArray(artist.genre) ? artist.genre.join(', ') : artist.genre },
+      selectedCurators[0],
+      pitchStyle,
+      ''
+    );
+    setPitchText(tmpl);
+    setPitchStep(1);
+  }, [artist, pitchStyle, selectedCurators]);
+
+  /* ── Translate EN → JA ── */
+  const handleTranslateToJa = useCallback(async () => {
+    if (!pitchText) return;
+    setTranslating(true);
+    try {
+      const res = await fetch('/api/pitch/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: pitchText, reverse: false }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setPitchJa(data.translated || '');
+      setPitchTab('ja');
+      setNotif('日本語に翻訳しました');
+    } catch {
+      setNotif('翻訳に失敗しました');
+    } finally {
+      setTranslating(false);
+    }
+  }, [pitchText]);
+
+  /* ── Translate JA → EN ── */
+  const handleTranslateToEn = useCallback(async () => {
+    if (!pitchJa) return;
+    setTranslating(true);
+    try {
+      const res = await fetch('/api/pitch/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: pitchJa, reverse: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setPitchText(data.translated || '');
+      setPitchTab('en');
+      setNotif('英語に反映しました');
+    } catch {
+      setNotif('翻訳に失敗しました');
+    } finally {
+      setTranslating(false);
+    }
+  }, [pitchJa]);
+
+  /* ── Auto-progress simulation ── */
+  const startAutoProgress = useCallback((pitchId) => {
+    const delay1 = 3000 + Math.random() * 5000;   // sent→opened: 3-8s
+    const delay2 = 5000 + Math.random() * 7000;   // opened→listened: 5-12s
+    const delay3 = 6000 + Math.random() * 9000;   // listened→accepted/declined: 6-15s
+
+    const t1 = setTimeout(() => {
+      setSentPitches(prev => prev.map(p => p.id === pitchId ? { ...p, status: 'opened' } : p));
+    }, delay1);
+
+    const t2 = setTimeout(() => {
+      setSentPitches(prev => prev.map(p => p.id === pitchId ? { ...p, status: 'listened' } : p));
+    }, delay1 + delay2);
+
+    const t3 = setTimeout(() => {
+      const accepted = Math.random() < 0.6;
+      const feedbackPool = accepted ? FEEDBACK_BANK.positive : FEEDBACK_BANK.negative;
+      const feedback = feedbackPool[Math.floor(Math.random() * feedbackPool.length)];
+      setSentPitches(prev => prev.map(p =>
+        p.id === pitchId
+          ? { ...p, status: accepted ? 'accepted' : 'declined', feedback }
+          : p
+      ));
+    }, delay1 + delay2 + delay3);
+
+    timersRef.current.push(t1, t2, t3);
+  }, []);
+
+  /* ── sendAll: create pitch records and start simulation ── */
+  const sendAll = useCallback(async () => {
+    const now = new Date();
+    const deadline = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const pitches = selectedCurators.map(curator => ({
+      id: `pitch_${Date.now()}_${curator.id}`,
+      artistName: artist.artistName,
+      songTitle: artist.songTitle,
+      songLink: artist.songLink,
+      genre: Array.isArray(artist.genre) ? artist.genre.join(', ') : artist.genre,
+      pitchText,
+      curatorId: curator.id,
+      curatorName: curator.name,
+      curatorPlatform: curator.type,
+      status: 'sent',
+      sentAt: now.toISOString(),
+      deadline: deadline.toISOString(),
+      feedback: null,
+    }));
+
+    setSentPitches(pitches);
+
+    // Deduct credits
+    setCredits(prev => Math.max(0, prev - totalCreditCost));
+
+    // Try to call email API for each
+    for (const pitch of pitches) {
+      try {
+        await fetch('/api/email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: `curator+${pitch.curatorId}@otonami.com`,
+            subject: `New pitch from ${pitch.artistName}`,
+            body: pitch.pitchText,
+          }),
+        });
+      } catch { /* silently continue */ }
+    }
+
+    // Start simulation for each pitch
+    pitches.forEach(p => startAutoProgress(p.id));
+
+    setStep(4);
+    setNotif(`${pitches.length}件送信しました！`);
+  }, [selectedCurators, artist, pitchText, totalCreditCost, startAutoProgress]);
+
+  /* ── Reset all state ── */
+  const resetAll = useCallback(() => {
+    timersRef.current.forEach(t => clearTimeout(t));
+    timersRef.current = [];
+    setStep(1);
+    setArtist({ artistName:'', songTitle:'', songLink:'', genre:'', mood:'', description:'', influences:'', achievements:'' });
+    setTrackData(null);
+    setAnalyzing(false);
+    setAnalyzeError('');
+    setSelected(new Set());
+    setGenreFilter('');
+    setTypeFilter('');
+    setSearchQ('');
+    setPitchStep(0);
+    setPitchStyle('professional');
+    setPitchText('');
+    setPitchJa('');
+    setPitchTab('ja');
+    setSentPitches([]);
+    setAiLoading(false);
+    setTranslating(false);
+    setNotif(null);
+  }, []);
+
+  /* ── Update artist field helper ── */
+  const setField = (key) => (e) => setArtist(prev => ({ ...prev, [key]: e.target.value }));
+
+  /* ── Toggle genre in artist.genre ── */
+  const toggleGenre = useCallback((g) => {
+    setArtist(prev => {
+      const genres = prev.genre ? prev.genre.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const idx = genres.indexOf(g);
+      if (idx >= 0) genres.splice(idx, 1);
+      else genres.push(g);
+      return { ...prev, genre: genres.join(', ') };
+    });
+  }, []);
+
+  const selectedGenres = useMemo(() => {
+    if (!artist.genre) return [];
+    return artist.genre.split(',').map(s => s.trim()).filter(Boolean);
+  }, [artist.genre]);
+
+  const hasFilters = genreFilter || typeFilter || searchQ;
+
+  /* ════════════════════════════════════════════════
+     RENDER
+  ════════════════════════════════════════════════ */
   return (
     <div style={{ minHeight: '100vh', background: T.bg, fontFamily: T.font }}>
       <style>{`
@@ -690,12 +1178,21 @@ export default function CuratorsPage() {
           from { opacity: 0; transform: scale(0.95) translateY(8px); }
           to   { opacity: 1; transform: scale(1)    translateY(0);   }
         }
+        @keyframes toastIn {
+          from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
         @media (max-width: 768px) {
           .nav-center { display: none !important; }
           .filter-bar { flex-direction: column !important; }
           .filter-bar select, .filter-bar input { width: 100% !important; }
         }
+        textarea:focus, input:focus { border-color: ${T.accent} !important; outline: none; }
+        select:focus { outline: none; }
       `}</style>
+
+      {/* ── Toast ── */}
+      <Toast msg={notif} onDismiss={() => setNotif(null)} />
 
       {/* ── Site Header ── */}
       <header style={{
@@ -711,10 +1208,14 @@ export default function CuratorsPage() {
             <span style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.accent, letterSpacing: -0.3 }}>OTONAMI</span>
           </a>
           <nav className="nav-center" style={{ display: 'flex', gap: 4 }}>
-            {[{href:'/',label: lang==='ja'?'使い方':'How It Works'},{href:'/curators',label:lang==='ja'?'キュレーターを探す':'Find Curators'},{href:'/studio',label:lang==='ja'?'アーティストの方':'For Artists'}].map(item => (
-              <a key={item.href} href={item.href} style={{
+            {[
+              { href: '/', label: lang === 'ja' ? '使い方' : 'How It Works' },
+              { href: '/curators', label: lang === 'ja' ? 'キュレーターを探す' : 'Find Curators' },
+              { href: '/curators', label: lang === 'ja' ? 'アーティストの方' : 'For Artists' },
+            ].map((item, idx) => (
+              <a key={idx} href={item.href} style={{
                 padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 500,
-                textDecoration: 'none', fontFamily: T.font, color: T.textSub,
+                textDecoration: 'none', fontFamily: T.font,
                 background: item.href === '/curators' ? T.accentLight : 'transparent',
                 color: item.href === '/curators' ? T.accent : T.textSub,
               }}>{item.label}</a>
@@ -722,6 +1223,10 @@ export default function CuratorsPage() {
           </nav>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* Credit display */}
+          <div style={{ padding: '6px 14px', background: T.accentLight, borderRadius: T.radius, border: `1px solid ${T.accentBorder}`, fontSize: 13, fontWeight: 700, color: T.accent, fontFamily: T.font }}>
+            {credits} cr
+          </div>
           <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', border: `1px solid ${T.border}` }}>
             {['EN','JP'].map(l => (
               <button key={l} onClick={() => { const v = l==='JP'?'ja':'en'; setLang(v); try{localStorage.setItem('otonami_locale',v);}catch{} }} style={{
@@ -738,105 +1243,703 @@ export default function CuratorsPage() {
       </header>
 
       {/* ── Page content ── */}
-      <div style={{ maxWidth: 1120, margin: '0 auto', padding: '32px 24px 120px' }}>
+      <div style={{ maxWidth: 960, margin: '0 auto', padding: '40px 24px 120px' }}>
 
-        {/* Page header */}
-        <h1 style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 6 }}>
-          {filtered.length.toLocaleString()} curators &amp; pros
-        </h1>
-        <p style={{ fontSize: 14, color: T.textSub, fontFamily: T.font, marginBottom: 28 }}>
-          {lang === 'ja'
-            ? '50件以上に送るアーティストが最も良い結果を得ています'
-            : 'Artists who send to 50+ curators get the best results'}
-        </p>
+        {/* Progress bar */}
+        <ProgressBar step={step} />
 
-        {/* Filter bar */}
-        <div className="filter-bar" style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-          <select
-            value={genreFilter}
-            onChange={e => setGenreFilter(e.target.value)}
-            style={{ ...selStyle, ...(genreFilter ? { borderColor: T.accent, background: T.accentLight, color: T.accent } : {}) }}
-          >
-            <option value="">Genres</option>
-            {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
-          </select>
+        {/* ════════════════════════════════
+            STEP 1: Track Input
+        ════════════════════════════════ */}
+        {step === 1 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+            <div>
+              <h1 style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 8 }}>
+                楽曲情報を入力
+              </h1>
+              <p style={{ fontSize: 14, color: T.textSub, fontFamily: T.font }}>
+                あなたの楽曲について教えてください。AIがキュレーターとのマッチングを最適化します。
+              </p>
+            </div>
 
-          <select
-            value={typeFilter}
-            onChange={e => setTypeFilter(e.target.value)}
-            style={{ ...selStyle, ...(typeFilter ? { borderColor: T.accent, background: T.accentLight, color: T.accent } : {}) }}
-          >
-            <option value="">Curator/Pro Types</option>
-            {CURATOR_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <input
-              type="text"
-              placeholder="Search curators..."
-              value={searchQ}
-              onChange={e => setSearchQ(e.target.value)}
-              style={{
-                width: '100%', padding: '10px 16px', borderRadius: T.radius,
-                border: `1.5px solid ${searchQ ? T.accent : T.border}`,
-                fontSize: 14, fontFamily: T.font, outline: 'none',
-                background: T.white, color: T.text,
-              }}
-            />
-          </div>
-
-          {hasFilters && (
-            <button
-              onClick={() => { setGenreFilter(''); setTypeFilter(''); setSearchQ(''); }}
-              style={{ fontSize: 13, color: T.accent, background: 'none', border: 'none', cursor: 'pointer', fontFamily: T.font, fontWeight: 600, whiteSpace: 'nowrap' }}
-            >Clear filters</button>
-          )}
-        </div>
-
-        {/* Stats hint bar */}
-        <div style={{
-          display: 'inline-flex', gap: 20, marginBottom: 28,
-          padding: '14px 24px', background: T.accentLight,
-          borderRadius: T.radiusLg, border: `1px solid ${T.accentBorder}`,
-          alignItems: 'center', flexWrap: 'wrap',
-        }}>
-          <span style={{ fontSize: 13, color: T.accent, fontFamily: T.font, fontWeight: 500 }}>
-            💡 {lang === 'ja' ? '50件以上に送るアーティストが最も良い結果を得ています' : 'Artists who send to 50+ curators get the best results'}
-          </span>
-          <div style={{ display: 'flex', gap: 16 }}>
-            {[{n:50,p:60,c:"#fbbf24"},{n:100,p:72,c:"#fb923c"},{n:"200+",p:93,c:T.green}].map((x,i) => (
-              <div key={i} style={{ textAlign: 'center', minWidth: 48 }}>
-                <div style={{ fontWeight: 800, fontSize: 18, color: x.c, fontFamily: T.font }}>{x.p}%</div>
-                <div style={{ fontSize: 10, color: T.textMuted, fontFamily: T.font, marginTop: 2 }}>{x.n} pros</div>
+            <div style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <Field
+                  label="アーティスト名 (EN)"
+                  value={artist.artistName}
+                  onChange={setField('artistName')}
+                  placeholder="e.g. Hiromi Uehara"
+                  required
+                />
+                <Field
+                  label="曲名"
+                  value={artist.songTitle}
+                  onChange={setField('songTitle')}
+                  placeholder="e.g. Spark"
+                  required
+                />
               </div>
-            ))}
-            <span style={{ fontSize: 13, color: T.textSub, fontFamily: T.font, alignSelf: 'center', marginLeft: 4 }}>success rate</span>
-          </div>
-        </div>
 
-        {/* Curator grid */}
-        {filtered.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))', gap: 20 }}>
-            {filtered.map(c => (
-              <CuratorCard
-                key={c.id}
-                c={c}
-                score={c.matchScore}
-                selected={selected.has(c.id)}
-                onToggle={toggle}
-                onDetail={setModal}
+              <Field
+                label="曲のリンク (YouTube / Spotify)"
+                value={artist.songLink}
+                onChange={setField('songLink')}
+                placeholder="https://open.spotify.com/track/... or https://youtu.be/..."
               />
-            ))}
+
+              {/* Genre multi-select */}
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, color: T.text, fontFamily: T.font, display: 'block', marginBottom: 10 }}>
+                  ジャンル<span style={{ color: T.accent, marginLeft: 3 }}>*</span>
+                  <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 400, marginLeft: 8 }}>複数選択可</span>
+                </label>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {ARTIST_GENRES.map(g => {
+                    const isSelected = selectedGenres.includes(g);
+                    return (
+                      <button
+                        key={g}
+                        onClick={() => toggleGenre(g)}
+                        style={{
+                          padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 500,
+                          fontFamily: T.font, cursor: 'pointer', transition: 'all 0.15s',
+                          background: isSelected ? T.accent : T.borderLight,
+                          color: isSelected ? '#fff' : T.textSub,
+                          border: `1.5px solid ${isSelected ? T.accent : T.border}`,
+                        }}
+                      >{g}</button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <Field
+                label="ムード / サウンドの雰囲気"
+                value={artist.mood}
+                onChange={setField('mood')}
+                placeholder="e.g. Energetic, Cinematic, Groovy"
+              />
+
+              <Field
+                label="楽曲の説明"
+                value={artist.description}
+                onChange={setField('description')}
+                placeholder="楽曲のサウンドや世界観を英語で説明してください"
+                multiline rows={3}
+              />
+
+              <Field
+                label="影響を受けたアーティスト / サウンドの参照"
+                value={artist.influences}
+                onChange={setField('influences')}
+                placeholder="e.g. Herbie Hancock, Snarky Puppy, Khruangbin"
+              />
+
+              <Field
+                label="実績・受賞歴"
+                value={artist.achievements}
+                onChange={setField('achievements')}
+                placeholder="e.g. SXSW 2024出演, Spotify Japan推薦, iTunes Jazz 1位"
+              />
+            </div>
+
+            {/* SoundNet analysis */}
+            <div style={{ background: T.white, borderRadius: T.radiusLg, padding: 24, border: `1px solid ${T.border}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div>
+                  <h2 style={{ fontFamily: T.font, fontSize: 16, fontWeight: 700, color: T.text, marginBottom: 4 }}>
+                    SoundNet 分析
+                  </h2>
+                  <p style={{ fontSize: 12.5, color: T.textSub, fontFamily: T.font }}>
+                    曲名・アーティスト名を入力すると自動で分析します
+                  </p>
+                </div>
+                <button
+                  onClick={handleAnalyze}
+                  disabled={analyzing || (!artist.songTitle && !artist.songLink)}
+                  style={{
+                    padding: '10px 20px', fontSize: 13, fontWeight: 600, fontFamily: T.font,
+                    borderRadius: T.radius, cursor: analyzing ? 'wait' : 'pointer',
+                    background: analyzing ? T.borderLight : T.accent,
+                    color: analyzing ? T.textMuted : '#fff',
+                    border: 'none', transition: 'all 0.15s',
+                    opacity: (!artist.songTitle && !artist.songLink) ? 0.5 : 1,
+                  }}
+                >
+                  {analyzing ? '分析中...' : '分析する'}
+                </button>
+              </div>
+
+              {analyzeError && (
+                <div style={{ padding: '10px 14px', background: '#fef2f2', borderRadius: T.radius, fontSize: 13, color: '#dc2626', fontFamily: T.font, marginBottom: 12 }}>
+                  {analyzeError}
+                </div>
+              )}
+
+              {analyzing && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 0', color: T.textSub, fontFamily: T.font, fontSize: 14 }}>
+                  <div style={{ width: 20, height: 20, border: `2px solid ${T.accentBorder}`, borderTopColor: T.accent, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                  SoundNetで分析しています...
+                  <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                </div>
+              )}
+
+              {trackData && !analyzing && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {trackData.audioFeatures && (
+                    <>
+                      {[
+                        { key: 'energy', label: 'Energy', color: '#f97316' },
+                        { key: 'danceability', label: 'Danceability', color: '#a855f7' },
+                        { key: 'tempo', label: 'Tempo', color: T.accent, max: 200 },
+                      ].map(({ key, label, color, max = 1 }) => {
+                        const raw = trackData.audioFeatures?.[key];
+                        if (raw == null) return null;
+                        const pct = max === 1 ? Math.round(raw * 100) : Math.min(100, Math.round(raw / max * 100));
+                        return (
+                          <div key={key}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                              <span style={{ fontSize: 12.5, fontWeight: 600, color: T.text, fontFamily: T.font }}>{label}</span>
+                              <span style={{ fontSize: 12.5, color: T.textSub, fontFamily: T.font }}>
+                                {key === 'tempo' ? `${Math.round(raw)} BPM` : `${pct}%`}
+                              </span>
+                            </div>
+                            <div style={{ height: 8, background: T.borderLight, borderRadius: 4, overflow: 'hidden' }}>
+                              <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 4, transition: 'width 0.8s ease' }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div style={{ padding: '8px 14px', background: T.accentLight, borderRadius: T.radius, fontSize: 12.5, color: T.accent, fontFamily: T.font, marginTop: 4 }}>
+                        ✓ 分析完了 — {trackData.source || 'SoundNet'} より取得
+                        {trackData.metadata?.title && ` | "${trackData.metadata.title}"`}
+                      </div>
+                    </>
+                  )}
+                  {!trackData.audioFeatures && (
+                    <div style={{ padding: '10px 14px', background: T.borderLight, borderRadius: T.radius, fontSize: 13, color: T.textSub, fontFamily: T.font }}>
+                      分析データを取得しました。
+                      {trackData.soundnetError && ` (SoundNet: ${trackData.soundnetError})`}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!trackData && !analyzing && (
+                <div style={{ textAlign: 'center', padding: '20px 0', color: T.textMuted, fontSize: 13, fontFamily: T.font }}>
+                  曲名とアーティスト名を入力すると自動で分析が始まります
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setStep(2)}
+                disabled={!artist.artistName || !artist.genre}
+                style={{
+                  padding: '14px 32px', fontSize: 15, fontWeight: 700, fontFamily: T.font,
+                  background: (!artist.artistName || !artist.genre) ? T.borderLight : T.accent,
+                  color: (!artist.artistName || !artist.genre) ? T.textMuted : '#fff',
+                  border: 'none', borderRadius: T.radius, cursor: (!artist.artistName || !artist.genre) ? 'not-allowed' : 'pointer',
+                  boxShadow: (!artist.artistName || !artist.genre) ? 'none' : '0 4px 16px rgba(14,165,233,0.3)',
+                  transition: 'all 0.15s',
+                }}
+              >
+                Next: キュレーターを選ぶ →
+              </button>
+            </div>
           </div>
-        ) : (
-          <div style={{ textAlign: 'center', padding: 60, color: T.textMuted, fontFamily: T.font, fontSize: 15 }}>
-            No curators match your filters.
+        )}
+
+        {/* ════════════════════════════════
+            STEP 2: Curator Selection
+        ════════════════════════════════ */}
+        {step === 2 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div>
+              <h1 style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 6 }}>
+                {filtered.length.toLocaleString()} キュレーター
+              </h1>
+              <p style={{ fontSize: 14, color: T.textSub, fontFamily: T.font }}>
+                {lang === 'ja' ? '50件以上に送るアーティストが最も良い結果を得ています' : 'Artists who send to 50+ curators get the best results'}
+              </p>
+            </div>
+
+            {/* Filter bar */}
+            <div className="filter-bar" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              <select
+                value={genreFilter}
+                onChange={e => setGenreFilter(e.target.value)}
+                style={{ ...selStyle, ...(genreFilter ? { borderColor: T.accent, background: T.accentLight, color: T.accent } : {}) }}
+              >
+                <option value="">Genres</option>
+                {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+
+              <select
+                value={typeFilter}
+                onChange={e => setTypeFilter(e.target.value)}
+                style={{ ...selStyle, ...(typeFilter ? { borderColor: T.accent, background: T.accentLight, color: T.accent } : {}) }}
+              >
+                <option value="">Curator/Pro Types</option>
+                {CURATOR_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <input
+                  type="text"
+                  placeholder="Search curators..."
+                  value={searchQ}
+                  onChange={e => setSearchQ(e.target.value)}
+                  style={{
+                    width: '100%', padding: '10px 16px', borderRadius: T.radius,
+                    border: `1.5px solid ${searchQ ? T.accent : T.border}`,
+                    fontSize: 14, fontFamily: T.font, outline: 'none',
+                    background: T.white, color: T.text,
+                  }}
+                />
+              </div>
+
+              {hasFilters && (
+                <button
+                  onClick={() => { setGenreFilter(''); setTypeFilter(''); setSearchQ(''); }}
+                  style={{ fontSize: 13, color: T.accent, background: 'none', border: 'none', cursor: 'pointer', fontFamily: T.font, fontWeight: 600, whiteSpace: 'nowrap' }}
+                >Clear filters</button>
+              )}
+            </div>
+
+            {/* Stats hint bar */}
+            <div style={{
+              display: 'inline-flex', gap: 20,
+              padding: '14px 24px', background: T.accentLight,
+              borderRadius: T.radiusLg, border: `1px solid ${T.accentBorder}`,
+              alignItems: 'center', flexWrap: 'wrap',
+            }}>
+              <span style={{ fontSize: 13, color: T.accent, fontFamily: T.font, fontWeight: 500 }}>
+                💡 {lang === 'ja' ? '50件以上に送るアーティストが最も良い結果を得ています' : 'Artists who send to 50+ curators get the best results'}
+              </span>
+              <div style={{ display: 'flex', gap: 16 }}>
+                {[{n:50,p:60,c:"#fbbf24"},{n:100,p:72,c:"#fb923c"},{n:"200+",p:93,c:T.green}].map((x,i) => (
+                  <div key={i} style={{ textAlign: 'center', minWidth: 48 }}>
+                    <div style={{ fontWeight: 800, fontSize: 18, color: x.c, fontFamily: T.font }}>{x.p}%</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, fontFamily: T.font, marginTop: 2 }}>{x.n} pros</div>
+                  </div>
+                ))}
+                <span style={{ fontSize: 13, color: T.textSub, fontFamily: T.font, alignSelf: 'center', marginLeft: 4 }}>success rate</span>
+              </div>
+            </div>
+
+            {/* Curator grid */}
+            {filtered.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))', gap: 20 }}>
+                {filtered.map(c => (
+                  <CuratorCard
+                    key={c.id}
+                    c={c}
+                    score={c.matchScore}
+                    selected={selected.has(c.id)}
+                    onToggle={toggle}
+                    onDetail={setModal}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: 60, color: T.textMuted, fontFamily: T.font, fontSize: 15 }}>
+                No curators match your filters.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ════════════════════════════════
+            STEP 3: Pitch Creation
+        ════════════════════════════════ */}
+        {step === 3 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+            <div>
+              <h1 style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 8 }}>
+                ピッチを作成
+              </h1>
+              <p style={{ fontSize: 14, color: T.textSub, fontFamily: T.font }}>
+                {selectedCurators.length}件のキュレーターに送るピッチメールを作成します
+              </p>
+            </div>
+
+            {/* pitchStep 0: Style selector */}
+            {pitchStep === 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {/* Selected curators list */}
+                <div style={{ background: T.white, borderRadius: T.radiusLg, padding: 24, border: `1px solid ${T.border}` }}>
+                  <h2 style={{ fontFamily: T.font, fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 16 }}>
+                    選択中のキュレーター ({selectedCurators.length}件)
+                  </h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {selectedCurators.map(c => (
+                      <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: T.bg, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
+                        <Avatar name={c.name} color={c.color} size={36} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontFamily: T.font, fontSize: 14, fontWeight: 600, color: T.text }}>{c.name}</div>
+                          <div style={{ fontFamily: T.font, fontSize: 12, color: T.textSub }}>{c.type} {c.country && FL[c.country] ? FL[c.country] : ''}</div>
+                        </div>
+                        <div style={{ fontSize: 13, color: T.accent, fontWeight: 700, fontFamily: T.font }}>{c.creditCost || 2} cr</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 16, padding: '12px 16px', background: T.accentLight, borderRadius: T.radius, border: `1px solid ${T.accentBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: T.text, fontFamily: T.font }}>合計クレジット</span>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: T.accent, fontFamily: T.font }}>{totalCreditCost} cr</span>
+                  </div>
+                </div>
+
+                {/* Pitch style radio */}
+                <div style={{ background: T.white, borderRadius: T.radiusLg, padding: 24, border: `1px solid ${T.border}` }}>
+                  <h2 style={{ fontFamily: T.font, fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 16 }}>
+                    ピッチスタイルを選択
+                  </h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {[
+                      { value: 'professional', label: 'Professional', desc: '業界標準の洗練されたトーン。実績を前面に出した説得力のあるメール。' },
+                      { value: 'casual', label: 'Casual', desc: '親しみやすく温かみのあるトーン。音楽への愛を共有する友人のように。' },
+                      { value: 'storytelling', label: 'Storytelling', desc: 'まず音楽の世界観を描写するスタイル。感情に訴える表現で興味を引く。' },
+                    ].map(opt => (
+                      <label
+                        key={opt.value}
+                        style={{
+                          display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px',
+                          borderRadius: T.radius, cursor: 'pointer',
+                          border: `1.5px solid ${pitchStyle === opt.value ? T.accent : T.border}`,
+                          background: pitchStyle === opt.value ? T.accentLight : T.white,
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="pitchStyle"
+                          value={opt.value}
+                          checked={pitchStyle === opt.value}
+                          onChange={() => setPitchStyle(opt.value)}
+                          style={{ marginTop: 2, accentColor: T.accent }}
+                        />
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: T.text, fontFamily: T.font }}>{opt.label}</div>
+                          <div style={{ fontSize: 12.5, color: T.textSub, fontFamily: T.font, marginTop: 3 }}>{opt.desc}</div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Generate buttons */}
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <button
+                    onClick={handleAIPitch}
+                    disabled={aiLoading}
+                    style={{
+                      flex: 1, minWidth: 200, padding: '14px 24px', fontSize: 15, fontWeight: 700,
+                      fontFamily: T.font, borderRadius: T.radius, cursor: aiLoading ? 'wait' : 'pointer',
+                      background: aiLoading ? T.borderLight : T.accent,
+                      color: aiLoading ? T.textMuted : '#fff',
+                      border: 'none',
+                      boxShadow: aiLoading ? 'none' : '0 4px 16px rgba(14,165,233,0.3)',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {aiLoading ? '🤖 生成中...' : '🤖 AIピッチ生成'}
+                  </button>
+                  <button
+                    onClick={handleTemplatePitch}
+                    disabled={aiLoading}
+                    style={{
+                      flex: 1, minWidth: 200, padding: '14px 24px', fontSize: 15, fontWeight: 700,
+                      fontFamily: T.font, borderRadius: T.radius, cursor: 'pointer',
+                      background: 'transparent', color: T.textSub,
+                      border: `1.5px solid ${T.border}`,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    📝 テンプレート
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <button
+                    onClick={() => setStep(2)}
+                    style={{ padding: '10px 20px', fontSize: 14, fontWeight: 600, fontFamily: T.font, background: 'transparent', color: T.textSub, border: `1.5px solid ${T.border}`, borderRadius: T.radius, cursor: 'pointer' }}
+                  >
+                    ← キュレーター選択に戻る
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* pitchStep 1: Review & Edit */}
+            {pitchStep === 1 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ background: T.white, borderRadius: T.radiusLg, padding: 24, border: `1px solid ${T.border}` }}>
+                  {/* Tab bar */}
+                  <div style={{ display: 'flex', gap: 0, marginBottom: 20, borderRadius: T.radius, overflow: 'hidden', border: `1px solid ${T.border}`, alignSelf: 'flex-start', width: 'fit-content' }}>
+                    {[{ id: 'en', label: 'English' }, { id: 'ja', label: '日本語' }].map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setPitchTab(tab.id)}
+                        style={{
+                          padding: '10px 24px', fontSize: 14, fontWeight: 600, fontFamily: T.font,
+                          cursor: 'pointer', border: 'none', transition: 'all 0.15s',
+                          background: pitchTab === tab.id ? T.accent : T.white,
+                          color: pitchTab === tab.id ? '#fff' : T.textSub,
+                        }}
+                      >{tab.label}</button>
+                    ))}
+                  </div>
+
+                  {pitchTab === 'en' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <textarea
+                        value={pitchText}
+                        onChange={e => setPitchText(e.target.value)}
+                        rows={14}
+                        style={{
+                          width: '100%', padding: '14px', border: `1.5px solid ${T.border}`,
+                          borderRadius: T.radius, fontSize: 13.5, fontFamily: T.font,
+                          color: T.text, background: T.bg, resize: 'vertical', lineHeight: 1.7,
+                        }}
+                      />
+                      <button
+                        onClick={handleTranslateToJa}
+                        disabled={translating || !pitchText}
+                        style={{
+                          padding: '10px 20px', fontSize: 13, fontWeight: 600, fontFamily: T.font,
+                          borderRadius: T.radius, cursor: translating ? 'wait' : 'pointer',
+                          background: translating ? T.borderLight : T.accentLight,
+                          color: translating ? T.textMuted : T.accent,
+                          border: `1.5px solid ${T.accentBorder}`, transition: 'all 0.15s',
+                          alignSelf: 'flex-start',
+                        }}
+                      >
+                        {translating ? '翻訳中...' : '🔄 日本語に反映'}
+                      </button>
+                    </div>
+                  )}
+
+                  {pitchTab === 'ja' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <textarea
+                        value={pitchJa}
+                        onChange={e => setPitchJa(e.target.value)}
+                        rows={14}
+                        placeholder="「日本語に反映」ボタンで翻訳、または直接入力"
+                        style={{
+                          width: '100%', padding: '14px', border: `1.5px solid ${T.border}`,
+                          borderRadius: T.radius, fontSize: 13.5, fontFamily: T.font,
+                          color: T.text, background: T.bg, resize: 'vertical', lineHeight: 1.7,
+                        }}
+                      />
+                      <button
+                        onClick={handleTranslateToEn}
+                        disabled={translating || !pitchJa}
+                        style={{
+                          padding: '10px 20px', fontSize: 13, fontWeight: 600, fontFamily: T.font,
+                          borderRadius: T.radius, cursor: translating ? 'wait' : 'pointer',
+                          background: translating ? T.borderLight : T.accentLight,
+                          color: translating ? T.textMuted : T.accent,
+                          border: `1.5px solid ${T.accentBorder}`, transition: 'all 0.15s',
+                          alignSelf: 'flex-start',
+                        }}
+                      >
+                        {translating ? '翻訳中...' : '🔄 英語に反映'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                  <button
+                    onClick={() => setPitchStep(0)}
+                    style={{ padding: '12px 24px', fontSize: 14, fontWeight: 600, fontFamily: T.font, background: 'transparent', color: T.textSub, border: `1.5px solid ${T.border}`, borderRadius: T.radius, cursor: 'pointer' }}
+                  >
+                    ← 戻る
+                  </button>
+                  <button
+                    onClick={() => setPitchStep(2)}
+                    disabled={!pitchText}
+                    style={{
+                      padding: '12px 32px', fontSize: 15, fontWeight: 700, fontFamily: T.font,
+                      background: !pitchText ? T.borderLight : T.accent,
+                      color: !pitchText ? T.textMuted : '#fff',
+                      border: 'none', borderRadius: T.radius, cursor: !pitchText ? 'not-allowed' : 'pointer',
+                      boxShadow: !pitchText ? 'none' : '0 4px 16px rgba(14,165,233,0.3)',
+                    }}
+                  >
+                    送信へ →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* pitchStep 2: Confirm */}
+            {pitchStep === 2 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}` }}>
+                  <h2 style={{ fontFamily: T.fontDisplay, fontSize: 20, fontWeight: 700, color: T.text, marginBottom: 20 }}>
+                    送信確認
+                  </h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {[
+                      { label: 'アーティスト', value: artist.artistName },
+                      { label: '楽曲', value: artist.songTitle || '(未入力)' },
+                      { label: 'ジャンル', value: Array.isArray(artist.genre) ? artist.genre.join(', ') : (artist.genre || '(未入力)') },
+                      { label: '送信先キュレーター数', value: `${selectedCurators.length}件` },
+                    ].map(item => (
+                      <div key={item.label} style={{ display: 'flex', alignItems: 'baseline', gap: 16, padding: '12px 0', borderBottom: `1px solid ${T.border}` }}>
+                        <span style={{ fontSize: 13, color: T.textSub, fontFamily: T.font, minWidth: 160 }}>{item.label}</span>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: T.text, fontFamily: T.font }}>{item.value}</span>
+                      </div>
+                    ))}
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, padding: '12px 0' }}>
+                      <span style={{ fontSize: 13, color: T.textSub, fontFamily: T.font, minWidth: 160 }}>消費クレジット</span>
+                      <span style={{ fontSize: 20, fontWeight: 800, color: T.accent, fontFamily: T.font }}>{totalCreditCost} cr</span>
+                      <span style={{ fontSize: 13, color: T.textMuted, fontFamily: T.font }}>（残高: {credits} cr → {credits - totalCreditCost} cr）</span>
+                    </div>
+                  </div>
+
+                  {credits < totalCreditCost && (
+                    <div style={{ padding: '12px 16px', background: '#fef2f2', borderRadius: T.radius, fontSize: 13.5, color: '#dc2626', fontFamily: T.font, marginTop: 16 }}>
+                      クレジットが不足しています。キュレーターの数を減らすか、クレジットを購入してください。
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                  <button
+                    onClick={() => setPitchStep(1)}
+                    style={{ padding: '12px 24px', fontSize: 14, fontWeight: 600, fontFamily: T.font, background: 'transparent', color: T.textSub, border: `1.5px solid ${T.border}`, borderRadius: T.radius, cursor: 'pointer' }}
+                  >
+                    ← 戻る
+                  </button>
+                  <button
+                    onClick={sendAll}
+                    disabled={credits < totalCreditCost}
+                    style={{
+                      padding: '14px 36px', fontSize: 16, fontWeight: 700, fontFamily: T.font,
+                      background: credits < totalCreditCost ? T.borderLight : T.green,
+                      color: credits < totalCreditCost ? T.textMuted : '#fff',
+                      border: 'none', borderRadius: T.radius,
+                      cursor: credits < totalCreditCost ? 'not-allowed' : 'pointer',
+                      boxShadow: credits < totalCreditCost ? 'none' : '0 4px 16px rgba(22,163,74,0.3)',
+                    }}
+                  >
+                    ✅ 送信する ({totalCreditCost}cr)
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ════════════════════════════════
+            STEP 4: Complete + Tracking
+        ════════════════════════════════ */}
+        {step === 4 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {/* Success card */}
+            <div style={{
+              background: T.white, borderRadius: T.radiusLg, padding: 32,
+              border: `1.5px solid ${T.greenBorder}`, textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
+              <h1 style={{ fontFamily: T.fontDisplay, fontSize: 26, fontWeight: 700, color: T.green, marginBottom: 8 }}>
+                ✅ {sentPitches.length}件送信完了！
+              </h1>
+              <p style={{ fontSize: 14, color: T.textSub, fontFamily: T.font }}>
+                キュレーターへのピッチが送信されました。ステータスはリアルタイムで更新されます。
+              </p>
+            </div>
+
+            {/* Pitch list */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {sentPitches.map(pitch => (
+                <div
+                  key={pitch.id}
+                  style={{
+                    background: T.white, borderRadius: T.radiusLg, padding: 24,
+                    border: `1px solid ${pitch.status === 'accepted' ? T.greenBorder : pitch.status === 'declined' ? '#fca5a5' : T.border}`,
+                    transition: 'border-color 0.3s',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: T.text, fontFamily: T.font }}>{pitch.curatorName}</span>
+                        <span style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>{pitch.curatorPlatform}</span>
+                      </div>
+                      <div style={{ fontSize: 13, color: T.textSub, fontFamily: T.font, marginBottom: 8 }}>
+                        {pitch.artistName} — {pitch.songTitle || '(楽曲未設定)'}
+                      </div>
+                      {pitch.feedback && (
+                        <div style={{
+                          padding: '10px 14px', background: pitch.status === 'accepted' ? T.greenLight : '#fef2f2',
+                          borderRadius: T.radius, fontSize: 13, fontStyle: 'italic',
+                          color: pitch.status === 'accepted' ? T.green : '#dc2626',
+                          fontFamily: T.font, marginTop: 8,
+                          border: `1px solid ${pitch.status === 'accepted' ? T.greenBorder : '#fca5a5'}`,
+                        }}>
+                          "{pitch.feedback}"
+                        </div>
+                      )}
+                    </div>
+                    <StatusBadge status={pitch.status} />
+                  </div>
+                  <PitchProgress status={pitch.status} />
+                  <div style={{ fontSize: 11.5, color: T.textMuted, fontFamily: T.font, marginTop: 8 }}>
+                    送信: {new Date(pitch.sentAt).toLocaleDateString('ja-JP')} | 期限: {new Date(pitch.deadline).toLocaleDateString('ja-JP')}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Stats summary */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
+              {[
+                { label: '送信済', status: 'sent', icon: '📤', color: T.textSub },
+                { label: '開封済', status: 'opened', icon: '👁', color: T.accent },
+                { label: '試聴済', status: 'listened', icon: '🎧', color: '#b45309' },
+                { label: '採用', status: 'accepted', icon: '🎉', color: T.green },
+                { label: '不採用', status: 'declined', icon: '📋', color: '#dc2626' },
+              ].map(item => {
+                const count = sentPitches.filter(p => p.status === item.status).length;
+                return (
+                  <div key={item.status} style={{
+                    background: T.white, borderRadius: T.radiusLg, padding: '16px 20px',
+                    border: `1px solid ${T.border}`, textAlign: 'center',
+                  }}>
+                    <div style={{ fontSize: 22 }}>{item.icon}</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: item.color, fontFamily: T.font, marginTop: 4 }}>{count}</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>{item.label}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Reset button */}
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8 }}>
+              <button
+                onClick={resetAll}
+                style={{
+                  padding: '14px 36px', fontSize: 15, fontWeight: 700, fontFamily: T.font,
+                  background: T.accent, color: '#fff', border: 'none',
+                  borderRadius: T.radius, cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(14,165,233,0.3)',
+                }}
+              >
+                別の楽曲を送る
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* ── Sticky bottom bar (shown when something selected) ── */}
-      {selected.size > 0 && (
+      {/* ── Sticky bottom bar: Step 2 ── */}
+      {step === 2 && (
         <div style={{
           position: 'fixed', bottom: 0, left: 0, right: 0,
           background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(12px)',
@@ -847,17 +1950,28 @@ export default function CuratorsPage() {
         }}>
           <div style={{ fontFamily: T.font, fontSize: 14 }}>
             <span style={{ fontWeight: 700, color: T.accent }}>{selected.size} selected</span>
-            <span style={{ color: T.textMuted }}> • {totalCost} credits</span>
+            <span style={{ color: T.textMuted }}> • {totalCreditCost} credits</span>
           </div>
-          <a
-            href="/studio"
-            style={{
-              padding: '12px 28px', fontSize: 14, fontWeight: 600,
-              background: T.accent, color: '#fff', borderRadius: T.radius,
-              textDecoration: 'none', fontFamily: T.font,
-              boxShadow: '0 4px 16px rgba(14,165,233,0.3)',
-            }}
-          >Next step →</a>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={() => setStep(1)}
+              style={{ padding: '10px 20px', fontSize: 13, fontWeight: 600, fontFamily: T.font, background: 'transparent', color: T.textSub, border: `1.5px solid ${T.border}`, borderRadius: T.radius, cursor: 'pointer' }}
+            >
+              ← 戻る
+            </button>
+            <button
+              onClick={() => { setPitchStep(0); setStep(3); }}
+              disabled={selected.size === 0}
+              style={{
+                padding: '12px 28px', fontSize: 14, fontWeight: 600,
+                background: selected.size === 0 ? T.borderLight : T.accent,
+                color: selected.size === 0 ? T.textMuted : '#fff',
+                borderRadius: T.radius, border: 'none', cursor: selected.size === 0 ? 'not-allowed' : 'pointer',
+                fontFamily: T.font,
+                boxShadow: selected.size === 0 ? 'none' : '0 4px 16px rgba(14,165,233,0.3)',
+              }}
+            >次へ: ピッチ作成 →</button>
+          </div>
         </div>
       )}
 

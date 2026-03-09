@@ -39,7 +39,10 @@ export async function GET(request) {
     const filter = searchParams.get('status');
 
     // curator_id OR curator_email でマッチ（シードキュレーターIDずれ対策）
-    const orFilter = `curator_id.eq.${curator.id},curator_email.eq.${curator.email}`;
+    const cId = String(curator.id || '').trim();
+    const cEmail = String(curator.email || '').trim();
+    const orFilter = `curator_id.eq.${cId},curator_email.eq.${cEmail}`;
+    console.log(`[dashboard] orFilter="${orFilter}"`);
 
     let query = db
       .from('pitches')

@@ -30,7 +30,10 @@ export async function GET(request, { params }) {
   console.log(`[pitch-detail] GET pitchId=${pitchId} curatorId=${curator.id} email=${curator.email}`);
 
   // curator_id OR curator_email でマッチ
-  const orFilter = `curator_id.eq.${curator.id},curator_email.eq.${curator.email}`;
+  const cId = String(curator.id || '').trim();
+  const cEmail = String(curator.email || '').trim();
+  const orFilter = `curator_id.eq.${cId},curator_email.eq.${cEmail}`;
+  console.log(`[pitch-detail] orFilter="${orFilter}"`);
 
   const { data, error } = await db
     .from('pitches')

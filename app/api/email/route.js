@@ -42,7 +42,7 @@ export async function POST(request) {
             <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
               Sent via <a href="https://otonami.io" style="color: #7c3aed; text-decoration: none;">OTONAMI</a> — Connecting Japanese Artists with the World
               <br>
-              <a href="https://otonami.io/curator/respond?pitch=${pitchId}" style="color: #7c3aed;">📩 Respond to this pitch</a>
+              <a href="https://otonami.io/curator/pitch/${pitchId}" style="display:inline-block;margin-top:8px;padding:10px 22px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">📩 Respond to this pitch</a>
             </div>
           </div>
         `;
@@ -55,7 +55,7 @@ export async function POST(request) {
             <p>Hi ${curatorName || toName},</p>
             <p>You have a pending pitch from <strong>${artistName}</strong> that's awaiting your feedback.</p>
             <p>Your response helps artists improve and ensures you continue receiving quality submissions.</p>
-            <p><a href="https://otonami.io/curator/inbox" style="display: inline-block; padding: 12px 24px; background: #7c3aed; color: white; text-decoration: none; border-radius: 8px;">Review Pitch</a></p>
+            <p><a href="https://otonami.io/curator/dashboard" style="display: inline-block; padding: 12px 24px; background: #7c3aed; color: white; text-decoration: none; border-radius: 8px;">Review Pitch</a></p>
             <p style="color: #94a3b8; font-size: 12px;">OTONAMI Team</p>
           </div>
         `;

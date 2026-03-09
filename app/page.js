@@ -182,7 +182,7 @@ export default function HomePage() {
         textAlign: 'center', padding: '120px 24px 100px',
         background: [
           'linear-gradient(180deg, rgba(15,23,42,0.72) 0%, rgba(15,23,42,0.82) 100%)',
-          "url('/hero.jpg') center/cover no-repeat",
+          "url('/images/hero-sxsw-crowd.jpg') center/cover no-repeat",
         ].join(', '),
         backgroundColor: '#0f172a',
       }}>
@@ -297,8 +297,37 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── From Japan to the World Stage ── */}
+      <section style={{ padding: '80px 24px', background: T.white }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>
+            {lang === 'ja' ? 'トラックレコード' : 'Track Record'}
+          </div>
+          <h2 style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.text, marginBottom: 48 }}>
+            {lang === 'ja' ? '日本から世界のステージへ' : 'From Japan to the World Stage'}
+          </h2>
+          <div className="three-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+            {[
+              { src: '/images/sxsw-trumpet.jpg', caption: 'SXSW 2025 — Tokyo Night' },
+              { src: '/images/outdoor-live.jpg', caption: lang === 'ja' ? '国際ツアー' : 'International Tour' },
+              { src: '/images/stage-performance.jpg', caption: 'ROUTE14 × OTONAMI' },
+            ].map((img, i) => (
+              <div key={i} style={{ borderRadius: T.radiusLg, overflow: 'hidden', aspectRatio: '4/3', position: 'relative' }}>
+                <img src={img.src} alt={img.caption} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  padding: '28px 16px 14px',
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.72), transparent)',
+                  color: '#fff', fontSize: 12, fontWeight: 600, fontFamily: T.font,
+                }}>{img.caption}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── For Artists ── */}
-      <section id="for-artists" style={{ padding: '80px 24px', background: T.white }}>
+      <section id="for-artists" style={{ padding: '80px 24px', background: T.bg }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div className="artist-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
             <div>
@@ -316,21 +345,56 @@ export default function HomePage() {
               onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,185,129,0.28)'; }}
               >{t.artCta}</a>
             </div>
-            {/* Feature list (right column, no photo needed) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {[
-                { ic: '🤖', title: lang === 'ja' ? 'AI英語ピッチ生成' : 'AI Pitch Generation', desc: lang === 'ja' ? '楽曲情報を入力するだけでプロ品質の英語ピッチメールを即生成。' : 'Professional English pitch emails generated instantly from your track info.' },
-                { ic: '🎯', title: lang === 'ja' ? 'AIマッチング' : 'Smart Matching', desc: lang === 'ja' ? 'ジャンル・ムード・音響特性で最適なキュレーターを自動選定。' : 'AI matches your sound to the right curators by genre, mood, and audio profile.' },
-                { ic: '📊', title: lang === 'ja' ? 'リアルタイム追跡' : 'Real-time Tracking', desc: lang === 'ja' ? 'ピッチの開封・試聴・返信ステータスをダッシュボードで管理。' : 'Track opens, listens, and responses in your dashboard.' },
-              ].map((f, i) => (
-                <div key={i} style={{ display: 'flex', gap: 16, padding: '20px 24px', background: T.bg, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: T.accentLight, border: `1px solid ${T.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{f.ic}</div>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text, fontFamily: T.font, marginBottom: 4 }}>{f.title}</div>
-                    <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.6, fontFamily: T.font }}>{f.desc}</div>
+            {/* Live performance photo */}
+            <div style={{ borderRadius: T.radiusXl, overflow: 'hidden', aspectRatio: '4/3', boxShadow: T.shadowLg }}>
+              <img
+                src="/images/outdoor-live.jpg"
+                alt="Live performance"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Backed by the Industry ── */}
+      <section style={{ padding: '80px 24px', background: T.white }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <div className="artist-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+            <div style={{ borderRadius: T.radiusXl, overflow: 'hidden', aspectRatio: '16/10', boxShadow: T.shadowLg }}>
+              <img
+                src="/images/hero-sxsw-crowd.jpg"
+                alt="SXSW performance"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>
+                {lang === 'ja' ? '業界の信頼' : 'Industry Backing'}
+              </div>
+              <h2 style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 16, lineHeight: 1.25 }}>
+                {lang === 'ja' ? '業界に支持されたネットワーク' : 'Backed by the Industry'}
+              </h2>
+              <p style={{ fontSize: 15, color: T.textSub, lineHeight: 1.75, marginBottom: 28, fontFamily: T.font }}>
+                {lang === 'ja'
+                  ? 'SXSW連続10年出演、ILCJ加盟70以上のレーベル。業界の第一線で培った信頼が、アーティストの国際展開を加速します。'
+                  : '10 consecutive years at SXSW. 70+ labels through ILCJ. A decade of trust built on the frontlines of the international music industry.'}
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  { label: lang === 'ja' ? 'SXSW 連続10年出演' : '10 Years at SXSW', sub: lang === 'ja' ? 'Austin, Texas' : 'Austin, Texas' },
+                  { label: lang === 'ja' ? 'ILCJ加盟レーベル70以上' : '70+ ILCJ Member Labels', sub: lang === 'ja' ? '日本最大インディー連合' : "Japan's largest indie coalition" },
+                  { label: lang === 'ja' ? 'キュレーター・プロ 3,449名' : '3,449 Curators & Pros', sub: lang === 'ja' ? '世界各国のメディア・プレイリスト' : 'Global media & playlists' },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: T.bg, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: T.accent, flexShrink: 0 }}/>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: T.text, fontFamily: T.font }}>{item.label}</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>{item.sub}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>

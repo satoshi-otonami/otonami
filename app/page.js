@@ -180,14 +180,13 @@ export default function HomePage() {
       <section style={{
         position: 'relative', overflow: 'hidden',
         textAlign: 'center', padding: '120px 24px 100px',
-        background: [
-          'linear-gradient(180deg, rgba(15,23,42,0.72) 0%, rgba(15,23,42,0.82) 100%)',
-          "url('/images/hero-sxsw-crowd.jpg') center/cover no-repeat",
-        ].join(', '),
+        backgroundImage: "linear-gradient(180deg, rgba(15,23,42,0.68) 0%, rgba(15,23,42,0.78) 100%), url('/images/hero-sxsw-crowd.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         backgroundColor: '#0f172a',
       }}>
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)', zIndex: 0 }}/>
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 80%, rgba(14,165,233,0.15) 0%, transparent 60%)', zIndex: 1 }}/>
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 100%, rgba(14,165,233,0.12) 0%, transparent 60%)', zIndex: 1 }}/>
         <div style={{ maxWidth: 740, margin: '0 auto', position: 'relative', zIndex: 2 }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 18px',

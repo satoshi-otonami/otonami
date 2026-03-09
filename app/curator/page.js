@@ -69,6 +69,8 @@ export default function CuratorRegistrationPage() {
   });
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarDragOver, setAvatarDragOver] = useState(false);
   const [step1Error, setStep1Error] = useState('');
   const [status, setStatus] = useState(null);
   const [error, setError] = useState('');
@@ -110,9 +112,12 @@ export default function CuratorRegistrationPage() {
     });
   };
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0];
+  const applyAvatarFile = (file) => {
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file. / 画像ファイルを選択してください。');
+      return;
+    }
     if (file.size > 2 * 1024 * 1024) {
       alert('File size must be under 2MB. / ファイルサイズは2MB以下にしてください。');
       return;
@@ -121,6 +126,14 @@ export default function CuratorRegistrationPage() {
     const reader = new FileReader();
     reader.onload = (ev) => setAvatarPreview(ev.target.result);
     reader.readAsDataURL(file);
+  };
+
+  const handleAvatarChange = (e) => applyAvatarFile(e.target.files?.[0]);
+
+  const handleAvatarDrop = (e) => {
+    e.preventDefault();
+    setAvatarDragOver(false);
+    applyAvatarFile(e.dataTransfer.files?.[0]);
   };
 
   const handleLogin = async () => {
@@ -169,19 +182,23 @@ export default function CuratorRegistrationPage() {
     // Upload avatar if selected
     let iconUrl = '';
     if (avatarFile) {
+      setAvatarUploading(true);
       try {
         const ext = avatarFile.name.split('.').pop().toLowerCase();
-        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const slug = form.email.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+        const fileName = `curator-${slug}-${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
-          .from('curator-avatars')
-          .upload(fileName, avatarFile, { contentType: avatarFile.type });
+          .from('avatars')
+          .upload(fileName, avatarFile, { contentType: avatarFile.type, upsert: true });
         if (!uploadError) {
           const { data: { publicUrl } } = supabase.storage
-            .from('curator-avatars')
+            .from('avatars')
             .getPublicUrl(fileName);
           iconUrl = publicUrl;
         }
-      } catch { /* skip image on error */ }
+      } catch { /* skip image on error */ } finally {
+        setAvatarUploading(false);
+      }
     }
 
     try {
@@ -502,27 +519,47 @@ export default function CuratorRegistrationPage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
                         <div
-                          onClick={() => avatarInputRef.current?.click()}
-                          style={{ width: 96, height: 96, borderRadius: '50%', border: `2px dashed ${avatarPreview ? T.accent : '#d1d5db'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', background: T.bg, flexShrink: 0 }}
+                          onClick={() => !avatarUploading && avatarInputRef.current?.click()}
+                          onDragOver={e => { e.preventDefault(); setAvatarDragOver(true); }}
+                          onDragLeave={() => setAvatarDragOver(false)}
+                          onDrop={handleAvatarDrop}
+                          style={{
+                            width: 96, height: 96, borderRadius: '50%',
+                            border: `2px dashed ${avatarDragOver ? T.accentDark : avatarPreview ? T.accent : '#d1d5db'}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: avatarUploading ? 'default' : 'pointer',
+                            overflow: 'hidden', background: avatarDragOver ? T.accentLight : T.bg,
+                            flexShrink: 0, transition: 'all 0.15s',
+                          }}
                         >
-                          {avatarPreview
-                            ? <img src={avatarPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            : <div style={{ textAlign: 'center', color: T.textMuted }}>
-                                <div style={{ fontSize: 24 }}>📷</div>
-                                <div style={{ fontSize: 10, marginTop: 3, fontFamily: T.font }}>Upload</div>
+                          {avatarUploading
+                            ? <div style={{ textAlign: 'center', color: T.accent }}>
+                                <div style={{ fontSize: 18 }}>⏳</div>
+                                <div style={{ fontSize: 9, marginTop: 3, fontFamily: T.font }}>Uploading...</div>
                               </div>
+                            : avatarPreview
+                              ? <img src={avatarPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              : <div style={{ textAlign: 'center', color: avatarDragOver ? T.accent : T.textMuted }}>
+                                  <div style={{ fontSize: 24 }}>📷</div>
+                                  <div style={{ fontSize: 10, marginTop: 3, fontFamily: T.font }}>
+                                    {avatarDragOver ? 'Drop!' : 'Upload'}
+                                  </div>
+                                </div>
                           }
                         </div>
                         <div>
-                          <button onClick={() => avatarInputRef.current?.click()} style={{ padding: '8px 16px', border: `1px solid ${T.border}`, borderRadius: 8, background: T.white, color: T.textSub, fontSize: 13, cursor: 'pointer', fontFamily: T.font }}>
+                          <button onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading} style={{ padding: '8px 16px', border: `1px solid ${T.border}`, borderRadius: 8, background: T.white, color: T.textSub, fontSize: 13, cursor: avatarUploading ? 'not-allowed' : 'pointer', fontFamily: T.font }}>
                             {avatarPreview ? 'Change Photo / 変更' : '📷 Upload Photo / 写真を追加'}
                           </button>
-                          {avatarPreview && (
+                          {avatarPreview && !avatarUploading && (
                             <button onClick={() => { setAvatarFile(null); setAvatarPreview(null); }} style={{ marginLeft: 8, padding: '8px 12px', border: 'none', background: 'none', color: '#ef4444', fontSize: 12, cursor: 'pointer', fontFamily: T.font }}>Remove</button>
                           )}
-                          <p style={{ color: T.textMuted, fontSize: 11, marginTop: 6, fontFamily: T.font }}>JPG, PNG, WebP — max 2MB</p>
+                          <p style={{ color: T.textMuted, fontSize: 11, marginTop: 6, fontFamily: T.font }}>
+                            JPG, PNG, WebP — max 2MB<br />
+                            <span style={{ color: T.textMuted }}>ドラッグ&ドロップも可</span>
+                          </p>
                         </div>
-                        <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAvatarChange} style={{ display: 'none' }} />
+                        <input ref={avatarInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" onChange={handleAvatarChange} style={{ display: 'none' }} />
                       </div>
                     </div>
 
@@ -611,11 +648,11 @@ export default function CuratorRegistrationPage() {
 
                     <div style={{ display: 'flex', gap: 10, marginTop: 28 }}>
                       <button onClick={() => setRegisterStep(1)} style={{ padding: '14px 20px', border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>
-                      <button onClick={handleSubmit} disabled={status === 'loading'} style={{ flex: 1, padding: '14px', height: 48, background: status === 'loading' ? T.border : T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: status === 'loading' ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
-                      onMouseEnter={e => { if (status !== 'loading') e.currentTarget.style.background = T.accentDark; }}
-                      onMouseLeave={e => { if (status !== 'loading') e.currentTarget.style.background = T.accent; }}
+                      <button onClick={handleSubmit} disabled={status === 'loading' || avatarUploading} style={{ flex: 1, padding: '14px', height: 48, background: (status === 'loading' || avatarUploading) ? T.border : T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: (status === 'loading' || avatarUploading) ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
+                      onMouseEnter={e => { if (status !== 'loading' && !avatarUploading) e.currentTarget.style.background = T.accentDark; }}
+                      onMouseLeave={e => { if (status !== 'loading' && !avatarUploading) e.currentTarget.style.background = T.accent; }}
                       >
-                        {status === 'loading' ? 'Submitting... / 送信中...' : 'Complete Registration / 登録完了 →'}
+                        {avatarUploading ? 'Uploading image... / 画像アップロード中...' : status === 'loading' ? 'Submitting... / 送信中...' : 'Complete Registration / 登録完了 →'}
                       </button>
                     </div>
                   </div>

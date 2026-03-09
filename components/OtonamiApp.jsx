@@ -371,8 +371,31 @@ export default function App() {
   const [notif, setNotif] = useState(null);
   const [page, setPage] = useState("landing");
   const timersRef = useRef([]);
+  const historyTabRef = useRef(false); // true after first artist tab push
 
   const notify = (msg, type="success") => { setNotif({msg,type}); setTimeout(()=>setNotif(null),4000); };
+
+  // ── Browser history: sync artist tabs with pushState ──
+  const ARTIST_TABS = ["dashboard","curators","pitch","tracking","analytics","shop"];
+  useEffect(() => {
+    if (!ARTIST_TABS.includes(page)) return;
+    const url = `/studio?tab=${page}`;
+    if (!historyTabRef.current) {
+      window.history.replaceState({ tab: page }, '', url);
+      historyTabRef.current = true;
+    } else {
+      window.history.pushState({ tab: page }, '', url);
+    }
+  }, [page]); // eslint-disable-line
+
+  useEffect(() => {
+    const onPop = (e) => {
+      const tab = e.state?.tab;
+      if (tab && ARTIST_TABS.includes(tab)) setPage(tab);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []); // eslint-disable-line
 
   // Load data from storage
   useEffect(() => {

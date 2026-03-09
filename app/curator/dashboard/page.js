@@ -87,13 +87,23 @@ export default function CuratorDashboard() {
     try {
       const body = { pitchId, status };
       if (draft.text?.trim()) body.feedback_message = draft.text.trim();
+      if (status === 'accepted' && draft.featured && draft.url?.trim()) {
+        body.placement_url = draft.url.trim();
+        body.placement_platform = draft.platform || 'Other';
+        body.placement_date = draft.date || new Date().toISOString().slice(0, 10);
+      }
       const res = await fetch('/api/curator/dashboard', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
       if (!res.ok) return;
-      setPitches(prev => prev.map(p => p.id === pitchId ? { ...p, status, feedback_message: body.feedback_message } : p));
+      setPitches(prev => prev.map(p => p.id === pitchId ? {
+        ...p, status,
+        feedback_message: body.feedback_message,
+        placement_url: body.placement_url,
+        placement_platform: body.placement_platform,
+      } : p));
       setFeedbackDraft(prev => { const n = {...prev}; delete n[pitchId]; return n; });
       showToast('✅ Feedback submitted');
     } finally {
@@ -103,7 +113,7 @@ export default function CuratorDashboard() {
 
   const handleFeedbackOnly = async (pitchId) => {
     const draft = feedbackDraft[pitchId] || {};
-    if (!draft.text?.trim() && !draft.rating) return;
+    if (!draft.text?.trim()) return;
     await handleAction(pitchId, 'feedback');
   };
 
@@ -479,45 +489,92 @@ export default function CuratorDashboard() {
                         </div>
                       )}
 
-                      {/* Action buttons with feedback */}
+                      {/* Placement section */}
+                      <div style={{ marginTop: 14, padding: '12px 14px', background: 'rgba(14,165,233,0.05)', border: '1px solid rgba(14,165,233,0.18)', borderRadius: 10 }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={feedbackDraft[pitch.id]?.featured || false}
+                            onChange={e => setDraft(pitch.id, 'featured', e.target.checked)}
+                            style={{ accentColor: '#0ea5e9', width: 15, height: 15 }}
+                          />
+                          <span style={{ color: '#38bdf8', fontSize: 13, fontWeight: 700 }}>
+                            Yes, I featured this track / はい、紹介しました
+                          </span>
+                        </label>
+                        {feedbackDraft[pitch.id]?.featured && (
+                          <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <select
+                              value={feedbackDraft[pitch.id]?.platform || ''}
+                              onChange={e => setDraft(pitch.id, 'platform', e.target.value)}
+                              style={{ background: '#0a0a18', border: '1px solid #1e3a4a', borderRadius: 7, color: '#ccc', fontSize: 13, padding: '8px 10px', outline: 'none' }}
+                            >
+                              <option value="">Platform / プラットフォーム...</option>
+                              <option value="Spotify Playlist">Spotify Playlist</option>
+                              <option value="Blog">Blog</option>
+                              <option value="YouTube">YouTube</option>
+                              <option value="Radio">Radio</option>
+                              <option value="Other">Other</option>
+                            </select>
+                            <input
+                              type="url"
+                              value={feedbackDraft[pitch.id]?.url || ''}
+                              onChange={e => setDraft(pitch.id, 'url', e.target.value)}
+                              placeholder="https://open.spotify.com/playlist/... *required"
+                              style={{ background: '#0a0a18', border: `1px solid ${feedbackDraft[pitch.id]?.featured && !feedbackDraft[pitch.id]?.url?.trim() ? '#ef4444' : '#0ea5e9'}`, borderRadius: 7, color: '#ccc', fontSize: 13, padding: '8px 10px', outline: 'none' }}
+                            />
+                            <input
+                              type="date"
+                              value={feedbackDraft[pitch.id]?.date || new Date().toISOString().slice(0, 10)}
+                              onChange={e => setDraft(pitch.id, 'date', e.target.value)}
+                              style={{ background: '#0a0a18', border: '1px solid #1e3a4a', borderRadius: 7, color: '#ccc', fontSize: 13, padding: '8px 10px', outline: 'none' }}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action buttons */}
                       {(() => {
                         const draftText = feedbackDraft[pitch.id]?.text?.trim() || '';
                         const validFeedback = draftText.length >= 20;
-                        const canSubmit = !isBusy && validFeedback;
+                        const featured = feedbackDraft[pitch.id]?.featured || false;
+                        const placementUrl = feedbackDraft[pitch.id]?.url?.trim() || '';
+                        const canAccept = !isBusy && validFeedback && (!featured || placementUrl.length > 0);
+                        const canOther = !isBusy && validFeedback;
                         return (
                           <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
                             {(pitch.status === 'sent' || pitch.status === 'feedback') && (
                               <>
                                 <button
                                   onClick={() => handleAction(pitch.id, 'accepted')}
-                                  disabled={!canSubmit}
+                                  disabled={!canAccept}
                                   style={{
-                                    padding: '8px 16px', border: '1px solid rgba(74,222,128,0.3)',
-                                    borderRadius: 8, background: 'rgba(74,222,128,0.15)',
-                                    color: '#4ade80', fontSize: 12, fontWeight: 700,
-                                    cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.4,
+                                    padding: '8px 16px', border: '1px solid rgba(16,185,129,0.4)',
+                                    borderRadius: 8, background: 'rgba(16,185,129,0.15)',
+                                    color: '#10b981', fontSize: 12, fontWeight: 700,
+                                    cursor: canAccept ? 'pointer' : 'not-allowed', opacity: canAccept ? 1 : 0.4,
                                   }}
-                                >{isBusy ? '...' : '✅ Accept + Feedback'}</button>
+                                >{isBusy ? '...' : '✅ Accept & Featured'}</button>
                                 <button
                                   onClick={() => handleAction(pitch.id, 'rejected')}
-                                  disabled={!canSubmit}
+                                  disabled={!canOther}
                                   style={{
-                                    padding: '8px 16px', border: '1px solid rgba(248,113,113,0.3)',
-                                    borderRadius: 8, background: 'rgba(248,113,113,0.1)',
-                                    color: '#f87171', fontSize: 12, fontWeight: 700,
-                                    cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.4,
+                                    padding: '8px 16px', border: '1px solid rgba(239,68,68,0.3)',
+                                    borderRadius: 8, background: 'rgba(239,68,68,0.1)',
+                                    color: '#ef4444', fontSize: 12, fontWeight: 700,
+                                    cursor: canOther ? 'pointer' : 'not-allowed', opacity: canOther ? 1 : 0.4,
                                   }}
-                                >{isBusy ? '...' : '❌ Decline + Feedback'}</button>
+                                >{isBusy ? '...' : '❌ Decline'}</button>
                               </>
                             )}
                             <button
                               onClick={() => handleFeedbackOnly(pitch.id)}
-                              disabled={!canSubmit}
+                              disabled={!canOther}
                               style={{
                                 padding: '8px 16px', border: '1px solid #2a2a4a',
                                 borderRadius: 8, background: 'rgba(124,58,237,0.15)',
                                 color: '#a78bfa', fontSize: 12, fontWeight: 700,
-                                cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.4,
+                                cursor: canOther ? 'pointer' : 'not-allowed', opacity: canOther ? 1 : 0.4,
                               }}
                             >{isBusy ? '...' : '💬 Feedback Only'}</button>
                           </div>
@@ -525,10 +582,16 @@ export default function CuratorDashboard() {
                       })()}
 
                       {/* Existing feedback display */}
-                      {pitch.feedback_message && (
+                      {(pitch.feedback_message || pitch.placement_url) && (
                         <div style={{ marginTop: 14, padding: '10px 14px', background: '#131328', borderRadius: 8, border: '1px solid #1e1e3a' }}>
-                          <div style={{ fontSize: 11, color: '#555', marginBottom: 4 }}>Previous feedback / 過去のフィードバック</div>
-                          <div style={{ color: '#aaa', fontSize: 13 }}>{pitch.feedback_message}</div>
+                          <div style={{ fontSize: 11, color: '#555', marginBottom: 6 }}>Previous feedback / 過去のフィードバック</div>
+                          {pitch.feedback_message && <div style={{ color: '#aaa', fontSize: 13 }}>{pitch.feedback_message}</div>}
+                          {pitch.placement_url && (
+                            <div style={{ marginTop: 6 }}>
+                              <span style={{ color: '#0ea5e9', fontSize: 11, fontWeight: 700 }}>{pitch.placement_platform || 'Placement'}: </span>
+                              <a href={pitch.placement_url} target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', fontSize: 12, wordBreak: 'break-all' }}>{pitch.placement_url}</a>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

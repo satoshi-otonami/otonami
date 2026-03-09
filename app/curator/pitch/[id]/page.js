@@ -151,8 +151,11 @@ function PitchView({ pitchId, curator }) {
   const [pitch, setPitch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [rating, setRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState('');
+  const [featured, setFeatured] = useState(false);
+  const [placementPlatform, setPlacementPlatform] = useState('');
+  const [placementUrl, setPlacementUrl] = useState('');
+  const [placementDate, setPlacementDate] = useState(new Date().toISOString().slice(0, 10));
   const [updating, setUpdating] = useState(false);
   const [done, setDone] = useState(false);
   const [toast, setToast] = useState('');
@@ -178,16 +181,23 @@ function PitchView({ pitchId, curator }) {
 
   const submit = async (status) => {
     if (feedbackText.trim().length < 20) return;
+    if (status === 'accepted' && featured && !placementUrl.trim()) return;
     const token = localStorage.getItem('curator_token');
     setUpdating(true);
     try {
+      const body = { status, feedback_message: feedbackText.trim() };
+      if (status === 'accepted' && featured && placementUrl.trim()) {
+        body.placement_url = placementUrl.trim();
+        body.placement_platform = placementPlatform || 'Other';
+        body.placement_date = placementDate;
+      }
       const res = await fetch(`/api/curator/pitch/${pitchId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status, feedback_message: feedbackText.trim() }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) { showToast('❌ Failed to submit. Please try again.'); return; }
-      setPitch(prev => ({ ...prev, status, feedback_message: feedbackText.trim() }));
+      setPitch(prev => ({ ...prev, status, feedback_message: feedbackText.trim(), placement_url: body.placement_url, placement_platform: body.placement_platform }));
       setDone(true);
       showToast('✅ Feedback submitted!');
     } finally {
@@ -216,6 +226,7 @@ function PitchView({ pitchId, curator }) {
   const alreadyResponded = ['accepted', 'rejected', 'feedback'].includes(pitch.status);
   const validFeedback = feedbackText.trim().length >= 20;
   const canSubmit = validFeedback && !updating && !done;
+
 
   const STATUS_COLORS = {
     sent:     { color: S.yellow, bg: 'rgba(250,204,21,0.1)',  label: 'Pending / 未対応' },
@@ -307,12 +318,22 @@ function PitchView({ pitchId, curator }) {
               ✅ Feedback submitted! / フィードバックを送信しました
             </div>
             {pitch.feedback_message && (
-              <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.7, background: S.sub, borderRadius: 10, padding: '12px 16px', border: `1px solid ${S.cardBorder}` }}>
+              <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.7, background: S.sub, borderRadius: 10, padding: '12px 16px', border: `1px solid ${S.cardBorder}`, marginBottom: 10 }}>
                 {pitch.feedback_message}
               </div>
             )}
+            {pitch.placement_url && (
+              <div style={{ padding: '10px 14px', background: 'rgba(14,165,233,0.07)', border: '1px solid rgba(14,165,233,0.2)', borderRadius: 10, marginBottom: 10 }}>
+                <div style={{ color: '#38bdf8', fontSize: 11, fontWeight: 700, marginBottom: 4 }}>
+                  {pitch.placement_platform || 'Placement'} — Placement URL
+                </div>
+                <a href={pitch.placement_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0ea5e9', fontSize: 13, wordBreak: 'break-all' }}>
+                  {pitch.placement_url}
+                </a>
+              </div>
+            )}
             <a href="/curator/dashboard" style={{
-              display: 'inline-block', marginTop: 16,
+              display: 'inline-block', marginTop: 6,
               padding: '10px 20px', borderRadius: 10,
               background: 'linear-gradient(135deg,#7c3aed,#2563eb)',
               color: S.text, textDecoration: 'none', fontWeight: 700, fontSize: 13,
@@ -321,26 +342,6 @@ function PitchView({ pitchId, curator }) {
         ) : (
           /* フィードバック入力フォーム */
           <>
-            {/* Star rating */}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ color: S.dim, fontSize: 12, marginBottom: 8 }}>Rating (optional)</div>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                {[1,2,3,4,5].map(star => (
-                  <button
-                    key={star}
-                    onClick={() => setRating(star === rating ? 0 : star)}
-                    style={{
-                      fontSize: 26, background: 'none', border: 'none',
-                      cursor: 'pointer', padding: '2px',
-                      color: star <= rating ? S.yellow : '#333',
-                      filter: star <= rating ? 'none' : 'grayscale(1)',
-                    }}
-                  >★</button>
-                ))}
-                {rating > 0 && <span style={{ color: S.yellow, fontSize: 12, marginLeft: 4 }}>{rating}/5</span>}
-              </div>
-            </div>
-
             {/* Feedback textarea */}
             <div style={{ marginBottom: 14 }}>
               <div style={{ color: S.dim, fontSize: 12, marginBottom: 8 }}>
@@ -366,44 +367,96 @@ function PitchView({ pitchId, curator }) {
               )}
             </div>
 
-            {/* Action buttons */}
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <button
-                onClick={() => submit('accepted')}
-                disabled={!canSubmit}
-                style={{
-                  flex: 1, minWidth: 140, padding: '11px 16px',
-                  border: '1px solid rgba(74,222,128,0.3)', borderRadius: 10,
-                  background: canSubmit ? 'rgba(74,222,128,0.15)' : 'transparent',
-                  color: canSubmit ? S.green : S.dim,
-                  fontWeight: 700, fontSize: 13, cursor: canSubmit ? 'pointer' : 'not-allowed',
-                }}
-              >{updating ? '...' : '✅ Accept + Feedback'}</button>
-
-              <button
-                onClick={() => submit('rejected')}
-                disabled={!canSubmit}
-                style={{
-                  flex: 1, minWidth: 140, padding: '11px 16px',
-                  border: '1px solid rgba(248,113,113,0.3)', borderRadius: 10,
-                  background: canSubmit ? 'rgba(248,113,113,0.1)' : 'transparent',
-                  color: canSubmit ? S.red : S.dim,
-                  fontWeight: 700, fontSize: 13, cursor: canSubmit ? 'pointer' : 'not-allowed',
-                }}
-              >{updating ? '...' : '❌ Decline + Feedback'}</button>
-
-              <button
-                onClick={() => submit('feedback')}
-                disabled={!canSubmit}
-                style={{
-                  flex: 1, minWidth: 140, padding: '11px 16px',
-                  border: `1px solid ${S.cardBorder}`, borderRadius: 10,
-                  background: canSubmit ? 'rgba(124,58,237,0.15)' : 'transparent',
-                  color: canSubmit ? S.purple : S.dim,
-                  fontWeight: 700, fontSize: 13, cursor: canSubmit ? 'pointer' : 'not-allowed',
-                }}
-              >{updating ? '...' : '💬 Feedback Only'}</button>
+            {/* Placement section */}
+            <div style={{ marginBottom: 16, padding: '12px 14px', background: 'rgba(14,165,233,0.05)', border: '1px solid rgba(14,165,233,0.18)', borderRadius: 10 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={featured}
+                  onChange={e => setFeatured(e.target.checked)}
+                  style={{ accentColor: '#0ea5e9', width: 15, height: 15 }}
+                />
+                <span style={{ color: '#38bdf8', fontSize: 13, fontWeight: 700 }}>
+                  Yes, I featured this track / はい、紹介しました
+                </span>
+              </label>
+              {featured && (
+                <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <select
+                    value={placementPlatform}
+                    onChange={e => setPlacementPlatform(e.target.value)}
+                    style={{ background: S.sub, border: `1px solid ${S.cardBorder}`, borderRadius: 8, color: '#ccc', fontSize: 13, padding: '9px 11px', outline: 'none' }}
+                  >
+                    <option value="">Platform / プラットフォーム...</option>
+                    <option value="Spotify Playlist">Spotify Playlist</option>
+                    <option value="Blog">Blog</option>
+                    <option value="YouTube">YouTube</option>
+                    <option value="Radio">Radio</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <input
+                    type="url"
+                    value={placementUrl}
+                    onChange={e => setPlacementUrl(e.target.value)}
+                    placeholder="https://open.spotify.com/playlist/... *required"
+                    style={{ background: S.sub, border: `1px solid ${featured && !placementUrl.trim() ? '#ef4444' : '#0ea5e9'}`, borderRadius: 8, color: '#ccc', fontSize: 13, padding: '9px 11px', outline: 'none', boxSizing: 'border-box', width: '100%' }}
+                  />
+                  {featured && !placementUrl.trim() && (
+                    <div style={{ color: '#ef4444', fontSize: 11 }}>URL is required when accepting as featured / URLは必須です</div>
+                  )}
+                  <input
+                    type="date"
+                    value={placementDate}
+                    onChange={e => setPlacementDate(e.target.value)}
+                    style={{ background: S.sub, border: `1px solid ${S.cardBorder}`, borderRadius: 8, color: '#ccc', fontSize: 13, padding: '9px 11px', outline: 'none' }}
+                  />
+                </div>
+              )}
             </div>
+
+            {/* Action buttons */}
+            {(() => {
+              const canAccept = canSubmit && (!featured || placementUrl.trim().length > 0);
+              return (
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => submit('accepted')}
+                    disabled={!canAccept}
+                    style={{
+                      flex: 1, minWidth: 140, padding: '11px 16px',
+                      border: '1px solid rgba(16,185,129,0.4)', borderRadius: 10,
+                      background: canAccept ? 'rgba(16,185,129,0.15)' : 'transparent',
+                      color: canAccept ? '#10b981' : S.dim,
+                      fontWeight: 700, fontSize: 13, cursor: canAccept ? 'pointer' : 'not-allowed',
+                    }}
+                  >{updating ? '...' : '✅ Accept & Featured'}</button>
+
+                  <button
+                    onClick={() => submit('rejected')}
+                    disabled={!canSubmit}
+                    style={{
+                      flex: 1, minWidth: 140, padding: '11px 16px',
+                      border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10,
+                      background: canSubmit ? 'rgba(239,68,68,0.1)' : 'transparent',
+                      color: canSubmit ? '#ef4444' : S.dim,
+                      fontWeight: 700, fontSize: 13, cursor: canSubmit ? 'pointer' : 'not-allowed',
+                    }}
+                  >{updating ? '...' : '❌ Decline'}</button>
+
+                  <button
+                    onClick={() => submit('feedback')}
+                    disabled={!canSubmit}
+                    style={{
+                      flex: 1, minWidth: 140, padding: '11px 16px',
+                      border: `1px solid ${S.cardBorder}`, borderRadius: 10,
+                      background: canSubmit ? 'rgba(124,58,237,0.15)' : 'transparent',
+                      color: canSubmit ? S.purple : S.dim,
+                      fontWeight: 700, fontSize: 13, cursor: canSubmit ? 'pointer' : 'not-allowed',
+                    }}
+                  >{updating ? '...' : '💬 Feedback Only'}</button>
+                </div>
+              );
+            })()}
           </>
         )}
       </div>

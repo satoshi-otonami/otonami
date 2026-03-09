@@ -78,7 +78,7 @@ export async function PATCH(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { pitchId, status, feedback_message } = await request.json();
+    const { pitchId, status, feedback_message, placement_platform, placement_url, placement_date } = await request.json();
 
     if (!pitchId || !['accepted', 'rejected', 'feedback', 'sent'].includes(status)) {
       return NextResponse.json(
@@ -91,6 +91,11 @@ export async function PATCH(request) {
 
     const updates = { status };
     if (feedback_message) updates.feedback_message = feedback_message;
+    if (status === 'accepted' && placement_url) {
+      updates.placement_url = placement_url;
+      if (placement_platform) updates.placement_platform = placement_platform;
+      if (placement_date) updates.placement_date = placement_date;
+    }
 
     // まず curator_id で試みる
     let { data, error } = await db

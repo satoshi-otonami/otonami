@@ -152,16 +152,16 @@ export default function HomePage() {
             display: flex !important;
             align-items: center; justify-content: center;
             background: none; border: 1px solid ${T.border};
-            border-radius: 8px; width: 40px; height: 40px;
+            border-radius: 8px; width: 44px; height: 44px;
             font-size: 20px; cursor: pointer; color: ${T.text};
-            flex-shrink: 0;
+            flex-shrink: 0; touch-action: manipulation;
           }
           .logo-text { font-size: 18px !important; }
           .header-pad { padding: 0 16px !important; }
           .nav-cta-label { display: none; }
           .nav-cta-short { display: inline !important; }
-          .lang-btn { padding: 5px 8px !important; font-size: 11px !important; }
-          .header-cta { padding: 7px 10px !important; font-size: 12px !important; }
+          .lang-btn { padding: 6px 9px !important; font-size: 11px !important; min-height: 36px !important; }
+          .header-cta { padding: 8px 11px !important; font-size: 12px !important; min-height: 36px !important; }
 
           /* Mobile menu overlay */
           .mobile-menu-overlay {

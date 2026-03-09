@@ -11,10 +11,21 @@ const COPY = {
     heroH1a: "Japan's indie music,", heroH1b: "to the world's curators",
     heroSub: "OTONAMI connects handpicked Japanese indie artists with curators worldwide. Get paid to review. No spam — only quality pitches matched to your taste.",
     ctaPrimary: 'Join as Curator →', ctaGhost: 'See How It Works',
+
     stat1n: '3,449', stat1l: 'Curators & Pros',
     stat2n: '70+',   stat2l: 'Japanese Labels',
     stat3n: '93%',   stat3l: 'Response Rate',
     stat4n: '10yr',  stat4l: 'SXSW Track Record',
+
+    whyLabel: 'Why OTONAMI', whyTitle: 'Built for Curators Who Value Quality',
+    whySub: 'We filter the noise so you only hear music that genuinely fits your audience.',
+    why1ic: '🎯', why1t: 'AI-Matched Pitches',
+    why1d: "Our Match Score engine compares each artist's audio features, genre, and mood against your profile. Only high-match submissions reach your inbox.",
+    why2ic: '💰', why2t: 'Get Paid to Listen',
+    why2d: 'Earn $3–5 per review, paid directly via PayPal. Transparent, guaranteed compensation for your time and expertise.',
+    why3ic: '🇯🇵', why3t: "Japan's Hidden Gems",
+    why3d: "Access 70+ independent labels through ILCJ, Japan's largest indie label coalition. Discover artists before they go global.",
+
     howTitle: 'How OTONAMI Works',
     step1ic: '🎵', step1s: '01', step1t: 'Submit Your Track',
     step1d: 'Add your Spotify or YouTube link. Our AI analyzes your sound profile and generates an English pitch automatically.',
@@ -22,6 +33,11 @@ const COPY = {
     step2d: 'Browse 3,400+ curators with AI match scores. Filter by genre, country, and type to find your perfect fit.',
     step3ic: '💬', step3s: '03', step3t: 'Get Real Feedback',
     step3d: 'Curators listen and respond within 7 days. Get playlist placements, blog features, or constructive feedback.',
+
+    artLabel: 'For Artists & Labels', artTitle: 'Are you a Japanese artist or label?',
+    artBody: 'OTONAMI helps you reach international curators with AI-generated English pitches. Input your track, get a professional pitch email, and submit to curators who match your sound — in minutes.',
+    artCta: 'Submit Your Music →',
+
     ctaBannerTitle: 'Ready to reach the world?',
     ctaBannerSub: 'Join 70+ Japanese labels already using OTONAMI',
     ctaBannerBtn: 'Start Your First Pitch →',
@@ -35,10 +51,21 @@ const COPY = {
     heroH1a: '日本のインディー音楽を、', heroH1b: '世界のキュレーターへ',
     heroSub: 'OTONAMIは厳選された日本のインディーアーティストとキュレーターをつなぎます。レビューで報酬を獲得。スパムなし — あなたの好みにマッチした楽曲だけが届きます。',
     ctaPrimary: 'キュレーターとして参加 →', ctaGhost: '使い方を見る',
+
     stat1n: '3,449', stat1l: 'Curators & Pros',
     stat2n: '70+',   stat2l: '加盟レーベル',
     stat3n: '93%',   stat3l: '回答率',
     stat4n: '10yr',  stat4l: 'SXSW 連続出演',
+
+    whyLabel: 'なぜOTONAMI？', whyTitle: 'クオリティを重視するキュレーターのために',
+    whySub: 'ノイズをフィルタリングし、あなたのオーディエンスに本当に合う音楽だけをお届けします。',
+    why1ic: '🎯', why1t: 'AIマッチングピッチ',
+    why1d: 'Match Scoreエンジンがアーティストの音響特性・ジャンル・ムードをあなたのプロファイルと比較。高マッチのピッチだけが届きます。ランダムな投稿は届きません。',
+    why2ic: '💰', why2t: '聴いて報酬を獲得',
+    why2d: '1件のレビューで$3〜5をPayPalで直接受け取れます。透明性があり、保証された報酬体系。あなたの時間と専門性に見合った対価です。',
+    why3ic: '🇯🇵', why3t: '日本の隠れた名曲',
+    why3d: '日本最大のインディーレーベル連合ILCJを通じて70以上のレーベルにアクセス。世界進出前のアーティストをいち早く発見しましょう。',
+
     howTitle: 'How OTONAMI Works',
     step1ic: '🎵', step1s: '01', step1t: '楽曲を送信',
     step1d: 'SpotifyまたはYouTubeのリンクを追加。AIが音楽プロファイルを分析し、英語ピッチを自動生成します。',
@@ -46,6 +73,11 @@ const COPY = {
     step2d: 'AIマッチスコア付きで3,400以上のキュレーターを閲覧。ジャンル・国・タイプで絞り込めます。',
     step3ic: '💬', step3s: '03', step3t: 'リアルなフィードバックを獲得',
     step3d: 'キュレーターが7日以内にリスニング・返信。プレイリスト掲載、ブログ記事、または建設的なフィードバックを受け取れます。',
+
+    artLabel: 'アーティスト・レーベルの方へ', artTitle: '日本のアーティスト・レーベルの方へ',
+    artBody: 'OTONAMIはAI生成の英語ピッチメールで、日本のアーティストが海外キュレーターにリーチするお手伝いをします。楽曲を入力してプロのピッチメールを生成、相性の良いキュレーターに数分で送信できます。',
+    artCta: '楽曲を投稿する →',
+
     ctaBannerTitle: 'Ready to reach the world?',
     ctaBannerSub: 'すでに70以上の日本のレーベルが利用中',
     ctaBannerBtn: '最初のピッチを始める →',
@@ -85,45 +117,36 @@ export default function HomePage() {
         ::-webkit-scrollbar-thumb { background: ${T.border}; border-radius: 3px; }
         @media (max-width: 768px) {
           .hero-h1 { font-size: 32px !important; }
-          .how-grid { grid-template-columns: 1fr !important; }
+          .three-col { grid-template-columns: 1fr !important; }
           .nav-links-center { display: none !important; }
+          .artist-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
       {/* ── Header ── */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(12px)',
+        background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
         borderBottom: `1px solid ${T.border}`,
         padding: '0 24px', height: 64,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         fontFamily: T.font,
       }}>
-        {/* Left: logo + nav */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <div style={{
-              width: 34, height: 34, borderRadius: 10,
-              background: T.accentGrad,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 800, fontSize: 17,
-            }}>O</div>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 17 }}>O</div>
             <span style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.accent, letterSpacing: -0.3 }}>OTONAMI</span>
           </a>
           <nav className="nav-links-center" style={{ display: 'flex', gap: 4 }}>
             {[
               { href: '#how-it-works', label: t.navHow },
-              { href: '/curator',      label: t.navCurators },
-              { href: '/studio',       label: t.navArtists },
+              { href: '/curators',     label: t.navCurators },
+              { href: '/submit',       label: t.navArtists },
             ].map(item => (
               <a key={item.href} href={item.href} style={{
                 background: 'transparent', color: T.textSub,
-                padding: '8px 14px', borderRadius: 8,
-                fontSize: 14, fontWeight: 500,
-                textDecoration: 'none',
-                transition: 'all 0.15s',
-                fontFamily: T.font,
+                padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 500,
+                textDecoration: 'none', transition: 'all 0.15s', fontFamily: T.font,
               }}
               onMouseEnter={e => { e.currentTarget.style.background = T.accentLight; e.currentTarget.style.color = T.accent; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = T.textSub; }}
@@ -131,15 +154,12 @@ export default function HomePage() {
             ))}
           </nav>
         </div>
-
-        {/* Right: lang toggle + CTA */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', border: `1px solid ${T.border}` }}>
             {['EN', 'JP'].map(l => (
               <button key={l} onClick={() => switchLang(l === 'JP' ? 'ja' : 'en')} style={{
                 padding: '6px 12px', fontSize: 12, fontWeight: 600,
-                fontFamily: T.font, border: 'none', cursor: 'pointer',
-                transition: 'all 0.15s',
+                fontFamily: T.font, border: 'none', cursor: 'pointer', transition: 'all 0.15s',
                 background: (l === 'JP' ? lang === 'ja' : lang === 'en') ? T.text : 'transparent',
                 color:      (l === 'JP' ? lang === 'ja' : lang === 'en') ? '#fff' : T.textSub,
               }}>{l === 'JP' ? '日本語' : l}</button>
@@ -148,8 +168,7 @@ export default function HomePage() {
           <a href="/curator" style={{
             padding: '8px 16px', fontSize: 13, fontWeight: 600,
             background: T.accent, color: '#fff', borderRadius: T.radius,
-            textDecoration: 'none', fontFamily: T.font,
-            transition: 'background 0.15s',
+            textDecoration: 'none', fontFamily: T.font, transition: 'background 0.15s',
           }}
           onMouseEnter={e => e.currentTarget.style.background = T.accentDark}
           onMouseLeave={e => e.currentTarget.style.background = T.accent}
@@ -167,31 +186,15 @@ export default function HomePage() {
         ].join(', '),
         backgroundColor: '#0f172a',
       }}>
-        {/* Fallback gradient shown when hero.jpg is absent (blends in as darker area) */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)',
-          zIndex: 0,
-        }}/>
-        {/* Sky Blue glow */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'radial-gradient(ellipse at 50% 80%, rgba(14,165,233,0.15) 0%, transparent 60%)',
-          zIndex: 1,
-        }}/>
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)', zIndex: 0 }}/>
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 80%, rgba(14,165,233,0.15) 0%, transparent 60%)', zIndex: 1 }}/>
         <div style={{ maxWidth: 740, margin: '0 auto', position: 'relative', zIndex: 2 }}>
-          {/* Badge */}
           <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '6px 18px',
-            background: 'rgba(14,165,233,0.15)',
-            borderRadius: 24, fontSize: 13, fontWeight: 600, color: '#7dd3fc',
-            marginBottom: 28,
-            border: '1px solid rgba(14,165,233,0.3)',
-            backdropFilter: 'blur(8px)',
+            display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 18px',
+            background: 'rgba(14,165,233,0.15)', borderRadius: 24, fontSize: 13,
+            fontWeight: 600, color: '#7dd3fc', marginBottom: 28,
+            border: '1px solid rgba(14,165,233,0.3)', backdropFilter: 'blur(8px)',
           }}>{t.heroTag}</div>
-
-          {/* H1 */}
           <h1 className="hero-h1" style={{
             fontFamily: T.fontDisplay, fontSize: 50, fontWeight: 700,
             color: '#fff', lineHeight: 1.18, marginBottom: 24, letterSpacing: -0.5,
@@ -199,34 +202,23 @@ export default function HomePage() {
             {t.heroH1a}<br/>
             <span style={{ color: '#38bdf8' }}>{t.heroH1b}</span>
           </h1>
-
-          {/* Sub */}
-          <p style={{
-            fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.75,
-            maxWidth: 560, margin: '0 auto 44px', fontFamily: T.font,
-          }}>{t.heroSub}</p>
-
-          {/* CTAs */}
+          <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.75, maxWidth: 560, margin: '0 auto 44px', fontFamily: T.font }}>
+            {t.heroSub}
+          </p>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
             <a href="/curator" style={{
-              padding: '16px 36px', fontSize: 16, fontWeight: 600,
-              background: '#10b981', color: '#fff', borderRadius: T.radius,
-              textDecoration: 'none', fontFamily: T.font,
-              boxShadow: '0 4px 20px rgba(16,185,129,0.35)',
-              transition: 'transform 0.15s, box-shadow 0.15s',
-              display: 'inline-block',
+              padding: '16px 36px', fontSize: 16, fontWeight: 600, background: '#10b981', color: '#fff',
+              borderRadius: T.radius, textDecoration: 'none', fontFamily: T.font,
+              boxShadow: '0 4px 20px rgba(16,185,129,0.35)', transition: 'transform 0.15s, box-shadow 0.15s', display: 'inline-block',
             }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(16,185,129,0.45)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 20px rgba(16,185,129,0.35)'; }}
             >{t.ctaPrimary}</a>
             <a href="#how-it-works" style={{
-              padding: '16px 32px', fontSize: 16, fontWeight: 600,
-              color: '#fff', borderRadius: T.radius,
-              textDecoration: 'none', fontFamily: T.font,
-              border: '1.5px solid rgba(255,255,255,0.3)',
-              background: 'rgba(255,255,255,0.05)',
-              display: 'inline-block',
-              transition: 'background 0.15s',
+              padding: '16px 32px', fontSize: 16, fontWeight: 600, color: '#fff',
+              borderRadius: T.radius, textDecoration: 'none', fontFamily: T.font,
+              border: '1.5px solid rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.05)',
+              display: 'inline-block', transition: 'background 0.15s',
             }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
@@ -236,15 +228,8 @@ export default function HomePage() {
       </section>
 
       {/* ── Stats bar ── */}
-      <section style={{
-        padding: '36px 24px',
-        background: T.white,
-        borderBottom: `1px solid ${T.border}`,
-      }}>
-        <div style={{
-          maxWidth: 900, margin: '0 auto',
-          display: 'flex', justifyContent: 'center', gap: 64, flexWrap: 'wrap',
-        }}>
+      <section style={{ padding: '36px 24px', background: T.white, borderBottom: `1px solid ${T.border}` }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'center', gap: 64, flexWrap: 'wrap' }}>
           {[
             { n: t.stat1n, l: t.stat1l },
             { n: t.stat2n, l: t.stat2l },
@@ -259,39 +244,51 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── How It Works ── */}
-      <section id="how-it-works" style={{ padding: '88px 24px', background: T.bg }}>
+      {/* ── Why OTONAMI ── */}
+      <section style={{ padding: '80px 24px', background: T.white }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
-          <h2 style={{
-            fontFamily: T.fontDisplay, fontSize: 36, fontWeight: 700,
-            color: T.text, textAlign: 'center', marginBottom: 64,
-          }}>{t.howTitle}</h2>
-          <div className="how-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 28 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>{t.whyLabel}</div>
+          <h2 style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.text, marginBottom: 12 }}>{t.whyTitle}</h2>
+          <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.7, maxWidth: 520, marginBottom: 48, fontFamily: T.font }}>{t.whySub}</p>
+          <div className="three-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+            {[
+              { ic: t.why1ic, title: t.why1t, desc: t.why1d, bg: 'rgba(99,102,241,0.08)' },
+              { ic: t.why2ic, title: t.why2t, desc: t.why2d, bg: 'rgba(16,185,129,0.08)' },
+              { ic: t.why3ic, title: t.why3t, desc: t.why3d, bg: 'rgba(14,165,233,0.08)' },
+            ].map((card, i) => (
+              <div key={i} style={{
+                background: T.bg, borderRadius: T.radiusLg, padding: '32px 28px',
+                border: `1px solid ${T.border}`, transition: 'transform 0.2s, box-shadow 0.2s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = T.shadowMd; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: card.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, marginBottom: 20 }}>{card.ic}</div>
+                <h3 style={{ fontFamily: T.font, fontSize: 17, fontWeight: 700, color: T.text, marginBottom: 10 }}>{card.title}</h3>
+                <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.75, fontFamily: T.font }}>{card.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── How It Works ── */}
+      <section id="how-it-works" style={{ padding: '80px 24px', background: T.bg }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <h2 style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.text, textAlign: 'center', marginBottom: 56 }}>{t.howTitle}</h2>
+          <div className="three-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 28 }}>
             {[
               { ic: t.step1ic, s: t.step1s, title: t.step1t, desc: t.step1d },
               { ic: t.step2ic, s: t.step2s, title: t.step2t, desc: t.step2d },
               { ic: t.step3ic, s: t.step3s, title: t.step3t, desc: t.step3d },
             ].map((item, i) => (
               <div key={i} style={{
-                background: T.white, borderRadius: T.radiusLg,
-                padding: 36, border: `1px solid ${T.border}`,
-                position: 'relative', overflow: 'hidden',
+                background: T.white, borderRadius: T.radiusLg, padding: 36,
+                border: `1px solid ${T.border}`, position: 'relative', overflow: 'hidden',
               }}>
-                {/* Top accent line */}
-                <div style={{
-                  position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-                  background: T.accentGrad,
-                }}/>
-                <div style={{
-                  width: 52, height: 52, borderRadius: 14,
-                  background: T.accentLight, border: `1px solid ${T.accentBorder}`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 26, marginBottom: 20,
-                }}>{item.ic}</div>
-                <div style={{
-                  fontSize: 11, fontWeight: 700, color: T.accent,
-                  marginBottom: 8, fontFamily: T.font, letterSpacing: 1.5,
-                }}>STEP {item.s}</div>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: T.accentGrad }}/>
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: T.accentLight, border: `1px solid ${T.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, marginBottom: 20 }}>{item.ic}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, marginBottom: 8, fontFamily: T.font, letterSpacing: 1.5 }}>STEP {item.s}</div>
                 <h3 style={{ fontFamily: T.font, fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 12 }}>{item.title}</h3>
                 <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.75, fontFamily: T.font }}>{item.desc}</p>
               </div>
@@ -300,21 +297,54 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── For Artists ── */}
+      <section id="for-artists" style={{ padding: '80px 24px', background: T.white }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <div className="artist-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>{t.artLabel}</div>
+              <h2 style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 16, lineHeight: 1.25 }}>{t.artTitle}</h2>
+              <p style={{ fontSize: 15, color: T.textSub, lineHeight: 1.75, marginBottom: 32, fontFamily: T.font }}>{t.artBody}</p>
+              <a href="/submit" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '14px 28px', fontSize: 15, fontWeight: 600,
+                background: '#10b981', color: '#fff', borderRadius: T.radius,
+                textDecoration: 'none', fontFamily: T.font,
+                boxShadow: '0 4px 16px rgba(16,185,129,0.28)', transition: 'transform 0.15s, box-shadow 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(16,185,129,0.4)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,185,129,0.28)'; }}
+              >{t.artCta}</a>
+            </div>
+            {/* Feature list (right column, no photo needed) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {[
+                { ic: '🤖', title: lang === 'ja' ? 'AI英語ピッチ生成' : 'AI Pitch Generation', desc: lang === 'ja' ? '楽曲情報を入力するだけでプロ品質の英語ピッチメールを即生成。' : 'Professional English pitch emails generated instantly from your track info.' },
+                { ic: '🎯', title: lang === 'ja' ? 'AIマッチング' : 'Smart Matching', desc: lang === 'ja' ? 'ジャンル・ムード・音響特性で最適なキュレーターを自動選定。' : 'AI matches your sound to the right curators by genre, mood, and audio profile.' },
+                { ic: '📊', title: lang === 'ja' ? 'リアルタイム追跡' : 'Real-time Tracking', desc: lang === 'ja' ? 'ピッチの開封・試聴・返信ステータスをダッシュボードで管理。' : 'Track opens, listens, and responses in your dashboard.' },
+              ].map((f, i) => (
+                <div key={i} style={{ display: 'flex', gap: 16, padding: '20px 24px', background: T.bg, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: T.accentLight, border: `1px solid ${T.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{f.ic}</div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text, fontFamily: T.font, marginBottom: 4 }}>{f.title}</div>
+                    <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.6, fontFamily: T.font }}>{f.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA Banner ── */}
       <section style={{ padding: '64px 24px', background: T.accentGrad, textAlign: 'center' }}>
-        <h2 style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 16 }}>
-          {t.ctaBannerTitle}
-        </h2>
-        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', marginBottom: 36, fontFamily: T.font }}>
-          {t.ctaBannerSub}
-        </p>
-        <a href="/studio" style={{
+        <h2 style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.ctaBannerTitle}</h2>
+        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', marginBottom: 36, fontFamily: T.font }}>{t.ctaBannerSub}</p>
+        <a href="/submit" style={{
           padding: '16px 36px', fontSize: 16, fontWeight: 600,
           background: '#fff', color: T.accent, borderRadius: T.radius,
-          textDecoration: 'none', fontFamily: T.font,
-          display: 'inline-block',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-          transition: 'box-shadow 0.15s, transform 0.15s',
+          textDecoration: 'none', fontFamily: T.font, display: 'inline-block',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.1)', transition: 'box-shadow 0.15s, transform 0.15s',
         }}
         onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
         onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'; e.currentTarget.style.transform = ''; }}
@@ -322,13 +352,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer style={{
-        padding: '32px 24px',
-        background: T.white,
-        borderTop: `1px solid ${T.border}`,
-        textAlign: 'center',
-        fontFamily: T.font, fontSize: 13, color: T.textMuted,
-      }}>
+      <footer style={{ padding: '32px 24px', background: T.white, borderTop: `1px solid ${T.border}`, textAlign: 'center', fontFamily: T.font, fontSize: 13, color: T.textMuted }}>
         {t.footerCopy}&nbsp;|&nbsp;{t.footerBy}
       </footer>
     </div>

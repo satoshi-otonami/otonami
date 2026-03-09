@@ -1,11 +1,12 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { T } from '@/lib/design-tokens';
 
 const STATUS_LABELS = {
-  sent:     { en: 'Pending',  ja: '未対応',  color: '#facc15', bg: 'rgba(250,204,21,0.1)' },
-  accepted: { en: 'Accepted', ja: '承認済み', color: '#4ade80', bg: 'rgba(74,222,128,0.1)' },
-  rejected: { en: 'Rejected', ja: '却下済み', color: '#f87171', bg: 'rgba(248,113,113,0.1)' },
-  feedback: { en: 'Feedback', ja: 'FB受信',   color: '#a78bfa', bg: 'rgba(167,139,250,0.1)' },
+  sent:     { en: 'Pending',  ja: '未対応',  color: '#92400e', bg: '#fef3c7' },
+  accepted: { en: 'Accepted', ja: '承認済み', color: '#065f46', bg: '#d1fae5' },
+  rejected: { en: 'Declined', ja: '却下済み', color: '#991b1b', bg: '#fee2e2' },
+  feedback: { en: 'Feedback', ja: 'FB受信',   color: '#1e40af', bg: '#dbeafe' },
 };
 
 const FILTER_TABS = [
@@ -22,8 +23,8 @@ export default function CuratorDashboard() {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState('');
   const [expanded, setExpanded] = useState(null);
-  const [updating, setUpdating] = useState(null); // pitchId being updated
-  const [feedbackDraft, setFeedbackDraft] = useState({}); // { [pitchId]: { text, rating } }
+  const [updating, setUpdating] = useState(null);
+  const [feedbackDraft, setFeedbackDraft] = useState({});
   const [toast, setToast] = useState('');
 
   // ── 認証 + 初期データ取得 ──
@@ -37,7 +38,6 @@ export default function CuratorDashboard() {
 
     (async () => {
       try {
-        // トークン検証 & キュレーター情報
         const res = await fetch('/api/curators/login', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -49,7 +49,6 @@ export default function CuratorDashboard() {
         const { curator: c } = await res.json();
         setCurator(c);
 
-        // ピッチ取得
         const pr = await fetch('/api/curator/dashboard', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -125,29 +124,35 @@ export default function CuratorDashboard() {
     window.location.href = '/curator';
   };
 
-  // ── スタイル定数 ──
-  const card = {
-    background: '#13132a', border: '1px solid #1e1e3a',
-    borderRadius: 14, padding: '20px 22px', marginBottom: 14,
+  // Render pitch body with clickable URLs
+  const renderBody = (text) => {
+    if (!text) return null;
+    const parts = text.split(/(https?:\/\/[^\s]+)/g);
+    return parts.map((part, i) =>
+      /^https?:\/\//.test(part)
+        ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, wordBreak: 'break-all' }}>{part}</a>
+        : part
+    );
   };
 
   // ── 未ログイン画面 ──
   if (!loading && (authError === 'not_logged_in' || authError === 'invalid_token')) return (
-    <div style={{ minHeight: '100vh', background: '#0a0a18', display: 'flex',
+    <div style={{ minHeight: '100vh', background: T.bg, display: 'flex',
                   alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ textAlign: 'center', color: '#fff', maxWidth: 420 }}>
+      <div style={{ textAlign: 'center', maxWidth: 420 }}>
         <div style={{ fontSize: 56, marginBottom: 16 }}>🔒</div>
-        <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 10 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 10, color: T.text, fontFamily: T.fontDisplay }}>
           Login Required
         </h1>
-        <p style={{ color: '#888', fontSize: 14, lineHeight: 1.8, marginBottom: 28 }}>
+        <p style={{ color: T.textSub, fontSize: 14, lineHeight: 1.8, marginBottom: 28, fontFamily: T.font }}>
           Please log in to access the curator dashboard.<br />
-          <span style={{ color: '#555', fontSize: 12 }}>ダッシュボードにアクセスするにはログインしてください。</span>
+          <span style={{ color: T.textMuted, fontSize: 12 }}>ダッシュボードにアクセスするにはログインしてください。</span>
         </p>
         <a href="/curator" style={{
           display: 'inline-block', padding: '13px 32px',
-          background: 'linear-gradient(135deg,#7c3aed,#2563eb)',
+          background: T.accentGrad,
           borderRadius: 24, color: '#fff', textDecoration: 'none', fontWeight: 700,
+          fontFamily: T.font,
         }}>Go to Login / ログイン →</a>
       </div>
     </div>
@@ -155,17 +160,17 @@ export default function CuratorDashboard() {
 
   // ── ローディング ──
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0a0a18', display: 'flex',
+    <div style={{ minHeight: '100vh', background: T.bg, display: 'flex',
                   alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ color: '#555', fontSize: 14 }}>Loading... / 読み込み中...</p>
+      <p style={{ color: T.textMuted, fontSize: 14, fontFamily: T.font }}>Loading... / 読み込み中...</p>
     </div>
   );
 
   // ── エラー ──
   if (authError === 'error') return (
-    <div style={{ minHeight: '100vh', background: '#0a0a18', display: 'flex',
+    <div style={{ minHeight: '100vh', background: T.bg, display: 'flex',
                   alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ color: '#f87171', fontSize: 14 }}>Something went wrong. Please try again.</p>
+      <p style={{ color: '#ef4444', fontSize: 14, fontFamily: T.font }}>Something went wrong. Please try again.</p>
     </div>
   );
 
@@ -177,100 +182,130 @@ export default function CuratorDashboard() {
     rejected: pitches.filter(p => p.status === 'rejected').length,
   };
 
-  // Render pitch body with clickable URLs
-  const renderBody = (text) => {
-    if (!text) return null;
-    const parts = text.split(/(https?:\/\/[^\s]+)/g);
-    return parts.map((part, i) =>
-      /^https?:\/\//.test(part)
-        ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" style={{ color: '#a78bfa', wordBreak: 'break-all' }}>{part}</a>
-        : part
-    );
+  // Shared input style for feedback area
+  const fbInp = {
+    width: '100%', background: T.white, border: `1px solid ${T.border}`,
+    borderRadius: 8, color: T.text, fontSize: 13, padding: '9px 12px',
+    outline: 'none', fontFamily: T.font, boxSizing: 'border-box',
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a18', padding: '0 0 80px' }}>
+    <div style={{ minHeight: '100vh', background: T.bg, fontFamily: T.font }}>
+      <style>{`
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: ${T.bg}; overflow-x: hidden; }
+
+        .pitch-card { transition: box-shadow 0.2s, transform 0.2s; }
+        .pitch-card:hover { box-shadow: 0 4px 16px rgba(14,165,233,0.08), 0 2px 8px rgba(0,0,0,0.06) !important; transform: translateY(-1px); }
+
+        .dash-tab-btn { transition: all 0.2s; }
+        .dash-tab-btn:hover { color: ${T.accent} !important; }
+
+        .fb-input:focus { border-color: ${T.accent} !important; box-shadow: 0 0 0 3px rgba(14,165,233,0.1) !important; outline: none !important; }
+
+        @media (max-width: 768px) {
+          .dash-header { padding: 0 16px !important; }
+          .profile-card { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
+          .stats-row { flex-direction: row !important; gap: 16px !important; }
+          .pitch-header { flex-wrap: wrap !important; }
+          .pitch-actions { flex-wrap: wrap !important; margin-top: 8px !important; }
+          .action-btns-row { flex-wrap: wrap !important; }
+        }
+      `}</style>
+
       {/* ── Toast ── */}
       {toast && (
         <div style={{
           position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-          background: '#1a3a2a', border: '1px solid #4ade80', borderRadius: 10,
-          padding: '10px 22px', color: '#4ade80', fontWeight: 700, fontSize: 14,
-          zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+          background: T.white, border: `1px solid #bbf7d0`, borderRadius: 10,
+          padding: '10px 22px', color: '#065f46', fontWeight: 700, fontSize: 14,
+          zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', fontFamily: T.font,
         }}>{toast}</div>
       )}
 
       {/* ── Header ── */}
-      <div style={{
-        background: '#0d0d20', borderBottom: '1px solid #1e1e3a',
-        padding: '16px 24px', display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10,
+      <header className="dash-header" style={{
+        position: 'sticky', top: 0, zIndex: 100,
+        background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
+        borderBottom: `1px solid ${T.border}`,
+        padding: '0 24px', height: 64,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        fontFamily: T.font,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <a href="/curator" style={{
-            fontSize: 18, fontWeight: 900, color: '#a78bfa',
-            textDecoration: 'none', letterSpacing: 2,
-          }}>OTONAMI</a>
-          <span style={{ color: '#2a2a4a', fontSize: 18 }}>|</span>
-          <span style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>Curator Dashboard</span>
-          <span style={{ color: '#555', fontSize: 12 }}>キュレーターダッシュボード</span>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 17 }}>O</div>
+            <span style={{ fontFamily: T.fontDisplay, fontSize: 20, fontWeight: 700, color: T.accent, letterSpacing: -0.3 }}>OTONAMI</span>
+          </a>
+          <span style={{ color: T.border, fontSize: 20 }}>|</span>
+          <span style={{ color: T.text, fontWeight: 700, fontSize: 14 }}>Curator Dashboard</span>
+          <span style={{ color: T.textMuted, fontSize: 12 }}>キュレーターダッシュボード</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {curator && (
             <div style={{ textAlign: 'right' }}>
-              <div style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>{curator.name}</div>
-              <div style={{ color: '#555', fontSize: 11 }}>{curator.email}</div>
+              <div style={{ color: T.text, fontSize: 13, fontWeight: 700 }}>{curator.name}</div>
+              <div style={{ color: T.textMuted, fontSize: 11 }}>{curator.email}</div>
             </div>
           )}
           <button onClick={handleLogout} style={{
-            padding: '7px 16px', border: '1px solid #2a2a4a',
-            borderRadius: 8, background: 'transparent', color: '#888',
-            fontSize: 12, cursor: 'pointer',
-          }}>Logout</button>
+            padding: '7px 16px', border: `1px solid ${T.border}`,
+            borderRadius: 8, background: T.white, color: T.textSub,
+            fontSize: 12, cursor: 'pointer', fontFamily: T.font,
+            transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSub; }}
+          >Logout</button>
         </div>
-      </div>
+      </header>
 
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 16px' }}>
+      <div style={{ maxWidth: 780, margin: '0 auto', padding: '32px 16px 96px' }}>
 
-        {/* ── 概要カード ── */}
+        {/* ── プロフィールカード ── */}
         {curator && (
-          <div style={{ ...card, display: 'flex', gap: 20, alignItems: 'center', marginBottom: 28 }}>
+          <div className="profile-card" style={{
+            background: T.white, border: `1px solid ${T.border}`, borderRadius: T.radiusLg,
+            padding: '20px 24px', marginBottom: 28, boxShadow: T.shadow,
+            display: 'flex', gap: 20, alignItems: 'center',
+          }}>
             <div style={{
-              width: 52, height: 52, borderRadius: '50%',
-              background: 'linear-gradient(135deg,#7c3aed,#2563eb)',
+              width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
+              background: T.accentGrad,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 22, flexShrink: 0,
+              fontSize: 22,
             }}>
               {curator.icon || '🎵'}
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: 17 }}>{curator.name}</div>
-              <div style={{ color: '#888', fontSize: 13, marginTop: 2 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ color: T.text, fontWeight: 800, fontSize: 17, fontFamily: T.font }}>{curator.name}</div>
+              <div style={{ color: T.textSub, fontSize: 13, marginTop: 2, fontFamily: T.font }}>
                 {curator.playlist || curator.type}
-                {curator.region && <span style={{ color: '#555', marginLeft: 8 }}>· {curator.region}</span>}
+                {curator.region && <span style={{ color: T.textMuted, marginLeft: 8 }}>· {curator.region}</span>}
               </div>
               {curator.genres?.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
                   {curator.genres.slice(0, 6).map(g => (
                     <span key={g} style={{
                       padding: '2px 9px', borderRadius: 12, fontSize: 11,
-                      background: 'rgba(124,58,237,0.15)', color: '#a78bfa',
-                      border: '1px solid rgba(124,58,237,0.3)',
+                      background: T.accentLight, color: T.accent,
+                      border: `1px solid ${T.accentBorder}`,
+                      fontFamily: T.font,
                     }}>{g}</span>
                   ))}
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', gap: 20, textAlign: 'center', flexShrink: 0 }}>
+            <div className="stats-row" style={{ display: 'flex', gap: 24, textAlign: 'center', flexShrink: 0 }}>
               {[
-                { label: 'Total', ja: '合計', val: counts.all },
-                { label: 'Pending', ja: '未対応', val: counts.sent, color: '#facc15' },
-                { label: 'Accepted', ja: '承認', val: counts.accepted, color: '#4ade80' },
-                { label: 'Rejected', ja: '却下', val: counts.rejected, color: '#f87171' },
+                { label: 'Total', ja: '合計', val: counts.all, color: T.text },
+                { label: 'Pending', ja: '未対応', val: counts.sent, color: '#eab308' },
+                { label: 'Accepted', ja: '承認', val: counts.accepted, color: '#10b981' },
+                { label: 'Rejected', ja: '却下', val: counts.rejected, color: '#ef4444' },
               ].map(s => (
                 <div key={s.label}>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: s.color || '#fff' }}>{s.val}</div>
-                  <div style={{ fontSize: 10, color: '#555', lineHeight: 1.4 }}>{s.label}<br />{s.ja}</div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: s.color, fontFamily: T.fontDisplay }}>{s.val}</div>
+                  <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.4, fontFamily: T.font }}>{s.label}<br />{s.ja}</div>
                 </div>
               ))}
             </div>
@@ -279,36 +314,43 @@ export default function CuratorDashboard() {
 
         {/* ── フィルタータブ ── */}
         <div style={{
-          display: 'flex', gap: 6, marginBottom: 20,
-          background: '#0f0f2a', borderRadius: 12, padding: 4,
-          border: '1px solid #1e1e3a',
+          display: 'flex', marginBottom: 24,
+          borderBottom: `2px solid ${T.border}`,
         }}>
-          {FILTER_TABS.map(t => (
-            <button key={t.key} onClick={() => setFilter(t.key)} style={{
-              flex: 1, padding: '9px 6px', border: 'none', borderRadius: 9,
-              cursor: 'pointer', fontWeight: 700, fontSize: 13, transition: 'all 0.2s',
-              background: filter === t.key ? 'linear-gradient(135deg,#7c3aed,#2563eb)' : 'transparent',
-              color: filter === t.key ? '#fff' : '#555',
-            }}>
-              {t.en}
-              <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 4, opacity: 0.8 }}>
-                / {t.ja}
-              </span>
-              {t.key !== 'all' && counts[t.key] > 0 && (
-                <span style={{
-                  marginLeft: 6, background: filter === t.key ? 'rgba(255,255,255,0.2)' : '#1e1e3a',
-                  borderRadius: 10, padding: '1px 7px', fontSize: 11, color: filter === t.key ? '#fff' : '#888',
-                }}>{counts[t.key]}</span>
-              )}
-            </button>
-          ))}
+          {FILTER_TABS.map(t => {
+            const cnt = t.key === 'all' ? null : counts[t.key];
+            const isActive = filter === t.key;
+            return (
+              <button key={t.key} onClick={() => setFilter(t.key)} className="dash-tab-btn" style={{
+                flex: 1, padding: '11px 8px', border: 'none', background: 'transparent',
+                cursor: 'pointer', fontWeight: isActive ? 700 : 500, fontSize: 13,
+                color: isActive ? T.accent : T.textSub,
+                borderBottom: isActive ? `2px solid ${T.accent}` : '2px solid transparent',
+                marginBottom: -2, fontFamily: T.font,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}>
+                <span>{t.en}<span style={{ fontSize: 10, fontWeight: 400, color: isActive ? T.accent : T.textMuted, marginLeft: 3 }}>/ {t.ja}</span></span>
+                {cnt != null && cnt > 0 && (
+                  <span style={{
+                    background: isActive ? T.accent : T.border,
+                    color: isActive ? '#fff' : T.textSub,
+                    borderRadius: 10, padding: '1px 7px', fontSize: 11, fontWeight: 700,
+                    fontFamily: T.font,
+                  }}>{cnt}</span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* ── ピッチ一覧 ── */}
         {filteredPitches.length === 0 ? (
-          <div style={{ ...card, textAlign: 'center', padding: '48px 24px' }}>
+          <div style={{
+            background: T.white, border: `1px solid ${T.border}`, borderRadius: T.radiusLg,
+            textAlign: 'center', padding: '48px 24px', boxShadow: T.shadow,
+          }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-            <p style={{ color: '#555', fontSize: 14 }}>
+            <p style={{ color: T.textMuted, fontSize: 14, fontFamily: T.font }}>
               No pitches yet. / まだピッチはありません。
             </p>
           </div>
@@ -319,35 +361,40 @@ export default function CuratorDashboard() {
             const isBusy = updating === pitch.id;
 
             return (
-              <div key={pitch.id} style={card}>
+              <div key={pitch.id} className="pitch-card" style={{
+                background: T.white, border: `1px solid ${T.border}`,
+                borderRadius: 12, padding: '18px 20px', marginBottom: 12,
+                boxShadow: T.shadow,
+              }}>
                 {/* ── ピッチヘッダー ── */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                <div className="pitch-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                   <div style={{
                     width: 42, height: 42, borderRadius: 10, flexShrink: 0,
-                    background: '#0d0d1f', border: '1px solid #2a2a4a',
+                    background: T.accentLight, border: `1px solid ${T.accentBorder}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
                   }}>🎵</div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                      <span style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>
+                      <span style={{ color: T.text, fontWeight: 700, fontSize: 15, fontFamily: T.font }}>
                         {pitch.artist_name || 'Unknown Artist'}
                       </span>
                       {pitch.artist_genre && (
-                        <span style={{ color: '#666', fontSize: 12 }}>{pitch.artist_genre}</span>
+                        <span style={{ color: T.textMuted, fontSize: 12, fontFamily: T.font }}>{pitch.artist_genre}</span>
                       )}
                       <span style={{
                         padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700,
-                        color: s.color, background: s.bg, border: `1px solid ${s.color}44`,
+                        color: s.color, background: s.bg, fontFamily: T.font,
                       }}>{s.en} / {s.ja}</span>
                     </div>
                     <div style={{
-                      color: '#aaa', fontSize: 13, marginTop: 4,
+                      color: '#374151', fontSize: 13, marginTop: 4,
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      fontFamily: T.font,
                     }}>
                       {pitch.subject || '(no subject)'}
                     </div>
-                    <div style={{ color: '#444', fontSize: 11, marginTop: 4 }}>
+                    <div style={{ color: T.textMuted, fontSize: 11, marginTop: 4, fontFamily: T.font }}>
                       {pitch.sent_at
                         ? new Date(pitch.sent_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })
                         : pitch.created_at
@@ -357,55 +404,30 @@ export default function CuratorDashboard() {
                   </div>
 
                   {/* ── アクションボタン ── */}
-                  <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
+                  <div className="pitch-actions" style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
                     <button
                       onClick={() => setExpanded(isExpanded ? null : pitch.id)}
                       style={{
-                        padding: '7px 14px', border: '1px solid #2a2a4a',
-                        borderRadius: 8, background: 'transparent',
-                        color: '#888', fontSize: 12, cursor: 'pointer',
+                        padding: '7px 14px', border: `1px solid ${T.accent}`,
+                        borderRadius: 8, background: T.white,
+                        color: T.accent, fontSize: 12, fontWeight: 600,
+                        cursor: 'pointer', fontFamily: T.font,
+                        transition: 'all 0.15s',
                       }}
+                      onMouseEnter={e => { e.currentTarget.style.background = T.accentLight; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = T.white; }}
                     >
                       {isExpanded ? 'Close / 閉じる' : 'Read / 読む'}
                     </button>
-                    {pitch.status === 'sent' && (
-                      <>
-                        <button
-                          onClick={() => handleAction(pitch.id, 'accepted')}
-                          disabled={isBusy}
-                          style={{
-                            padding: '7px 14px', border: 'none', borderRadius: 8,
-                            background: isBusy ? '#1a2a1a' : 'rgba(74,222,128,0.15)',
-                            color: isBusy ? '#444' : '#4ade80',
-                            fontSize: 12, fontWeight: 700, cursor: isBusy ? 'not-allowed' : 'pointer',
-                            border: '1px solid rgba(74,222,128,0.3)',
-                          }}
-                        >
-                          {isBusy ? '...' : 'Accept / 承認'}
-                        </button>
-                        <button
-                          onClick={() => handleAction(pitch.id, 'rejected')}
-                          disabled={isBusy}
-                          style={{
-                            padding: '7px 14px', border: 'none', borderRadius: 8,
-                            background: isBusy ? '#2a1a1a' : 'rgba(248,113,113,0.1)',
-                            color: isBusy ? '#444' : '#f87171',
-                            fontSize: 12, fontWeight: 700, cursor: isBusy ? 'not-allowed' : 'pointer',
-                            border: '1px solid rgba(248,113,113,0.3)',
-                          }}
-                        >
-                          {isBusy ? '...' : 'Reject / 却下'}
-                        </button>
-                      </>
-                    )}
                     {pitch.status !== 'sent' && (
                       <button
                         onClick={() => handleAction(pitch.id, 'sent')}
                         disabled={isBusy}
                         style={{
-                          padding: '7px 14px', border: '1px solid #2a2a4a',
-                          borderRadius: 8, background: 'transparent',
-                          color: '#555', fontSize: 11, cursor: isBusy ? 'not-allowed' : 'pointer',
+                          padding: '7px 14px', border: `1px solid ${T.border}`,
+                          borderRadius: 8, background: T.white,
+                          color: T.textSub, fontSize: 11,
+                          cursor: isBusy ? 'not-allowed' : 'pointer', fontFamily: T.font,
                         }}
                       >
                         Undo / 取り消し
@@ -416,23 +438,24 @@ export default function CuratorDashboard() {
 
                 {/* ── ピッチ本文 + フィードバックUI（展開時） ── */}
                 {isExpanded && (
-                  <div style={{ marginTop: 18, paddingTop: 18, borderTop: '1px solid #1e1e3a' }}>
+                  <div style={{ marginTop: 18, paddingTop: 18, borderTop: `1px solid ${T.border}` }}>
                     {/* Pitch body */}
                     {pitch.body ? (
                       <pre style={{
-                        color: '#ccc', fontSize: 13, lineHeight: 1.8,
+                        color: '#374151', fontSize: 13, lineHeight: 1.8,
                         whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                        margin: '0 0 20px', background: '#0d0d1f', borderRadius: 10,
-                        padding: '16px 18px', border: '1px solid #1e1e3a',
+                        fontFamily: T.font,
+                        margin: '0 0 20px', background: T.bg, borderRadius: 10,
+                        padding: '16px 18px', border: `1px solid ${T.border}`,
                       }}>
                         {renderBody(pitch.body)}
                       </pre>
                     ) : (
                       <p style={{
-                        color: '#555', fontSize: 13, textAlign: 'center',
-                        padding: '20px', background: '#0d0d1f', borderRadius: 10,
-                        border: '1px solid #1e1e3a', margin: '0 0 20px',
+                        color: T.textMuted, fontSize: 13, textAlign: 'center',
+                        padding: '20px', background: T.bg, borderRadius: 10,
+                        border: `1px solid ${T.border}`, margin: '0 0 20px',
+                        fontFamily: T.font,
                       }}>
                         Pitch content not stored for this entry.<br />
                         <span style={{ fontSize: 11 }}>このピッチの本文データは保存されていません。</span>
@@ -441,15 +464,15 @@ export default function CuratorDashboard() {
 
                     {/* ── Feedback UI ── */}
                     <div style={{
-                      background: '#0d0d1f', border: '1px solid #1e1e3a',
+                      background: T.bg, border: `1px solid ${T.border}`,
                       borderRadius: 12, padding: '16px 18px',
                     }}>
-                      <div style={{ color: '#888', fontSize: 12, fontWeight: 700, marginBottom: 12 }}>
+                      <div style={{ color: T.textSub, fontSize: 12, fontWeight: 700, marginBottom: 12, letterSpacing: 0.5, fontFamily: T.font }}>
                         FEEDBACK / フィードバック
                       </div>
 
                       {/* Star rating */}
-                      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                      <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
                         {[1,2,3,4,5].map(star => (
                           <button
                             key={star}
@@ -457,13 +480,12 @@ export default function CuratorDashboard() {
                             style={{
                               fontSize: 22, background: 'none', border: 'none',
                               cursor: 'pointer', padding: '2px 3px',
-                              color: star <= (feedbackDraft[pitch.id]?.rating || 0) ? '#facc15' : '#333',
-                              filter: star <= (feedbackDraft[pitch.id]?.rating || 0) ? 'none' : 'grayscale(1)',
+                              color: star <= (feedbackDraft[pitch.id]?.rating || 0) ? '#f59e0b' : '#d1d5db',
                             }}
                           >★</button>
                         ))}
                         {feedbackDraft[pitch.id]?.rating > 0 && (
-                          <span style={{ color: '#facc15', fontSize: 12, alignSelf: 'center' }}>
+                          <span style={{ color: '#f59e0b', fontSize: 12, alignSelf: 'center', fontFamily: T.font }}>
                             {feedbackDraft[pitch.id].rating}/5
                           </span>
                         )}
@@ -471,43 +493,43 @@ export default function CuratorDashboard() {
 
                       {/* Feedback textarea */}
                       <textarea
+                        className="fb-input"
                         value={feedbackDraft[pitch.id]?.text || ''}
                         onChange={e => setDraft(pitch.id, 'text', e.target.value)}
                         placeholder="Share your thoughts on this track... (Required for payment)"
                         rows={4}
                         style={{
-                          width: '100%', background: '#0a0a18',
-                          border: `1px solid ${(feedbackDraft[pitch.id]?.text?.trim().length > 0 && feedbackDraft[pitch.id]?.text?.trim().length < 20) ? '#f87171' : '#2a2a4a'}`,
-                          borderRadius: 8, color: '#ccc', fontSize: 13, lineHeight: 1.6,
-                          padding: '10px 12px', resize: 'vertical', fontFamily: 'inherit',
-                          boxSizing: 'border-box',
+                          ...fbInp,
+                          border: `1px solid ${(feedbackDraft[pitch.id]?.text?.trim().length > 0 && feedbackDraft[pitch.id]?.text?.trim().length < 20) ? '#ef4444' : T.border}`,
+                          resize: 'vertical',
                         }}
                       />
                       {feedbackDraft[pitch.id]?.text?.trim().length > 0 && feedbackDraft[pitch.id]?.text?.trim().length < 20 && (
-                        <div style={{ color: '#f87171', fontSize: 11, marginTop: 4 }}>
+                        <div style={{ color: '#ef4444', fontSize: 11, marginTop: 4, fontFamily: T.font }}>
                           Minimum 20 characters ({feedbackDraft[pitch.id].text.trim().length}/20)
                         </div>
                       )}
 
                       {/* Placement section */}
-                      <div style={{ marginTop: 14, padding: '12px 14px', background: 'rgba(14,165,233,0.05)', border: '1px solid rgba(14,165,233,0.18)', borderRadius: 10 }}>
+                      <div style={{ marginTop: 14, padding: '12px 14px', background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: 10 }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                           <input
                             type="checkbox"
                             checked={feedbackDraft[pitch.id]?.featured || false}
                             onChange={e => setDraft(pitch.id, 'featured', e.target.checked)}
-                            style={{ accentColor: '#0ea5e9', width: 15, height: 15 }}
+                            style={{ accentColor: T.accent, width: 15, height: 15 }}
                           />
-                          <span style={{ color: '#38bdf8', fontSize: 13, fontWeight: 700 }}>
+                          <span style={{ color: T.accent, fontSize: 13, fontWeight: 700, fontFamily: T.font }}>
                             Yes, I featured this track / はい、紹介しました
                           </span>
                         </label>
                         {feedbackDraft[pitch.id]?.featured && (
                           <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
                             <select
+                              className="fb-input"
                               value={feedbackDraft[pitch.id]?.platform || ''}
                               onChange={e => setDraft(pitch.id, 'platform', e.target.value)}
-                              style={{ background: '#0a0a18', border: '1px solid #1e3a4a', borderRadius: 7, color: '#ccc', fontSize: 13, padding: '8px 10px', outline: 'none' }}
+                              style={fbInp}
                             >
                               <option value="">Platform / プラットフォーム...</option>
                               <option value="Spotify Playlist">Spotify Playlist</option>
@@ -518,16 +540,21 @@ export default function CuratorDashboard() {
                             </select>
                             <input
                               type="url"
+                              className="fb-input"
                               value={feedbackDraft[pitch.id]?.url || ''}
                               onChange={e => setDraft(pitch.id, 'url', e.target.value)}
                               placeholder="https://open.spotify.com/playlist/... *required"
-                              style={{ background: '#0a0a18', border: `1px solid ${feedbackDraft[pitch.id]?.featured && !feedbackDraft[pitch.id]?.url?.trim() ? '#ef4444' : '#0ea5e9'}`, borderRadius: 7, color: '#ccc', fontSize: 13, padding: '8px 10px', outline: 'none' }}
+                              style={{
+                                ...fbInp,
+                                border: `1px solid ${feedbackDraft[pitch.id]?.featured && !feedbackDraft[pitch.id]?.url?.trim() ? '#ef4444' : T.accent}`,
+                              }}
                             />
                             <input
                               type="date"
+                              className="fb-input"
                               value={feedbackDraft[pitch.id]?.date || new Date().toISOString().slice(0, 10)}
                               onChange={e => setDraft(pitch.id, 'date', e.target.value)}
-                              style={{ background: '#0a0a18', border: '1px solid #1e3a4a', borderRadius: 7, color: '#ccc', fontSize: 13, padding: '8px 10px', outline: 'none' }}
+                              style={fbInp}
                             />
                           </div>
                         )}
@@ -542,54 +569,59 @@ export default function CuratorDashboard() {
                         const canAccept = !isBusy && validFeedback && (!featured || placementUrl.length > 0);
                         const canOther = !isBusy && validFeedback;
                         return (
-                          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                          <div className="action-btns-row" style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
                             {(pitch.status === 'sent' || pitch.status === 'feedback') && (
                               <>
                                 <button
                                   onClick={() => handleAction(pitch.id, 'accepted')}
                                   disabled={!canAccept}
                                   style={{
-                                    padding: '8px 16px', border: '1px solid rgba(16,185,129,0.4)',
-                                    borderRadius: 8, background: 'rgba(16,185,129,0.15)',
-                                    color: '#10b981', fontSize: 12, fontWeight: 700,
-                                    cursor: canAccept ? 'pointer' : 'not-allowed', opacity: canAccept ? 1 : 0.4,
+                                    padding: '9px 18px', border: 'none',
+                                    borderRadius: 8, background: canAccept ? '#10b981' : T.border,
+                                    color: '#fff', fontSize: 12, fontWeight: 700,
+                                    cursor: canAccept ? 'pointer' : 'not-allowed',
+                                    fontFamily: T.font, transition: 'background 0.15s',
                                   }}
                                 >{isBusy ? '...' : '✅ Accept & Featured'}</button>
+                                <button
+                                  onClick={() => handleFeedbackOnly(pitch.id)}
+                                  disabled={!canOther}
+                                  style={{
+                                    padding: '9px 18px', border: 'none',
+                                    borderRadius: 8, background: canOther ? T.accent : T.border,
+                                    color: '#fff', fontSize: 12, fontWeight: 700,
+                                    cursor: canOther ? 'pointer' : 'not-allowed',
+                                    fontFamily: T.font, transition: 'background 0.15s',
+                                  }}
+                                >{isBusy ? '...' : '💬 Feedback Only'}</button>
                                 <button
                                   onClick={() => handleAction(pitch.id, 'rejected')}
                                   disabled={!canOther}
                                   style={{
-                                    padding: '8px 16px', border: '1px solid rgba(239,68,68,0.3)',
-                                    borderRadius: 8, background: 'rgba(239,68,68,0.1)',
-                                    color: '#ef4444', fontSize: 12, fontWeight: 700,
-                                    cursor: canOther ? 'pointer' : 'not-allowed', opacity: canOther ? 1 : 0.4,
+                                    padding: '9px 18px',
+                                    border: `1px solid ${canOther ? '#ef4444' : T.border}`,
+                                    borderRadius: 8, background: T.white,
+                                    color: canOther ? '#ef4444' : T.textMuted,
+                                    fontSize: 12, fontWeight: 700,
+                                    cursor: canOther ? 'pointer' : 'not-allowed',
+                                    fontFamily: T.font, transition: 'all 0.15s',
                                   }}
                                 >{isBusy ? '...' : '❌ Decline'}</button>
                               </>
                             )}
-                            <button
-                              onClick={() => handleFeedbackOnly(pitch.id)}
-                              disabled={!canOther}
-                              style={{
-                                padding: '8px 16px', border: '1px solid #2a2a4a',
-                                borderRadius: 8, background: 'rgba(124,58,237,0.15)',
-                                color: '#a78bfa', fontSize: 12, fontWeight: 700,
-                                cursor: canOther ? 'pointer' : 'not-allowed', opacity: canOther ? 1 : 0.4,
-                              }}
-                            >{isBusy ? '...' : '💬 Feedback Only'}</button>
                           </div>
                         );
                       })()}
 
                       {/* Existing feedback display */}
                       {(pitch.feedback_message || pitch.placement_url) && (
-                        <div style={{ marginTop: 14, padding: '10px 14px', background: '#131328', borderRadius: 8, border: '1px solid #1e1e3a' }}>
-                          <div style={{ fontSize: 11, color: '#555', marginBottom: 6 }}>Previous feedback / 過去のフィードバック</div>
-                          {pitch.feedback_message && <div style={{ color: '#aaa', fontSize: 13 }}>{pitch.feedback_message}</div>}
+                        <div style={{ marginTop: 14, padding: '10px 14px', background: T.white, borderRadius: 8, border: `1px solid ${T.border}` }}>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, fontFamily: T.font }}>Previous feedback / 過去のフィードバック</div>
+                          {pitch.feedback_message && <div style={{ color: T.textSub, fontSize: 13, fontFamily: T.font }}>{pitch.feedback_message}</div>}
                           {pitch.placement_url && (
                             <div style={{ marginTop: 6 }}>
-                              <span style={{ color: '#0ea5e9', fontSize: 11, fontWeight: 700 }}>{pitch.placement_platform || 'Placement'}: </span>
-                              <a href={pitch.placement_url} target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', fontSize: 12, wordBreak: 'break-all' }}>{pitch.placement_url}</a>
+                              <span style={{ color: T.accent, fontSize: 11, fontWeight: 700, fontFamily: T.font }}>{pitch.placement_platform || 'Placement'}: </span>
+                              <a href={pitch.placement_url} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, fontSize: 12, wordBreak: 'break-all', fontFamily: T.font }}>{pitch.placement_url}</a>
                             </div>
                           )}
                         </div>
@@ -603,6 +635,18 @@ export default function CuratorDashboard() {
         )}
 
       </div>
+
+      {/* ── Footer ── */}
+      <footer style={{
+        padding: '32px 24px', background: T.white, borderTop: `1px solid ${T.border}`,
+        textAlign: 'center', fontFamily: T.font, fontSize: 13, color: T.textMuted,
+      }}>
+        <div>
+          <span>OTONAMI — Connecting Japanese Music to the World</span>
+          <span style={{ margin: '0 8px' }}>·</span>
+          <span>TYCompany LLC / ILCJ</span>
+        </div>
+      </footer>
     </div>
   );
 }

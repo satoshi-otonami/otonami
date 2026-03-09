@@ -269,20 +269,32 @@ export default function CuratorDashboard() {
             padding: '20px 24px', marginBottom: 28, boxShadow: T.shadow,
             display: 'flex', gap: 20, alignItems: 'center',
           }}>
-            <div style={{
-              width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
-              background: T.accentGrad,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 22,
-            }}>
-              {curator.icon || '🎵'}
-            </div>
+            {curator.icon_url ? (
+              <img src={curator.icon_url} alt={curator.name} style={{
+                width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
+                objectFit: 'cover', border: `1px solid ${T.border}`,
+              }} />
+            ) : (
+              <div style={{
+                width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
+                background: T.accentGrad,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 22,
+              }}>
+                {curator.icon || '🎵'}
+              </div>
+            )}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ color: T.text, fontWeight: 800, fontSize: 17, fontFamily: T.font }}>{curator.name}</div>
               <div style={{ color: T.textSub, fontSize: 13, marginTop: 2, fontFamily: T.font }}>
                 {curator.playlist || curator.type}
                 {curator.region && <span style={{ color: T.textMuted, marginLeft: 8 }}>· {curator.region}</span>}
               </div>
+              {curator.bio && (
+                <div style={{ color: T.textSub, fontSize: 12, marginTop: 6, lineHeight: 1.5, fontFamily: T.font, maxWidth: 400 }}>
+                  {curator.bio}
+                </div>
+              )}
               {curator.genres?.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
                   {curator.genres.slice(0, 6).map(g => (

@@ -230,7 +230,7 @@ export default function CuratorRegistrationPage() {
     width: '100%', padding: '12px 16px', borderRadius: 8,
     border: `1px solid ${T.border}`, background: T.white, color: T.text,
     fontSize: 14, outline: 'none', marginTop: 6, boxSizing: 'border-box',
-    fontFamily: T.font,
+    fontFamily: T.font, minHeight: 48,
   };
   const lbl = { fontSize: 13, color: '#374151', display: 'block', marginTop: 18, fontWeight: 500, fontFamily: T.font };
   const sub = { fontSize: 11, color: T.textMuted, marginLeft: 6, fontWeight: 400 };
@@ -306,6 +306,17 @@ export default function CuratorRegistrationPage() {
         .pill-tag:hover { border-color: ${T.accent} !important; background: ${T.accentLight} !important; color: ${T.accent} !important; }
         .curator-tab-btn { transition: all 0.2s; }
         .curator-tab-btn:hover { color: ${T.accent} !important; }
+        @media (max-width: 768px) {
+          .curator-input { min-height: 48px !important; font-size: 16px !important; }
+          .pill-tag { min-height: 36px !important; padding: 8px 16px !important; font-size: 13px !important; }
+          .step-btns-row { flex-direction: column !important; }
+          .step-btn-back { width: 100% !important; }
+          .avatar-upload-row { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+          .step-indicator { flex-wrap: wrap !important; gap: 8px !important; }
+          .step-label { white-space: normal !important; font-size: 11px !important; }
+          .register-card { padding: 20px 16px !important; }
+          .payout-notice { padding: 12px 14px !important; }
+        }
       `}</style>
 
       {/* ── Mobile Menu Overlay ── */}
@@ -399,9 +410,9 @@ export default function CuratorRegistrationPage() {
                 <span style={{ color: T.textMuted, fontSize: 12 }}>登録済みのキュレーターの方はこちら</span>
               </p>
               <label style={lbl}>Email Address <span style={sub}>メールアドレス</span></label>
-              <input className="curator-input" style={inp} type="text" value={loginForm.email} placeholder="your@email.com" onChange={e => setLoginForm(f => ({ ...f, email: e.target.value }))} />
+              <input className="curator-input" style={inp} type="email" value={loginForm.email} placeholder="your@email.com" autoComplete="email" onChange={e => setLoginForm(f => ({ ...f, email: e.target.value }))} />
               <label style={lbl}>Password <span style={sub}>パスワード</span></label>
-              <input className="curator-input" style={inp} type="password" value={loginForm.password} placeholder="Your password" onChange={e => setLoginForm(f => ({ ...f, password: e.target.value }))} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+              <input className="curator-input" style={inp} type="password" value={loginForm.password} placeholder="Your password" autoComplete="current-password" onChange={e => setLoginForm(f => ({ ...f, password: e.target.value }))} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
 
               {loginStatus === 'password_not_set' && (
                 <div style={{ marginTop: 16, padding: '14px 18px', background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: 10 }}>
@@ -436,12 +447,12 @@ export default function CuratorRegistrationPage() {
             <>
               {/* Progress bar */}
               <div style={{ marginBottom: 28 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 8 }}>
+                <div className="step-indicator" style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 8 }}>
                   {[1, 2].map((s, i) => (
                     <div key={s} style={{ display: 'flex', alignItems: 'center', flex: i < 1 ? 'none' : 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <div style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, fontFamily: T.font, background: registerStep >= s ? T.accent : T.border, color: registerStep >= s ? '#fff' : T.textSub, flexShrink: 0 }}>{s}</div>
-                        <span style={{ fontSize: 12, fontWeight: registerStep === s ? 700 : 400, color: registerStep >= s ? T.accent : T.textMuted, fontFamily: T.font, whiteSpace: 'nowrap' }}>
+                        <span className="step-label" style={{ fontSize: 12, fontWeight: registerStep === s ? 700 : 400, color: registerStep >= s ? T.accent : T.textMuted, fontFamily: T.font, whiteSpace: 'nowrap' }}>
                           {s === 1 ? 'Basic Info / 基本情報' : 'Profile / プロフィール'}
                         </span>
                       </div>
@@ -453,20 +464,20 @@ export default function CuratorRegistrationPage() {
 
               {/* ── STEP 1: Basic Info ── */}
               {registerStep === 1 && (
-                <div style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+                <div className="register-card" style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
                   <p style={{ color: T.textSub, fontSize: 13, marginTop: 0, marginBottom: 24, lineHeight: 1.6, fontFamily: T.font }}>
                     Discover emerging Japanese indie artists and receive curated pitches.<br />
                     <span style={{ color: T.textMuted, fontSize: 12 }}>日本のインディーアーティストから厳選されたピッチを受け取れます。</span>
                   </p>
 
                   <label style={lbl}>Your Name * <span style={sub}>お名前</span></label>
-                  <input className="curator-input" style={inp} value={form.name} placeholder="e.g. Taro Yamada" onChange={e => set('name', e.target.value)} />
+                  <input className="curator-input" style={inp} value={form.name} placeholder="e.g. Taro Yamada" autoComplete="name" autoCorrect="off" onChange={e => set('name', e.target.value)} />
 
                   <label style={lbl}>Email Address * <span style={sub}>メールアドレス</span></label>
-                  <input className="curator-input" style={inp} type="email" value={form.email} placeholder="your@email.com" onChange={e => set('email', e.target.value)} />
+                  <input className="curator-input" style={inp} type="email" value={form.email} placeholder="your@email.com" autoComplete="email" onChange={e => set('email', e.target.value)} />
 
                   <label style={lbl}>Password * <span style={sub}>パスワード（8文字以上）</span></label>
-                  <input className="curator-input" style={inp} type="password" value={form.password} placeholder="Minimum 8 characters" onChange={e => set('password', e.target.value)} />
+                  <input className="curator-input" style={inp} type="password" value={form.password} placeholder="Minimum 8 characters" autoComplete="new-password" onChange={e => set('password', e.target.value)} />
 
                   <label style={lbl}>Curator Type * <span style={sub}>タイプ</span></label>
                   <select className="curator-input" style={inp} value={form.type} onChange={e => set('type', e.target.value)}>
@@ -474,10 +485,10 @@ export default function CuratorRegistrationPage() {
                   </select>
 
                   <label style={lbl}>Platform Name * <span style={sub}>プラットフォーム名・媒体名</span></label>
-                  <input className="curator-input" style={inp} value={form.outletName} placeholder="e.g. Tokyo Sound Journal, My Indie Playlist" onChange={e => set('outletName', e.target.value)} />
+                  <input className="curator-input" style={inp} value={form.outletName} placeholder="e.g. Tokyo Sound Journal, My Indie Playlist" autoComplete="organization" autoCorrect="off" onChange={e => set('outletName', e.target.value)} />
 
                   <label style={lbl}>Platform URL <span style={sub}>ウェブサイト・URL（任意）</span></label>
-                  <input className="curator-input" style={inp} type="url" value={form.url} placeholder="https://your-site.com" onChange={e => set('url', e.target.value)} />
+                  <input className="curator-input" style={inp} type="url" value={form.url} placeholder="https://your-site.com" autoComplete="url" onChange={e => set('url', e.target.value)} />
 
                   <label style={lbl}>Country / Region <span style={sub}>国・地域</span></label>
                   <select className="curator-input" style={inp} value={form.region} onChange={e => set('region', e.target.value)}>
@@ -499,7 +510,7 @@ export default function CuratorRegistrationPage() {
               {registerStep === 2 && (
                 <>
                   {/* Payout notice */}
-                  <div style={{ background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <div className="payout-notice" style={{ background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                     <span style={{ fontSize: 20 }}>💰</span>
                     <div>
                       <p style={{ color: T.accent, fontWeight: 700, margin: 0, fontSize: 14, fontFamily: T.font }}>Curator Payout Policy</p>
@@ -510,14 +521,14 @@ export default function CuratorRegistrationPage() {
                     </div>
                   </div>
 
-                  <div style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+                  <div className="register-card" style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
 
                     {/* ── Profile Image ── */}
                     <div style={{ marginBottom: 4 }}>
                       <div style={{ fontSize: 13, color: '#374151', fontWeight: 600, marginBottom: 14, fontFamily: T.font }}>
                         Profile Photo <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 400, marginLeft: 4 }}>プロフィール写真（任意）</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                      <div className="avatar-upload-row" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
                         <div
                           onClick={() => !avatarUploading && avatarInputRef.current?.click()}
                           onDragOver={e => { e.preventDefault(); setAvatarDragOver(true); }}
@@ -565,7 +576,7 @@ export default function CuratorRegistrationPage() {
 
                     {/* Bio */}
                     <label style={lbl}>Bio / 自己紹介 <span style={sub}>最大500文字</span></label>
-                    <textarea className="curator-input" value={form.bio} onChange={e => { if (e.target.value.length <= 500) set('bio', e.target.value); }} placeholder="Tell artists about your platform and what you're looking for..." rows={4} style={{ ...inp, height: 110, resize: 'vertical' }} />
+                    <textarea className="curator-input" value={form.bio} onChange={e => { if (e.target.value.length <= 500) set('bio', e.target.value); }} placeholder="Tell artists about your platform and what you're looking for..." rows={4} style={{ ...inp, minHeight: 120, height: 120, resize: 'vertical' }} />
                     {form.bio.length > 400 && <p style={{ color: form.bio.length > 480 ? '#ef4444' : T.textMuted, fontSize: 11, marginTop: 4, fontFamily: T.font }}>{form.bio.length}/500</p>}
 
                     {/* Genres accepted most often */}
@@ -646,8 +657,8 @@ export default function CuratorRegistrationPage() {
 
                     {error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 14, fontFamily: T.font }}>{error}</p>}
 
-                    <div style={{ display: 'flex', gap: 10, marginTop: 28 }}>
-                      <button onClick={() => setRegisterStep(1)} style={{ padding: '14px 20px', border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>
+                    <div className="step-btns-row" style={{ display: 'flex', gap: 10, marginTop: 28 }}>
+                      <button onClick={() => setRegisterStep(1)} className="step-btn-back" style={{ padding: '14px 20px', height: 48, border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>
                       <button onClick={handleSubmit} disabled={status === 'loading' || avatarUploading} style={{ flex: 1, padding: '14px', height: 48, background: (status === 'loading' || avatarUploading) ? T.border : T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: (status === 'loading' || avatarUploading) ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
                       onMouseEnter={e => { if (status !== 'loading' && !avatarUploading) e.currentTarget.style.background = T.accentDark; }}
                       onMouseLeave={e => { if (status !== 'loading' && !avatarUploading) e.currentTarget.style.background = T.accent; }}

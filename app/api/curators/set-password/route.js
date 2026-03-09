@@ -62,7 +62,9 @@ export async function POST(request) {
     const toEmail  = testMode ? (process.env.EMAIL_TEST_REDIRECT || 'satoshiy339@gmail.com') : email;
     const subjectPrefix = testMode ? '[TEST] ' : '';
 
-    await resend.emails.send({
+    console.log(`[set-password] Sending to: ${toEmail} (testMode=${testMode}, originalEmail=${email})`);
+
+    const { data: emailData, error: emailError } = await resend.emails.send({
       from: `OTONAMI <${FROM}>`,
       to: [toEmail],
       subject: `${subjectPrefix}OTONAMI — Set Your Password / パスワード設定`,
@@ -97,6 +99,12 @@ export async function POST(request) {
       `,
     });
 
+    if (emailError) {
+      console.error(`[set-password] Resend error:`, emailError);
+      return NextResponse.json({ error: `Failed to send email: ${emailError.message || JSON.stringify(emailError)}` }, { status: 500 });
+    }
+
+    console.log(`[set-password] Email sent OK. resend_id=${emailData?.id}`);
     return NextResponse.json({ success: true, message: 'Password setup email sent.' });
   } catch (error) {
     console.error('Set-password POST error:', error);

@@ -1,40 +1,39 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-
-/* ── スタイル定数（dashboardと統一） ── */
-const S = {
-  bg:      '#0a0a18',
-  card:    '#13132a',
-  cardBorder: '#1e1e3a',
-  sub:     '#0d0d20',
-  text:    '#ffffff',
-  muted:   '#888888',
-  dim:     '#555555',
-  purple:  '#a78bfa',
-  green:   '#4ade80',
-  red:     '#f87171',
-  yellow:  '#facc15',
-};
+import { T } from '@/lib/design-tokens';
 
 function renderBody(text) {
   if (!text) return null;
   return text.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
     /^https?:\/\//.test(part)
       ? <a key={i} href={part} target="_blank" rel="noopener noreferrer"
-          style={{ color: S.purple, wordBreak: 'break-all' }}>{part}</a>
+          style={{ color: T.accent, wordBreak: 'break-all' }}>{part}</a>
       : part
   );
 }
 
+const STATUS_COLORS = {
+  sent:     { color: '#92400e', bg: '#fef3c7', label: 'Pending / 未対応' },
+  accepted: { color: '#065f46', bg: '#d1fae5', label: 'Accepted / 承認済み' },
+  rejected: { color: '#991b1b', bg: '#fee2e2', label: 'Declined / 却下済み' },
+  feedback: { color: '#1e40af', bg: '#dbeafe', label: 'Feedback Sent / FB送信済み' },
+};
+
 /* ── ログインフォーム ── */
-function LoginForm({ pitchId, onLogin }) {
+function LoginForm({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
   const [passwordNotSet, setPasswordNotSet] = useState(false);
+
+  const inp = {
+    width: '100%', padding: '12px 16px', borderRadius: 8,
+    border: `1px solid ${T.border}`, background: T.white, color: T.text,
+    fontSize: 14, outline: 'none', marginTop: 6, boxSizing: 'border-box',
+    fontFamily: T.font,
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,79 +63,76 @@ function LoginForm({ pitchId, onLogin }) {
 
   return (
     <div style={{
-      minHeight: '100vh', background: S.bg,
+      minHeight: '100vh', background: T.bg, fontFamily: T.font,
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
     }}>
-      <div style={{ width: '100%', maxWidth: 420 }}>
-        {/* Logo */}
+      <div style={{ width: '100%', maxWidth: 440 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <a href="/" style={{ fontSize: 22, fontWeight: 900, color: S.purple, textDecoration: 'none', letterSpacing: 2 }}>OTONAMI</a>
-          <p style={{ color: S.muted, fontSize: 14, marginTop: 10, lineHeight: 1.6 }}>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', justifyContent: 'center', marginBottom: 20 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 18 }}>O</div>
+            <span style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.accent }}>OTONAMI</span>
+          </a>
+          <p style={{ color: T.textSub, fontSize: 14, lineHeight: 1.6, fontFamily: T.font }}>
             Log in to respond to this pitch.<br />
-            <span style={{ fontSize: 12, color: S.dim }}>このピッチに返信するにはログインしてください。</span>
+            <span style={{ fontSize: 12, color: T.textMuted }}>このピッチに返信するにはログインしてください。</span>
           </p>
         </div>
 
         <form onSubmit={handleSubmit} style={{
-          background: S.card, border: `1px solid ${S.cardBorder}`,
-          borderRadius: 16, padding: '28px 24px',
+          background: T.white, border: `1px solid ${T.border}`,
+          borderRadius: T.radiusLg, padding: '28px 24px', boxShadow: T.shadow,
         }}>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', color: S.muted, fontSize: 12, fontWeight: 700, marginBottom: 6 }}>EMAIL</label>
+            <label style={{ display: 'block', color: '#374151', fontSize: 13, fontWeight: 500, marginBottom: 6, fontFamily: T.font }}>
+              Email Address <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>メールアドレス</span>
+            </label>
             <input
               type="email" value={email} onChange={e => setEmail(e.target.value)}
-              required autoFocus
-              style={{
-                width: '100%', background: S.sub, border: `1px solid ${S.cardBorder}`,
-                borderRadius: 8, color: S.text, fontSize: 14, padding: '10px 12px',
-                outline: 'none', boxSizing: 'border-box',
-              }}
+              required autoFocus style={inp} placeholder="your@email.com"
             />
           </div>
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', color: S.muted, fontSize: 12, fontWeight: 700, marginBottom: 6 }}>PASSWORD</label>
+            <label style={{ display: 'block', color: '#374151', fontSize: 13, fontWeight: 500, marginBottom: 6, fontFamily: T.font }}>
+              Password <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>パスワード</span>
+            </label>
             <input
               type="password" value={password} onChange={e => setPassword(e.target.value)}
-              required
-              style={{
-                width: '100%', background: S.sub, border: `1px solid ${S.cardBorder}`,
-                borderRadius: 8, color: S.text, fontSize: 14, padding: '10px 12px',
-                outline: 'none', boxSizing: 'border-box',
-              }}
+              required style={inp} placeholder="Your password"
             />
           </div>
           {passwordNotSet && (
-            <div style={{ marginBottom: 14, padding: '12px 14px', background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.25)', borderRadius: 10 }}>
-              <p style={{ color: '#38bdf8', fontSize: 13, margin: '0 0 8px', fontWeight: 700 }}>Password not set</p>
-              <p style={{ color: '#888', fontSize: 12, margin: '0 0 10px', lineHeight: 1.6 }}>
+            <div style={{ marginBottom: 16, padding: '14px 16px', background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: 10 }}>
+              <p style={{ color: T.accent, fontSize: 13, margin: '0 0 6px', fontWeight: 700, fontFamily: T.font }}>Password not set / パスワード未設定</p>
+              <p style={{ color: T.textSub, fontSize: 12, margin: '0 0 10px', lineHeight: 1.6, fontFamily: T.font }}>
                 Your account exists but no password has been set yet.
               </p>
               <a href="/curator/set-password" style={{
                 display: 'inline-block', padding: '7px 16px',
-                background: 'linear-gradient(135deg,#0ea5e9,#38bdf8)',
+                background: T.accent,
                 borderRadius: 8, color: '#fff', textDecoration: 'none', fontSize: 12, fontWeight: 700,
               }}>Set password →</a>
             </div>
           )}
           {error && (
-            <div style={{ color: S.red, fontSize: 12, marginBottom: 14, padding: '8px 12px', background: 'rgba(248,113,113,0.1)', borderRadius: 8 }}>
+            <div style={{ color: '#ef4444', fontSize: 12, marginBottom: 14, padding: '8px 12px', background: '#fef2f2', borderRadius: 8, fontFamily: T.font }}>
               {error}
             </div>
           )}
           <button
             type="submit" disabled={loading}
             style={{
-              width: '100%', padding: '12px', border: 'none', borderRadius: 10,
-              background: loading ? '#2a2a4a' : 'linear-gradient(135deg,#7c3aed,#2563eb)',
-              color: loading ? S.dim : S.text, fontWeight: 700, fontSize: 15,
-              cursor: loading ? 'not-allowed' : 'pointer',
+              width: '100%', padding: '13px', border: 'none', borderRadius: 10, height: 48,
+              background: loading ? T.border : T.accent,
+              color: '#fff', fontWeight: 700, fontSize: 15,
+              cursor: loading ? 'not-allowed' : 'pointer', fontFamily: T.font,
+              transition: 'background 0.15s',
             }}
           >{loading ? 'Logging in...' : 'Log In / ログイン'}</button>
           <div style={{ textAlign: 'center', marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <a href="/curator" style={{ color: S.dim, fontSize: 12, textDecoration: 'none' }}>
+            <a href="/curator" style={{ color: T.textMuted, fontSize: 12, textDecoration: 'none', fontFamily: T.font }}>
               No account? Register as curator →
             </a>
-            <a href="/curator/set-password" style={{ color: '#555', fontSize: 12, textDecoration: 'none' }}>
+            <a href="/curator/set-password" style={{ color: T.textMuted, fontSize: 12, textDecoration: 'none', fontFamily: T.font }}>
               Forgot password? / パスワードを忘れた方
             </a>
           </div>
@@ -147,7 +143,7 @@ function LoginForm({ pitchId, onLogin }) {
 }
 
 /* ── ピッチ詳細ビュー ── */
-function PitchView({ pitchId, curator }) {
+function PitchView({ pitchId }) {
   const [pitch, setPitch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -205,19 +201,23 @@ function PitchView({ pitchId, curator }) {
     }
   };
 
-  const card = { background: S.card, border: `1px solid ${S.cardBorder}`, borderRadius: 14, padding: '20px 22px' };
+  const fbInp = {
+    width: '100%', background: T.white, border: `1px solid ${T.border}`,
+    borderRadius: 8, color: T.text, fontSize: 13, padding: '10px 12px',
+    outline: 'none', fontFamily: T.font, boxSizing: 'border-box',
+  };
 
   if (loading) return (
     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ color: S.dim, fontSize: 14 }}>Loading pitch... / 読み込み中...</p>
+      <p style={{ color: T.textMuted, fontSize: 14, fontFamily: T.font }}>Loading pitch... / 読み込み中...</p>
     </div>
   );
 
   if (error) return (
     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
       <div style={{ fontSize: 40 }}>⚠️</div>
-      <p style={{ color: S.red, fontSize: 14 }}>{error}</p>
-      <a href="/curator/dashboard" style={{ color: S.purple, fontSize: 13 }}>← Go to Dashboard</a>
+      <p style={{ color: '#ef4444', fontSize: 14, fontFamily: T.font }}>{error}</p>
+      <a href="/curator/dashboard" style={{ color: T.accent, fontSize: 13, fontFamily: T.font }}>← Go to Dashboard</a>
     </div>
   );
 
@@ -226,57 +226,64 @@ function PitchView({ pitchId, curator }) {
   const alreadyResponded = ['accepted', 'rejected', 'feedback'].includes(pitch.status);
   const validFeedback = feedbackText.trim().length >= 20;
   const canSubmit = validFeedback && !updating && !done;
-
-
-  const STATUS_COLORS = {
-    sent:     { color: S.yellow, bg: 'rgba(250,204,21,0.1)',  label: 'Pending / 未対応' },
-    accepted: { color: S.green,  bg: 'rgba(74,222,128,0.1)',  label: 'Accepted / 承認済み' },
-    rejected: { color: S.red,    bg: 'rgba(248,113,113,0.1)', label: 'Declined / 却下済み' },
-    feedback: { color: S.purple, bg: 'rgba(167,139,250,0.1)', label: 'Feedback Sent / FB送信済み' },
-  };
   const st = STATUS_COLORS[pitch.status] || STATUS_COLORS.sent;
 
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', padding: '32px 16px 80px' }}>
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          background: T.white, border: '1px solid #bbf7d0', borderRadius: 10,
+          padding: '10px 22px', color: '#065f46', fontWeight: 700, fontSize: 14,
+          zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', whiteSpace: 'nowrap',
+          fontFamily: T.font,
+        }}>{toast}</div>
+      )}
+
       {/* Back link */}
-      <a href="/curator/dashboard" style={{ color: S.dim, fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>
+      <a href="/curator/dashboard" style={{ color: T.textSub, fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24, fontFamily: T.font }}>
         ← Back to Dashboard
       </a>
 
       {/* Pitch header card */}
-      <div style={{ ...card, marginBottom: 16 }}>
+      <div style={{
+        background: T.white, border: `1px solid ${T.border}`, borderRadius: T.radiusLg,
+        padding: '20px 22px', marginBottom: 14, boxShadow: T.shadow,
+      }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: '#0d0d1f', border: `1px solid ${S.cardBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🎵</div>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: T.accentLight, border: `1px solid ${T.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🎵</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
-              <span style={{ color: S.text, fontWeight: 800, fontSize: 18 }}>
+              <span style={{ color: T.text, fontWeight: 800, fontSize: 18, fontFamily: T.font }}>
                 {pitch.artist_name || 'Unknown Artist'}
               </span>
               {pitch.artist_genre && (
-                <span style={{ color: S.dim, fontSize: 13 }}>{pitch.artist_genre}</span>
+                <span style={{ color: T.textMuted, fontSize: 13, fontFamily: T.font }}>{pitch.artist_genre}</span>
               )}
               <span style={{
                 padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700,
-                color: st.color, background: st.bg, border: `1px solid ${st.color}44`,
+                color: st.color, background: st.bg, fontFamily: T.font,
               }}>{st.label}</span>
             </div>
             {pitch.song_title && (
-              <div style={{ color: S.muted, fontSize: 14, marginBottom: 4 }}>
+              <div style={{ color: T.textSub, fontSize: 14, marginBottom: 6, fontFamily: T.font }}>
                 🎵 &ldquo;{pitch.song_title}&rdquo;
               </div>
             )}
             {pitch.song_link && (
               <a href={pitch.song_link} target="_blank" rel="noopener noreferrer" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
-                color: S.purple, fontSize: 13, textDecoration: 'none',
-                padding: '4px 10px', background: 'rgba(124,58,237,0.12)',
-                borderRadius: 8, border: '1px solid rgba(124,58,237,0.25)',
+                color: T.accent, fontSize: 13, textDecoration: 'none',
+                padding: '5px 12px', background: T.accentLight,
+                borderRadius: 8, border: `1px solid ${T.accentBorder}`,
+                fontFamily: T.font,
               }}>
                 ▶ Listen to Track
               </a>
             )}
           </div>
-          <div style={{ color: S.dim, fontSize: 11, flexShrink: 0 }}>
+          <div style={{ color: T.textMuted, fontSize: 11, flexShrink: 0, fontFamily: T.font }}>
             {pitch.sent_at
               ? new Date(pitch.sent_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })
               : pitch.created_at
@@ -287,47 +294,52 @@ function PitchView({ pitchId, curator }) {
       </div>
 
       {/* Pitch body */}
-      <div style={{ ...card, marginBottom: 16 }}>
-        <div style={{ color: S.muted, fontSize: 11, fontWeight: 700, marginBottom: 12, letterSpacing: 1 }}>PITCH MESSAGE</div>
+      <div style={{
+        background: T.white, border: `1px solid ${T.border}`, borderRadius: T.radiusLg,
+        padding: '20px 22px', marginBottom: 14, boxShadow: T.shadow,
+      }}>
+        <div style={{ color: T.textSub, fontSize: 11, fontWeight: 700, marginBottom: 12, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: T.font }}>Pitch Message</div>
         {pitch.body ? (
           <pre style={{
-            color: '#ccc', fontSize: 13, lineHeight: 1.85,
+            color: '#374151', fontSize: 13, lineHeight: 1.85,
             whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-            margin: 0,
+            fontFamily: T.font, margin: 0,
           }}>
             {renderBody(pitch.body)}
           </pre>
         ) : (
-          <p style={{ color: S.dim, fontSize: 13, textAlign: 'center', padding: 20 }}>
+          <p style={{ color: T.textMuted, fontSize: 13, textAlign: 'center', padding: 20, fontFamily: T.font }}>
             Pitch content not available.
           </p>
         )}
       </div>
 
       {/* Feedback UI */}
-      <div style={{ ...card }}>
-        <div style={{ color: S.muted, fontSize: 11, fontWeight: 700, marginBottom: 16, letterSpacing: 1 }}>
-          YOUR FEEDBACK / フィードバック
+      <div style={{
+        background: T.white, border: `1px solid ${T.border}`, borderRadius: T.radiusLg,
+        padding: '20px 22px', boxShadow: T.shadow,
+      }}>
+        <div style={{ color: T.textSub, fontSize: 11, fontWeight: 700, marginBottom: 16, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: T.font }}>
+          Your Feedback / フィードバック
         </div>
 
         {done || (alreadyResponded && pitch.feedback_message) ? (
           /* 送信済み */
           <div>
-            <div style={{ color: S.green, fontWeight: 700, fontSize: 15, marginBottom: 12 }}>
+            <div style={{ color: '#065f46', fontWeight: 700, fontSize: 15, marginBottom: 12, fontFamily: T.font }}>
               ✅ Feedback submitted! / フィードバックを送信しました
             </div>
             {pitch.feedback_message && (
-              <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.7, background: S.sub, borderRadius: 10, padding: '12px 16px', border: `1px solid ${S.cardBorder}`, marginBottom: 10 }}>
+              <div style={{ color: T.textSub, fontSize: 13, lineHeight: 1.7, background: T.bg, borderRadius: 10, padding: '12px 16px', border: `1px solid ${T.border}`, marginBottom: 10, fontFamily: T.font }}>
                 {pitch.feedback_message}
               </div>
             )}
             {pitch.placement_url && (
-              <div style={{ padding: '10px 14px', background: 'rgba(14,165,233,0.07)', border: '1px solid rgba(14,165,233,0.2)', borderRadius: 10, marginBottom: 10 }}>
-                <div style={{ color: '#38bdf8', fontSize: 11, fontWeight: 700, marginBottom: 4 }}>
+              <div style={{ padding: '10px 14px', background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: 10, marginBottom: 10 }}>
+                <div style={{ color: T.accent, fontSize: 11, fontWeight: 700, marginBottom: 4, fontFamily: T.font }}>
                   {pitch.placement_platform || 'Placement'} — Placement URL
                 </div>
-                <a href={pitch.placement_url} target="_blank" rel="noopener noreferrer" style={{ color: '#0ea5e9', fontSize: 13, wordBreak: 'break-all' }}>
+                <a href={pitch.placement_url} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, fontSize: 13, wordBreak: 'break-all', fontFamily: T.font }}>
                   {pitch.placement_url}
                 </a>
               </div>
@@ -335,17 +347,18 @@ function PitchView({ pitchId, curator }) {
             <a href="/curator/dashboard" style={{
               display: 'inline-block', marginTop: 6,
               padding: '10px 20px', borderRadius: 10,
-              background: 'linear-gradient(135deg,#7c3aed,#2563eb)',
-              color: S.text, textDecoration: 'none', fontWeight: 700, fontSize: 13,
+              background: T.accentGrad,
+              color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 13,
+              fontFamily: T.font,
             }}>← Back to Dashboard</a>
           </div>
         ) : (
           /* フィードバック入力フォーム */
           <>
-            {/* Feedback textarea */}
             <div style={{ marginBottom: 14 }}>
-              <div style={{ color: S.dim, fontSize: 12, marginBottom: 8 }}>
-                Comments <span style={{ color: S.red }}>*</span> (min 20 characters / 最低20文字)
+              <div style={{ color: T.textSub, fontSize: 12, marginBottom: 8, fontFamily: T.font }}>
+                Comments <span style={{ color: '#ef4444' }}>*</span>
+                <span style={{ color: T.textMuted, marginLeft: 4 }}>(min 20 characters / 最低20文字)</span>
               </div>
               <textarea
                 value={feedbackText}
@@ -353,30 +366,28 @@ function PitchView({ pitchId, curator }) {
                 placeholder="Share your honest thoughts on this track — what works, what doesn't, and whether it fits your audience..."
                 rows={5}
                 style={{
-                  width: '100%', background: S.sub,
-                  border: `1px solid ${feedbackText.trim().length > 0 && feedbackText.trim().length < 20 ? S.red : S.cardBorder}`,
-                  borderRadius: 10, color: '#ccc', fontSize: 13, lineHeight: 1.7,
-                  padding: '12px 14px', resize: 'vertical', fontFamily: 'inherit',
-                  boxSizing: 'border-box', outline: 'none',
+                  ...fbInp,
+                  border: `1px solid ${feedbackText.trim().length > 0 && feedbackText.trim().length < 20 ? '#ef4444' : T.border}`,
+                  resize: 'vertical', lineHeight: 1.7,
                 }}
               />
               {feedbackText.trim().length > 0 && feedbackText.trim().length < 20 && (
-                <div style={{ color: S.red, fontSize: 11, marginTop: 4 }}>
+                <div style={{ color: '#ef4444', fontSize: 11, marginTop: 4, fontFamily: T.font }}>
                   {feedbackText.trim().length}/20 characters — {20 - feedbackText.trim().length} more needed
                 </div>
               )}
             </div>
 
             {/* Placement section */}
-            <div style={{ marginBottom: 16, padding: '12px 14px', background: 'rgba(14,165,233,0.05)', border: '1px solid rgba(14,165,233,0.18)', borderRadius: 10 }}>
+            <div style={{ marginBottom: 16, padding: '12px 14px', background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: 10 }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={featured}
                   onChange={e => setFeatured(e.target.checked)}
-                  style={{ accentColor: '#0ea5e9', width: 15, height: 15 }}
+                  style={{ accentColor: T.accent, width: 15, height: 15 }}
                 />
-                <span style={{ color: '#38bdf8', fontSize: 13, fontWeight: 700 }}>
+                <span style={{ color: T.accent, fontSize: 13, fontWeight: 700, fontFamily: T.font }}>
                   Yes, I featured this track / はい、紹介しました
                 </span>
               </label>
@@ -385,7 +396,7 @@ function PitchView({ pitchId, curator }) {
                   <select
                     value={placementPlatform}
                     onChange={e => setPlacementPlatform(e.target.value)}
-                    style={{ background: S.sub, border: `1px solid ${S.cardBorder}`, borderRadius: 8, color: '#ccc', fontSize: 13, padding: '9px 11px', outline: 'none' }}
+                    style={fbInp}
                   >
                     <option value="">Platform / プラットフォーム...</option>
                     <option value="Spotify Playlist">Spotify Playlist</option>
@@ -399,16 +410,19 @@ function PitchView({ pitchId, curator }) {
                     value={placementUrl}
                     onChange={e => setPlacementUrl(e.target.value)}
                     placeholder="https://open.spotify.com/playlist/... *required"
-                    style={{ background: S.sub, border: `1px solid ${featured && !placementUrl.trim() ? '#ef4444' : '#0ea5e9'}`, borderRadius: 8, color: '#ccc', fontSize: 13, padding: '9px 11px', outline: 'none', boxSizing: 'border-box', width: '100%' }}
+                    style={{
+                      ...fbInp,
+                      border: `1px solid ${featured && !placementUrl.trim() ? '#ef4444' : T.accent}`,
+                    }}
                   />
                   {featured && !placementUrl.trim() && (
-                    <div style={{ color: '#ef4444', fontSize: 11 }}>URL is required when accepting as featured / URLは必須です</div>
+                    <div style={{ color: '#ef4444', fontSize: 11, fontFamily: T.font }}>URL is required when accepting as featured / URLは必須です</div>
                   )}
                   <input
                     type="date"
                     value={placementDate}
                     onChange={e => setPlacementDate(e.target.value)}
-                    style={{ background: S.sub, border: `1px solid ${S.cardBorder}`, borderRadius: 8, color: '#ccc', fontSize: 13, padding: '9px 11px', outline: 'none' }}
+                    style={fbInp}
                   />
                 </div>
               )}
@@ -424,36 +438,39 @@ function PitchView({ pitchId, curator }) {
                     disabled={!canAccept}
                     style={{
                       flex: 1, minWidth: 140, padding: '11px 16px',
-                      border: '1px solid rgba(16,185,129,0.4)', borderRadius: 10,
-                      background: canAccept ? 'rgba(16,185,129,0.15)' : 'transparent',
-                      color: canAccept ? '#10b981' : S.dim,
+                      border: 'none', borderRadius: 10,
+                      background: canAccept ? '#10b981' : T.border,
+                      color: '#fff',
                       fontWeight: 700, fontSize: 13, cursor: canAccept ? 'pointer' : 'not-allowed',
+                      fontFamily: T.font, transition: 'background 0.15s',
                     }}
                   >{updating ? '...' : '✅ Accept & Featured'}</button>
-
-                  <button
-                    onClick={() => submit('rejected')}
-                    disabled={!canSubmit}
-                    style={{
-                      flex: 1, minWidth: 140, padding: '11px 16px',
-                      border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10,
-                      background: canSubmit ? 'rgba(239,68,68,0.1)' : 'transparent',
-                      color: canSubmit ? '#ef4444' : S.dim,
-                      fontWeight: 700, fontSize: 13, cursor: canSubmit ? 'pointer' : 'not-allowed',
-                    }}
-                  >{updating ? '...' : '❌ Decline'}</button>
 
                   <button
                     onClick={() => submit('feedback')}
                     disabled={!canSubmit}
                     style={{
                       flex: 1, minWidth: 140, padding: '11px 16px',
-                      border: `1px solid ${S.cardBorder}`, borderRadius: 10,
-                      background: canSubmit ? 'rgba(124,58,237,0.15)' : 'transparent',
-                      color: canSubmit ? S.purple : S.dim,
+                      border: 'none', borderRadius: 10,
+                      background: canSubmit ? T.accent : T.border,
+                      color: '#fff',
                       fontWeight: 700, fontSize: 13, cursor: canSubmit ? 'pointer' : 'not-allowed',
+                      fontFamily: T.font, transition: 'background 0.15s',
                     }}
                   >{updating ? '...' : '💬 Feedback Only'}</button>
+
+                  <button
+                    onClick={() => submit('rejected')}
+                    disabled={!canSubmit}
+                    style={{
+                      flex: 1, minWidth: 140, padding: '11px 16px',
+                      border: `1px solid ${canSubmit ? '#ef4444' : T.border}`, borderRadius: 10,
+                      background: T.white,
+                      color: canSubmit ? '#ef4444' : T.textMuted,
+                      fontWeight: 700, fontSize: 13, cursor: canSubmit ? 'pointer' : 'not-allowed',
+                      fontFamily: T.font, transition: 'all 0.15s',
+                    }}
+                  >{updating ? '...' : '❌ Decline'}</button>
                 </div>
               );
             })()}
@@ -467,11 +484,8 @@ function PitchView({ pitchId, curator }) {
 /* ── メインページ ── */
 export default function PitchRespondPage() {
   const { id: pitchId } = useParams();
-  const [authState, setAuthState] = useState('loading'); // 'loading' | 'authed' | 'unauthed'
+  const [authState, setAuthState] = useState('loading');
   const [curator, setCurator] = useState(null);
-  const [toast, setToast] = useState('');
-
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('curator_token') : null;
@@ -484,53 +498,72 @@ export default function PitchRespondPage() {
   }, []);
 
   if (authState === 'loading') return (
-    <div style={{ minHeight: '100vh', background: S.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ color: S.dim, fontSize: 14 }}>Loading... / 読み込み中...</p>
+    <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ color: T.textMuted, fontSize: 14, fontFamily: T.font }}>Loading... / 読み込み中...</p>
     </div>
   );
 
   if (authState === 'unauthed') return (
-    <LoginForm pitchId={pitchId} onLogin={(c) => { setCurator(c); setAuthState('authed'); }} />
+    <LoginForm onLogin={(c) => { setCurator(c); setAuthState('authed'); }} />
   );
 
   return (
-    <div style={{ minHeight: '100vh', background: S.bg, color: S.text }}>
-      {/* Toast */}
-      {toast && (
-        <div style={{
-          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-          background: '#1a3a2a', border: '1px solid #4ade80', borderRadius: 10,
-          padding: '10px 22px', color: S.green, fontWeight: 700, fontSize: 14,
-          zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.4)', whiteSpace: 'nowrap',
-        }}>{toast}</div>
-      )}
+    <div style={{ minHeight: '100vh', background: T.bg, color: T.text, fontFamily: T.font }}>
+      <style>{`*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }`}</style>
 
-      {/* Header */}
-      <div style={{
-        background: '#0d0d20', borderBottom: `1px solid ${S.cardBorder}`,
-        padding: '14px 24px', display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10,
+      {/* ── Header ── */}
+      <header style={{
+        position: 'sticky', top: 0, zIndex: 100,
+        background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
+        borderBottom: `1px solid ${T.border}`,
+        padding: '0 24px', height: 64,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        fontFamily: T.font,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <a href="/curator" style={{ fontSize: 17, fontWeight: 900, color: S.purple, textDecoration: 'none', letterSpacing: 2 }}>OTONAMI</a>
-          <span style={{ color: '#2a2a4a', fontSize: 16 }}>|</span>
-          <span style={{ color: S.text, fontWeight: 700, fontSize: 14 }}>Respond to Pitch</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          {curator && (
-            <span style={{ color: S.muted, fontSize: 12 }}>{curator.name}</span>
-          )}
-          <a href="/curator/dashboard" style={{ color: S.dim, fontSize: 12, textDecoration: 'none', padding: '6px 14px', border: `1px solid ${S.cardBorder}`, borderRadius: 8 }}>
-            Dashboard
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 17 }}>O</div>
+            <span style={{ fontFamily: T.fontDisplay, fontSize: 20, fontWeight: 700, color: T.accent, letterSpacing: -0.3 }}>OTONAMI</span>
           </a>
+          <span style={{ color: T.border, fontSize: 20 }}>|</span>
+          <span style={{ color: T.text, fontWeight: 700, fontSize: 14, fontFamily: T.font }}>Respond to Pitch</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {curator && (
+            <span style={{ color: T.textSub, fontSize: 12, fontFamily: T.font }}>{curator.name}</span>
+          )}
+          <a href="/curator/dashboard" style={{
+            color: T.textSub, fontSize: 12, textDecoration: 'none',
+            padding: '6px 14px', border: `1px solid ${T.border}`, borderRadius: 8,
+            fontFamily: T.font, transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = T.accent; e.currentTarget.style.color = T.accent; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSub; }}
+          >Dashboard</a>
           <button
             onClick={() => { localStorage.removeItem('curator_token'); window.location.href = '/curator'; }}
-            style={{ background: 'none', border: `1px solid ${S.cardBorder}`, borderRadius: 8, color: S.dim, fontSize: 12, padding: '6px 12px', cursor: 'pointer' }}
+            style={{
+              background: 'none', border: `1px solid ${T.border}`, borderRadius: 8,
+              color: T.textSub, fontSize: 12, padding: '6px 12px', cursor: 'pointer',
+              fontFamily: T.font, transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSub; }}
           >Logout</button>
         </div>
-      </div>
+      </header>
 
-      <PitchView pitchId={pitchId} curator={curator} />
+      <PitchView pitchId={pitchId} />
+
+      {/* ── Footer ── */}
+      <footer style={{
+        padding: '32px 24px', background: T.white, borderTop: `1px solid ${T.border}`,
+        textAlign: 'center', fontFamily: T.font, fontSize: 13, color: T.textMuted,
+      }}>
+        <span>OTONAMI — Connecting Japanese Music to the World</span>
+        <span style={{ margin: '0 8px' }}>·</span>
+        <span>TYCompany LLC / ILCJ</span>
+      </footer>
     </div>
   );
 }

@@ -316,12 +316,12 @@ export default function CuratorDashboard() {
   const fbInp = {
     width: '100%', background: T.white, border: `1px solid ${T.border}`,
     borderRadius: 8, color: T.text, fontSize: 13, padding: '9px 12px',
-    outline: 'none', fontFamily: T.font, boxSizing: 'border-box',
+    outline: 'none', fontFamily: T.font, boxSizing: 'border-box', minHeight: 44,
   };
   const editInp = {
     width: '100%', padding: '10px 14px', borderRadius: 8,
     border: `1px solid ${T.border}`, background: T.white, color: T.text,
-    fontSize: 13, outline: 'none', boxSizing: 'border-box', fontFamily: T.font,
+    fontSize: 13, outline: 'none', boxSizing: 'border-box', fontFamily: T.font, minHeight: 44,
   };
   const editLbl = { fontSize: 12, color: '#374151', display: 'block', marginBottom: 5, fontWeight: 600, fontFamily: T.font };
 
@@ -343,11 +343,27 @@ export default function CuratorDashboard() {
         .pill-tag-edit:hover { border-color: ${T.accent} !important; background: ${T.accentLight} !important; color: ${T.accent} !important; }
         @media (max-width: 768px) {
           .dash-header { padding: 0 16px !important; }
+          .dash-header-subtitle { display: none !important; }
+          .dash-header-meta { display: none !important; }
           .profile-top { flex-direction: column !important; align-items: flex-start !important; }
           .pitch-header { flex-wrap: wrap !important; }
-          .pitch-actions { flex-wrap: wrap !important; margin-top: 8px !important; }
-          .action-btns-row { flex-wrap: wrap !important; }
+          .pitch-actions { flex-wrap: wrap !important; margin-top: 8px !important; width: 100% !important; }
+          .pitch-actions button { flex: 1; min-height: 40px !important; }
+          .action-btns-row { flex-wrap: wrap !important; gap: 8px !important; }
+          .action-btns-row button { flex: 1 1 calc(50% - 4px); min-height: 44px !important; font-size: 13px !important; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .edit-2col-grid { grid-template-columns: 1fr !important; }
+          .edit-avatar-row { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+          .edit-save-btns { flex-direction: column !important; }
+          .edit-save-btns button { width: 100% !important; min-height: 48px !important; }
+          .edit-input { min-height: 48px !important; font-size: 16px !important; }
+          .edit-bio-textarea { min-height: 120px !important; font-size: 16px !important; }
+          .fb-input { font-size: 16px !important; }
+          .fb-textarea { min-height: 100px !important; font-size: 16px !important; }
+          .pill-tag-edit { min-height: 36px !important; padding: 6px 12px !important; }
+          .pitch-fb-stars button { min-width: 44px !important; min-height: 44px !important; font-size: 26px !important; padding: 0 !important; }
+          .dash-filter-tabs { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; flex-wrap: nowrap !important; }
+          .dash-filter-tabs button { flex-shrink: 0 !important; min-height: 44px !important; }
         }
       `}</style>
 
@@ -376,13 +392,13 @@ export default function CuratorDashboard() {
             <div style={{ width: 34, height: 34, borderRadius: 10, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 17 }}>O</div>
             <span style={{ fontFamily: T.fontDisplay, fontSize: 20, fontWeight: 700, color: T.accent, letterSpacing: -0.3 }}>OTONAMI</span>
           </a>
-          <span style={{ color: T.border, fontSize: 20 }}>|</span>
-          <span style={{ color: T.text, fontWeight: 700, fontSize: 14 }}>Curator Dashboard</span>
-          <span style={{ color: T.textMuted, fontSize: 12 }}>キュレーターダッシュボード</span>
+          <span className="dash-header-subtitle" style={{ color: T.border, fontSize: 20 }}>|</span>
+          <span className="dash-header-subtitle" style={{ color: T.text, fontWeight: 700, fontSize: 14 }}>Curator Dashboard</span>
+          <span className="dash-header-subtitle" style={{ color: T.textMuted, fontSize: 12 }}>キュレーターダッシュボード</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {curator && (
-            <div style={{ textAlign: 'right' }}>
+            <div className="dash-header-meta" style={{ textAlign: 'right' }}>
               <div style={{ color: T.text, fontSize: 13, fontWeight: 700 }}>{curator.name}</div>
               <div style={{ color: T.textMuted, fontSize: 11 }}>{curator.email}</div>
             </div>
@@ -391,6 +407,7 @@ export default function CuratorDashboard() {
             padding: '7px 16px', border: `1px solid ${T.border}`,
             borderRadius: 8, background: T.white, color: T.textSub,
             fontSize: 12, cursor: 'pointer', fontFamily: T.font, transition: 'all 0.15s',
+            minHeight: 40, minWidth: 44,
           }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444'; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSub; }}
@@ -398,7 +415,7 @@ export default function CuratorDashboard() {
         </div>
       </header>
 
-      <div style={{ maxWidth: 820, margin: '0 auto', padding: '32px 16px 96px' }}>
+      <div style={{ maxWidth: 820, margin: '0 auto', padding: '32px 16px calc(96px + env(safe-area-inset-bottom))' }}>
 
         {/* ── プロフィールカード ── */}
         {curator && (
@@ -421,7 +438,7 @@ export default function CuratorDashboard() {
                 {/* Avatar upload */}
                 <div style={{ marginBottom: 20 }}>
                   <div style={editLbl}>Profile Photo / プロフィール写真</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div className="edit-avatar-row" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <div
                       onClick={() => !editAvatarUploading && editAvatarRef.current?.click()}
                       onDragOver={e => { e.preventDefault(); setEditAvatarDragOver(true); }}
@@ -458,7 +475,7 @@ export default function CuratorDashboard() {
                 </div>
 
                 {/* 2-column grid for basic fields */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+                <div className="edit-2col-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
                   <div>
                     <label style={editLbl}>Curator Type / タイプ</label>
                     <select className="edit-input" style={editInp} value={editForm.type} onChange={e => setEditForm(f => ({ ...f, type: e.target.value }))}>
@@ -493,7 +510,7 @@ export default function CuratorDashboard() {
 
                 <div style={{ marginBottom: 14 }}>
                   <label style={editLbl}>Bio / 自己紹介 <span style={{ fontSize: 10, fontWeight: 400, color: T.textMuted }}>最大500文字</span></label>
-                  <textarea className="edit-input" value={editForm.bio} onChange={e => { if (e.target.value.length <= 500) setEditForm(f => ({ ...f, bio: e.target.value })); }} placeholder="Tell artists about your platform..." rows={3} style={{ ...editInp, resize: 'vertical', height: 90 }} />
+                  <textarea className="edit-input edit-bio-textarea" value={editForm.bio} onChange={e => { if (e.target.value.length <= 500) setEditForm(f => ({ ...f, bio: e.target.value })); }} placeholder="Tell artists about your platform..." rows={3} style={{ ...editInp, resize: 'vertical', height: 90 }} />
                   {editForm.bio?.length > 400 && <div style={{ color: editForm.bio.length > 480 ? '#ef4444' : T.textMuted, fontSize: 11, marginTop: 2, fontFamily: T.font }}>{editForm.bio.length}/500</div>}
                 </div>
 
@@ -564,7 +581,7 @@ export default function CuratorDashboard() {
 
                 {saveError && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 14, padding: '10px 14px', background: '#fef2f2', borderRadius: 8, fontFamily: T.font }}>{saveError}</div>}
 
-                <div style={{ display: 'flex', gap: 10 }}>
+                <div className="edit-save-btns" style={{ display: 'flex', gap: 10 }}>
                   <button onClick={() => setEditMode(false)} style={{ padding: '11px 22px', border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>
                     Cancel / キャンセル
                   </button>
@@ -707,7 +724,7 @@ export default function CuratorDashboard() {
         )}
 
         {/* ── フィルタータブ ── */}
-        <div style={{ display: 'flex', marginBottom: 24, borderBottom: `2px solid ${T.border}` }}>
+        <div className="dash-filter-tabs" style={{ display: 'flex', marginBottom: 24, borderBottom: `2px solid ${T.border}` }}>
           {FILTER_TABS.map(t => {
             const cnt = t.key === 'all' ? null : counts[t.key];
             const isActive = filter === t.key;
@@ -801,14 +818,14 @@ export default function CuratorDashboard() {
                     {/* ── Feedback UI ── */}
                     <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 12, padding: '16px 18px' }}>
                       <div style={{ color: T.textSub, fontSize: 12, fontWeight: 700, marginBottom: 12, letterSpacing: 0.5, fontFamily: T.font }}>FEEDBACK / フィードバック</div>
-                      <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
+                      <div className="pitch-fb-stars" style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
                         {[1,2,3,4,5].map(star => (
-                          <button key={star} onClick={() => setDraft(pitch.id, 'rating', star === (feedbackDraft[pitch.id]?.rating) ? 0 : star)} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 3px', color: star <= (feedbackDraft[pitch.id]?.rating || 0) ? '#f59e0b' : '#d1d5db' }}>★</button>
+                          <button key={star} onClick={() => setDraft(pitch.id, 'rating', star === (feedbackDraft[pitch.id]?.rating) ? 0 : star)} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 3px', color: star <= (feedbackDraft[pitch.id]?.rating || 0) ? '#f59e0b' : '#d1d5db', minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>★</button>
                         ))}
                         {feedbackDraft[pitch.id]?.rating > 0 && <span style={{ color: '#f59e0b', fontSize: 12, alignSelf: 'center', fontFamily: T.font }}>{feedbackDraft[pitch.id].rating}/5</span>}
                       </div>
-                      <textarea className="fb-input" value={feedbackDraft[pitch.id]?.text || ''} onChange={e => setDraft(pitch.id, 'text', e.target.value)} placeholder="Share your thoughts on this track... (Required for payment)" rows={4}
-                        style={{ ...fbInp, border: `1px solid ${(feedbackDraft[pitch.id]?.text?.trim().length > 0 && feedbackDraft[pitch.id]?.text?.trim().length < 20) ? '#ef4444' : T.border}`, resize: 'vertical' }} />
+                      <textarea className="fb-input fb-textarea" value={feedbackDraft[pitch.id]?.text || ''} onChange={e => setDraft(pitch.id, 'text', e.target.value)} placeholder="Share your thoughts on this track... (Required for payment)" rows={4}
+                        style={{ ...fbInp, border: `1px solid ${(feedbackDraft[pitch.id]?.text?.trim().length > 0 && feedbackDraft[pitch.id]?.text?.trim().length < 20) ? '#ef4444' : T.border}`, resize: 'vertical', minHeight: 100 }} />
                       {feedbackDraft[pitch.id]?.text?.trim().length > 0 && feedbackDraft[pitch.id]?.text?.trim().length < 20 && (
                         <div style={{ color: '#ef4444', fontSize: 11, marginTop: 4, fontFamily: T.font }}>Minimum 20 characters ({feedbackDraft[pitch.id].text.trim().length}/20)</div>
                       )}

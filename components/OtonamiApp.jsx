@@ -2217,14 +2217,34 @@ function CuratorApp({user, pitches, page, setPage, savePitches, notify, updatePi
   ];
 
   return <>
+    <style>{`
+      @media (max-width: 768px) {
+        .curator-nav-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; flex-wrap: nowrap !important; justify-content: flex-start !important; }
+        .curator-nav-tabs button { scroll-snap-align: start; flex-shrink: 0; min-height: 44px; }
+        .curator-nav-user { display: none !important; }
+        .curator-main { padding: 1rem !important; }
+        .curator-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        .curator-action-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        .curator-decision-btns { flex-direction: column !important; }
+        .curator-decision-btns button { width: 100% !important; }
+        .curator-star-btn { min-width: 44px !important; min-height: 44px !important; font-size: 1.8rem !important; }
+        .curator-feedback-area { min-height: 120px !important; font-size: 1rem !important; }
+        .curator-input-mobile { font-size: 1rem !important; min-height: 48px !important; }
+        .curator-card-header { flex-direction: column !important; align-items: flex-start !important; }
+        .curator-card-header-right { text-align: left !important; margin-top: 8px !important; }
+        .curator-earnings-row { flex-direction: column !important; }
+        .curator-earnings-row > div { width: 100%; }
+        .curator-msg-input { font-size: 1rem !important; }
+      }
+    `}</style>
     <nav style={css.nav}>
       <div style={css.navBrand}>OTONAMI <span style={{fontSize:"0.6rem",color:"#38bdf8",fontWeight:400}}>CURATOR</span></div>
-      <div style={{display:"flex",gap:4,flex:1,justifyContent:"center"}}>
+      <div className="curator-nav-tabs" style={{display:"flex",gap:4,flex:1,justifyContent:"center"}}>
         {navItems.map(n => <button key={n.id} onClick={()=>setPage(n.id)} style={{...css.navBtn,...(page===n.id?css.navBtnActive:{})}}>{n.icon} {n.label}{n.badge && <span style={css.navBadge}>{n.badge}</span>}</button>)}
       </div>
-      <div style={{fontSize:"0.75rem",color:"#64748b"}}>{user.name}</div>
+      <div className="curator-nav-user" style={{fontSize:"0.75rem",color:"#64748b"}}>{user.name}</div>
     </nav>
-    <main style={css.main}>
+    <main className="curator-main" style={css.main}>
       {page==="curator-inbox" && <CuratorInbox user={user} pitches={pending} allPitches={pitches} savePitches={savePitches} notify={notify} curators={curators} saveCurators={saveCurators}/>}
       {page==="curator-reviewed" && <CuratorReviewed pitches={reviewed}/>}
       {page==="curator-profile" && <CuratorProfile user={user} curators={curators} saveCurators={saveCurators} notify={notify} stats={{total:myPitches.length,reviewed:reviewed.length,accepted:myPitches.filter(p=>p.status==="accepted").length}}/>}
@@ -2326,14 +2346,14 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
       <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:20,overflow:"hidden"}}>
         {/* Header */}
         <div style={{background:"#f0f9ff",padding:"1.5rem"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div className="curator-card-header" style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
             <div>
               <div style={{fontSize:"0.72rem",color:"#0ea5e9",fontWeight:600,marginBottom:4}}>NEW SUBMISSION</div>
               <h2 style={{fontSize:"1.3rem",fontWeight:800,margin:"0 0 0.3rem"}}>{activePitch.artistNameEn || activePitch.artistName}</h2>
               <div style={{fontSize:"0.85rem",color:"#64748b"}}>{activePitch.genre} · "{activePitch.songTitle}"</div>
               {activePitch.achievements && <div style={{fontSize:"0.78rem",color:"#0ea5e9",marginTop:4}}>🏆 {activePitch.achievements}</div>}
             </div>
-            <div style={{textAlign:"right",fontSize:"0.72rem",color:"#64748b"}}>
+            <div className="curator-card-header-right" style={{textAlign:"right",fontSize:"0.72rem",color:"#64748b"}}>
               <div>累計報酬: <span style={{color:"#10b981",fontWeight:700}}>¥{totalEarnings.toLocaleString()}</span></div>
             </div>
           </div>
@@ -2370,8 +2390,8 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
             </div>)}
           </div>
           <div style={{display:"flex",gap:5}}>
-            <input value={curatorMessage} onChange={e=>setCuratorMessage(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendCuratorMessage();}}} placeholder="アーティストへメッセージ…" style={{...css.input,marginBottom:0,flex:1,fontSize:"0.8rem"}}/>
-            <button onClick={sendCuratorMessage} style={{...css.btnSm,background:"#0ea5e9",color:"#fff",border:"none",fontWeight:600,padding:"0.5rem 0.8rem"}}>送信</button>
+            <input value={curatorMessage} onChange={e=>setCuratorMessage(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendCuratorMessage();}}} placeholder="アーティストへメッセージ…" className="curator-msg-input" style={{...css.input,marginBottom:0,flex:1,fontSize:"0.8rem"}}/>
+            <button onClick={sendCuratorMessage} style={{...css.btnSm,background:"#0ea5e9",color:"#fff",border:"none",fontWeight:600,padding:"0.5rem 0.8rem",minHeight:44,minWidth:44}}>送信</button>
           </div>
         </div>
 
@@ -2383,12 +2403,12 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
           <div style={{marginBottom:"1rem"}}>
             <div style={{fontSize:"0.78rem",color:"#64748b",marginBottom:6}}>評価</div>
             <div style={{display:"flex",gap:4}}>
-              {[1,2,3,4,5].map(n => <button key={n} onClick={()=>setRating(n)} style={{fontSize:"1.5rem",background:"none",border:"none",cursor:"pointer",opacity:n<=rating?1:0.25}}>{n<=rating?"★":"☆"}</button>)}
+              {[1,2,3,4,5].map(n => <button key={n} onClick={()=>setRating(n)} className="curator-star-btn" style={{fontSize:"1.5rem",background:"none",border:"none",cursor:"pointer",opacity:n<=rating?1:0.25,minWidth:44,minHeight:44,display:"flex",alignItems:"center",justifyContent:"center"}}>{n<=rating?"★":"☆"}</button>)}
             </div>
           </div>
 
           {/* Feedback text */}
-          <textarea value={feedback} onChange={e=>setFeedback(e.target.value)} placeholder="この曲についてのフィードバックを書いてください。建設的で具体的なコメントが喜ばれます。（15文字以上）" rows={4} style={{...css.input,minHeight:100,resize:"vertical",fontSize:"0.88rem"}}/>
+          <textarea value={feedback} onChange={e=>setFeedback(e.target.value)} placeholder="この曲についてのフィードバックを書いてください。建設的で具体的なコメントが喜ばれます。（15文字以上）" rows={4} className="curator-feedback-area" style={{...css.input,minHeight:100,resize:"vertical",fontSize:"0.88rem"}}/>
 
           {/* Decision Section */}
           {!showDecision ? (
@@ -2402,7 +2422,7 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
               {/* Revenue Info */}
               <div style={{background:"#f8fafc",borderRadius:12,padding:"1rem",marginBottom:"1rem",fontSize:"0.78rem"}}>
                 <div style={{fontWeight:700,marginBottom:6}}>💰 レビュー報酬（{curatorData?.creditCost||2}クレジットキュレーター）</div>
-                <div style={{display:"flex",gap:12}}>
+                <div className="curator-earnings-row" style={{display:"flex",gap:12}}>
                   <div style={{flex:1,textAlign:"center",padding:"0.5rem",borderRadius:8,background:"#ecfdf5",border:"1px solid #bbf7d0"}}>
                     <div style={{fontWeight:800,color:"#10b981",fontSize:"1.1rem"}}>¥{CURATOR_PAY.calc(curatorData?.creditCost||2,true)}</div>
                     <div style={{fontSize:"0.68rem",color:"#16a34a"}}>採用時（70%）</div>
@@ -2417,21 +2437,21 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
               {/* Accept: Action Type Selection */}
               <div style={{marginBottom:"1rem"}}>
                 <div style={{fontSize:"0.82rem",fontWeight:700,marginBottom:8}}>🎯 採用する場合のアクション</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
+                <div className="curator-action-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
                   {ACTION_TYPES.map(a => (
-                    <button key={a.id} onClick={()=>setActionType(a.id)} style={{padding:"0.6rem",borderRadius:10,border:actionType===a.id?"2px solid #10b981":"1px solid #e2e8f0",background:actionType===a.id?"#ecfdf5":"#fff",cursor:"pointer",fontFamily:"inherit",textAlign:"center",fontSize:"0.72rem"}}>
+                    <button key={a.id} onClick={()=>setActionType(a.id)} style={{padding:"0.6rem",borderRadius:10,border:actionType===a.id?"2px solid #10b981":"1px solid #e2e8f0",background:actionType===a.id?"#ecfdf5":"#fff",cursor:"pointer",fontFamily:"inherit",textAlign:"center",fontSize:"0.72rem",minHeight:44}}>
                       <div style={{fontSize:"1rem"}}>{a.icon}</div>
                       <div style={{fontWeight:actionType===a.id?700:500,color:actionType===a.id?"#16a34a":"#334155"}}>{a.label}</div>
                     </button>
                   ))}
                 </div>
-                {actionType && <input value={actionNote} onChange={e=>setActionNote(e.target.value)} placeholder={`${ACTION_TYPES.find(a=>a.id===actionType)?.desc}の詳細（プレイリスト名、掲載URLなど）`} style={{...css.input,marginTop:8,fontSize:"0.82rem"}}/>}
+                {actionType && <input value={actionNote} onChange={e=>setActionNote(e.target.value)} placeholder={`${ACTION_TYPES.find(a=>a.id===actionType)?.desc}の詳細（プレイリスト名、掲載URLなど）`} className="curator-input-mobile" style={{...css.input,marginTop:8,fontSize:"0.82rem"}}/>}
               </div>
 
               {/* Decision Buttons */}
-              <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>submitFeedback("accepted")} disabled={!actionType} style={{...css.btnPrimary,background:actionType?"linear-gradient(135deg,#10b981,#06b6d4)":"#e2e8f0",color:actionType?"#fff":"#94a3b8",flex:1}}>🎉 採用（¥{CURATOR_PAY.calc(curatorData?.creditCost||2,true)}獲得）</button>
-                <button onClick={()=>submitFeedback("declined")} style={{...css.btnGhost,flex:1}}>📋 不採用（¥{CURATOR_PAY.calc(curatorData?.creditCost||2,false)}獲得）</button>
+              <div className="curator-decision-btns" style={{display:"flex",gap:8}}>
+                <button onClick={()=>submitFeedback("accepted")} disabled={!actionType} style={{...css.btnPrimary,background:actionType?"linear-gradient(135deg,#10b981,#06b6d4)":"#e2e8f0",color:actionType?"#fff":"#94a3b8",flex:1,minHeight:48}}>🎉 採用（¥{CURATOR_PAY.calc(curatorData?.creditCost||2,true)}獲得）</button>
+                <button onClick={()=>submitFeedback("declined")} style={{...css.btnGhost,flex:1,minHeight:48}}>📋 不採用（¥{CURATOR_PAY.calc(curatorData?.creditCost||2,false)}獲得）</button>
               </div>
               <div style={{textAlign:"center",fontSize:"0.68rem",color:"#94a3b8",marginTop:6}}>📧 アーティストにメール通知が自動送信されます</div>
             </div>
@@ -2522,7 +2542,7 @@ function CuratorProfile({user, curators, saveCurators, notify, stats}) {
         <div style={{width:56,height:56,borderRadius:14,background:"linear-gradient(135deg,#0ea5e9,#38bdf8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.5rem"}}>{user.avatar}</div>
         <div><div style={{fontWeight:800,fontSize:"1.1rem"}}>{user.name}</div><div style={{fontSize:"0.82rem",color:"#64748b"}}>{user.platform}</div></div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+      <div className="curator-stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
         <div style={{textAlign:"center",background:"#f8fafc",borderRadius:10,padding:"0.8rem"}}><div style={{fontSize:"1.3rem",fontWeight:800,color:"#3b82f6"}}>{stats.total}</div><div style={{fontSize:"0.68rem",color:"#94a3b8"}}>受信</div></div>
         <div style={{textAlign:"center",background:"#f8fafc",borderRadius:10,padding:"0.8rem"}}><div style={{fontSize:"1.3rem",fontWeight:800,color:"#8b5cf6"}}>{stats.reviewed}</div><div style={{fontSize:"0.68rem",color:"#94a3b8"}}>レビュー</div></div>
         <div style={{textAlign:"center",background:"#f8fafc",borderRadius:10,padding:"0.8rem"}}><div style={{fontSize:"1.3rem",fontWeight:800,color:"#10b981"}}>{stats.accepted}</div><div style={{fontSize:"0.68rem",color:"#94a3b8"}}>採用</div></div>

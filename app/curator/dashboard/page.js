@@ -754,12 +754,22 @@ export default function CuratorDashboard() {
                     <div style={{ color: '#374151', fontSize: 13, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: T.font }}>
                       {pitch.subject || '(no subject)'}
                     </div>
-                    <div style={{ color: T.textMuted, fontSize: 11, marginTop: 4, fontFamily: T.font }}>
-                      {pitch.sent_at
-                        ? new Date(pitch.sent_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })
-                        : pitch.created_at
-                        ? new Date(pitch.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })
-                        : ''}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
+                      <span style={{ color: T.textMuted, fontSize: 11, fontFamily: T.font }}>
+                        {pitch.sent_at
+                          ? new Date(pitch.sent_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })
+                          : pitch.created_at
+                          ? new Date(pitch.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })
+                          : ''}
+                      </span>
+                      {pitch.song_link && (
+                        <a href={pitch.song_link} target="_blank" rel="noopener noreferrer" style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          padding: '2px 10px', borderRadius: 10, fontSize: 11, fontWeight: 600,
+                          background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0',
+                          textDecoration: 'none', fontFamily: T.font,
+                        }}>▶ Listen</a>
+                      )}
                     </div>
                   </div>
                   <div className="pitch-actions" style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>

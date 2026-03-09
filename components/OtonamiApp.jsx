@@ -1266,11 +1266,17 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     }));
 
     // Insert each pitch to DB individually to get the actual Supabase UUID.
+    // insertPitchGetUUID also auto-translates Japanese content to English.
     // Replace the temporary local id with the real UUID so email links work.
     const newPitches = [];
     for (const p of tempPitches) {
-      const dbId = await insertPitchGetUUID(p);
-      newPitches.push(dbId ? { ...p, id: dbId } : p);
+      const result = await insertPitchGetUUID(p);
+      if (result) {
+        // Use translated pitchText (if translation occurred) for the email body
+        newPitches.push({ ...p, id: result.id, pitchText: result.pitchText ?? p.pitchText });
+      } else {
+        newPitches.push(p);
+      }
     }
 
     await savePitches([...newPitches, ...pitches]);

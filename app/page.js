@@ -8,7 +8,7 @@ const COPY = {
     navHow: 'How It Works', navCurators: 'Find Curators', navArtists: 'For Artists',
     navCta: 'Join as Curator',
     heroTag: '♪ Curator Network — AI-Powered Matching',
-    heroH1a: "Japan's indie music,", heroH1b: 'to the world's curators',
+    heroH1a: "Japan's indie music,", heroH1b: "to the world's curators",
     heroSub: "OTONAMI connects handpicked Japanese indie artists with curators worldwide. Get paid to review. No spam — only quality pitches matched to your taste.",
     ctaPrimary: 'Join as Curator →', ctaGhost: 'See How It Works',
     stat1n: '3,449', stat1l: 'Curators & Pros',

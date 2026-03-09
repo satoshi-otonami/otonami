@@ -1,6 +1,26 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { Resend } from 'resend';
+import bcrypt from 'bcryptjs';
+
+async function setCuratorPasswordHash(email, hash) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  await fetch(`${url}/rest/v1/rpc/curator_auth`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': key,
+      'Authorization': `Bearer ${key}`,
+    },
+    body: JSON.stringify({
+      p_action: 'set',
+      p_email: email,
+      p_password_hash: hash,
+      p_name: null,
+    }),
+  });
+}
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM = `OTONAMI <${process.env.EMAIL_FROM || 'onboarding@resend.dev'}>`;
@@ -53,6 +73,12 @@ export async function POST(request) {
       .single();
 
     if (error) throw new Error(error.message);
+
+    // 1b. パスワードをハッシュ化して curator_auth に保存
+    if (form.password) {
+      const hash = await bcrypt.hash(form.password, 10);
+      await setCuratorPasswordHash(form.email, hash);
+    }
 
     // 2. Satoshiへの通知メール
     const adminSubject = (testMode ? '[TEST] ' : '') + `【OTONAMI】新規キュレーター登録: ${form.name}`;

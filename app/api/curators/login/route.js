@@ -111,7 +111,7 @@ export async function POST(request) {
       // キュレーター情報取得（pw_hashを含まないselect — これはPostgRESTで問題ない）
       const { data: curator } = await db
         .from('curators')
-        .select('id, name, email, type, playlist, url, genres, followers, region, icon')
+        .select('id, name, email, type, playlist, url, genres, followers, region, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, accepts')
         .eq('id', info.id)
         .single();
 
@@ -185,7 +185,7 @@ export async function GET(request) {
     const db = getServiceSupabase();
     const { data: curator } = await db
       .from('curators')
-      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon')
+      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url')
       .eq('id', payload.id)
       .single();
 

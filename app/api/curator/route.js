@@ -2,6 +2,20 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { Resend } from 'resend';
 import bcrypt from 'bcryptjs';
+import { jwtVerify } from 'jose';
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'fallback-otonami-secret-change-me'
+);
+
+async function verifyToken(token) {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 async function setCuratorPasswordHash(email, hash) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -170,6 +184,49 @@ export async function POST(request) {
     return NextResponse.json({ success: true, curator: data });
   } catch (e) {
     console.error('Curator registration error:', e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
+}
+
+// PUT /api/curator — プロフィール更新（JWT認証必須）
+export async function PUT(request) {
+  try {
+    const auth = request.headers.get('authorization');
+    if (!auth?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const payload = await verifyToken(auth.slice(7));
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const supabase = getServiceSupabase();
+
+    const ALLOWED = [
+      'type', 'playlist', 'url', 'region', 'bio', 'followers',
+      'genres', 'accepts', 'preferred_moods', 'opportunities',
+      'similar_artists', 'playlist_url', 'icon_url',
+    ];
+    const updateData = {};
+    for (const key of ALLOWED) {
+      if (body[key] !== undefined) updateData[key] = body[key];
+    }
+    if (updateData.followers !== undefined) {
+      updateData.followers = parseInt(updateData.followers) || 0;
+    }
+
+    const { data, error } = await supabase
+      .from('curators')
+      .update(updateData)
+      .eq('id', payload.id)
+      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url')
+      .single();
+
+    if (error) throw new Error(error.message);
+    return NextResponse.json({ curator: data });
+  } catch (e) {
+    console.error('Curator update error:', e);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

@@ -30,23 +30,189 @@ const CURATOR_TYPES = [
   "Label/Management",
 ];
 
-/* ── Demo curators (from docs/otonami-redesign.jsx) ── */
+/* ── Demo curators (from docs/otonami-redesign.jsx + OTONAMI seeds) ── */
 const DEMO_CURATORS = [
-  { id:"dc_1", name:"Bizarreland Radio",       country:"CL", type:"Playlist Curator",        color:"#dc2626", certified:true,  shareRate:7,  followers:{spotify:18400,instagram:335000}, genres:["Dance music","Jazz fusion","Instrumental"],         genresOpen:["Afrobeat","Lo-fi Hip Hop","Electronic"],   tags:["Honest","High Impact"],                        bio:"My radio/playlist have a lot of style, but the most important is the attitude and the skills.", creditCost:2 },
-  { id:"dc_2", name:"Liminal Waves",           country:"NL", type:"Playlist Curator",        color:"#7c3aed", certified:false, shareRate:12, followers:{spotify:5200},                   genres:["Film music","Instrumental","Ambient"],              genresOpen:["Experimental"],                            tags:["Honest"],                                      bio:"Curating music for introspective moments. Always looking for unique soundscapes.", creditCost:2 },
-  { id:"dc_3", name:"FusioNostalgia",          country:"US", type:"Media Outlet/Journalist", color:"#059669", certified:false, shareRate:18, followers:{instagram:12000},                genres:["Dance music","Jazz fusion","Instrumental","Disco"], genresOpen:["Indie pop","Funk","Neo soul"],              tags:["High sharing rate"],                           bio:"Covering the intersection of jazz, funk, and electronic music worldwide.", creditCost:3 },
-  { id:"dc_4", name:"Gamadeus Playlist",       country:"IT", type:"Playlist Curator",        color:"#0284c7", certified:true,  shareRate:15, followers:{spotify:8900},                   genres:["Film music","Instrumental","Ambient","Electronic"], genresOpen:["Minimal","Neo/Modern Classical","Solo Piano"],tags:["Honest","A Quick Sharer"],                     bio:"A certified playlist focused on cinematic and atmospheric sounds.", creditCost:2 },
-  { id:"dc_5", name:"Italian Summer Aesthetic",country:"IT", type:"Playlist Curator",        color:"#ea580c", certified:false, shareRate:22, followers:{spotify:24000,instagram:8500},    genres:["Film music","Instrumental","Modern jazz"],          genresOpen:["Dream pop","Indie folk"],                  tags:["Honest","High Impact","Top curator/pro"],      bio:"Curating the perfect soundtrack for golden hour moments.", creditCost:3 },
-  { id:"dc_6", name:"Max Panasiuk",            country:"UA", type:"Playlist Curator",        color:"#4f46e5", certified:false, shareRate:9,  followers:{spotify:3200},                   genres:["Film music","Instrumental"],                        genresOpen:["Chill/Lo-fi Hip-Hop","Electropop"],        tags:["Honest"],                                      bio:"Ukrainian curator open to global sounds.", creditCost:2 },
-  { id:"dc_7", name:"Island Music",            country:"IT", type:"Playlist Curator",        color:"#0d9488", certified:false, shareRate:25, followers:{spotify:14500},                   genres:["Dance music","Film music","Instrumental"],          genresOpen:["Ambient","Chill out","Classical music"],   tags:["High sharing rate"],                           bio:"Island vibes and global grooves. High sharing rate.", creditCost:2 },
-  { id:"dc_8", name:"Hot Monkey Music",        country:"AU", type:"Playlist Curator",        color:"#be123c", certified:false, shareRate:11, followers:{spotify:31000,instagram:15000},   genres:["Dance music","Bass music","Deep house"],           genresOpen:["House music","Tech House"],                tags:["Honest","Clear about their musical style","Top curator/pro"], bio:"Australia's go-to curator for dance, bass, and groove.", creditCost:3 },
+  {
+    id:"dc_1", name:"Bizarreland Radio", country:"CL", type:"Playlist Curator", color:"#dc2626",
+    certified:true, shareRate:7, followers:{spotify:18400,instagram:335000,facebook:22000,youtube:49},
+    genres:["Dance music","Jazz fusion","Instrumental"],
+    genresOpen:["Afrobeat","Lo-fi Hip Hop","Electronic"],
+    moods:["Authentic","Eclectic","Creative","Danceable","Downbeat","Engaged"],
+    tags:["Honest","High Impact"],
+    matchTags:["Dance music","Jazz fusion","Japanese artists","Instrumental/Without lyrics","Released tracks"],
+    opportunities:["Add artists to my impactful playlist(s)","Create post or reel on social media","Add to story on social media"],
+    similarTo:["Snoop Dogg","Wiz Khalifa","SFDK","Mucho Muchacho"],
+    recentArtists:[{n:"Burning Linga",by:"Maicky Miller"},{n:"The Quease",by:"Robin Mullarkey"},{n:"Outside",by:"just martin"},{n:"Last Night",by:"Rodney Hazard"}],
+    bio:"My radio/playlist have a lot of style, but the most important is the attitude and the skills.", creditCost:2,
+  },
+  {
+    id:"dc_2", name:"Liminal Waves", country:"NL", type:"Playlist Curator", color:"#7c3aed",
+    certified:false, shareRate:12, followers:{spotify:5200},
+    genres:["Film music","Instrumental","Ambient"],
+    genresOpen:["Experimental","Minimal"],
+    moods:["Atmospheric","Contemplative","Cinematic"],
+    tags:["Honest"],
+    matchTags:["Film music","Instrumental","Ambient","Japanese artists"],
+    opportunities:["Add artists to my impactful playlist(s)"],
+    similarTo:[], recentArtists:[],
+    bio:"Curating music for introspective moments. Always looking for unique soundscapes.", creditCost:2,
+  },
+  {
+    id:"dc_3", name:"FusioNostalgia", country:"US", type:"Media Outlet/Journalist", color:"#059669",
+    certified:false, shareRate:18, followers:{instagram:12000},
+    genres:["Dance music","Jazz fusion","Instrumental","Disco"],
+    genresOpen:["Indie pop","Funk","Neo soul"],
+    moods:["Groovy","Energetic","Nostalgic"],
+    tags:["High sharing rate","Shared 1 of your tracks"],
+    matchTags:["Jazz fusion","Dance music","Instrumental","Japanese artists"],
+    opportunities:["Feature in online magazine","Social media post"],
+    similarTo:["Herbie Hancock","Tower of Power","Snarky Puppy"],
+    recentArtists:[],
+    bio:"Covering the intersection of jazz, funk, and electronic music worldwide.", creditCost:3,
+  },
+  {
+    id:"dc_4", name:"Gamadeus Playlist", country:"IT", type:"Playlist Curator", color:"#0284c7",
+    certified:true, shareRate:15, followers:{spotify:8900},
+    genres:["Film music","Instrumental","Ambient","Electronic"],
+    genresOpen:["Minimal","Neo/Modern Classical","Solo Piano"],
+    moods:["Minimal","Contemplative","Dreamy"],
+    tags:["Honest","A Quick Sharer"],
+    matchTags:["Film music","Instrumental","Ambient","Cinematic"],
+    opportunities:["Add artists to my impactful playlist(s)"],
+    similarTo:["Nils Frahm","Max Richter","Ólafur Arnalds"],
+    recentArtists:[],
+    bio:"A certified playlist focused on cinematic and atmospheric sounds.", creditCost:2,
+  },
+  {
+    id:"dc_5", name:"Italian Summer Aesthetic", country:"IT", type:"Playlist Curator", color:"#ea580c",
+    certified:false, shareRate:22, followers:{spotify:24000,instagram:8500},
+    genres:["Film music","Instrumental","Modern jazz"],
+    genresOpen:["Dream pop","Indie folk","City pop"],
+    moods:["Warm","Romantic","Breezy"],
+    tags:["Honest","High Impact","Top curator/pro"],
+    matchTags:["Film music","Instrumental","Modern jazz","Japanese artists"],
+    opportunities:["Add artists to my impactful playlist(s)","Add to story on social media"],
+    similarTo:["Nicola Cruz","Khruangbin","Flamingosis"],
+    recentArtists:[],
+    bio:"Curating the perfect soundtrack for golden hour moments.", creditCost:3,
+  },
+  {
+    id:"dc_6", name:"Max Panasiuk", country:"UA", type:"Playlist Curator", color:"#4f46e5",
+    certified:false, shareRate:9, followers:{spotify:3200},
+    genres:["Film music","Instrumental"],
+    genresOpen:["Chill/Lo-fi Hip-Hop","Electropop"],
+    moods:["Chill","Energetic","Groovy"],
+    tags:["Honest"],
+    matchTags:["Film music","Instrumental","Japanese artists"],
+    opportunities:["Add artists to my impactful playlist(s)"],
+    similarTo:[], recentArtists:[],
+    bio:"Ukrainian curator open to global sounds.", creditCost:2,
+  },
+  {
+    id:"dc_7", name:"Island Music", country:"IT", type:"Playlist Curator", color:"#0d9488",
+    certified:false, shareRate:25, followers:{spotify:14500},
+    genres:["Dance music","Film music","Instrumental"],
+    genresOpen:["Ambient","Chill out","Classical music"],
+    moods:["Relaxing","Uplifting","Tropical"],
+    tags:["High sharing rate"],
+    matchTags:["Dance music","Film music","Instrumental"],
+    opportunities:["Add artists to my impactful playlist(s)"],
+    similarTo:["Bonobo","Floating Points","Maribou State"],
+    recentArtists:[],
+    bio:"Island vibes and global grooves. High sharing rate.", creditCost:2,
+  },
+  {
+    id:"dc_8", name:"Hot Monkey Music", country:"AU", type:"Playlist Curator", color:"#be123c",
+    certified:false, shareRate:11, followers:{spotify:31000,instagram:15000},
+    genres:["Dance music","Bass music","Deep house"],
+    genresOpen:["House music","Tech House"],
+    moods:["Energetic","Danceable","Bold"],
+    tags:["Honest","Clear about their musical style","Top curator/pro"],
+    matchTags:["Dance music","Japanese artists"],
+    opportunities:["Add artists to my impactful playlist(s)"],
+    similarTo:["Fisher","Chris Lake","Skrillex"],
+    recentArtists:[],
+    bio:"Australia's go-to curator for dance, bass, and groove.", creditCost:3,
+  },
   /* ── OTONAMI seed curators ── */
-  { id:"c_pstm", name:"Patrick St. Michel",   country:"US", type:"Media Outlet/Journalist", color:"#7c3aed", certified:false, shareRate:15, followers:{spotify:28000},                   genres:["Electronic","Jazz","Funk","Ambient","Experimental"],genresOpen:[],                                          tags:["Verified","High quality FB"],                  bio:"東京在住のアメリカ人音楽ライター。Make Believe Melodies運営。Japan Times, Pitchfork, Bandcamp Daily寄稿。", creditCost:3 },
-  { id:"c_leap", name:"Leap250",               country:"JP", type:"Media Outlet/Journalist", color:"#059669", certified:false, shareRate:10, followers:{spotify:5000},                    genres:["J-Rock","Indie Rock","Pop","Dream Pop","J-Pop"],    genresOpen:[],                                          tags:["High answer rate","High quality FB"],           bio:"J-Music Monthly Roundup運営。毎月の日本音楽レコメンデーション。Spotify J-Music Playlist Draft主催。", creditCost:2 },
-  { id:"c_ian",  name:"Ian Martin",            country:"UK", type:"Media Outlet/Journalist", color:"#dc2626", certified:false, shareRate:8,  followers:{},                               genres:["Noise","Indie Rock","Experimental","Punk"],         genresOpen:[],                                          tags:["Verified","Selective"],                         bio:"東京在住の英国人ライター。Call And Response Records主宰。日本地下音楽シーンに特化。", creditCost:2 },
-  { id:"c_mrk",  name:"mMarukudeibu",          country:"JP", type:"Playlist Curator",        color:"#0284c7", certified:true,  shareRate:20, followers:{spotify:34800},                   genres:["Jazz","Fusion","Funk","City Pop"],                  genresOpen:[],                                          tags:["High accept rate"],                            bio:"Spotify最大級の日本ジャズフュージョンプレイリスト。34,800+ saves。", creditCost:3 },
-  { id:"c_jame", name:"JaME World",            country:"JP", type:"Media Outlet/Journalist", color:"#f59e0b", certified:false, shareRate:12, followers:{},                               genres:["J-Pop","J-Rock","Visual Kei","Anime"],              genresOpen:[],                                          tags:["High answer rate"],                            bio:"多言語対応の日本音楽エンターテイメントメディア。インタビュー、レビュー、ニュース。", creditCost:3 },
-  { id:"c_yama", name:"Yamashita Satoshi",     country:"JP", type:"Playlist Curator",        color:"#0d9488", certified:true,  shareRate:18, followers:{spotify:8500},                    genres:["Jazz","Funk","Latin","Soul","Fusion"],              genresOpen:[],                                          tags:["High accept rate","Verified"],                 bio:"東京のジャズ・ファンク・ラテン専門プレイリストキュレーター。SXSW常連アーティストを中心に厳選。", creditCost:2 },
+  {
+    id:"c_pstm", name:"Patrick St. Michel", country:"US", type:"Media Outlet/Journalist", color:"#7c3aed",
+    certified:false, shareRate:15, followers:{spotify:28000},
+    genres:["Electronic","Jazz","Funk","Ambient","Experimental"],
+    genresOpen:["Post-rock","Noise pop"],
+    moods:["Sophisticated","Experimental","Eclectic"],
+    tags:["Verified","High quality FB"],
+    matchTags:["Japanese artists","Electronic","Jazz","Experimental","Independent releases"],
+    opportunities:["Review on Make Believe Melodies","Newsletter feature","Bandcamp Daily recommendation"],
+    similarTo:["Cornelius","Foodman","Seiho"],
+    recentArtists:[{n:"Awesome City Club",by:"AWCC"},{n:"Tohji",by:"独立"}],
+    bio:"東京在住のアメリカ人音楽ライター。2009年よりMake Believe Melodiesを運営。Japan Times, Pitchfork, Bandcamp Daily寄稿。日本の電子音楽・実験音楽に特化。", creditCost:3,
+  },
+  {
+    id:"c_leap", name:"Leap250", country:"JP", type:"Media Outlet/Journalist", color:"#059669",
+    certified:false, shareRate:10, followers:{spotify:5000},
+    genres:["J-Rock","Indie Rock","Pop","Dream Pop","J-Pop"],
+    genresOpen:["Math Rock","Shoegaze","Emo"],
+    moods:["Dreamy","Nostalgic","Energetic","Indie"],
+    tags:["High answer rate","High quality FB"],
+    matchTags:["J-Music","Indie Rock","Dream Pop","Japanese artists","International appeal"],
+    opportunities:["J-Music Monthly Roundup feature","Spotify playlist add","Blog review"],
+    similarTo:["くるり","eastern youth","Homecomings"],
+    recentArtists:[],
+    bio:"J-Music Monthly Roundup運営。毎月の日本音楽レコメンデーション。Spotify J-Music Playlist Draft主催。英語圏向けに日本インディーを紹介。", creditCost:2,
+  },
+  {
+    id:"c_ian", name:"Ian Martin", country:"UK", type:"Media Outlet/Journalist", color:"#dc2626",
+    certified:false, shareRate:8, followers:{},
+    genres:["Noise","Indie Rock","Experimental","Punk","Post-Punk"],
+    genresOpen:["Math Rock","Art Rock","No Wave"],
+    moods:["Aggressive","Experimental","Heavy","Raw"],
+    tags:["Verified","Selective"],
+    matchTags:["Japanese underground","Noise","Experimental","Punk","Independent labels"],
+    opportunities:["Review on Clear And Refreshing","Call And Response Records interest","Live booking connection"],
+    similarTo:["Melt-Banana","Bo Ningen","Otoboke Beaver"],
+    recentArtists:[],
+    bio:"東京在住の英国人ライター。Call And Response Records主宰。著書『Quit Your Band』。日本地下音楽シーンに特化した唯一無二の視点。", creditCost:2,
+  },
+  {
+    id:"c_mrk", name:"mMarukudeibu", country:"JP", type:"Playlist Curator", color:"#0284c7",
+    certified:true, shareRate:20, followers:{spotify:34800},
+    genres:["Jazz","Fusion","Funk","City Pop"],
+    genresOpen:["Soul","R&B","Groove"],
+    moods:["Groovy","Sophisticated","Smooth","Energetic"],
+    tags:["High accept rate"],
+    matchTags:["Jazz fusion","City Pop","Japanese artists","Funk","Instrumental"],
+    opportunities:["Add to Japanese Jazz Fusion playlist (34.8k saves)","Featured artist slot"],
+    similarTo:["T-Square","Casiopea","Soil & Pimp Sessions"],
+    recentArtists:[{n:"ROUTE14band",by:"ROUTE14band"},{n:"WONK",by:"WONK"}],
+    bio:"Spotify最大級の日本ジャズフュージョンプレイリスト。34,800+ saves。日本のジャズ・ファンク・シティポップを世界に届けるキュレーター。", creditCost:3,
+  },
+  {
+    id:"c_jame", name:"JaME World", country:"JP", type:"Media Outlet/Journalist", color:"#f59e0b",
+    certified:false, shareRate:12, followers:{},
+    genres:["J-Pop","J-Rock","Visual Kei","Anime"],
+    genresOpen:["K-Pop","Asian Pop","Electronic"],
+    moods:["Energetic","Dramatic","Heavy","Indie"],
+    tags:["High answer rate"],
+    matchTags:["J-Pop","J-Rock","Visual Kei","Japanese artists","International audience"],
+    opportunities:["Review","Interview","News Feature","Artist spotlight"],
+    similarTo:["BABYMETAL","ONE OK ROCK","Kenshi Yonezu"],
+    recentArtists:[],
+    bio:"多言語対応の日本音楽エンターテイメントメディア。インタビュー、レビュー、ニュース。欧米・アジア向けに日本音楽を発信。", creditCost:3,
+  },
+  {
+    id:"c_yama", name:"Yamashita Satoshi", country:"JP", type:"Playlist Curator", color:"#0d9488",
+    certified:true, shareRate:18, followers:{spotify:8500},
+    genres:["Jazz","Funk","Latin","Soul","Fusion"],
+    genresOpen:["Afrobeat","Brazilian","Groove"],
+    moods:["Groovy","Energetic","Latin","Soulful"],
+    tags:["High accept rate","Verified"],
+    matchTags:["Jazz","Funk","Latin","Japanese artists","SXSW alumni"],
+    opportunities:["Jazz & Funk Japan playlist add","Featured artist spotlight","SXSW network introduction"],
+    similarTo:["Hiromi","Makoto Ozone","Snarky Puppy"],
+    recentArtists:[{n:"ROUTE14band",by:"ROUTE14band"},{n:"Chihiro Yamazaki",by:"山崎千裕"}],
+    bio:"東京のジャズ・ファンク・ラテン専門プレイリストキュレーター。SXSW常連アーティストを中心に厳選。Jazz & Funk Japan（8,500 saves）運営。", creditCost:2,
+  },
 ];
 
 /* ── Match score (genre overlap + shareRate bonus) ── */
@@ -71,6 +237,38 @@ function Avatar({ name, color, size = 48 }) {
       color: '#fff', fontWeight: 700, fontSize: size * 0.35,
       fontFamily: T.font, letterSpacing: -0.5,
     }}>{initials}</div>
+  );
+}
+
+/* ── Tag pill ── */
+function Tag({ children, variant = 'default', small = false }) {
+  const V = {
+    default: { bg: T.borderLight, color: T.textSub,  bd: T.border       },
+    match:   { bg: T.greenLight,  color: T.green,     bd: T.greenBorder  },
+    accent:  { bg: T.accentLight, color: T.accent,    bd: T.accentBorder },
+  };
+  const s = V[variant] || V.default;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      padding: small ? '2px 8px' : '4px 12px',
+      background: s.bg, color: s.color, border: `1px solid ${s.bd}`,
+      borderRadius: 20, fontSize: small ? 11 : 12.5,
+      fontWeight: 500, fontFamily: T.font, whiteSpace: 'nowrap',
+    }}>
+      {variant === 'match' && <span style={{ fontSize: small ? 9 : 11 }}>✓</span>}
+      {children}
+    </span>
+  );
+}
+
+/* ── Section block ── */
+function SectionBlock({ title, children }) {
+  return (
+    <div>
+      <h3 style={{ fontFamily: T.font, fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 12 }}>{title}</h3>
+      {children}
+    </div>
   );
 }
 
@@ -179,8 +377,17 @@ function CuratorCard({ c, score, selected, onToggle, onDetail }) {
 
 /* ── Curator Detail Modal ── */
 function CuratorModal({ c, score, selected, onClose, onToggle }) {
+  useEffect(() => {
+    if (!c) return;
+    const handler = e => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [c, onClose]);
+
   if (!c) return null;
-  const scoreColor = score >= 75 ? T.green : score >= 60 ? T.accent : T.textMuted;
+
+  const scoreColor = score >= 75 ? T.green : score >= 60 ? T.accent : '#b45309';
+
   return (
     <div
       onClick={onClose}
@@ -188,21 +395,25 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
         position: 'fixed', inset: 0, zIndex: 1000,
         background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+        animation: 'overlayIn 0.2s ease',
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
           background: T.white, borderRadius: T.radiusXl,
-          maxWidth: 560, width: '100%', maxHeight: '88vh', overflow: 'auto',
+          maxWidth: 580, width: '100%', maxHeight: '88vh',
           boxShadow: T.shadowLg,
+          animation: 'modalIn 0.25s cubic-bezier(0.16,1,0.3,1)',
+          display: 'flex', flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
-        {/* Header */}
-        <div style={{ padding: '32px 32px 24px', borderBottom: `1px solid ${T.border}`, display: 'flex', gap: 20 }}>
+        {/* ── Header ── */}
+        <div style={{ padding: '32px 32px 24px', borderBottom: `1px solid ${T.border}`, display: 'flex', gap: 20, flexShrink: 0 }}>
           <Avatar name={c.name} color={c.color} size={72} />
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <h2 style={{ fontFamily: T.font, fontSize: 22, fontWeight: 700, color: T.text, margin: 0 }}>{c.name}</h2>
               {c.country && FL[c.country] && <span style={{ fontSize: 20 }}>{FL[c.country]}</span>}
             </div>
@@ -222,60 +433,130 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
               }}>♫ Certified Spotify playlist</div>
             )}
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 24, color: T.textMuted, cursor: 'pointer', alignSelf: 'flex-start' }}>×</button>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', fontSize: 24, color: T.textMuted, cursor: 'pointer', alignSelf: 'flex-start', lineHeight: 1, padding: 4, flexShrink: 0 }}
+          >×</button>
         </div>
 
-        {/* Body */}
-        <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {/* ── Scrollable body ── */}
+        <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 28, overflowY: 'auto', flex: 1 }}>
+          {/* Bio */}
           <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.75, fontFamily: T.font, margin: 0 }}>{c.bio}</p>
 
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '14px 18px', background: T.bg, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
+          {/* Share rate + match score */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px', background: T.bg, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
             <span style={{ fontSize: 13, color: T.textSub, fontFamily: T.font }}>Share rate</span>
             <span style={{ fontWeight: 700, fontSize: 22, color: T.accent, fontFamily: T.font }}>{c.shareRate}%</span>
-            {score != null && <>
-              <span style={{ fontSize: 13, color: T.textSub, fontFamily: T.font, marginLeft: 'auto' }}>Match score</span>
-              <span style={{ fontWeight: 700, fontSize: 22, color: scoreColor, fontFamily: T.font }}>{score}%</span>
-            </>}
+            {score != null && (
+              <>
+                <span style={{ flex: 1 }} />
+                <span style={{ fontSize: 13, color: T.textSub, fontFamily: T.font }}>Match score</span>
+                <span style={{ fontWeight: 700, fontSize: 22, color: scoreColor, fontFamily: T.font }}>{score}%</span>
+              </>
+            )}
           </div>
 
-          <div>
-            <div style={{ fontFamily: T.font, fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 10 }}>Genres accepted</div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {(c.genres || []).map((g, i) => (
-                <span key={i} style={{ padding: '4px 12px', background: T.borderLight, color: T.textSub, border: `1px solid ${T.border}`, borderRadius: 20, fontSize: 12.5, fontWeight: 500, fontFamily: T.font }}>{g}</span>
-              ))}
-            </div>
-          </div>
-
-          {(c.genresOpen || []).length > 0 && (
-            <div>
-              <div style={{ fontFamily: T.font, fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 10 }}>Also open to</div>
+          {/* How well you match */}
+          {(c.matchTags || []).length > 0 && (
+            <SectionBlock title="How well you match">
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {c.genresOpen.map((g, i) => (
-                  <span key={i} style={{ padding: '4px 12px', background: T.accentLight, color: T.accent, border: `1px solid ${T.accentBorder}`, borderRadius: 20, fontSize: 12.5, fontWeight: 500, fontFamily: T.font }}>{g}</span>
-                ))}
+                {c.matchTags.map((t, i) => <Tag key={i} variant="match">{t}</Tag>)}
               </div>
-            </div>
+            </SectionBlock>
           )}
 
-          <div>
-            <div style={{ fontFamily: T.font, fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 10 }}>Tags</div>
+          {/* Genres accepted */}
+          <SectionBlock title="Genres accepted most often">
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {(c.tags || []).map((t, i) => (
-                <span key={i} style={{ padding: '4px 12px', background: T.bg, color: T.textSub, border: `1px solid ${T.border}`, borderRadius: 20, fontSize: 12.5, fontFamily: T.font }}>{t}</span>
-              ))}
+              {(c.genres || []).map((g, i) => <Tag key={i}>{g}</Tag>)}
             </div>
-          </div>
+          </SectionBlock>
+
+          {/* Also open to */}
+          {(c.genresOpen || []).length > 0 && (
+            <SectionBlock title="Also open to receiving">
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {c.genresOpen.map((g, i) => <Tag key={i} variant="accent">{g}</Tag>)}
+              </div>
+            </SectionBlock>
+          )}
+
+          {/* Similar to */}
+          {(c.similarTo || []).length > 0 && (
+            <SectionBlock title="They want music similar to...">
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {c.similarTo.map((a, i) => (
+                  <span key={i} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '6px 14px', background: T.bg, borderRadius: 20,
+                    fontSize: 13, fontWeight: 500, color: T.text,
+                    border: `1px solid ${T.border}`, fontFamily: T.font,
+                  }}>🎤 {a}</span>
+                ))}
+              </div>
+            </SectionBlock>
+          )}
+
+          {/* Moods */}
+          {(c.moods || []).length > 0 && (
+            <SectionBlock title="Moods they love">
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {c.moods.map((m, i) => <Tag key={i}>{m}</Tag>)}
+              </div>
+            </SectionBlock>
+          )}
+
+          {/* Opportunities */}
+          {(c.opportunities || []).length > 0 && (
+            <SectionBlock title="Main opportunities">
+              {c.opportunities.map((op, i) => (
+                <div key={i} style={{
+                  padding: '10px 14px', background: T.bg, borderRadius: T.radius,
+                  marginBottom: 8, fontSize: 13.5, color: T.text,
+                  fontFamily: T.font, border: `1px solid ${T.border}`,
+                }}>{op}</div>
+              ))}
+            </SectionBlock>
+          )}
+
+          {/* Recently gave opportunities to */}
+          {(c.recentArtists || []).length > 0 && (
+            <SectionBlock title="Recently gave opportunities to">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {c.recentArtists.map((a, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 14px', background: T.bg,
+                    borderRadius: T.radius, border: `1px solid ${T.border}`,
+                  }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                      background: T.accentLight, border: `1px solid ${T.accentBorder}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+                    }}>🎵</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.text, fontFamily: T.font, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.n}</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font }}>{a.by}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </SectionBlock>
+          )}
         </div>
 
-        {/* Footer */}
+        {/* ── Sticky footer ── */}
         <div style={{
           padding: '20px 32px', borderTop: `1px solid ${T.border}`,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          position: 'sticky', bottom: 0, background: T.white,
+          background: T.white, flexShrink: 0,
           borderRadius: `0 0 ${T.radiusXl}px ${T.radiusXl}px`,
         }}>
-          <button onClick={onClose} style={{ padding: '10px 20px', fontSize: 14, fontWeight: 600, fontFamily: T.font, background: 'transparent', color: T.textSub, border: `1.5px solid ${T.border}`, borderRadius: T.radius, cursor: 'pointer' }}>Close</button>
+          <button
+            onClick={onClose}
+            style={{ padding: '10px 20px', fontSize: 14, fontWeight: 600, fontFamily: T.font, background: 'transparent', color: T.textSub, border: `1.5px solid ${T.border}`, borderRadius: T.radius, cursor: 'pointer' }}
+          >View similar curators</button>
           <button
             onClick={() => onToggle(c.id)}
             style={{
@@ -283,7 +564,7 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
               background: selected ? T.accentLight : T.accent,
               color: selected ? T.accent : '#fff',
               border: `1.5px solid ${selected ? T.accentBorder : T.accent}`,
-              borderRadius: T.radius, cursor: 'pointer',
+              borderRadius: T.radius, cursor: 'pointer', transition: 'all 0.15s',
             }}
           >{selected ? 'Added ✓' : `Add for ${c.creditCost || 2} ©`}</button>
         </div>
@@ -401,6 +682,14 @@ export default function CuratorsPage() {
       <style>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
+        @keyframes overlayIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.95) translateY(8px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0);   }
+        }
         @media (max-width: 768px) {
           .nav-center { display: none !important; }
           .filter-bar { flex-direction: column !important; }

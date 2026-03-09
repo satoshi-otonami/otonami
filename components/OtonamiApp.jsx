@@ -1,7 +1,7 @@
 'use client';
 import { initSession, loadCurators, loadPitches, loadCredits,
          savePitchesToDB, saveCuratorToDB, saveCredits as saveCreditsDB,
-         logEmail } from '@/lib/db';
+         logEmail, insertPitchGetUUID } from '@/lib/db';
 
 import API from '@/lib/api-client';
 import { analyzeTrack } from '@/lib/api-track';
@@ -1250,7 +1250,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const sendAll = async () => {
     if (credits < cost) { notify("クレジットが不足しています", "error"); return; }
     const lnk = {...links, songLink: getSongLink()};
-    const newPitches = targets.map(c => ({
+    const tempPitches = targets.map(c => ({
       id: "p_" + Date.now() + "_" + c.id,
       artistId: user.id, artistEmail: user.email, artistName: artist.name, artistNameEn: artist.nameEn||artist.name,
       songTitle: artist.songTitle, songLink: getSongLink(), genre: artist.genre, mood: artist.mood, description: artist.description, influences: artist.influences, achievements: artist.achievements,
@@ -1261,11 +1261,20 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       feedback:null, rating:null, decision:null,
       deadline: new Date(Date.now()+7*24*60*60*1000).toISOString(),
     }));
+
+    // Insert each pitch to DB individually to get the actual Supabase UUID.
+    // Replace the temporary local id with the real UUID so email links work.
+    const newPitches = [];
+    for (const p of tempPitches) {
+      const dbId = await insertPitchGetUUID(p);
+      newPitches.push(dbId ? { ...p, id: dbId } : p);
+    }
+
     await savePitches([...newPitches, ...pitches]);
     await saveCredits(credits - cost);
     saveToStorage(artist, links, followers);
     setStep(3);
-    // Send real emails (non-blocking — don't fail if email API not configured)
+    // Send real emails with the actual DB UUID so /curator/pitch/[id] links work
     for (const p of newPitches) {
       try {
         if (p.curatorEmail) {

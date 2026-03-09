@@ -34,7 +34,7 @@ export async function GET(request, { params }) {
 
   const { data, error } = await db
     .from('pitches')
-    .select('id, artist_name, artist_name_en, artist_genre, subject, body, status, sent_at, created_at, feedback, rating, feedback_at, song_title, song_link')
+    .select('*')
     .eq('id', pitchId)
     .or(orFilter)
     .single();
@@ -53,7 +53,7 @@ export async function PATCH(request, { params }) {
   const curator = await getAuthCurator(request);
   if (!curator) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { status, feedback, rating } = await request.json();
+  const { status, feedback_text, feedback_rating } = await request.json();
   if (!['accepted', 'rejected', 'feedback', 'sent'].includes(status)) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
   }
@@ -61,8 +61,8 @@ export async function PATCH(request, { params }) {
   const db = getServiceSupabase();
   const pitchId = params.id;
   const updates = { status };
-  if (feedback) { updates.feedback = feedback; updates.feedback_at = new Date().toISOString(); }
-  if (rating)   updates.rating = rating;
+  if (feedback_text) { updates.feedback_text = feedback_text; updates.feedback_at = new Date().toISOString(); }
+  if (feedback_rating) updates.feedback_rating = feedback_rating;
 
   // まず curator_id で試みる
   let { data, error } = await db

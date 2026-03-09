@@ -38,12 +38,12 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get('status');
 
-    // curator_idとemailの両方でマッチ（シードキュレーターIDずれ対策）
+    // curator_id OR curator_email でマッチ（シードキュレーターIDずれ対策）
     const orFilter = `curator_id.eq.${curator.id},curator_email.eq.${curator.email}`;
 
     let query = db
       .from('pitches')
-      .select('id, artist_name, artist_genre, subject, body, status, sent_at, created_at, feedback, rating, feedback_at')
+      .select('*')
       .or(orFilter)
       .order('created_at', { ascending: false })
       .limit(100);
@@ -74,7 +74,7 @@ export async function PATCH(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { pitchId, status, feedback, rating } = await request.json();
+    const { pitchId, status, feedback_text, feedback_rating } = await request.json();
 
     if (!pitchId || !['accepted', 'rejected', 'feedback', 'sent'].includes(status)) {
       return NextResponse.json(
@@ -86,8 +86,8 @@ export async function PATCH(request) {
     const db = getServiceSupabase();
 
     const updates = { status };
-    if (feedback) { updates.feedback = feedback; updates.feedback_at = new Date().toISOString(); }
-    if (rating) updates.rating = rating;
+    if (feedback_text) { updates.feedback_text = feedback_text; updates.feedback_at = new Date().toISOString(); }
+    if (feedback_rating) updates.feedback_rating = feedback_rating;
 
     // まず curator_id で試みる
     let { data, error } = await db

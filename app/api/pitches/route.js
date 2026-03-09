@@ -4,7 +4,8 @@ import { getServiceSupabase } from '@/lib/supabase';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-const JAPANESE_RE = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/;
+// ひらがな・カタカナ・漢字・全角記号を検出
+const JAPANESE_RE = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\uff01-\uff5e]/;
 
 async function ensureEnglishPitch(pitchContent, artistName, trackTitle) {
   if (!pitchContent?.trim()) return { text: pitchContent, translated: false };
@@ -18,17 +19,42 @@ async function ensureEnglishPitch(pitchContent, artistName, trackTitle) {
       max_tokens: 1024,
       messages: [{
         role: 'user',
-        content: `You are a professional music PR writer. Translate and polish the following music pitch into natural, professional English. Keep the tone friendly and enthusiastic. Preserve all artist names, track titles, URLs, and proper nouns as-is. Do NOT add any information that isn't in the original. Return ONLY the English pitch text, no explanations.
+        content: `You are a professional music PR translator. Your job is to convert a music pitch into fluent, professional English.
+
+STRICT RULES:
+1. The output must be 100% in English. Do NOT leave any Japanese text (hiragana, katakana, kanji) in the output.
+2. If the original contains Japanese greetings or self-introductions (e.g. "こんにちは", "〜です"), translate them naturally into English or remove them if they are redundant.
+3. Preserve artist names, track titles, and URLs exactly as-is — but if the artist name is written in Japanese (e.g. "るーと１４"), romanize it or use the English equivalent if known.
+4. Keep the tone friendly, enthusiastic, and professional.
+5. Do NOT add any information not present in the original.
+6. Return ONLY the translated English text. No explanations, no markdown, no quotes.
 
 Artist: ${artistName}
 Track: ${trackTitle}
 
-Original pitch:
+Original pitch (may contain mixed Japanese and English):
 ${pitchContent}`,
       }],
     });
 
     const translated = response.content.filter(b => b.type === 'text').map(b => b.text).join('');
+
+    // 翻訳後も日本語が残っていたら1回だけリトライ（全角記号も含めてチェック）
+    const stillHasJapanese = JAPANESE_RE.test(translated);
+    if (stillHasJapanese) {
+      console.warn('[pitches] First translation still contains Japanese, retrying...');
+      const retry = await anthropic.messages.create({
+        model: 'claude-haiku-4-5',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: `The following text still contains Japanese characters. Rewrite it entirely in English. Remove or translate ALL Japanese text. Return ONLY the English version:\n\n${translated}`,
+        }],
+      });
+      const retried = retry.content.filter(b => b.type === 'text').map(b => b.text).join('');
+      return { text: retried, translated: true };
+    }
+
     return { text: translated, translated: true };
   } catch (e) {
     console.error('[pitches] Translation failed, using original:', e.message);

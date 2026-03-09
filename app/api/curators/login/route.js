@@ -97,7 +97,10 @@ export async function POST(request) {
       }
 
       if (!info.hash) {
-        return NextResponse.json({ error: 'Password not set. Please register to set your password.', needsPasswordSetup: true }, { status: 403 });
+        return NextResponse.json({
+          error: 'password_not_set',
+          message: 'Your account exists but no password has been set yet. Please use Set Password to create your password.',
+        }, { status: 409 });
       }
 
       const valid = await bcrypt.compare(password, info.hash);

@@ -60,6 +60,10 @@ export default function CuratorRegistrationPage() {
         body: JSON.stringify({ action: 'login', email: loginForm.email, password: loginForm.password }),
       });
       const data = await res.json();
+      if (res.status === 409 && data.error === 'password_not_set') {
+        setLoginStatus('password_not_set');
+        return;
+      }
       if (!res.ok) throw new Error(data.error || 'Login failed');
       localStorage.setItem('curator_token', data.token);
       setLoggedInCurator(data.curator);
@@ -214,6 +218,23 @@ export default function CuratorRegistrationPage() {
                    onChange={e => setLoginForm(f => ({ ...f, password: e.target.value }))}
                    onKeyDown={e => e.key === 'Enter' && handleLogin()} />
 
+            {loginStatus === 'password_not_set' && (
+              <div style={{ marginTop: 14, padding: '12px 16px', background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.25)', borderRadius: 10 }}>
+                <p style={{ color: '#38bdf8', fontSize: 13, margin: '0 0 8px', fontWeight: 700 }}>
+                  Password not set / パスワード未設定
+                </p>
+                <p style={{ color: '#888', fontSize: 12, margin: '0 0 10px', lineHeight: 1.6 }}>
+                  Your account exists but no password has been set yet.<br />
+                  <span style={{ color: '#555' }}>アカウントは存在しますがパスワードが設定されていません。</span>
+                </p>
+                <a href={`/curator/set-password`} style={{
+                  display: 'inline-block', padding: '8px 18px',
+                  background: 'linear-gradient(135deg,#0ea5e9,#38bdf8)',
+                  borderRadius: 8, color: '#fff', textDecoration: 'none',
+                  fontSize: 13, fontWeight: 700,
+                }}>Set your password → / パスワードを設定する</a>
+              </div>
+            )}
             {loginError && (
               <p style={{ color: '#f87171', fontSize: 13, marginTop: 14 }}>{loginError}</p>
             )}
@@ -234,6 +255,11 @@ export default function CuratorRegistrationPage() {
                 background: 'none', border: 'none', color: '#a78bfa',
                 cursor: 'pointer', fontSize: 12, textDecoration: 'underline',
               }}>Join as a Curator / 新規登録</button>
+            </p>
+            <p style={{ textAlign: 'center', fontSize: 12, marginTop: 8 }}>
+              <a href="/curator/set-password" style={{ color: '#555', textDecoration: 'none' }}>
+                Forgot password? / パスワードを忘れた方
+              </a>
             </p>
           </div>
         )}

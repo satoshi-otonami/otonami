@@ -34,17 +34,24 @@ function LoginForm({ pitchId, onLogin }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const [passwordNotSet, setPasswordNotSet] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setPasswordNotSet(false);
     setLoading(true);
     try {
       const res = await fetch('/api/curators/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ action: 'login', email, password }),
       });
       const data = await res.json();
+      if (res.status === 409 && data.error === 'password_not_set') {
+        setPasswordNotSet(true);
+        return;
+      }
       if (!res.ok) { setError(data.error || 'Login failed'); return; }
       localStorage.setItem('curator_token', data.token);
       onLogin(data.curator);
@@ -98,6 +105,19 @@ function LoginForm({ pitchId, onLogin }) {
               }}
             />
           </div>
+          {passwordNotSet && (
+            <div style={{ marginBottom: 14, padding: '12px 14px', background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.25)', borderRadius: 10 }}>
+              <p style={{ color: '#38bdf8', fontSize: 13, margin: '0 0 8px', fontWeight: 700 }}>Password not set</p>
+              <p style={{ color: '#888', fontSize: 12, margin: '0 0 10px', lineHeight: 1.6 }}>
+                Your account exists but no password has been set yet.
+              </p>
+              <a href="/curator/set-password" style={{
+                display: 'inline-block', padding: '7px 16px',
+                background: 'linear-gradient(135deg,#0ea5e9,#38bdf8)',
+                borderRadius: 8, color: '#fff', textDecoration: 'none', fontSize: 12, fontWeight: 700,
+              }}>Set password →</a>
+            </div>
+          )}
           {error && (
             <div style={{ color: S.red, fontSize: 12, marginBottom: 14, padding: '8px 12px', background: 'rgba(248,113,113,0.1)', borderRadius: 8 }}>
               {error}
@@ -112,9 +132,12 @@ function LoginForm({ pitchId, onLogin }) {
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >{loading ? 'Logging in...' : 'Log In / ログイン'}</button>
-          <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <div style={{ textAlign: 'center', marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <a href="/curator" style={{ color: S.dim, fontSize: 12, textDecoration: 'none' }}>
               No account? Register as curator →
+            </a>
+            <a href="/curator/set-password" style={{ color: '#555', fontSize: 12, textDecoration: 'none' }}>
+              Forgot password? / パスワードを忘れた方
             </a>
           </div>
         </form>

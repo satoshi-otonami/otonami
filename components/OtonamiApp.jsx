@@ -2037,23 +2037,23 @@ function Tracking({pitches, curators, notify, savePitches, allPitches}) {
   };
   const steps = ["送信","開封","試聴","FB","結果"];
 
-  function getReachedStep(pitch) {
-    if (pitch.status === 'interested' || pitch.status === 'accepted') return 5;
-    if (pitch.status === 'declined') return 5;
-    if (pitch.feedbackAt || pitch.status === 'feedback') return 4;
-    if (pitch.listenedAt || pitch.status === 'listened') return 3;
-    if (pitch.openedAt || pitch.status === 'opened') return 2;
-    return 1;
-  }
-
-  function getBarColor(pitch, barIndex, reachedStep) {
-    if (barIndex >= reachedStep) return '#e2e8f0';
-    const isFinalBar = barIndex === reachedStep - 1;
-    if (isFinalBar) {
-      if (pitch.status === 'declined') return '#ef4444';
+  // Per-bar color: each bar only colored if its own timestamp/condition is met
+  function getBarColor(pitch, barIndex) {
+    // Bar 4 (結果): only based on final status
+    if (barIndex === 4) {
       if (pitch.status === 'accepted' || pitch.status === 'interested') return '#10b981';
+      if (pitch.status === 'declined') return '#ef4444';
+      return '#e2e8f0';
     }
-    return 'linear-gradient(90deg,#0ea5e9,#38bdf8)';
+    // Bar 0 (送信): always reached if pitch exists
+    if (barIndex === 0) return 'linear-gradient(90deg,#0ea5e9,#38bdf8)';
+    // Bar 1 (開封): only if openedAt timestamp is set
+    if (barIndex === 1) return pitch.openedAt ? 'linear-gradient(90deg,#0ea5e9,#38bdf8)' : '#e2e8f0';
+    // Bar 2 (試聴): only if listenedAt timestamp is set
+    if (barIndex === 2) return pitch.listenedAt ? 'linear-gradient(90deg,#0ea5e9,#38bdf8)' : '#e2e8f0';
+    // Bar 3 (FB): only if feedbackAt timestamp is set or status is 'feedback'
+    if (barIndex === 3) return (pitch.feedbackAt || pitch.status === 'feedback') ? 'linear-gradient(90deg,#0ea5e9,#38bdf8)' : '#e2e8f0';
+    return '#e2e8f0';
   }
 
   const sendReply = async (pitchId) => {
@@ -2087,7 +2087,6 @@ function Tracking({pitches, curators, notify, savePitches, allPitches}) {
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
       {pitches.map(p => {
         const s = statusMap[p.status] || statusMap.sent;
-        const reachedStep = getReachedStep(p);
         const isOpen = expanded === p.id;
         const actionInfo = p.actionType ? ACTION_TYPES.find(a=>a.id===p.actionType) : null;
         return <div key={p.id} style={{background:"#fff",border:`1px solid ${p.status==="accepted"?"#bbf7d0":"#f1f5f9"}`,borderRadius:14,padding:"1rem",cursor:"pointer",transition:"all 0.12s"}} onClick={()=>setExpanded(isOpen?null:p.id)}>
@@ -2105,12 +2104,14 @@ function Tracking({pitches, curators, notify, savePitches, allPitches}) {
           {/* Progress bar */}
           <div style={{display:"flex",gap:2,marginTop:8}}>
             {steps.map((st,i) => {
-              const barColor = getBarColor(p, i, reachedStep);
-              const reached = i < reachedStep;
-              const isCurrent = i === reachedStep - 1;
+              const barColor = getBarColor(p, i);
+              const isActive = barColor !== '#e2e8f0';
+              const textColor = p.status === 'declined' && i === 4 ? '#ef4444'
+                : p.status === 'accepted' && i === 4 ? '#10b981'
+                : isActive ? '#0ea5e9' : '#cbd5e1';
               return <div key={i} style={{flex:1,textAlign:"center"}}>
                 <div style={{height:3,borderRadius:3,background:barColor,marginBottom:2}}/>
-                <div style={{fontSize:"0.58rem",color:reached?"#0ea5e9":"#cbd5e1",fontWeight:isCurrent?700:400}}>{st}</div>
+                <div style={{fontSize:"0.58rem",color:textColor,fontWeight:isActive?700:400}}>{st}</div>
               </div>;
             })}
           </div>
@@ -2364,8 +2365,16 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
 
   const startListen = async () => {
     setIsListening(true);
-    const np = allPitches.map(x => x.id === activePitch.id ? {...x, status:"listened", listenedAt:new Date().toISOString()} : x);
-    await savePitches(np);
+    if (!activePitch.listenedAt) {
+      const now = new Date().toISOString();
+      const np = allPitches.map(x => x.id === activePitch.id ? {
+        ...x,
+        status: ['sent','opened'].includes(x.status) ? 'listened' : x.status,
+        listenedAt: now,
+      } : x);
+      await savePitches(np);
+      setActivePitch(prev => ({...prev, listenedAt: now, status: ['sent','opened'].includes(prev.status) ? 'listened' : prev.status}));
+    }
     timerRef.current = setInterval(() => setListenTime(t => t + 1), 1000);
   };
 
@@ -2375,17 +2384,22 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
   };
 
   const submitFeedback = async (decision) => {
-    if (!feedback.trim()) { notify("フィードバックを入力してください", "error"); return; }
     if (decision === "accepted" && !actionType) { notify("採用アクションを選択してください", "error"); return; }
+    if (decision === "accepted" && !feedback.trim()) { notify("フィードバックを入力してください", "error"); return; }
     stopListen();
     const curCreditCost = curators.find(c=>c.id===user.id)?.creditCost || 2;
     const payment = CURATOR_PAY.calc(curCreditCost, decision === "accepted");
+    const now = new Date().toISOString();
     const np = allPitches.map(x => x.id === activePitch.id ? {
-      ...x, status: decision, feedbackAt: new Date().toISOString(),
-      feedback: feedback.trim(), rating, decision, listenDuration: listenTime,
+      ...x,
+      status: decision,
+      decision,
+      listenDuration: listenTime,
+      curatorPayment: payment,
       actionType: decision === "accepted" ? actionType : null,
       actionNote: decision === "accepted" ? actionNote.trim() : null,
-      curatorPayment: payment,
+      // Only set feedbackAt/feedback if curator actually wrote feedback
+      ...(feedback.trim() ? { feedback: feedback.trim(), feedbackAt: now, rating } : {}),
     } : x);
     await savePitches(np);
     // Update curator stats

@@ -24,11 +24,16 @@ export async function POST(request) {
           const subMatch = pitchText.match(/^Subject:\s*(.+)/m);
           emailSubject = subMatch ? subMatch[1].trim() : `Music Pitch: ${artistName}`;
         }
-        // Convert pitch text to HTML (preserve line breaks, add styling)
-        const pitchBody = pitchText
-          .replace(/^Subject:.*\n\n?/m, '') // Remove subject line from body
-          .replace(/\n/g, '<br>');
-        
+        // Strip the "Subject: ..." line, then wrap each non-empty line in a <p> tag
+        const bodyText = pitchText
+          .replace(/^Subject:[^\n]*\n*/m, '') // Remove subject line
+          .trimStart();
+        const pitchBody = bodyText
+          .split('\n')
+          .filter(line => line.trim())
+          .map(line => `<p style="margin:0 0 12px 0;line-height:1.6;color:#334155;">${line}</p>`)
+          .join('');
+
         htmlBody = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
             ${pitchBody}

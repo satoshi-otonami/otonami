@@ -2037,6 +2037,25 @@ function Tracking({pitches, curators, notify, savePitches, allPitches}) {
   };
   const steps = ["送信","開封","試聴","FB","結果"];
 
+  function getReachedStep(pitch) {
+    if (pitch.status === 'interested' || pitch.status === 'accepted') return 5;
+    if (pitch.status === 'declined') return 5;
+    if (pitch.feedbackAt || pitch.status === 'feedback') return 4;
+    if (pitch.listenedAt || pitch.status === 'listened') return 3;
+    if (pitch.openedAt || pitch.status === 'opened') return 2;
+    return 1;
+  }
+
+  function getBarColor(pitch, barIndex, reachedStep) {
+    if (barIndex >= reachedStep) return '#e2e8f0';
+    const isFinalBar = barIndex === reachedStep - 1;
+    if (isFinalBar) {
+      if (pitch.status === 'declined') return '#ef4444';
+      if (pitch.status === 'accepted' || pitch.status === 'interested') return '#10b981';
+    }
+    return 'linear-gradient(90deg,#0ea5e9,#38bdf8)';
+  }
+
   const sendReply = async (pitchId) => {
     if (!replyText.trim()) return;
     const pitch = pitches.find(p=>p.id===pitchId);
@@ -2068,7 +2087,7 @@ function Tracking({pitches, curators, notify, savePitches, allPitches}) {
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
       {pitches.map(p => {
         const s = statusMap[p.status] || statusMap.sent;
-        const stepNum = s.step;
+        const reachedStep = getReachedStep(p);
         const isOpen = expanded === p.id;
         const actionInfo = p.actionType ? ACTION_TYPES.find(a=>a.id===p.actionType) : null;
         return <div key={p.id} style={{background:"#fff",border:`1px solid ${p.status==="accepted"?"#bbf7d0":"#f1f5f9"}`,borderRadius:14,padding:"1rem",cursor:"pointer",transition:"all 0.12s"}} onClick={()=>setExpanded(isOpen?null:p.id)}>
@@ -2085,10 +2104,15 @@ function Tracking({pitches, curators, notify, savePitches, allPitches}) {
           </div>
           {/* Progress bar */}
           <div style={{display:"flex",gap:2,marginTop:8}}>
-            {steps.map((st,i) => <div key={i} style={{flex:1,textAlign:"center"}}>
-              <div style={{height:3,borderRadius:3,background:i<stepNum?"linear-gradient(90deg,#0ea5e9,#38bdf8)":"#e2e8f0",marginBottom:2}}/>
-              <div style={{fontSize:"0.58rem",color:i<stepNum?"#0ea5e9":"#cbd5e1",fontWeight:i===stepNum-1?700:400}}>{st}</div>
-            </div>)}
+            {steps.map((st,i) => {
+              const barColor = getBarColor(p, i, reachedStep);
+              const reached = i < reachedStep;
+              const isCurrent = i === reachedStep - 1;
+              return <div key={i} style={{flex:1,textAlign:"center"}}>
+                <div style={{height:3,borderRadius:3,background:barColor,marginBottom:2}}/>
+                <div style={{fontSize:"0.58rem",color:reached?"#0ea5e9":"#cbd5e1",fontWeight:isCurrent?700:400}}>{st}</div>
+              </div>;
+            })}
           </div>
           {isOpen && <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid #f1f5f9",animation:"fadeIn 0.2s ease"}} onClick={e=>e.stopPropagation()}>
             <div style={{fontSize:"0.78rem",color:"#64748b"}}>

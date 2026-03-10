@@ -1257,7 +1257,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       id: "p_" + Date.now() + "_" + c.id,
       artistId: user.id, artistEmail: user.email, artistName: artist.name, artistNameEn: artist.nameEn||artist.name,
       songTitle: artist.songTitle, songLink: getSongLink(), genre: artist.genre, mood: artist.mood, description: artist.description, influences: artist.influences, achievements: artist.achievements,
-      pitchText: PE.generate(artist, c, pitchStyle, lnk, user.name, followers).replace(/\[Curator Name\]/gi, c.name), epk,
+      pitchText: pitchText.replace(/\[Curator Name\]/gi, c.name), epk,
       curatorId: c.id, curatorName: c.name, curatorPlatform: c.platform, curatorEmail: c.email, creditCost: c.creditCost||2,
       status: "sent", sentAt: new Date().toISOString(),
       openedAt:null, listenedAt:null, feedbackAt:null, listenDuration:0,

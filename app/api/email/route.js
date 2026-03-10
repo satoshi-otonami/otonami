@@ -60,6 +60,11 @@ export async function POST(request) {
           return `<p style="margin:8px 0;"><a href="${trackUrl}" style="color:#0ea5e9;font-size:14px;">▶ Listen to Track</a></p>`;
         })();
 
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.vercel.app';
+        const trackingPixel = pitchId
+          ? `<img src="${appUrl}/api/track/open?pid=${pitchId}" width="1" height="1" alt="" style="display:none;border:0;"/>`
+          : '';
+
         htmlBody = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
             ${pitchBody}
@@ -76,6 +81,7 @@ export async function POST(request) {
               <br>
               <a href="https://otonami.io/curator/pitch/${pitchId}" style="display:inline-block;margin-top:8px;padding:10px 22px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">📩 Respond to this pitch</a>
             </div>
+            ${trackingPixel}
           </div>
         `;
         break;

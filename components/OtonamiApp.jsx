@@ -2027,13 +2027,13 @@ function Tracking({pitches, curators, notify, savePitches, allPitches}) {
   const [detailPitchId, setDetailPitchId] = useState(null);
   const detailPitch = detailPitchId ? (allPitches||pitches).find(p=>p.id===detailPitchId) : null;
   const statusMap = {
-    sent:{label:"送信済",color:"#94a3b8",bg:"#f8fafc",icon:"📤",step:1},
-    opened:{label:"開封済",color:"#3b82f6",bg:"#eff6ff",icon:"👁",step:2},
-    listened:{label:"試聴済",color:"#8b5cf6",bg:"#f5f3ff",icon:"🎧",step:3},
-    feedback:{label:"FB受信",color:"#06b6d4",bg:"#ecfeff",icon:"💬",step:4},
-    accepted:{label:"採用！",color:"#10b981",bg:"#ecfdf5",icon:"🎉",step:5},
-    declined:{label:"不採用",color:"#ef4444",bg:"#fef2f2",icon:"✕",step:5},
-    expired:{label:"期限切れ",color:"#f59e0b",bg:"#fffbeb",icon:"⏰",step:0},
+    sent:    {label:"📨 Sent",       color:"#94a3b8",bg:"#f8fafc",  icon:"📨",step:1},
+    opened:  {label:"📬 Opened",     color:"#0ea5e9",bg:"#f0f9ff",  icon:"📬",step:2},
+    listened:{label:"🎧 Listened",   color:"#22c55e",bg:"#f0fdf4",  icon:"🎧",step:3},
+    feedback:{label:"💬 Feedback",   color:"#10b981",bg:"#d1fae5",  icon:"💬",step:4},
+    accepted:{label:"🎉 Accepted",   color:"#059669",bg:"#ecfdf5",  icon:"🎉",step:5},
+    declined:{label:"✕ Declined",    color:"#ef4444",bg:"#fef2f2",  icon:"✕", step:5},
+    expired: {label:"⏰ Expired",    color:"#f59e0b",bg:"#fffbeb",  icon:"⏰",step:0},
   };
   const steps = ["送信","開封","試聴","FB","結果"];
 
@@ -2092,8 +2092,11 @@ function Tracking({pitches, curators, notify, savePitches, allPitches}) {
           </div>
           {isOpen && <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid #f1f5f9",animation:"fadeIn 0.2s ease"}} onClick={e=>e.stopPropagation()}>
             <div style={{fontSize:"0.78rem",color:"#64748b"}}>
-              <div>📤 送信: {new Date(p.sentAt).toLocaleString("ja-JP")}</div>
-              {p.openedAt && <div>👁 開封: {new Date(p.openedAt).toLocaleString("ja-JP")}</div>}
+              <div>📨 Sent: {new Date(p.sentAt).toLocaleString("ja-JP")}</div>
+              {p.openedAt
+                ? <div style={{color:"#0ea5e9",fontWeight:600}}>📬 Opened: {new Date(p.openedAt).toLocaleString("ja-JP")}</div>
+                : <div style={{color:"#94a3b8"}}>📭 未開封</div>
+              }
               {p.listenedAt && <div>🎧 試聴: {new Date(p.listenedAt).toLocaleString("ja-JP")} ({p.listenDuration}秒)</div>}
               {p.feedbackAt && <div>💬 FB: {new Date(p.feedbackAt).toLocaleString("ja-JP")}</div>}
             </div>

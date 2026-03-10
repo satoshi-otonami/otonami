@@ -778,6 +778,17 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
   </div>;
 }
 
+// ─── Embed Player Helper ───
+// Returns { type: 'spotify'|'youtube', id } or null
+function getEmbedInfo(url) {
+  if (!url) return null;
+  const sp = url.match(/spotify\.com\/track\/([a-zA-Z0-9]+)/);
+  if (sp) return { type: 'spotify', id: sp[1] };
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+  if (yt) return { type: 'youtube', id: yt[1] };
+  return null;
+}
+
 // ─── Curator Browser ───
 function CuratorBrowser({curators, selected, setSelected, setPage, trackData, setTrackData, notify, artist}) {
   const [q, setQ] = useState(""); const [genre, setGenre] = useState(""); const [type, setType] = useState("");
@@ -1295,7 +1306,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     for (const p of newPitches) {
       try {
         if (p.curatorEmail) {
-          await API.sendPitchEmail(p.id, p.curatorEmail, p.curatorName, p.pitchText, p.epk, p.artistNameEn || p.artistName);
+          await API.sendPitchEmail(p.id, p.curatorEmail, p.curatorName, p.pitchText, p.epk, p.artistNameEn || p.artistName, p.songLink);
         }
       } catch (e) { console.log("Email send skipped:", e.message); }
       startAutoProgress(p.id, p.curatorName, p);
@@ -1413,6 +1424,25 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
             })()}
           </div>
         )}
+        {/* Embed preview so artist can confirm correct track */}
+        {(() => {
+          const embed = getEmbedInfo(artist.songLink);
+          if (embed?.type === 'spotify') return (
+            <div style={{marginTop:8}}>
+              <div style={{fontSize:"0.62rem",color:"#4d7c0f",fontWeight:600,marginBottom:4}}>✅ Spotify プレビュー — キュレーターにはこの曲を聴いてもらいます</div>
+              <iframe src={`https://open.spotify.com/embed/track/${embed.id}?theme=0`} width="100%" height="80" frameBorder="0" allow="encrypted-media" style={{borderRadius:12,display:"block"}} title="Spotify preview"/>
+            </div>
+          );
+          if (embed?.type === 'youtube') return (
+            <div style={{marginTop:8}}>
+              <div style={{fontSize:"0.62rem",color:"#4d7c0f",fontWeight:600,marginBottom:4}}>✅ YouTube プレビュー — キュレーターにはこの曲を聴いてもらいます</div>
+              <div style={{position:"relative",paddingBottom:"56.25%",height:0,overflow:"hidden",borderRadius:12}}>
+                <iframe src={`https://www.youtube.com/embed/${embed.id}`} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none",borderRadius:12}} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="YouTube preview"/>
+              </div>
+            </div>
+          );
+          return null;
+        })()}
       </div>
       <div style={{marginTop:5}}><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>主な実績・数値</label><input style={css.input} value={artist.achievements} onChange={e=>setF("achievements",e.target.value)} placeholder="SXSW 10年連続出演, Spotify月間50万再生"/></div>
       <div style={{marginTop:4}}><label style={{fontSize:"0.66rem",color:"#64748b",fontWeight:600}}>紹介文 *（日本語OK）</label><textarea style={{...css.input,minHeight:60,resize:"vertical"}} value={artist.description} onChange={e=>setF("description",e.target.value)} placeholder="音楽性、特徴、ユニークなポイント"/></div>
@@ -2375,16 +2405,46 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
 
         {/* Audio Player */}
         <div style={{padding:"1.5rem",borderBottom:"1px solid #f1f5f9"}}>
-          <div style={{background:"linear-gradient(135deg,#1e1b4b,#312e81)",borderRadius:16,padding:"1.2rem",color:"#fff",textAlign:"center"}}>
-            <div style={{fontSize:"1.5rem",marginBottom:8}}>🎵</div>
-            <div style={{fontWeight:700,marginBottom:4}}>"{activePitch.songTitle}"</div>
-            {activePitch.songLink && <div style={{fontSize:"0.72rem",color:"#a5b4fc",marginBottom:12}}>{activePitch.songLink}</div>}
-            <div style={{display:"flex",alignItems:"center",gap:12,justifyContent:"center"}}>
-              <button onClick={isListening ? stopListen : startListen} style={{width:48,height:48,borderRadius:"50%",background:isListening?"#ef4444":"#10b981",border:"none",color:"#fff",fontSize:"1.2rem",cursor:"pointer"}}>{isListening?"⏸":"▶"}</button>
-              <div style={{fontSize:"1.5rem",fontWeight:700,fontVariantNumeric:"tabular-nums",minWidth:60}}>{Math.floor(listenTime/60)}:{(listenTime%60).toString().padStart(2,"0")}</div>
-            </div>
-            {isListening && <div style={{fontSize:"0.72rem",color:"#a5b4fc",marginTop:8,animation:"pulse 1.5s infinite"}}>♪ 再生中...</div>}
-          </div>
+          {(() => {
+            const embed = getEmbedInfo(activePitch.songLink);
+            if (embed?.type === 'spotify') return (
+              <div>
+                <div style={{fontSize:"0.78rem",fontWeight:700,marginBottom:8}}>🎧 "{activePitch.songTitle}"</div>
+                <iframe src={`https://open.spotify.com/embed/track/${embed.id}?theme=0`} width="100%" height="80" frameBorder="0" allow="encrypted-media" style={{borderRadius:12,display:"block"}} title="Spotify player"/>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginTop:10}}>
+                  <button onClick={isListening ? stopListen : startListen} style={{padding:"0.4rem 1rem",borderRadius:20,background:isListening?"#ef4444":"#0ea5e9",border:"none",color:"#fff",fontSize:"0.75rem",fontWeight:700,cursor:"pointer",minHeight:36}}>{isListening?"⏸ 停止":"▶ 試聴開始"}</button>
+                  <span style={{fontSize:"0.88rem",fontVariantNumeric:"tabular-nums",fontWeight:600,color:"#334155"}}>{Math.floor(listenTime/60)}:{(listenTime%60).toString().padStart(2,"0")}</span>
+                  {isListening && <span style={{fontSize:"0.7rem",color:"#0ea5e9"}}>♪ 計測中…</span>}
+                </div>
+              </div>
+            );
+            if (embed?.type === 'youtube') return (
+              <div>
+                <div style={{fontSize:"0.78rem",fontWeight:700,marginBottom:8}}>▶ "{activePitch.songTitle}"</div>
+                <div style={{position:"relative",paddingBottom:"56.25%",height:0,overflow:"hidden",borderRadius:12}}>
+                  <iframe src={`https://www.youtube.com/embed/${embed.id}`} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none",borderRadius:12}} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="YouTube player"/>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginTop:10}}>
+                  <button onClick={isListening ? stopListen : startListen} style={{padding:"0.4rem 1rem",borderRadius:20,background:isListening?"#ef4444":"#0ea5e9",border:"none",color:"#fff",fontSize:"0.75rem",fontWeight:700,cursor:"pointer",minHeight:36}}>{isListening?"⏸ 停止":"▶ 試聴開始"}</button>
+                  <span style={{fontSize:"0.88rem",fontVariantNumeric:"tabular-nums",fontWeight:600,color:"#334155"}}>{Math.floor(listenTime/60)}:{(listenTime%60).toString().padStart(2,"0")}</span>
+                  {isListening && <span style={{fontSize:"0.7rem",color:"#0ea5e9"}}>♪ 計測中…</span>}
+                </div>
+              </div>
+            );
+            // Fallback: no embeddable URL — show mock player with timer
+            return (
+              <div style={{background:"linear-gradient(135deg,#1e1b4b,#312e81)",borderRadius:16,padding:"1.2rem",color:"#fff",textAlign:"center"}}>
+                <div style={{fontSize:"1.5rem",marginBottom:8}}>🎵</div>
+                <div style={{fontWeight:700,marginBottom:4}}>"{activePitch.songTitle}"</div>
+                {activePitch.songLink && <div style={{fontSize:"0.72rem",color:"#a5b4fc",marginBottom:12}}>{activePitch.songLink}</div>}
+                <div style={{display:"flex",alignItems:"center",gap:12,justifyContent:"center"}}>
+                  <button onClick={isListening ? stopListen : startListen} style={{width:48,height:48,borderRadius:"50%",background:isListening?"#ef4444":"#10b981",border:"none",color:"#fff",fontSize:"1.2rem",cursor:"pointer"}}>{isListening?"⏸":"▶"}</button>
+                  <div style={{fontSize:"1.5rem",fontWeight:700,fontVariantNumeric:"tabular-nums",minWidth:60}}>{Math.floor(listenTime/60)}:{(listenTime%60).toString().padStart(2,"0")}</div>
+                </div>
+                {isListening && <div style={{fontSize:"0.72rem",color:"#a5b4fc",marginTop:8,animation:"pulse 1.5s infinite"}}>♪ 再生中...</div>}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Pitch Message */}

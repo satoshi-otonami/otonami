@@ -7,7 +7,7 @@ const FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 
 export async function POST(request) {
   try {
-    const { type, pitchId, toEmail: _toEmail, toName, subject, pitchText, epk, artistName, curatorName } = await request.json();
+    const { type, pitchId, toEmail: _toEmail, toName, subject, pitchText, epk, artistName, curatorName, trackUrl } = await request.json();
     let toEmail = _toEmail;
 
     if (!toEmail || !type) {
@@ -34,9 +34,36 @@ export async function POST(request) {
           .map(line => `<p style="margin:0 0 12px 0;line-height:1.6;color:#334155;">${line}</p>`)
           .join('');
 
+        // Email-safe track block: no iframes — thumbnail image (YouTube) or button (Spotify)
+        const trackBlock = (() => {
+          if (!trackUrl) return '';
+          const ytMatch = trackUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+          if (ytMatch) {
+            const vid = ytMatch[1];
+            return `
+              <div style="margin:16px 0;">
+                <a href="${trackUrl}" style="display:block;text-decoration:none;">
+                  <img src="https://img.youtube.com/vi/${vid}/mqdefault.jpg" alt="Watch on YouTube" width="320" height="180" style="border-radius:12px;display:block;max-width:100%;"/>
+                  <span style="display:inline-block;margin-top:8px;color:#0ea5e9;font-size:14px;font-weight:600;">▶ Watch on YouTube</span>
+                </a>
+              </div>`;
+          }
+          const spMatch = trackUrl.match(/spotify\.com\/track\/([a-zA-Z0-9]+)/);
+          if (spMatch) {
+            return `
+              <div style="margin:16px 0;">
+                <a href="${trackUrl}" style="display:inline-block;background:#1DB954;color:#fff;padding:10px 22px;border-radius:20px;text-decoration:none;font-size:14px;font-weight:700;">
+                  ▶ Listen on Spotify
+                </a>
+              </div>`;
+          }
+          return `<p style="margin:8px 0;"><a href="${trackUrl}" style="color:#0ea5e9;font-size:14px;">▶ Listen to Track</a></p>`;
+        })();
+
         htmlBody = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
             ${pitchBody}
+            ${trackBlock}
             ${epk ? `
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
               <div style="background: #f8fafc; padding: 16px; border-radius: 8px; font-size: 14px;">

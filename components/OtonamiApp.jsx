@@ -5,7 +5,7 @@ import { initSession, loadCurators, loadPitches, loadCredits,
 
 import API from '@/lib/api-client';
 import { analyzeTrack } from '@/lib/api-track';
-import { getMatchLabel, rankCurators } from '@/lib/match-score';
+import { getMatchLabel, rankCurators, calculateMatchScore } from '@/lib/match-score';
 
 import { useState, useEffect, useRef, useMemo } from "react";
 
@@ -995,6 +995,13 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const [quickUrl, setQuickUrl] = useState("");
   const targets = curators.filter(c => selected.includes(c.id));
   const cost = targets.reduce((sum, c) => sum + (c.creditCost || 2), 0);
+  // Build effective track for match scoring (same logic as CuratorBrowser)
+  const effectiveTrack = useMemo(() => {
+    const trackGenre = trackData?.genre || artist?.genre || '';
+    const mood       = trackData?.mood  || artist?.mood  || '';
+    if (!trackGenre && !trackData?.audioFeatures) return null;
+    return { ...trackData, genre: trackGenre, mood };
+  }, [trackData, artist]);
   const setF = (k, v) => setArtist(prev => ({...prev, [k]: v}));
   const setL = (k, v) => setLinks(prev => ({...prev, [k]: v}));
   const setFol = (k, v) => setFollowers(prev => ({...prev, [k]: parseInt(v)||0}));
@@ -1258,6 +1265,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       artistId: user.id, artistEmail: user.email, artistName: artist.name, artistNameEn: artist.nameEn||artist.name,
       songTitle: artist.songTitle, songLink: getSongLink(), genre: artist.genre, mood: artist.mood, description: artist.description, influences: artist.influences, achievements: artist.achievements,
       pitchText: pitchText.replace(/\[Curator Name\]/gi, c.name), epk,
+      matchScore: effectiveTrack ? calculateMatchScore(c, effectiveTrack) : null,
       curatorId: c.id, curatorName: c.name, curatorPlatform: c.platform, curatorEmail: c.email, creditCost: c.creditCost||2,
       status: "sent", sentAt: new Date().toISOString(),
       openedAt:null, listenedAt:null, feedbackAt:null, listenDuration:0,

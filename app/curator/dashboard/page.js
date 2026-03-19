@@ -780,12 +780,21 @@ export default function CuratorDashboard() {
                           : ''}
                       </span>
                       {pitch.song_link && (
-                        <a href={pitch.song_link} target="_blank" rel="noopener noreferrer" style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 4,
-                          padding: '2px 10px', borderRadius: 10, fontSize: 11, fontWeight: 600,
-                          background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0',
-                          textDecoration: 'none', fontFamily: T.font,
-                        }}>▶ Listen</a>
+                        <a href={pitch.song_link} target="_blank" rel="noopener noreferrer"
+                          onClick={() => {
+                            const token = localStorage.getItem('curator_token');
+                            fetch(`/api/curator/pitch/${pitch.id}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                              body: JSON.stringify({ action: 'listen' }),
+                            }).catch(() => {});
+                          }}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            padding: '2px 10px', borderRadius: 10, fontSize: 11, fontWeight: 600,
+                            background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0',
+                            textDecoration: 'none', fontFamily: T.font,
+                          }}>▶ Listen</a>
                       )}
                     </div>
                   </div>

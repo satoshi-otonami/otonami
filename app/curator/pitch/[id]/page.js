@@ -272,13 +272,22 @@ function PitchView({ pitchId }) {
               </div>
             )}
             {pitch.song_link && (
-              <a href={pitch.song_link} target="_blank" rel="noopener noreferrer" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                color: T.accent, fontSize: 13, textDecoration: 'none',
-                padding: '5px 12px', background: T.accentLight,
-                borderRadius: 8, border: `1px solid ${T.accentBorder}`,
-                fontFamily: T.font,
-              }}>
+              <a href={pitch.song_link} target="_blank" rel="noopener noreferrer"
+                onClick={() => {
+                  const token = localStorage.getItem('curator_token');
+                  fetch(`/api/curator/pitch/${pitchId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ action: 'listen' }),
+                  }).catch(() => {});
+                }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  color: T.accent, fontSize: 13, textDecoration: 'none',
+                  padding: '5px 12px', background: T.accentLight,
+                  borderRadius: 8, border: `1px solid ${T.accentBorder}`,
+                  fontFamily: T.font,
+                }}>
                 ▶ Listen to Track
               </a>
             )}

@@ -101,6 +101,10 @@ export async function PATCH(request) {
       if (placement_platform) updates.placement_platform = placement_platform;
       if (placement_date) updates.placement_date = placement_date;
     }
+    // フィードバック送信時にfeedback_atを記録
+    if (['accepted', 'rejected', 'feedback'].includes(status)) {
+      updates.feedback_at = new Date().toISOString();
+    }
 
     // まず curator_id で試みる
     let { data, error } = await db

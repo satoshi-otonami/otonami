@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
-import { getServiceSupabase } from '@/lib/supabase';
 
 // 1x1 transparent GIF
 const PIXEL = Buffer.from(
@@ -17,36 +16,10 @@ const PIXEL_HEADERS = {
 };
 
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const pitchId = searchParams.get('pid');
-
-  if (pitchId) {
-    try {
-      const db = getServiceSupabase();
-
-      // Only record first open — never overwrite opened_at
-      const { data: pitch } = await db
-        .from('pitches')
-        .select('status, opened_at')
-        .eq('id', pitchId)
-        .single();
-
-      if (pitch && !pitch.opened_at) {
-        await db
-          .from('pitches')
-          .update({
-            status: pitch.status === 'sent' ? 'opened' : pitch.status,
-            opened_at: new Date().toISOString(),
-          })
-          .eq('id', pitchId);
-
-        console.log(`[track/open] First open recorded for pitch ${pitchId}`);
-      }
-    } catch (e) {
-      // Never let tracking errors affect the response
-      console.warn('[track/open] Error:', e.message);
-    }
-  }
-
+  // ピクセルを返すだけ。DB更新はしない。
+  // Gmailなどのメールクライアントが受信時に画像をプリフェッチするため、
+  // メール開封トラッキングピクセルでopened_atを更新すると、キュレーターが
+  // 実際に開封する前にステータスが自動進行してしまう。
+  // 開封記録はキュレーターがダッシュボードでピッチ詳細を開いた時に行う。
   return new NextResponse(PIXEL, { headers: PIXEL_HEADERS });
 }

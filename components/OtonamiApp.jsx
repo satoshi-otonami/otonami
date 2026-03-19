@@ -417,7 +417,7 @@ const saveCredits = async (c) => {
     <div style={css.shell}>
       {notif && <div style={{...css.toast, background: notif.type==="success" ? "linear-gradient(135deg,#059669,#0891b2)" : "linear-gradient(135deg,#dc2626,#ea580c)"}}>{notif.type==="success"?"✓":"!"} {notif.msg}</div>}
       {mode === "artist" ? (
-        <ArtistApp user={user} curators={curators} pitches={pitches} credits={credits} page={page} setPage={setPage} savePitches={savePitches} saveCredits={saveCredits} notify={notify} updatePitch={updatePitch} />
+        <ArtistApp user={user} curators={curators} pitches={pitches} credits={credits} page={page} setPage={setPage} savePitches={savePitches} saveCredits={saveCredits} notify={notify} updatePitch={updatePitch} refreshPitches={refreshPitches} />
       ) : (
         <CuratorApp user={user} pitches={pitches} page={page} setPage={setPage} savePitches={savePitches} notify={notify} updatePitch={updatePitch} curators={curators} saveCurators={saveCurators} />
       )}
@@ -596,7 +596,7 @@ function loadArtistDraft() {
   try { const r = sessionStorage.getItem("otonami_artist_draft"); return r ? JSON.parse(r) : null; } catch { return null; }
 }
 
-function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, saveCredits, notify, updatePitch}) {
+function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, saveCredits, notify, updatePitch, refreshPitches}) {
   const [selected, setSelected] = useState([]);
   const [trackData, setTrackData] = useState(null);
 

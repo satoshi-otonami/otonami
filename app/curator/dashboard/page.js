@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 const STATUS_LABELS = {
   sent:     { en: 'Pending',  ja: '未対応',  color: '#92400e', bg: '#fef3c7' },
   accepted: { en: 'Accepted', ja: '承認済み', color: '#065f46', bg: '#d1fae5' },
-  rejected: { en: 'Declined', ja: '却下済み', color: '#991b1b', bg: '#fee2e2' },
+  declined: { en: 'Declined', ja: '却下済み', color: '#991b1b', bg: '#fee2e2' },
   feedback: { en: 'Feedback', ja: 'FB受信',   color: '#1e40af', bg: '#dbeafe' },
 };
 
@@ -14,7 +14,7 @@ const FILTER_TABS = [
   { key: 'all',      en: 'All',      ja: 'すべて' },
   { key: 'sent',     en: 'Pending',  ja: '未対応' },
   { key: 'accepted', en: 'Accepted', ja: '承認' },
-  { key: 'rejected', en: 'Rejected', ja: '却下' },
+  { key: 'declined', en: 'Declined', ja: '却下' },
 ];
 
 const TYPE_OPTIONS = [
@@ -310,7 +310,7 @@ export default function CuratorDashboard() {
     all: pitches.length,
     sent: pitches.filter(p => p.status === 'sent').length,
     accepted: pitches.filter(p => p.status === 'accepted').length,
-    rejected: pitches.filter(p => p.status === 'rejected').length,
+    declined: pitches.filter(p => p.status === 'declined').length,
   };
 
   const fbInp = {
@@ -710,7 +710,7 @@ export default function CuratorDashboard() {
               { label: 'Total', ja: '合計', val: counts.all, color: T.text, bg: T.white },
               { label: 'Pending', ja: '未対応', val: counts.sent, color: '#d97706', bg: '#fef3c7' },
               { label: 'Accepted', ja: '承認', val: counts.accepted, color: '#059669', bg: '#d1fae5' },
-              { label: 'Rejected', ja: '却下', val: counts.rejected, color: '#dc2626', bg: '#fee2e2' },
+              { label: 'Declined', ja: '却下', val: counts.declined, color: '#dc2626', bg: '#fee2e2' },
             ].map(s => (
               <div key={s.label} style={{
                 background: s.bg, border: `1px solid ${T.border}`, borderRadius: 12,
@@ -871,7 +871,7 @@ export default function CuratorDashboard() {
                               <>
                                 <button onClick={() => handleAction(pitch.id, 'accepted')} disabled={!canAccept} style={{ padding: '9px 18px', border: 'none', borderRadius: 8, background: canAccept ? '#10b981' : T.border, color: '#fff', fontSize: 12, fontWeight: 700, cursor: canAccept ? 'pointer' : 'not-allowed', fontFamily: T.font }}>{isBusy ? '...' : '✅ Accept & Featured'}</button>
                                 <button onClick={() => handleFeedbackOnly(pitch.id)} disabled={!canOther} style={{ padding: '9px 18px', border: 'none', borderRadius: 8, background: canOther ? T.accent : T.border, color: '#fff', fontSize: 12, fontWeight: 700, cursor: canOther ? 'pointer' : 'not-allowed', fontFamily: T.font }}>{isBusy ? '...' : '💬 Feedback Only'}</button>
-                                <button onClick={() => handleAction(pitch.id, 'rejected')} disabled={!canOther} style={{ padding: '9px 18px', border: `1px solid ${canOther ? '#ef4444' : T.border}`, borderRadius: 8, background: T.white, color: canOther ? '#ef4444' : T.textMuted, fontSize: 12, fontWeight: 700, cursor: canOther ? 'pointer' : 'not-allowed', fontFamily: T.font }}>{isBusy ? '...' : '❌ Decline'}</button>
+                                <button onClick={() => handleAction(pitch.id, 'declined')} disabled={!canOther} style={{ padding: '9px 18px', border: `1px solid ${canOther ? '#ef4444' : T.border}`, borderRadius: 8, background: T.white, color: canOther ? '#ef4444' : T.textMuted, fontSize: 12, fontWeight: 700, cursor: canOther ? 'pointer' : 'not-allowed', fontFamily: T.font }}>{isBusy ? '...' : '❌ Decline'}</button>
                               </>
                             )}
                           </div>

@@ -16,7 +16,7 @@ function renderBody(text) {
 const STATUS_COLORS = {
   sent:     { color: '#92400e', bg: '#fef3c7', label: 'Pending / 未対応' },
   accepted: { color: '#065f46', bg: '#d1fae5', label: 'Accepted / 承認済み' },
-  rejected: { color: '#991b1b', bg: '#fee2e2', label: 'Declined / 却下済み' },
+  declined: { color: '#991b1b', bg: '#fee2e2', label: 'Declined / 却下済み' },
   feedback: { color: '#1e40af', bg: '#dbeafe', label: 'Feedback Sent / FB送信済み' },
 };
 
@@ -223,7 +223,7 @@ function PitchView({ pitchId }) {
 
   if (!pitch) return null;
 
-  const alreadyResponded = ['accepted', 'rejected', 'feedback'].includes(pitch.status);
+  const alreadyResponded = ['accepted', 'declined', 'feedback'].includes(pitch.status);
   const validFeedback = feedbackText.trim().length >= 20;
   const canSubmit = validFeedback && !updating && !done;
   const st = STATUS_COLORS[pitch.status] || STATUS_COLORS.sent;
@@ -469,7 +469,7 @@ function PitchView({ pitchId }) {
                   >{updating ? '...' : '💬 Feedback Only'}</button>
 
                   <button
-                    onClick={() => submit('rejected')}
+                    onClick={() => submit('declined')}
                     disabled={!canSubmit}
                     style={{
                       flex: 1, minWidth: 140, padding: '11px 16px',

@@ -85,7 +85,7 @@ export async function PATCH(request) {
 
     const { pitchId, status, feedback_message, placement_platform, placement_url, placement_date } = await request.json();
 
-    if (!pitchId || !['accepted', 'rejected', 'feedback', 'sent'].includes(status)) {
+    if (!pitchId || !['accepted', 'declined', 'feedback', 'sent'].includes(status)) {
       return NextResponse.json(
         { error: 'pitchId and valid status required' },
         { status: 400 }
@@ -102,7 +102,7 @@ export async function PATCH(request) {
       if (placement_date) updates.placement_date = placement_date;
     }
     // フィードバック送信時にfeedback_atを記録
-    if (['accepted', 'rejected', 'feedback'].includes(status)) {
+    if (['accepted', 'declined', 'feedback'].includes(status)) {
       updates.feedback_at = new Date().toISOString();
     }
 
@@ -135,7 +135,7 @@ export async function PATCH(request) {
 
     // アーティストへの通知メール（失敗してもレスポンスには影響しない）
     if (data.artist_email) {
-      const sc = { accepted: '✅ Accepted', rejected: '❌ Declined', feedback: '💬 Feedback' };
+      const sc = { accepted: '✅ Accepted', declined: '❌ Declined', feedback: '💬 Feedback' };
       const statusLabel = sc[status] || status;
       resend.emails.send({
         from: `OTONAMI <${FROM}>`,

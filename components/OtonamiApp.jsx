@@ -364,6 +364,12 @@ const savePitches = async (p) => {
   setPitches(p);
   await savePitchesToDB(p);
 };
+// DBから最新のピッチを再取得してstateを更新（キュレーター操作後の反映に使用）
+const refreshPitches = async () => {
+  const fresh = await loadPitches();
+  if (fresh?.length) setPitches(fresh);
+  return fresh;
+};
 const saveCurators = async (c) => {
   setCurators(c);
   for (const curator of c) {
@@ -634,7 +640,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify}/>}
       {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist}/>}
       {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft}/>}
-      {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches}/>}
+      {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches} refreshPitches={refreshPitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches}/>}
       {page==="shop" && <CreditShop user={user} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage}/>}
     </main>
@@ -1945,11 +1951,25 @@ function PitchDetailModal({pitch, curators, savePitches, allPitches, onClose, no
 }
 
 // ─── Tracking ───
-function Tracking({pitches, curators, notify, savePitches, allPitches}) {
+function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPitches}) {
   const [expanded, setExpanded] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [detailPitchId, setDetailPitchId] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // マウント時にDBから最新ステータスを取得
+  useEffect(() => {
+    if (refreshPitches) refreshPitches();
+  }, []); // eslint-disable-line
+
+  const handleRefresh = async () => {
+    if (!refreshPitches || refreshing) return;
+    setRefreshing(true);
+    await refreshPitches();
+    setRefreshing(false);
+    notify('最新のステータスを取得しました');
+  };
   const detailPitch = detailPitchId ? (allPitches||pitches).find(p=>p.id===detailPitchId) : null;
   const statusMap = {
     sent:    {label:"📨 Sent",       color:"#94a3b8",bg:"#f8fafc",  icon:"📨",step:1},
@@ -2007,7 +2027,12 @@ function Tracking({pitches, curators, notify, savePitches, allPitches}) {
   const accepted = pitches.filter(p=>p.status==="accepted").length;
 
   return <div>
-    <h1 style={{fontSize:"1.4rem",fontWeight:800,marginBottom:"0.3rem"}}>トラッキング</h1>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.3rem"}}>
+      <h1 style={{fontSize:"1.4rem",fontWeight:800,margin:0}}>トラッキング</h1>
+      <button onClick={handleRefresh} disabled={refreshing} style={{padding:"5px 12px",fontSize:"0.78rem",fontWeight:600,border:"1px solid #e2e8f0",borderRadius:8,background:"#fff",color:"#64748b",cursor:refreshing?"not-allowed":"pointer",fontFamily:"inherit"}}>
+        {refreshing ? '更新中...' : '↻ 更新'}
+      </button>
+    </div>
     <p style={{color:"#64748b",fontSize:"0.82rem",marginBottom:"1.5rem"}}>{pitches.length}件送信 · {inProgress}件進行中 · {accepted}件採用</p>
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
       {pitches.map(p => {

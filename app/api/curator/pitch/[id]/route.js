@@ -38,7 +38,7 @@ async function sendFeedbackNotification(pitch) {
 
   const statusConfig = {
     accepted: { label: '✅ Accepted / 承認されました', color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: '#10b981' },
-    rejected: { label: '❌ Declined / 見送りとなりました', color: '#ef4444', bg: 'rgba(239,68,68,0.10)', border: '#ef4444' },
+    declined: { label: '❌ Declined / 見送りとなりました', color: '#ef4444', bg: 'rgba(239,68,68,0.10)', border: '#ef4444' },
     feedback: { label: '💬 Feedback / フィードバック受信', color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: '#a78bfa' },
   };
   const sc = statusConfig[status] || statusConfig.feedback;
@@ -196,7 +196,7 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ success: true });
   }
 
-  if (!['accepted', 'rejected', 'feedback', 'sent'].includes(status)) {
+  if (!['accepted', 'declined', 'feedback', 'sent'].includes(status)) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
   }
 
@@ -208,7 +208,7 @@ export async function PATCH(request, { params }) {
     if (placement_date) updates.placement_date = placement_date;
   }
   // フィードバック送信時にfeedback_atを記録
-  if (['accepted', 'rejected', 'feedback'].includes(status)) {
+  if (['accepted', 'declined', 'feedback'].includes(status)) {
     updates.feedback_at = now;
   }
 

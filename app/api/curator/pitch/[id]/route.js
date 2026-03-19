@@ -151,16 +151,20 @@ export async function GET(request, { params }) {
   // キュレーターが初めてピッチ詳細を開いた時にopened_atを記録
   if (!data.opened_at) {
     const now = new Date().toISOString();
-    await db
+    const { error: openError } = await db
       .from('pitches')
       .update({
         opened_at: now,
         status: data.status === 'sent' ? 'opened' : data.status,
       })
       .eq('id', pitchId);
-    data.opened_at = now;
-    if (data.status === 'sent') data.status = 'opened';
-    console.log(`[pitch-detail] First view recorded for pitch ${pitchId}`);
+    if (openError) {
+      console.error(`[pitch-detail] opened_at update failed for pitch ${pitchId}:`, openError.message);
+    } else {
+      data.opened_at = now;
+      if (data.status === 'sent') data.status = 'opened';
+      console.log(`[pitch-detail] First view recorded for pitch ${pitchId}`);
+    }
   }
 
   return NextResponse.json({ pitch: data });
@@ -190,8 +194,12 @@ export async function PATCH(request, { params }) {
         listened_at: now,
         status: ['sent', 'opened'].includes(current.status) ? 'listened' : current.status,
       };
-      await db.from('pitches').update(listenUpdates).eq('id', pitchId);
-      console.log(`[pitch-detail] Listen recorded for pitch ${pitchId}`);
+      const { error: listenError } = await db.from('pitches').update(listenUpdates).eq('id', pitchId);
+      if (listenError) {
+        console.error(`[pitch-detail] listened_at update failed for pitch ${pitchId}:`, listenError.message);
+      } else {
+        console.log(`[pitch-detail] Listen recorded for pitch ${pitchId}`);
+      }
     }
     return NextResponse.json({ success: true });
   }
@@ -207,10 +215,7 @@ export async function PATCH(request, { params }) {
     if (placement_platform) updates.placement_platform = placement_platform;
     if (placement_date) updates.placement_date = placement_date;
   }
-  // フィードバック送信時にfeedback_atを記録
-  if (['accepted', 'declined', 'feedback'].includes(status)) {
-    updates.feedback_at = now;
-  }
+  // feedback_at は別途更新（column が存在しない場合でもメイン更新を妨げないように分離）
 
   // まず curator_id で試みる
   let { data, error } = await db
@@ -234,8 +239,26 @@ export async function PATCH(request, { params }) {
     error = res2.error;
   }
 
-  if (error || !data) {
+  if (error) {
+    console.error(`[pitch-detail] PATCH update error for pitch ${pitchId}:`, error.message, 'curator_id:', curator.id, 'curator_name:', curator.name);
     return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
+  }
+  if (!data) {
+    console.error(`[pitch-detail] PATCH no data returned for pitch ${pitchId} — curator_id: ${curator.id} curator_name: ${curator.name}`);
+    return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
+  }
+
+  // feedback_at を別途更新（column が存在しない場合もメイン更新は成功済み）
+  if (['accepted', 'declined', 'feedback'].includes(status)) {
+    const { error: fatError } = await db
+      .from('pitches')
+      .update({ feedback_at: now })
+      .eq('id', data.id);
+    if (fatError) {
+      console.warn(`[pitch-detail] feedback_at update failed (column may not exist):`, fatError.message);
+    } else {
+      data.feedback_at = now;
+    }
   }
 
   // アーティストへの通知メール（失敗してもレスポンスには影響しない）

@@ -296,13 +296,27 @@ const timeAgo = (dateStr) => {
 
 // ─── App ───
 export default function App() {
-  const [mode, setMode] = useState(null); // "artist" | "curator" | null
-  const [user, setUser] = useState(null);
+  const [mode, setMode] = useState(() => {
+    try { return localStorage.getItem('otonami-mode') || null; } catch { return null; }
+  });
+  const [user, setUser] = useState(() => {
+    try { const s = localStorage.getItem('otonami-user'); return s ? JSON.parse(s) : null; } catch { return null; }
+  });
   const [curators, setCurators] = useState([]);
   const [pitches, setPitches] = useState([]);
   const [credits, setCredits] = useState(20);
   const [notif, setNotif] = useState(null);
-  const [page, setPage] = useState("landing");
+  const [page, setPage] = useState(() => {
+    try {
+      const hasUser = !!localStorage.getItem('otonami-user');
+      if (hasUser) {
+        const tab = new URLSearchParams(window.location.search).get('tab');
+        if (tab && ["dashboard","curators","pitch","tracking","analytics","shop"].includes(tab)) return tab;
+        return "dashboard";
+      }
+    } catch {}
+    return "landing";
+  });
   const historyTabRef = useRef(false); // true after first artist tab push
 
   const notify = (msg, type="success") => { setNotif({msg,type}); setTimeout(()=>setNotif(null),4000); };
@@ -408,9 +422,9 @@ const saveCredits = async (c) => {
   };
 
   // ─── Landing ───
-  if (page === "landing" && !user) return <Landing onArtist={() => { setMode("artist"); setPage("auth"); }} onCurator={() => { window.location.href = '/curator'; }} />;
+  if (page === "landing" && !user) return <Landing onArtist={() => { setMode("artist"); try { localStorage.setItem('otonami-mode', 'artist'); } catch {} setPage("auth"); }} onCurator={() => { window.location.href = '/curator'; }} />;
   // ─── Auth ───
-  if (page === "auth" && !user) return <Auth mode={mode} curators={curators} onLogin={(u) => { setUser(u); setPage(mode === "artist" ? "dashboard" : "curator-inbox"); }} onBack={() => setPage("landing")} onRegisterCurator={async (c) => { const nc = [...curators, c]; await saveCurators(nc); setUser(c); setPage("curator-inbox"); notify("キュレーター登録完了！"); }} />;
+  if (page === "auth" && !user) return <Auth mode={mode} curators={curators} onLogin={(u) => { setUser(u); try { localStorage.setItem('otonami-user', JSON.stringify(u)); } catch {} const tab = new URLSearchParams(window.location.search).get('tab'); const validTab = tab && ["dashboard","curators","pitch","tracking","analytics","shop"].includes(tab) ? tab : null; setPage(validTab || (mode === "artist" ? "dashboard" : "curator-inbox")); }} onBack={() => setPage("landing")} onRegisterCurator={async (c) => { const nc = [...curators, c]; await saveCurators(nc); setUser(c); try { localStorage.setItem('otonami-user', JSON.stringify(c)); localStorage.setItem('otonami-mode', 'curator'); } catch {} setPage("curator-inbox"); notify("キュレーター登録完了！"); }} />;
 
   // ─── Main App ───
   return (
@@ -2067,7 +2081,7 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
           </div>
           {isOpen && <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid #f1f5f9",animation:"fadeIn 0.2s ease"}} onClick={e=>e.stopPropagation()}>
             <div style={{fontSize:"0.78rem",color:"#64748b"}}>
-              <div>📨 Sent: {new Date(p.sentAt).toLocaleString("ja-JP")}</div>
+              <div>📨 Sent: {new Date(p.sentAt || p.createdAt).toLocaleString("ja-JP")}</div>
               {p.openedAt
                 ? <div style={{color:"#0ea5e9",fontWeight:600}}>📬 Opened: {new Date(p.openedAt).toLocaleString("ja-JP")}</div>
                 : <div style={{color:"#94a3b8"}}>📭 未開封</div>
@@ -2541,7 +2555,7 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
           </div>
           <div style={{textAlign:"right"}}>
             <div style={{fontSize:"0.72rem",color:daysLeft<=2?"#ef4444":"#64748b",fontWeight:daysLeft<=2?700:400}}>{daysLeft}日残り</div>
-            <div style={{fontSize:"0.65rem",color:"#94a3b8"}}>{new Date(p.sentAt).toLocaleDateString("ja-JP")}</div>
+            <div style={{fontSize:"0.65rem",color:"#94a3b8"}}>{new Date(p.sentAt || p.createdAt).toLocaleDateString("ja-JP")}</div>
           </div>
         </div>
       </div>;

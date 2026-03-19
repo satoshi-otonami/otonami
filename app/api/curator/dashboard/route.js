@@ -101,10 +101,8 @@ export async function PATCH(request) {
       if (placement_platform) updates.placement_platform = placement_platform;
       if (placement_date) updates.placement_date = placement_date;
     }
-    // フィードバック送信時にfeedback_atを記録
-    if (['accepted', 'declined', 'feedback'].includes(status)) {
-      updates.feedback_at = new Date().toISOString();
-    }
+    // feedback_at は別途更新（column が存在しない場合でもメイン更新を妨げないように分離）
+    const now = new Date().toISOString();
 
     // まず curator_id で試みる
     let { data, error } = await db
@@ -128,9 +126,25 @@ export async function PATCH(request) {
       error = res2.error;
     }
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error(`[dashboard] PATCH update error for pitch ${pitchId}:`, error.message);
+      throw new Error(error.message);
+    }
     if (!data) {
       return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
+    }
+
+    // feedback_at を別途更新（column が存在しない場合もメイン更新は成功済み）
+    if (['accepted', 'declined', 'feedback'].includes(status)) {
+      const { error: fatError } = await db
+        .from('pitches')
+        .update({ feedback_at: now })
+        .eq('id', data.id);
+      if (fatError) {
+        console.warn(`[dashboard] feedback_at update failed (column may not exist):`, fatError.message);
+      } else {
+        data.feedback_at = now;
+      }
     }
 
     // アーティストへの通知メール（失敗してもレスポンスには影響しない）

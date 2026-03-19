@@ -224,76 +224,9 @@ const ARTIST_DB = [
 // Remove empty duplicate entry
 const ARTIST_DB_CLEAN = ARTIST_DB.filter(a => a.name);
 
-// ─── Demo Auto-Progression (simulates curator response flow) ───
-const FEEDBACK_BANK = {
-  positive: [
-    "Love the sound! Adding to the playlist right away. The energy is infectious.",
-    "This is exactly what my listeners are looking for. Added!",
-    "Incredible energy. Welcome to the playlist! Japan has such amazing talent.",
-    "Great production quality and unique vibe. Added to rotation.",
-    "This fits perfectly with our playlist aesthetic. You're in!",
-    "Outstanding musicianship. My audience will love this. Shared on socials too.",
-    "Refreshing sound from Japan! Added immediately. Keep me posted on new releases.",
-    "Exactly the kind of discovery I live for. Playlist updated!",
-    "Really impressive work. I'd love to feature this in our next newsletter too.",
-    "The fusion of styles is masterful. Definitely adding and sharing with my network.",
-  ],
-  negative: [
-    "Good track but doesn't quite fit our current playlist direction. Try again with your next release!",
-    "Interesting sound, but we're looking for something with a different energy right now.",
-    "Quality production but not the right match for our audience at the moment. Keep creating!",
-    "Appreciate the submission! The style is a bit outside our playlist focus right now.",
-    "Well-crafted but we recently added similar tracks. Revisit us in a few months!",
-    "Good musicianship, but the mood doesn't align with our current curation theme. Try us again soon.",
-    "Not a fit for us right now, but I can see potential. Polish the mix a bit and resubmit!",
-  ],
-};
-
-const scheduleAutoProgress = (pitchId, updateFn, notifyFn, curatorName, acceptBoost, pitchData) => {
-  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-  // Stage 1: sent → opened (3-8 sec)
-  const t1 = rand(3000, 8000);
-  const timer1 = setTimeout(() => {
-    updateFn(pitchId, { status: "opened", openedAt: new Date().toISOString() });
-    notifyFn("👁 " + curatorName + " がピッチを開封しました");
-    // Email to artist
-    if (pitchData) sendEmail(EMAIL_TEMPLATES.curatorOpened(
-      {name: pitchData.artistName, email: pitchData.artistEmail||"artist@example.com"},
-      {name: curatorName, platform: pitchData.curatorPlatform||""}
-    ));
-  }, t1);
-  // Stage 2: opened → listened (5-12 sec after opened)
-  const t2 = t1 + rand(5000, 12000);
-  const listenDur = rand(15, 90);
-  const timer2 = setTimeout(() => {
-    updateFn(pitchId, { status: "listened", listenedAt: new Date().toISOString(), listenDuration: listenDur });
-    notifyFn("🎧 " + curatorName + " が楽曲を試聴しました (" + listenDur + "秒)");
-  }, t2);
-  // Stage 3: listened → accepted/declined (6-15 sec after listened)
-  const t3 = t2 + rand(6000, 15000);
-  const timer3 = setTimeout(() => {
-    const accepted = Math.random() * 100 < Math.min((acceptBoost || 40) + 20, 85);
-    const pool = accepted ? FEEDBACK_BANK.positive : FEEDBACK_BANK.negative;
-    const fb = pool[Math.floor(Math.random() * pool.length)];
-    const rating = accepted ? rand(4, 5) : rand(2, 3);
-    const actionType = accepted ? ACTION_TYPES[rand(0, ACTION_TYPES.length-1)].id : null;
-    updateFn(pitchId, {
-      status: accepted ? "accepted" : "declined",
-      feedbackAt: new Date().toISOString(),
-      feedback: fb, rating, decision: accepted ? "accepted" : "declined",
-      actionType, curatorPayment: CURATOR_PAY.calc(pitchData?.creditCost || 2, accepted),
-    });
-    if (accepted) notifyFn("🎉 " + curatorName + " があなたの曲を採用しました！");
-    else notifyFn("📋 " + curatorName + " からフィードバックが届きました");
-    // Email to artist
-    if (pitchData) sendEmail(EMAIL_TEMPLATES.curatorFeedback(
-      {name: pitchData.artistName, email: pitchData.artistEmail||"artist@example.com"},
-      {name: curatorName, platform: pitchData.curatorPlatform||""},
-      accepted?"accepted":"declined", fb, accepted?ACTION_TYPES.find(a=>a.id===actionType)?.label:null
-    ));
-  }, t3);
-  return [timer1, timer2, timer3];
-};
+// ─── Demo Auto-Progression removed ───
+// 自動ステータス進行コードを削除。
+// ステータス更新はキュレーターの実際のアクションのみで行う。
 
 // ─── Storage helpers ───
 
@@ -370,7 +303,6 @@ export default function App() {
   const [credits, setCredits] = useState(20);
   const [notif, setNotif] = useState(null);
   const [page, setPage] = useState("landing");
-  const timersRef = useRef([]);
   const historyTabRef = useRef(false); // true after first artist tab push
 
   const notify = (msg, type="success") => { setNotif({msg,type}); setTimeout(()=>setNotif(null),4000); };
@@ -424,7 +356,7 @@ if (savedPitches?.length) setPitches(savedPitches);
     const s = document.createElement("style");
     s.textContent = `@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}*{box-sizing:border-box}`;
     document.head.appendChild(s);
-    return () => { document.head.removeChild(s); timersRef.current.forEach(t => clearTimeout(t)); };
+    return () => { document.head.removeChild(s); };
   }, []);
 
   // Save helpers
@@ -469,12 +401,6 @@ const saveCredits = async (c) => {
     });
   };
 
-  // Demo auto-progression: simulates curator opening → listening → feedback
-  const startAutoProgress = (pitchId, curatorName, acceptBoost, pitchData) => {
-    const timers = scheduleAutoProgress(pitchId, updatePitch, notify, curatorName, acceptBoost, pitchData);
-    timersRef.current.push(...timers);
-  };
-
   // ─── Landing ───
   if (page === "landing" && !user) return <Landing onArtist={() => { setMode("artist"); setPage("auth"); }} onCurator={() => { window.location.href = '/curator'; }} />;
   // ─── Auth ───
@@ -485,7 +411,7 @@ const saveCredits = async (c) => {
     <div style={css.shell}>
       {notif && <div style={{...css.toast, background: notif.type==="success" ? "linear-gradient(135deg,#059669,#0891b2)" : "linear-gradient(135deg,#dc2626,#ea580c)"}}>{notif.type==="success"?"✓":"!"} {notif.msg}</div>}
       {mode === "artist" ? (
-        <ArtistApp user={user} curators={curators} pitches={pitches} credits={credits} page={page} setPage={setPage} savePitches={savePitches} saveCredits={saveCredits} notify={notify} updatePitch={updatePitch} startAutoProgress={startAutoProgress} />
+        <ArtistApp user={user} curators={curators} pitches={pitches} credits={credits} page={page} setPage={setPage} savePitches={savePitches} saveCredits={saveCredits} notify={notify} updatePitch={updatePitch} />
       ) : (
         <CuratorApp user={user} pitches={pitches} page={page} setPage={setPage} savePitches={savePitches} notify={notify} updatePitch={updatePitch} curators={curators} saveCurators={saveCurators} />
       )}
@@ -664,7 +590,7 @@ function loadArtistDraft() {
   try { const r = sessionStorage.getItem("otonami_artist_draft"); return r ? JSON.parse(r) : null; } catch { return null; }
 }
 
-function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, saveCredits, notify, updatePitch, startAutoProgress}) {
+function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, saveCredits, notify, updatePitch}) {
   const [selected, setSelected] = useState([]);
   const [trackData, setTrackData] = useState(null);
 
@@ -707,7 +633,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     <main style={css.main}>
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify}/>}
       {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist}/>}
-      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} startAutoProgress={startAutoProgress} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft}/>}
+      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches}/>}
       {page==="shop" && <CreditShop user={user} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage}/>}
@@ -991,7 +917,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 }
 
 // ─── Pitch Creator (Template Engine + Social Links + Followers) ───
-function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, startAutoProgress, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft}) {
+function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft}) {
   const [pitchText, setPitchText] = useState("");
   const [pitchJa, setPitchJa] = useState("");
   const [pitchTab, setPitchTab] = useState("ja"); // "en" | "ja"
@@ -1309,7 +1235,6 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           await API.sendPitchEmail(p.id, p.curatorEmail, p.curatorName, p.pitchText, p.epk, p.artistNameEn || p.artistName, p.songLink);
         }
       } catch (e) { console.log("Email send skipped:", e.message); }
-      startAutoProgress(p.id, p.curatorName, p);
     }
     notify("✅ " + newPitches.length + "件送信完了！");
   };

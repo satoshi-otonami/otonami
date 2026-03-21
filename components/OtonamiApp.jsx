@@ -1024,8 +1024,13 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       const dcAv = [{bg:'rgba(196,149,106,0.2)',text:'#c4956a'},{bg:'rgba(232,93,58,0.15)',text:'#e85d3a'},{bg:'rgba(74,222,128,0.12)',text:'#4ade80'},{bg:'rgba(96,165,250,0.12)',text:'#60a5fa'},{bg:'rgba(251,191,36,0.12)',text:'#fbbf24'},{bg:'rgba(168,85,247,0.12)',text:'#a855f7'}][dc.name.charCodeAt(0) % 6];
       const dcInitials = dc.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
       const dcFollowers = dc.followers || dc.audience;
+      const artistGenres = (artist?.genre || '').split(',').map(g => g.trim().toLowerCase()).filter(Boolean);
+      const matchingGenres = artistGenres.length > 0
+        ? (dc.genres || []).filter(g => artistGenres.includes(g.toLowerCase()))
+        : [];
       return <div onClick={()=>setDetailCurator(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.65)',backdropFilter:'blur(8px)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}}>
         <div onClick={e=>e.stopPropagation()} style={{background:'#222222',borderRadius:16,border:'1px solid rgba(255,255,255,0.08)',maxWidth:560,width:'100%',maxHeight:'90vh',overflowY:'auto',animation:'curatorModalIn 0.2s ease'}}>
+
           {/* Header */}
           <div style={{padding:'24px 24px 20px',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',gap:16}}>
             <div style={{width:64,height:64,borderRadius:'50%',flexShrink:0,position:'relative',overflow:'hidden'}}>
@@ -1035,33 +1040,106 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
             <div style={{flex:1,minWidth:0}}>
               <h3 style={{fontSize:20,fontWeight:500,color:'#f0ede6',fontFamily:"'Playfair Display',Georgia,serif",margin:'0 0 4px'}}>{dc.name}</h3>
               <div style={{fontSize:13,color:'#7a7870'}}>
-                {dc.platform}{dcFollowers ? ' · '+( dcFollowers>=1000?(dcFollowers/1000).toFixed(1)+'K followers':dcFollowers+' followers') : ''}
+                {dc.platform}{dcFollowers ? ' · '+(dcFollowers>=1000?(dcFollowers/1000).toFixed(1)+'K followers':dcFollowers+' followers') : ''}
               </div>
             </div>
             <button onClick={()=>setDetailCurator(null)} style={{background:'transparent',border:'none',color:'#7a7870',fontSize:24,cursor:'pointer',padding:4,lineHeight:1,flexShrink:0}}>×</button>
           </div>
+
           {/* Body */}
-          <div style={{padding:'24px',display:'flex',flexDirection:'column',gap:20}}>
+          <div style={{padding:'24px',display:'flex',flexDirection:'column',gap:24}}>
+
+            {/* Match section */}
+            {(dcMs != null || matchingGenres.length > 0) && <div style={{background:dcMs!=null?(dcMs>=85?'rgba(74,222,128,0.06)':dcMs>=70?'rgba(96,165,250,0.06)':'rgba(251,191,36,0.06)'):'rgba(255,255,255,0.03)',borderRadius:12,padding:16,border:'1px solid '+(dcMs!=null?(dcMs>=85?'rgba(74,222,128,0.15)':dcMs>=70?'rgba(96,165,250,0.15)':'rgba(251,191,36,0.15)'):'rgba(255,255,255,0.06)')}}>
+              {dcMs != null && <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:matchingGenres.length>0?12:0}}>
+                <div style={{fontSize:32,fontWeight:600,color:dcMsColor,lineHeight:1}}>{dcMs}%</div>
+                <div>
+                  <div style={{fontSize:13,fontWeight:500,color:'#f0ede6'}}>Match Score</div>
+                  {dc.matchReasons?.length > 0 && <div style={{fontSize:12,color:'#7a7870',marginTop:2}}>{dc.matchReasons.join(' · ')}</div>}
+                </div>
+              </div>}
+              {matchingGenres.length > 0 && <div>
+                <div style={{fontSize:12,color:'#7a7870',marginBottom:8}}>How well you match</div>
+                <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                  {matchingGenres.map((g,i) => <span key={i} style={{background:'rgba(74,222,128,0.08)',border:'1px solid rgba(74,222,128,0.2)',color:'#4ade80',padding:'4px 12px',borderRadius:20,fontSize:12}}>✓ {g}</span>)}
+                </div>
+              </div>}
+            </div>}
+
+            {/* Stats */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
+              <div style={{background:'#2a2a2a',borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
+                <div style={{fontSize:20,fontWeight:600,color:'#f0ede6'}}>
+                  {(dc.pitchesResponded && dc.pitchesReceived) ? Math.round((dc.pitchesResponded/dc.pitchesReceived)*100)+'%' : '--'}
+                </div>
+                <div style={{fontSize:11,color:'#7a7870',marginTop:3}}>Answer rate</div>
+              </div>
+              <div style={{background:'#2a2a2a',borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
+                <div style={{fontSize:20,fontWeight:600,color:'#f0ede6'}}>
+                  {(dc.pitchesAccepted && dc.pitchesResponded) ? Math.round((dc.pitchesAccepted/dc.pitchesResponded)*100)+'%' : '--'}
+                </div>
+                <div style={{fontSize:11,color:'#7a7870',marginTop:3}}>Share rate</div>
+              </div>
+              <div style={{background:'#2a2a2a',borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
+                <div style={{fontSize:17,fontWeight:600,color:'#f0ede6',lineHeight:1.2}}>{dc.responseTime || '7 days'}</div>
+                <div style={{fontSize:11,color:'#7a7870',marginTop:3}}>Responds in</div>
+              </div>
+            </div>
+
+            {/* Bio */}
             {dc.bio && <p style={{fontSize:14,color:'#c0bdb5',lineHeight:1.7,margin:0}}>{dc.bio}</p>}
+
+            {/* Platform URL */}
             {dc.url && <a href={dc.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{display:'inline-flex',alignItems:'center',gap:6,color:'#c4956a',fontSize:13,textDecoration:'none',wordBreak:'break-all'}}>🔗 {dc.url}</a>}
+
+            {/* Genres they love */}
             {dc.genres?.length > 0 && <div>
-              <div style={{fontSize:11,color:'#7a7870',textTransform:'uppercase',letterSpacing:'1px',marginBottom:10,fontWeight:600}}>Genres</div>
+              <div style={{fontSize:13,fontWeight:500,color:'#c0bdb5',marginBottom:10}}>Genres they love</div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                 {dc.genres.map((g,i) => <span key={i} style={{background:'rgba(196,149,106,0.08)',border:'1px solid rgba(196,149,106,0.15)',color:'#c4956a',padding:'4px 12px',borderRadius:20,fontSize:12}}>{g}</span>)}
               </div>
             </div>}
-            {dc.accepts?.length > 0 && <div>
-              <div style={{fontSize:11,color:'#7a7870',textTransform:'uppercase',letterSpacing:'1px',marginBottom:10,fontWeight:600}}>Accepts</div>
+
+            {/* Genres they don't want */}
+            {dc.rejectedGenres?.length > 0 && <div>
+              <div style={{fontSize:13,fontWeight:500,color:'#c0bdb5',marginBottom:10}}>They don't want to receive...</div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-                {dc.accepts.map((a,i) => <span key={i} style={{background:'rgba(74,222,128,0.08)',border:'1px solid rgba(74,222,128,0.15)',color:'#4ade80',padding:'4px 12px',borderRadius:20,fontSize:12}}>{a}</span>)}
+                {dc.rejectedGenres.map((g,i) => <span key={i} style={{background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.15)',color:'#ef4444',padding:'4px 12px',borderRadius:20,fontSize:12}}>{g}</span>)}
               </div>
             </div>}
-            {dcMs != null && <div style={{background:dcMs>=85?'rgba(74,222,128,0.08)':dcMs>=70?'rgba(96,165,250,0.08)':'rgba(251,191,36,0.08)',borderRadius:10,padding:16,textAlign:'center'}}>
-              <div style={{fontSize:11,color:'#7a7870',marginBottom:4}}>Match Score</div>
-              <div style={{fontSize:32,fontWeight:600,color:dcMsColor}}>{dcMs}%</div>
-              {dc.matchReasons?.length > 0 && <div style={{fontSize:12,color:'#7a7870',marginTop:6}}>{dc.matchReasons.join(' · ')}</div>}
+
+            {/* Moods they love */}
+            {dc.preferredMoods?.length > 0 && <div>
+              <div style={{fontSize:13,fontWeight:500,color:'#c0bdb5',marginBottom:10}}>Moods they love</div>
+              <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                {dc.preferredMoods.map((m,i) => <span key={i} style={{background:'rgba(168,85,247,0.08)',border:'1px solid rgba(168,85,247,0.15)',color:'#a855f7',padding:'4px 12px',borderRadius:20,fontSize:12}}>{m}</span>)}
+              </div>
             </div>}
+
+            {/* Similar artists */}
+            {dc.preferredArtists?.length > 0 && <div>
+              <div style={{fontSize:13,fontWeight:500,color:'#c0bdb5',marginBottom:10}}>They want music similar to...</div>
+              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                {dc.preferredArtists.map((a,i) => <span key={i} style={{background:'#2a2a2a',border:'1px solid rgba(255,255,255,0.08)',color:'#f0ede6',padding:'6px 14px',borderRadius:20,fontSize:12}}>🎤 {a}</span>)}
+              </div>
+            </div>}
+
+            {/* Main opportunities */}
+            {(dc.opportunities?.length > 0 || dc.accepts?.length > 0) && <div>
+              <div style={{fontSize:13,fontWeight:500,color:'#c0bdb5',marginBottom:10}}>Main opportunities</div>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {(dc.opportunities?.length > 0 ? dc.opportunities : dc.accepts).map((o,i) => <div key={i} style={{background:'#2a2a2a',borderRadius:8,padding:'10px 14px',fontSize:13,color:'#c0bdb5',border:'1px solid rgba(255,255,255,0.04)'}}>{o}</div>)}
+              </div>
+            </div>}
+
+            {/* Playlist link */}
+            {dc.playlistUrl && <div>
+              <div style={{fontSize:13,fontWeight:500,color:'#c0bdb5',marginBottom:10}}>Their playlist</div>
+              <a href={dc.playlistUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{display:'flex',alignItems:'center',gap:10,background:'#2a2a2a',borderRadius:10,padding:14,color:'#c4956a',textDecoration:'none',fontSize:13,border:'1px solid rgba(255,255,255,0.06)',wordBreak:'break-all'}}>🎵 {dc.playlistUrl}</a>
+            </div>}
+
           </div>
+
           {/* Footer */}
           <div style={{padding:'16px 24px',borderTop:'1px solid rgba(255,255,255,0.06)',display:'flex',justifyContent:'flex-end',gap:12}}>
             <button onClick={()=>setDetailCurator(null)} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.12)',color:'#c0bdb5',borderRadius:8,padding:'10px 20px',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>閉じる</button>
@@ -1069,6 +1147,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
               {dcOn ? '選択解除' : `選択 · ${dc.creditCost||2}cr`}
             </button>
           </div>
+
         </div>
       </div>;
     })()}

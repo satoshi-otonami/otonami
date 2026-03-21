@@ -1079,6 +1079,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const [fetchingFollowers, setFetchingFollowers] = useState(false);
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [trackAnalysisStatus, setTrackAnalysisStatus] = useState('idle'); // 'idle'|'loading'|'done'|'error'
+  const analyzeInFlightRef = useRef(false);
   const [customGenre, setCustomGenre] = useState("");
   const parseGenreTags = (str) => (str||'').split(',').map(s=>s.trim()).filter(Boolean);
   const toggleGenreTag = (tag) => {
@@ -1095,6 +1096,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
 
   const analyzeTrackFn = async (songName, artistName, trackUrl) => {
     if (!songName?.trim() && !trackUrl?.trim()) return;
+    if (analyzeInFlightRef.current) return; // Prevent concurrent requests
+    analyzeInFlightRef.current = true;
     setAnalyzeLoading(true);
     setTrackAnalysisStatus('loading');
     try {
@@ -1109,13 +1112,18 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     } catch (e) {
       console.warn('Track analyze:', e.message);
       setTrackAnalysisStatus('error');
+    } finally {
+      analyzeInFlightRef.current = false;
+      setAnalyzeLoading(false);
     }
-    setAnalyzeLoading(false);
   };
 
   // Auto-analyze when songTitle + artist name are filled (1.5s debounce)
+  // Skips when a streaming URL is present — the URL effect handles that case
   const lastAnalyzedKeyRef = useRef('');
+  const hasStreamingUrl = /spotify\.com\/track\/|youtube\.com\/|youtu\.be\/|soundcloud\.com\//.test(artist.songLink || '');
   useEffect(() => {
+    if (hasStreamingUrl) return; // URL trigger takes priority
     const song = artist.songTitle?.trim();
     const name = (artist.nameEn || artist.name)?.trim();
     if (!song || !name) return;
@@ -1124,9 +1132,9 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     const timer = setTimeout(() => {
       lastAnalyzedKeyRef.current = key;
       analyzeTrackFn(song, name);
-    }, 1500);
+    }, 3000);
     return () => clearTimeout(timer);
-  }, [artist.songTitle, artist.nameEn, artist.name]);
+  }, [artist.songTitle, artist.nameEn, artist.name, hasStreamingUrl]);
 
   // Auto-analyze when a track URL is entered (1.5s debounce)
   useEffect(() => {
@@ -1137,7 +1145,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     const timer = setTimeout(() => {
       lastAnalyzedKeyRef.current = key;
       analyzeTrackFn(artist.songTitle, artist.nameEn || artist.name, url);
-    }, 1500);
+    }, 3000);
     return () => clearTimeout(timer);
   }, [artist.songLink]);
 

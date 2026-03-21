@@ -146,16 +146,26 @@ async function fetchSoundNetFeatures(songName, artistName) {
   let lastError = '';
 
   for (const endpoint of endpoints) {
-    const res = await fetch(
-      `https://track-analysis.p.rapidapi.com${endpoint}?${params}`,
-      {
-        method: 'GET',
-        headers: {
-          'x-rapidapi-host': 'track-analysis.p.rapidapi.com',
-          'x-rapidapi-key': rapidApiKey,
-        },
+    let res;
+    // Retry on 429 rate limit (up to 2 retries: wait 2s then 4s)
+    for (let attempt = 0; attempt <= 2; attempt++) {
+      if (attempt > 0) {
+        const waitMs = attempt * 2000;
+        console.log(`[SoundNet] 429 rate limited on ${endpoint}, retrying in ${waitMs}ms...`);
+        await new Promise(r => setTimeout(r, waitMs));
       }
-    );
+      res = await fetch(
+        `https://track-analysis.p.rapidapi.com${endpoint}?${params}`,
+        {
+          method: 'GET',
+          headers: {
+            'x-rapidapi-host': 'track-analysis.p.rapidapi.com',
+            'x-rapidapi-key': rapidApiKey,
+          },
+        }
+      );
+      if (res.status !== 429) break;
+    }
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));

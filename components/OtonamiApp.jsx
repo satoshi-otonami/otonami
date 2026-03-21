@@ -736,6 +736,29 @@ function getEmbedInfo(url) {
   return null;
 }
 
+// Extract song title from a YouTube video title string
+function parseYTTitle(title, authorName) {
+  if (!title) return '';
+  // Quoted title: 'ROUTE14band "Mahal" MV' → 'Mahal'  (double or Japanese quotes)
+  const q = title.match(/[「"'"]([^「"'"]{1,60})[」"'"]/);
+  if (q) return q[1].trim();
+  // Dash pattern: "Artist - Song (Official Video)" → "Song"
+  const dash = title.match(/^.+?[-–—]\s*(.+?)(?:\s*[\(\[（【]|$)/);
+  if (dash) {
+    const candidate = dash[1].replace(/\s*(Official|Music\s*Video|MV|Audio|Lyric|Live|PV|Short)\s*/gi, '').trim();
+    if (candidate) return candidate;
+  }
+  // Strip author name and common suffixes, return remainder
+  let t = title;
+  if (authorName) t = t.replace(new RegExp(authorName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '');
+  t = t
+    .replace(/\s*[\(\[（【].*?[\)\]）】]/g, '')
+    .replace(/\s*(Official|Music\s*Video|MV|Audio|Lyric|Live|PV|Short)\s*/gi, ' ')
+    .replace(/[-+,\s]+$/, '')
+    .trim();
+  return t;
+}
+
 // ─── Curator Browser ───
 function CuratorBrowser({curators, selected, setSelected, setPage, trackData, setTrackData, notify, artist}) {
   const [q, setQ] = useState(""); const [genre, setGenre] = useState(""); const [type, setType] = useState("");
@@ -1080,6 +1103,9 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [trackAnalysisStatus, setTrackAnalysisStatus] = useState('idle'); // 'idle'|'loading'|'done'|'error'
   const analyzeInFlightRef = useRef(false);
+  // Separate title for the specific track being pitched (vs artist.songTitle = 代表曲)
+  const [pitchSongTitle, setPitchSongTitle] = useState('');
+  const [pitchSongTitleAuto, setPitchSongTitleAuto] = useState(false);
   const [customGenre, setCustomGenre] = useState("");
   const parseGenreTags = (str) => (str||'').split(',').map(s=>s.trim()).filter(Boolean);
   const toggleGenreTag = (tag) => {
@@ -1148,6 +1174,39 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     }, 3000);
     return () => clearTimeout(timer);
   }, [artist.songLink]);
+
+  // Auto-fetch pitch song title from oEmbed when URL is entered (fast, no auth needed)
+  useEffect(() => {
+    const url = artist.songLink?.trim();
+    if (!url) {
+      if (pitchSongTitleAuto) { setPitchSongTitle(''); setPitchSongTitleAuto(false); }
+      return;
+    }
+    if (!pitchSongTitleAuto && pitchSongTitle) return; // User manually typed a title — don't overwrite
+    const embed = getEmbedInfo(url);
+    if (!embed) return;
+    let cancelled = false;
+    const oembedUrl = embed.type === 'spotify'
+      ? `https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`
+      : `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+    fetch(oembedUrl)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (cancelled || !d?.title) return;
+        const title = embed.type === 'youtube' ? (parseYTTitle(d.title, d.author_name) || d.title) : d.title;
+        if (title) { setPitchSongTitle(title); setPitchSongTitleAuto(true); }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [artist.songLink]);
+
+  // Initialize pitchSongTitle from trackData on mount (if analyzed in CuratorBrowser)
+  useEffect(() => {
+    if (trackData?.songName && !pitchSongTitle) {
+      setPitchSongTitle(trackData.songName);
+      setPitchSongTitleAuto(true);
+    }
+  }, [trackData?.songName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Auto-fetch followers from API ──
   const autoFetchFollowers = async () => {
@@ -1218,7 +1277,9 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     try {
       const lnk = {...links, songLink: getSongLink()};
       const rep = targets[0] || {name:"Curator",type:"blog",platform:"Music Platform"};
-      const result = await API.generatePitch(artist, rep, pitchStyle, lnk, followers, user.name, trackData?.audioFeatures);
+      // Use pitchSongTitle (track-specific) over artist.songTitle (representative track)
+      const pitchArtist = pitchSongTitle ? { ...artist, songTitle: pitchSongTitle } : artist;
+      const result = await API.generatePitch(pitchArtist, rep, pitchStyle, lnk, followers, user.name, trackData?.audioFeatures);
       setPitchText(result.pitch);
       setEpk(result.epk);
       setPitchTab("ja");
@@ -1236,9 +1297,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const generatePitch = () => {
     const lnk = {...links, songLink: getSongLink()};
     const rep = targets[0] || {name:"Curator",type:"blog",platform:"Music Platform"};
-    const generated = PE.generate(artist, rep, pitchStyle, lnk, user.name, followers);
+    const pitchArtist = pitchSongTitle ? { ...artist, songTitle: pitchSongTitle } : artist;
+    const generated = PE.generate(pitchArtist, rep, pitchStyle, lnk, user.name, followers);
     setPitchText(generated);
-    setEpk(PE.epk(artist, lnk, followers));
+    setEpk(PE.epk(pitchArtist, lnk, followers));
     setPitchJa("");
     setPitchTab("ja");
     setStep(2);
@@ -1376,6 +1438,19 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         <label style={{fontSize:"0.72rem",color:"#4d7c0f",fontWeight:700}}>🎵 ピッチ楽曲URL（キュレーターに聴いてもらう曲）</label>
         <div style={{fontSize:"0.6rem",color:"#65a30d",marginBottom:4}}>Spotify, YouTube, SoundCloud等のURLを入力 — ピッチメールに自動挿入されます</div>
         <input style={{...css.input,border:"1px solid #bef264",background:"#fefce8"}} value={artist.songLink||""} onChange={e=>setF("songLink",e.target.value)} placeholder="https://open.spotify.com/track/... or https://youtube.com/watch?v=..."/>
+        {/* Pitch song title — auto-populated from oEmbed, editable */}
+        <div style={{marginTop:6}}>
+          <label style={{fontSize:"0.62rem",color:"#4d7c0f",fontWeight:600,display:"flex",alignItems:"center",gap:5}}>
+            🎵 ピッチ対象曲名
+            {pitchSongTitleAuto && <span style={{fontWeight:400,color:"#94a3b8",fontSize:"0.58rem"}}>URLから自動取得</span>}
+          </label>
+          <input
+            style={{...css.input,border:"1px solid #bef264",background:"#fefce8",marginTop:2}}
+            value={pitchSongTitle}
+            onChange={e=>{setPitchSongTitle(e.target.value);setPitchSongTitleAuto(false);}}
+            placeholder={artist.songTitle ? `${artist.songTitle}（代表曲）` : "ピッチする曲名を入力"}
+          />
+        </div>
         {/* Audio features analysis status */}
         {trackAnalysisStatus === 'loading' && (
           <div style={{marginTop:6,display:"flex",alignItems:"center",gap:6,fontSize:"0.68rem",color:"#64748b"}}>

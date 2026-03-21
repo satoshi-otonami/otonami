@@ -517,15 +517,25 @@ export default function HomePage() {
             </div>
           </AnimatedSection>
 
-          {/* Pull quote */}
-          <AnimatedSection delay={200}>
-            <div style={{ maxWidth: 680, margin: '0 auto', borderLeft: `3px solid ${D.accent}`, paddingLeft: 28 }}>
-              <p style={{ fontFamily: D.fHead, fontStyle: 'italic', fontSize: 20, color: D.text, lineHeight: 1.6, marginBottom: 12 }}>
-                {t.trust.quote}
-              </p>
-              <p style={{ fontSize: 13, color: D.textMuted }}>{t.trust.quoteBy}</p>
-            </div>
-          </AnimatedSection>
+          {/* Pull quote + photo */}
+          <div className="two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+            <AnimatedSection delay={200}>
+              <div style={{ borderLeft: `3px solid ${D.accent}`, paddingLeft: 28 }}>
+                <p style={{ fontFamily: D.fHead, fontStyle: 'italic', fontSize: 20, color: D.text, lineHeight: 1.6, marginBottom: 12 }}>
+                  {t.trust.quote}
+                </p>
+                <p style={{ fontSize: 13, color: D.textMuted }}>{t.trust.quoteBy}</p>
+              </div>
+            </AnimatedSection>
+
+            <AnimatedSection delay={300}>
+              <img
+                src="/images/sxsw-trumpet.jpg"
+                alt="SXSW Performance"
+                style={{ width: '100%', height: 320, objectFit: 'cover', borderRadius: 16, display: 'block' }}
+              />
+            </AnimatedSection>
+          </div>
         </div>
       </section>
 
@@ -565,13 +575,20 @@ export default function HomePage() {
         <div style={wrap}>
           <div className="two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
             <AnimatedSection delay={120}>
-              <div style={{ background: D.surfaceAlt, border: `1px solid ${D.border}`, borderRadius: 16, padding: '32px 28px' }}>
-                {t.artists.features.map((f, i) => (
-                  <div key={i} className="feature-row">
-                    <span style={{ color: D.accent, fontSize: 18, flexShrink: 0, marginTop: 1 }}>✦</span>
-                    <span style={{ fontSize: 15, color: D.textSec, lineHeight: 1.65 }}>{f}</span>
-                  </div>
-                ))}
+              <div>
+                <img
+                  src="/images/outdoor-live.jpg"
+                  alt="Live Performance"
+                  style={{ width: '100%', height: 260, objectFit: 'cover', borderRadius: 16, display: 'block', marginBottom: 20 }}
+                />
+                <div style={{ background: D.surfaceAlt, border: `1px solid ${D.border}`, borderRadius: 16, padding: '28px 24px' }}>
+                  {t.artists.features.map((f, i) => (
+                    <div key={i} className="feature-row">
+                      <span style={{ color: D.accent, fontSize: 18, flexShrink: 0, marginTop: 1 }}>✦</span>
+                      <span style={{ fontSize: 15, color: D.textSec, lineHeight: 1.65 }}>{f}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </AnimatedSection>
 

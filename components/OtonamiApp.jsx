@@ -5,6 +5,7 @@ import { initSession, loadCurators, loadPitches, loadCredits,
 
 import API from '@/lib/api-client';
 import { analyzeTrack } from '@/lib/api-track';
+import { describeTrackCharacteristics } from '@/lib/track-description';
 import { getMatchLabel, rankCurators, calculateMatchScore } from '@/lib/match-score';
 
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -1077,6 +1078,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const [aiLoading, setAiLoading] = useState(false);
   const [fetchingFollowers, setFetchingFollowers] = useState(false);
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
+  const [trackAnalysisStatus, setTrackAnalysisStatus] = useState('idle'); // 'idle'|'loading'|'done'|'error'
   const [customGenre, setCustomGenre] = useState("");
   const parseGenreTags = (str) => (str||'').split(',').map(s=>s.trim()).filter(Boolean);
   const toggleGenreTag = (tag) => {
@@ -1091,14 +1093,21 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     setCustomGenre('');
   };
 
-  const analyzeTrackFn = async (songName, artistName) => {
-    if (!songName?.trim()) return;
+  const analyzeTrackFn = async (songName, artistName, trackUrl) => {
+    if (!songName?.trim() && !trackUrl?.trim()) return;
     setAnalyzeLoading(true);
+    setTrackAnalysisStatus('loading');
     try {
-      const result = await analyzeTrack({ songName: songName.trim(), artistName: (artistName || '').trim() });
+      const result = await analyzeTrack({
+        ...(trackUrl ? { trackUrl: trackUrl.trim() } : {}),
+        songName: (songName || '').trim(),
+        artistName: (artistName || '').trim(),
+      });
       if (setTrackData) setTrackData({ ...result, genre: artist.genre, mood: artist.mood });
+      setTrackAnalysisStatus('done');
     } catch (e) {
       console.warn('Track analyze:', e.message);
+      setTrackAnalysisStatus('error');
     }
     setAnalyzeLoading(false);
   };
@@ -1109,7 +1118,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     const song = artist.songTitle?.trim();
     const name = (artist.nameEn || artist.name)?.trim();
     if (!song || !name) return;
-    const key = song + '|' + name;
+    const key = 'name|' + song + '|' + name;
     if (key === lastAnalyzedKeyRef.current) return;
     const timer = setTimeout(() => {
       lastAnalyzedKeyRef.current = key;
@@ -1117,6 +1126,19 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     }, 1500);
     return () => clearTimeout(timer);
   }, [artist.songTitle, artist.nameEn, artist.name]);
+
+  // Auto-analyze when a track URL is entered (1.5s debounce)
+  useEffect(() => {
+    const url = artist.songLink?.trim();
+    if (!url || !/spotify\.com\/track\/|youtube\.com\/|youtu\.be\/|soundcloud\.com\//.test(url)) return;
+    const key = 'url|' + url;
+    if (key === lastAnalyzedKeyRef.current) return;
+    const timer = setTimeout(() => {
+      lastAnalyzedKeyRef.current = key;
+      analyzeTrackFn(artist.songTitle, artist.nameEn || artist.name, url);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [artist.songLink]);
 
   // ── Auto-fetch followers from API ──
   const autoFetchFollowers = async () => {
@@ -1345,28 +1367,50 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         <label style={{fontSize:"0.72rem",color:"#4d7c0f",fontWeight:700}}>🎵 ピッチ楽曲URL（キュレーターに聴いてもらう曲）</label>
         <div style={{fontSize:"0.6rem",color:"#65a30d",marginBottom:4}}>Spotify, YouTube, SoundCloud等のURLを入力 — ピッチメールに自動挿入されます</div>
         <input style={{...css.input,border:"1px solid #bef264",background:"#fefce8"}} value={artist.songLink||""} onChange={e=>setF("songLink",e.target.value)} placeholder="https://open.spotify.com/track/... or https://youtube.com/watch?v=..."/>
-        {/* Auto-analysis status — triggered by songTitle + artistName inputs above */}
-        {analyzeLoading && (
-          <div style={{marginTop:4,fontSize:"0.62rem",color:"#0ea5e9"}}>🔍 SoundNet分析中…</div>
+        {/* Audio features analysis status */}
+        {trackAnalysisStatus === 'loading' && (
+          <div style={{marginTop:6,display:"flex",alignItems:"center",gap:6,fontSize:"0.68rem",color:"#64748b"}}>
+            <span style={{display:"inline-block",width:12,height:12,border:"2px solid #cbd5e1",borderTopColor:"#0ea5e9",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
+            🔍 楽曲を分析中...
+          </div>
         )}
-        {!analyzeLoading && trackData?.audioFeatures && (
-          <div style={{marginTop:6,padding:"0.5rem",background:"#fff",borderRadius:8,border:"1px solid #bef264"}}>
-            <div style={{fontSize:"0.62rem",fontWeight:700,color:"#4d7c0f",marginBottom:4}}>
-              ✅ SoundNet分析済み: {trackData.songName && <strong>{trackData.songName}</strong>}{trackData.artistName && <span style={{color:"#64748b"}}> — {trackData.artistName}</span>}
-            </div>
-            {(() => {
-              const af = trackData.audioFeatures;
-              return <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"3px 12px"}}>
-                {[["Energy",af.energy],["Danceability",af.danceability],["Acousticness",af.acousticness],["Valence",af.valence],["Instrumental",af.instrumentalness]].map(([label,val])=>val!=null&&(
-                  <div key={label} style={{display:"flex",alignItems:"center",gap:4}}>
-                    <span style={{fontSize:"0.58rem",color:"#64748b",width:70,flexShrink:0}}>{label}</span>
-                    <div style={{flex:1,height:4,borderRadius:2,background:"#e2e8f0"}}><div style={{height:4,borderRadius:2,background:"linear-gradient(90deg,#0ea5e9,#38bdf8)",width:(val*100)+"%"}}/></div>
-                    <span style={{fontSize:"0.58rem",color:"#4d7c0f",width:26,textAlign:"right"}}>{Math.round(val*100)}%</span>
-                  </div>
+        {trackAnalysisStatus === 'done' && trackData?.audioFeatures && (() => {
+          const desc = describeTrackCharacteristics(trackData.audioFeatures);
+          const pillTags = [];
+          const af = trackData.audioFeatures;
+          if (af.energy != null) pillTags.push({ icon: '⚡', label: af.energy >= 0.67 ? 'High Energy' : af.energy >= 0.33 ? 'Mid Energy' : 'Low Energy' });
+          if (af.danceability >= 0.5) pillTags.push({ icon: '💃', label: 'Danceable' });
+          if (af.acousticness >= 0.5) pillTags.push({ icon: '🎹', label: 'Acoustic' });
+          if (af.instrumentalness >= 0.5) pillTags.push({ icon: '🎸', label: 'Instrumental' });
+          if (af.valence != null) pillTags.push({ icon: af.valence >= 0.6 ? '☀️' : af.valence >= 0.3 ? '🌤' : '🌧', label: af.valence >= 0.6 ? 'Positive' : af.valence >= 0.3 ? 'Balanced' : 'Dark' });
+          if (af.tempo != null) pillTags.push({ icon: '⏱', label: Math.round(af.tempo) + ' BPM' });
+          return (
+            <div style={{marginTop:6,padding:"0.5rem 0.6rem",background:"#f0fdf4",borderRadius:8,border:"1px solid #bbf7d0"}}>
+              <div style={{fontSize:"0.62rem",fontWeight:700,color:"#15803d",marginBottom:5}}>
+                ✅ 楽曲分析完了
+                {trackData.songName && <span style={{fontWeight:400,color:"#64748b",marginLeft:6}}>{trackData.songName}{trackData.artistName ? ` — ${trackData.artistName}` : ''}</span>}
+              </div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                {pillTags.map(({icon,label}) => (
+                  <span key={label} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"0.18rem 0.55rem",background:"#fff",border:"1px solid #d1fae5",borderRadius:20,fontSize:"0.65rem",color:"#15803d",fontWeight:500}}>
+                    {icon} {label}
+                  </span>
                 ))}
-                {af.tempo!=null && <div style={{display:"flex",alignItems:"center",gap:4}}><span style={{fontSize:"0.58rem",color:"#64748b",width:70,flexShrink:0}}>Tempo</span><span style={{fontSize:"0.58rem",color:"#4d7c0f",fontWeight:600}}>{Math.round(af.tempo)} BPM</span></div>}
-              </div>;
-            })()}
+              </div>
+              {desc.characteristics && (
+                <div style={{marginTop:4,fontSize:"0.6rem",color:"#64748b",fontStyle:"italic"}}>ピッチ生成に使用: {desc.characteristics}</div>
+              )}
+            </div>
+          );
+        })()}
+        {trackAnalysisStatus === 'done' && !trackData?.audioFeatures && (
+          <div style={{marginTop:6,fontSize:"0.62rem",color:"#0284c7",background:"#f0f9ff",borderRadius:6,padding:"0.35rem 0.5rem",border:"1px solid #bae6fd"}}>
+            ℹ️ 楽曲分析データなし — ジャンル情報でピッチを生成します
+          </div>
+        )}
+        {trackAnalysisStatus === 'error' && (
+          <div style={{marginTop:6,fontSize:"0.62rem",color:"#0284c7",background:"#f0f9ff",borderRadius:6,padding:"0.35rem 0.5rem",border:"1px solid #bae6fd"}}>
+            ℹ️ 楽曲分析データなし — ジャンル情報でピッチを生成します
           </div>
         )}
         {/* Embed preview so artist can confirm correct track */}

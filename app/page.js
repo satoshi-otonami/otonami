@@ -15,13 +15,13 @@ const COPY = {
     hero: {
       tag: 'AI-POWERED MUSIC PITCH PLATFORM',
       h1: ["Connect Japanese", "indie artists with", "the world's curators"],
-      sub: 'AI-matched pitches. Real music industry connections.\nTrusted by 70+ independent labels.',
+      sub: 'AI-matched pitches. Real music industry connections.\nBuilt from the heart of Japan\'s independent music scene.',
       ctaPrimary: 'Start Pitching →',
       ctaGhost: 'Join as Curator',
     },
     stats: [
       { n: '3,449', l: 'Curators & Pros' },
-      { n: '70+',   l: 'Japanese Labels' },
+      { n: '70+',   l: 'Labels in Network' },
       { n: '11×',   l: 'SXSW Consecutive' },
       { n: '6',     l: 'Countries' },
     ],
@@ -36,9 +36,9 @@ const COPY = {
     },
     trust: {
       label: 'TRUSTED BY',
-      orgs: ['ILCJ — 70+ Independent Labels', 'SXSW — 11 Consecutive Years', 'Blue Note Tokyo'],
-      quote: '"OTONAMI is the most efficient tool for bringing Japanese indie music to the world."',
-      quoteBy: '— ILCJ Representative',
+      orgs: ['Japan Independent Music Scene', 'SXSW — 11 Consecutive Years', 'Blue Note Tokyo'],
+      quote: '"Built by musicians, for musicians — bridging the gap between Japanese indie artists and the global music community."',
+      quoteBy: '— Music Industry Professional',
     },
     curators: {
       label: 'FOR CURATORS',
@@ -66,7 +66,7 @@ const COPY = {
     },
     cta: {
       title: 'Ready to reach the world?',
-      sub: 'Join 70+ Japanese labels already using OTONAMI',
+      sub: 'Join Japanese labels and independent artists already using OTONAMI',
       btn: 'Start Your First Pitch →',
     },
     footer: {
@@ -74,10 +74,9 @@ const COPY = {
       links: [
         { label: 'For Curators', href: '/curator' },
         { label: 'For Artists',  href: '/studio' },
-        { label: 'About ILCJ',   href: 'https://ilcj.jp' },
         { label: 'Contact',      href: 'mailto:info@otonami.io' },
       ],
-      copy: '© 2025 TYCompany LLC / ILCJ. All rights reserved.',
+      copy: '© 2025 TYCompany LLC. All rights reserved.',
       email: 'info@otonami.io',
     },
   },
@@ -89,13 +88,13 @@ const COPY = {
     hero: {
       tag: 'AIパワード・ミュージックピッチプラットフォーム',
       h1: ['日本のインディー音楽を、', '世界のキュレーターへ', 'つなぐ'],
-      sub: 'AIマッチングピッチ。リアルな音楽業界コネクション。\n70以上のインディーレーベルに信頼されています。',
+      sub: 'AIマッチングピッチ。リアルな音楽業界コネクション。\n日本のインディーミュージックシーンから生まれたプラットフォーム。',
       ctaPrimary: 'ピッチを始める →',
       ctaGhost: 'キュレーターとして参加',
     },
     stats: [
       { n: '3,449', l: 'Curators & Pros' },
-      { n: '70+',   l: '加盟レーベル' },
+      { n: '70+',   l: 'ネットワーク内レーベル' },
       { n: '11回',  l: 'SXSW 連続出演' },
       { n: '6',     l: '対応国' },
     ],
@@ -110,9 +109,9 @@ const COPY = {
     },
     trust: {
       label: 'TRUSTED BY',
-      orgs: ['ILCJ — 70以上のインディーレーベル', 'SXSW — 11年連続', 'ブルーノート東京'],
-      quote: '"OTONAMIは日本のインディー音楽を世界に届ける最も効率的なツールです"',
-      quoteBy: '— ILCJ 理事',
+      orgs: ['日本のインディーミュージックシーン', 'SXSW — 11年連続', 'ブルーノート東京'],
+      quote: '"ミュージシャンが作り、ミュージシャンのために — 日本のインディーアーティストと世界の音楽コミュニティをつなぐプラットフォーム。"',
+      quoteBy: '— 音楽業界プロフェッショナル',
     },
     curators: {
       label: 'FOR CURATORS',
@@ -140,7 +139,7 @@ const COPY = {
     },
     cta: {
       title: '世界へ届ける準備はできていますか？',
-      sub: 'すでに70以上の日本のレーベルが利用しています',
+      sub: 'すでに多くの日本のレーベルやアーティストが利用しています',
       btn: '最初のピッチを始める →',
     },
     footer: {
@@ -148,10 +147,9 @@ const COPY = {
       links: [
         { label: 'キュレーター向け', href: '/curator' },
         { label: 'アーティスト向け', href: '/studio' },
-        { label: 'ILCJについて',     href: 'https://ilcj.jp' },
         { label: 'お問い合わせ',     href: 'mailto:info@otonami.io' },
       ],
-      copy: '© 2025 TYCompany LLC / ILCJ. All rights reserved.',
+      copy: '© 2025 TYCompany LLC. All rights reserved.',
       email: 'info@otonami.io',
     },
   },
@@ -162,6 +160,53 @@ const COPY = {
 ───────────────────────────────────────── */
 const wrap  = { maxWidth: 1200, margin: '0 auto', padding: '0 24px' };
 const label = { fontSize: 11, fontWeight: 600, letterSpacing: '3px', color: D.accent, textTransform: 'uppercase', marginBottom: 20 };
+
+/* Gold gradient divider */
+function Divider() {
+  return (
+    <div style={{
+      height: 1,
+      background: `linear-gradient(90deg, transparent, ${D.accent}55, ${D.accent}99, ${D.accent}55, transparent)`,
+      margin: 0,
+    }} />
+  );
+}
+
+/* SVG icons for How It Works cards */
+const WaveformIcon = () => (
+  <svg width="32" height="24" viewBox="0 0 32 24" fill="none" style={{ marginBottom: 16, opacity: 0.85 }}>
+    <rect x="0"  y="10" width="3" height="4"  rx="1.5" fill="currentColor"/>
+    <rect x="5"  y="6"  width="3" height="12" rx="1.5" fill="currentColor"/>
+    <rect x="10" y="2"  width="3" height="20" rx="1.5" fill="currentColor"/>
+    <rect x="15" y="5"  width="3" height="14" rx="1.5" fill="currentColor"/>
+    <rect x="20" y="8"  width="3" height="8"  rx="1.5" fill="currentColor"/>
+    <rect x="25" y="4"  width="3" height="16" rx="1.5" fill="currentColor"/>
+    <rect x="29" y="9"  width="3" height="6"  rx="1.5" fill="currentColor"/>
+  </svg>
+);
+
+const NetworkIcon = () => (
+  <svg width="36" height="32" viewBox="0 0 36 32" fill="none" style={{ marginBottom: 16, opacity: 0.85 }}>
+    <circle cx="18" cy="16" r="4" fill="currentColor"/>
+    <circle cx="4"  cy="6"  r="3" fill="currentColor" opacity="0.7"/>
+    <circle cx="32" cy="6"  r="3" fill="currentColor" opacity="0.7"/>
+    <circle cx="4"  cy="26" r="3" fill="currentColor" opacity="0.7"/>
+    <circle cx="32" cy="26" r="3" fill="currentColor" opacity="0.7"/>
+    <line x1="18" y1="12" x2="7"  y2="8"  stroke="currentColor" strokeWidth="1.5" opacity="0.4"/>
+    <line x1="18" y1="12" x2="29" y2="8"  stroke="currentColor" strokeWidth="1.5" opacity="0.4"/>
+    <line x1="18" y1="20" x2="7"  y2="24" stroke="currentColor" strokeWidth="1.5" opacity="0.4"/>
+    <line x1="18" y1="20" x2="29" y2="24" stroke="currentColor" strokeWidth="1.5" opacity="0.4"/>
+  </svg>
+);
+
+const PaperPlaneIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" style={{ marginBottom: 16, opacity: 0.85 }}>
+    <path d="M2 2L30 16L2 30L8 16L2 2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none"/>
+    <path d="M8 16H30" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const STEP_ICONS = [WaveformIcon, NetworkIcon, PaperPlaneIcon];
 
 /* ─────────────────────────────────────────
    Page component
@@ -277,6 +322,8 @@ export default function HomePage() {
         }
         .how-card:hover { border-color: ${D.accentBorder}; }
 
+        .how-card .step-icon { color: ${D.accent}; }
+
         /* ── Responsive ── */
         @media (max-width: 768px) {
           .nav-desktop-links { display: none !important; }
@@ -292,6 +339,7 @@ export default function HomePage() {
           .section-pad { padding: 72px 0 !important; }
           .footer-links { flex-direction: column !important; gap: 12px !important; }
           .lang-toggle { display: none !important; }
+          .two-col { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 480px) {
           .hero-h1 { font-size: 28px !important; }
@@ -375,7 +423,14 @@ export default function HomePage() {
       </header>
 
       {/* ─────────────────────────── Hero ─────────────────────────── */}
-      <section style={{ background: D.bg, paddingTop: 160, paddingBottom: 100 }}>
+      <section style={{
+        backgroundImage: `linear-gradient(rgba(26,26,26,0.72), rgba(26,26,26,0.96)), url('/images/hero-sxsw-crowd.jpg')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center 30%',
+        backgroundRepeat: 'no-repeat',
+        paddingTop: 160,
+        paddingBottom: 100,
+      }}>
         <div style={{ ...wrap, textAlign: 'center' }}>
 
           {/* Tag */}
@@ -413,6 +468,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      <Divider />
+
       {/* ─────────────────────────── How It Works ─────────────────────────── */}
       <section id="how-it-works" style={{ background: D.surface, padding: '100px 0' }} className="section-pad">
         <div style={wrap}>
@@ -424,18 +481,24 @@ export default function HomePage() {
           </AnimatedSection>
 
           <div className="how-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
-            {t.how.steps.map((step, i) => (
-              <AnimatedSection key={i} delay={i * 100}>
-                <div className="how-card" style={{ height: '100%' }}>
-                  <div style={{ fontFamily: D.fHead, fontSize: 42, color: D.accent, marginBottom: 20, lineHeight: 1, opacity: 0.9 }}>{step.num}</div>
-                  <h3 style={{ fontSize: 17, fontWeight: 600, color: D.text, marginBottom: 12 }}>{step.t}</h3>
-                  <p style={{ fontSize: 14, color: D.textSec, lineHeight: 1.7 }}>{step.d}</p>
-                </div>
-              </AnimatedSection>
-            ))}
+            {t.how.steps.map((step, i) => {
+              const Icon = STEP_ICONS[i];
+              return (
+                <AnimatedSection key={i} delay={i * 100}>
+                  <div className="how-card" style={{ height: '100%' }}>
+                    <div className="step-icon"><Icon /></div>
+                    <div style={{ fontFamily: D.fHead, fontSize: 42, color: D.accent, marginBottom: 16, lineHeight: 1, opacity: 0.9 }}>{step.num}</div>
+                    <h3 style={{ fontSize: 17, fontWeight: 600, color: D.text, marginBottom: 12 }}>{step.t}</h3>
+                    <p style={{ fontSize: 14, color: D.textSec, lineHeight: 1.7 }}>{step.d}</p>
+                  </div>
+                </AnimatedSection>
+              );
+            })}
           </div>
         </div>
       </section>
+
+      <Divider />
 
       {/* ─────────────────────────── Trust / Social Proof ─────────────────────────── */}
       <section style={{ background: D.bg, padding: '100px 0' }} className="section-pad">
@@ -466,10 +529,12 @@ export default function HomePage() {
         </div>
       </section>
 
+      <Divider />
+
       {/* ─────────────────────────── For Curators ─────────────────────────── */}
       <section style={{ background: D.surface, padding: '100px 0' }} className="section-pad">
         <div style={wrap}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+          <div className="two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
             <AnimatedSection>
               <div>
                 <div style={label}>{t.curators.label}</div>
@@ -493,10 +558,12 @@ export default function HomePage() {
         </div>
       </section>
 
+      <Divider />
+
       {/* ─────────────────────────── For Artists ─────────────────────────── */}
       <section style={{ background: D.bg, padding: '100px 0' }} className="section-pad">
         <div style={wrap}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+          <div className="two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
             <AnimatedSection delay={120}>
               <div style={{ background: D.surfaceAlt, border: `1px solid ${D.border}`, borderRadius: 16, padding: '32px 28px' }}>
                 {t.artists.features.map((f, i) => (
@@ -520,8 +587,18 @@ export default function HomePage() {
         </div>
       </section>
 
+      <Divider />
+
       {/* ─────────────────────────── CTA Banner ─────────────────────────── */}
-      <section style={{ background: D.surface, padding: '80px 0', borderTop: `1px solid ${D.border}`, borderBottom: `1px solid ${D.border}` }}>
+      <section style={{
+        backgroundImage: `linear-gradient(rgba(26,26,26,0.82), rgba(26,26,26,0.92)), url('/images/stage-performance.jpg')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center 40%',
+        backgroundRepeat: 'no-repeat',
+        padding: '80px 0',
+        borderTop: `1px solid ${D.border}`,
+        borderBottom: `1px solid ${D.border}`,
+      }}>
         <AnimatedSection>
           <div style={{ ...wrap, textAlign: 'center' }}>
             <h2 style={{ fontFamily: D.fHead, fontSize: 40, fontWeight: 500, color: D.text, marginBottom: 12 }}>{t.cta.title}</h2>

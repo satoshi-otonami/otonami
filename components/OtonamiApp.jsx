@@ -1162,18 +1162,22 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     return () => clearTimeout(timer);
   }, [artist.songTitle, artist.nameEn, artist.name, hasStreamingUrl]);
 
-  // Auto-analyze when a track URL is entered (1.5s debounce)
+  // Trigger analysis after pitchSongTitle is confirmed (oEmbed resolved or manually entered)
+  // This replaces the old URL-only trigger so we always send the correct song name to SoundNet
   useEffect(() => {
     const url = artist.songLink?.trim();
-    if (!url || !/spotify\.com\/track\/|youtube\.com\/|youtu\.be\/|soundcloud\.com\//.test(url)) return;
-    const key = 'url|' + url;
+    const song = pitchSongTitle?.trim();
+    if (!url || !song) return;
+    if (!/spotify\.com\/track\/|youtube\.com\/|youtu\.be\/|soundcloud\.com\//.test(url)) return;
+    const key = 'pitch|' + url + '|' + song;
     if (key === lastAnalyzedKeyRef.current) return;
+    const artistName = (artist.nameEn || artist.name)?.trim();
     const timer = setTimeout(() => {
       lastAnalyzedKeyRef.current = key;
-      analyzeTrackFn(artist.songTitle, artist.nameEn || artist.name, url);
-    }, 3000);
+      analyzeTrackFn(song, artistName, url);
+    }, 500); // Short — oEmbed already waited ~200ms before setting pitchSongTitle
     return () => clearTimeout(timer);
-  }, [artist.songLink]);
+  }, [pitchSongTitle, artist.songLink]);
 
   // Auto-fetch pitch song title from oEmbed when URL is entered (fast, no auth needed)
   useEffect(() => {
@@ -1472,7 +1476,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
             <div style={{marginTop:6,padding:"0.5rem 0.6rem",background:"#f0fdf4",borderRadius:8,border:"1px solid #bbf7d0"}}>
               <div style={{fontSize:"0.62rem",fontWeight:700,color:"#15803d",marginBottom:5}}>
                 ✅ 楽曲分析完了
-                {trackData.songName && <span style={{fontWeight:400,color:"#64748b",marginLeft:6}}>{trackData.songName}{trackData.artistName ? ` — ${trackData.artistName}` : ''}</span>}
+                {(pitchSongTitle || trackData.songName) && <span style={{fontWeight:400,color:"#64748b",marginLeft:6}}>{pitchSongTitle || trackData.songName}{trackData.artistName ? ` — ${trackData.artistName}` : ''}</span>}
               </div>
               <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
                 {pillTags.map(({icon,label}) => (

@@ -856,9 +856,11 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   const matchColor = (score) => score >= 85 ? "#16a34a" : score >= 70 ? "#2563eb" : score >= 50 ? "#0ea5e9" : score >= 30 ? "#d97706" : "#dc2626";
 
   return <div>
-    <div style={{marginBottom:"1rem"}}>
-      <h1 style={{fontSize:"1.4rem",fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6"}}>キュレーター</h1>
-      <p style={{color:"#c0bdb5",fontSize:"0.85rem",margin:"0.3rem 0 0"}}>{curators.length}人のキュレーター・プロ {selected.length > 0 && <span style={{color:"#c4956a",fontWeight:600}}>· {selected.length}人選択中</span>}</p>
+    <style>{`.curator-list-card { flex-direction: row !important; } @media (max-width: 480px) { .curator-list-card { flex-direction: column !important; } }`}</style>
+    <div style={{marginBottom:"1.2rem"}}>
+      <div style={{fontSize:"0.68rem",letterSpacing:"0.12em",color:"#c4956a",fontWeight:600,marginBottom:6,textTransform:"uppercase"}}>Curators</div>
+      <h1 style={{fontSize:"1.7rem",fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6",lineHeight:1.1}}>キュレーター</h1>
+      <p style={{color:"#7a7870",fontSize:"0.82rem",margin:"0.4rem 0 0"}}>{curators.length}人のキュレーター・プロ {selected.length > 0 && <span style={{color:"#c4956a",fontWeight:600}}>· {selected.length}人選択中</span>}</p>
     </div>
 
     {/* ── Track Analysis Section ── */}
@@ -918,40 +920,82 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
     </div>
 
     <div style={{display:"flex",gap:8,marginBottom:"1rem",flexWrap:"wrap"}}>
-      <input style={css.filterInput} placeholder="検索..." value={q} onChange={e=>setQ(e.target.value)}/>
-      <select style={css.filterSelect} value={genre} onChange={e=>setGenre(e.target.value)}><option value="">全ジャンル</option>{GENRES.map(g=><option key={g}>{g}</option>)}</select>
-      <select style={css.filterSelect} value={type} onChange={e=>setType(e.target.value)}><option value="">全タイプ</option>{CURATOR_TYPES.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>
+      <div style={{position:"relative",flex:"1 1 150px",minWidth:120}}>
+        <span style={{position:"absolute",left:"0.7rem",top:"50%",transform:"translateY(-50%)",fontSize:"0.85rem",pointerEvents:"none",color:"#7a7870"}}>🔍</span>
+        <input style={{...css.filterInput,flex:"unset",width:"100%",paddingLeft:"2rem",boxSizing:"border-box"}} placeholder="名前・プラットフォームで検索..." value={q} onChange={e=>setQ(e.target.value)}/>
+      </div>
+      <select style={{...css.filterSelect,flex:"1 1 120px"}} value={genre} onChange={e=>setGenre(e.target.value)}><option value="">全ジャンル</option>{GENRES.map(g=><option key={g}>{g}</option>)}</select>
+      <select style={{...css.filterSelect,flex:"1 1 120px"}} value={type} onChange={e=>setType(e.target.value)}><option value="">全タイプ</option>{CURATOR_TYPES.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>
     </div>
     {selected.length > 0 && <div style={{background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.4)",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600}}>{selected.length}人選択中 · 合計{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}cr (¥{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)*160})</span><div style={{display:"flex",gap:6}}><button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem"}}>🚀 ピッチ作成へ</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
-    <div style={{display:"flex",flexDirection:"column",gap:8}}>
-      {list.map(c => {
-        const on = selected.includes(c.id);
-        const ms = c.matchScore;
-        const ml = ms != null ? getMatchLabel(ms) : null;
-        return <div key={c.id} onClick={()=>toggle(c.id)} style={{background:on?"rgba(196,149,106,0.1)":"#2a2a2a",border:on?"1px solid rgba(196,149,106,0.4)":"1px solid rgba(255,255,255,0.06)",borderRadius:16,padding:"1rem 1.2rem",cursor:"pointer",transition:"all 0.12s"}}>
-          <div style={{display:"flex",alignItems:"center",gap:"0.75rem"}}>
-            <div style={{width:44,height:44,borderRadius:12,background:on?"linear-gradient(135deg,#c4956a,#e85d3a)":"#333333",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.2rem",flexShrink:0}}>{c.avatar}</div>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {(() => {
+        const avatarColors = [
+          {bg:'rgba(196,149,106,0.2)',text:'#c4956a'},
+          {bg:'rgba(232,93,58,0.15)',text:'#e85d3a'},
+          {bg:'rgba(74,222,128,0.12)',text:'#4ade80'},
+          {bg:'rgba(96,165,250,0.12)',text:'#60a5fa'},
+          {bg:'rgba(251,191,36,0.12)',text:'#fbbf24'},
+          {bg:'rgba(168,85,247,0.12)',text:'#a855f7'},
+        ];
+        const typeBadgeMap = {
+          blog:       {bg:'rgba(96,165,250,0.12)',text:'#60a5fa',label:'📝 Blog'},
+          playlist:   {bg:'rgba(74,222,128,0.12)',text:'#4ade80',label:'🎵 Playlist'},
+          radio:      {bg:'rgba(251,191,36,0.12)',text:'#fbbf24',label:'📻 Radio'},
+          label:      {bg:'rgba(168,85,247,0.12)',text:'#a855f7',label:'💿 Label'},
+          management: {bg:'rgba(232,93,58,0.12)',text:'#e85d3a',label:'🤝 Mgmt'},
+          publisher:  {bg:'rgba(96,165,250,0.12)',text:'#60a5fa',label:'📚 Publisher'},
+        };
+        const regionFlags = {'Japan':'🇯🇵','US':'🇺🇸','USA':'🇺🇸','UK':'🇬🇧','France':'🇫🇷','Germany':'🇩🇪','Australia':'🇦🇺','Global':'🌍'};
+        const msColor = (score) => score >= 85 ? '#4ade80' : score >= 70 ? '#60a5fa' : '#fbbf24';
+        const circumference = 113;
+        return list.map(c => {
+          const on = selected.includes(c.id);
+          const ms = c.matchScore;
+          const ml = ms != null ? getMatchLabel(ms) : null;
+          const colorIdx = c.name.charCodeAt(0) % avatarColors.length;
+          const av = avatarColors[colorIdx];
+          const initials = c.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+          const typeBadge = typeBadgeMap[c.type];
+          const flag = c.region ? (regionFlags[c.region] || null) : null;
+          return <div key={c.id} onClick={()=>toggle(c.id)} className="curator-list-card" style={{background:on?'rgba(196,149,106,0.1)':'#222222',border:on?'1px solid rgba(196,149,106,0.4)':'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:'20px',display:'flex',gap:16,alignItems:'flex-start',cursor:'pointer',transition:'all 0.2s ease'}}>
+            {/* Avatar */}
+            <div style={{width:48,height:48,borderRadius:'50%',background:on?'linear-gradient(135deg,#c4956a,#e85d3a)':av.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:600,color:on?'#fff':av.text,flexShrink:0,letterSpacing:'-0.5px'}}>{initials}</div>
+            {/* Info */}
             <div style={{flex:1,minWidth:0}}>
-              <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                <span style={{fontWeight:700,fontSize:"0.9rem",color:"#f0ede6"}}>{c.name}</span>
-                {c.badges?.map(b => <span key={b} style={{fontSize:"0.6rem",padding:"0.1rem 0.4rem",borderRadius:6,background:b==="verified"?"#dcfce7":"#eff6ff",color:b==="verified"?"#16a34a":"#2563eb"}}>{BADGES[b]}</span>)}
-                {ml && <span style={{fontSize:"0.62rem",padding:"0.15rem 0.5rem",borderRadius:8,background:"rgba(26,26,26,0.8)",color:matchColor(ms),fontWeight:700,border:"1px solid "+matchColor(ms)+"40"}}>{ml.emoji} {ms}%</span>}
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>
+                <span style={{fontSize:16,fontWeight:500,color:'#f0ede6'}}>{c.name}</span>
+                {flag && <span style={{fontSize:14}}>{flag}</span>}
+                {typeBadge && <span style={{padding:'3px 10px',borderRadius:20,fontSize:11,background:typeBadge.bg,color:typeBadge.text,fontWeight:500}}>{typeBadge.label}</span>}
+                {c.badges?.map(b => <span key={b} style={{fontSize:'0.6rem',padding:'0.1rem 0.4rem',borderRadius:6,background:b==='verified'?'#dcfce7':'#eff6ff',color:b==='verified'?'#16a34a':'#2563eb'}}>{BADGES[b]}</span>)}
               </div>
-              <div style={{fontSize:"0.75rem",color:"#c0bdb5"}}>{c.platform} · {c.audience>=1000?(c.audience/1000).toFixed(1)+"K":c.audience} · <span style={{color:"#f59e0b",fontWeight:600}}>{c.creditCost||2}cr</span></div>
-              {c.bio && <div style={{fontSize:"0.72rem",color:"#7a7870",marginTop:3}}>{c.bio.length>80?c.bio.substring(0,80)+"…":c.bio}</div>}
-              {ml && c.matchReasons?.length > 0 && <div style={{fontSize:"0.62rem",color:"#c4956a",marginTop:3}}>{c.matchReasons.slice(0,2).join(" · ")}</div>}
+              <div style={{fontSize:'0.75rem',color:'#7a7870',marginBottom:6}}>{c.platform}{c.audience ? ' · '+(c.audience>=1000?(c.audience/1000).toFixed(1)+'K':c.audience) : ''}</div>
+              {c.bio && <p style={{fontSize:13,color:'#7a7870',margin:'0 0 10px',lineHeight:1.4}}>{c.bio.length>80?c.bio.substring(0,80)+'…':c.bio}</p>}
+              {ml && c.matchReasons?.length > 0 && <div style={{fontSize:'0.62rem',color:'#c4956a',marginBottom:8}}>{c.matchReasons.slice(0,2).join(' · ')}</div>}
+              <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                {c.genres.slice(0,4).map(g => <span key={g} style={{fontSize:11,padding:'3px 10px',borderRadius:20,background:'rgba(196,149,106,0.08)',border:'1px solid rgba(196,149,106,0.15)',color:'#c4956a'}}>{g}</span>)}
+                {c.genres.length > 4 && <span style={{fontSize:'0.62rem',color:'#7a7870',alignSelf:'center'}}>+{c.genres.length-4}</span>}
+              </div>
             </div>
-            <div style={{display:"flex",gap:8,alignItems:"center",flexShrink:0}}>
-              {c.offers?.slice(0,2).map(o => <span key={o} style={{fontSize:"0.62rem",padding:"0.15rem 0.4rem",borderRadius:5,background:"rgba(196,149,106,0.08)",color:"#c4956a"}}>{o}</span>)}
-              {on && <div style={{width:24,height:24,borderRadius:"50%",background:"#c4956a",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.7rem",fontWeight:700}}>✓</div>}
+            {/* Right: match gauge + credits */}
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,flexShrink:0}}>
+              {ms != null ? (
+                <div style={{position:'relative',width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <svg width="44" height="44" style={{position:'absolute',transform:'rotate(-90deg)'}}>
+                    <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3"/>
+                    <circle cx="22" cy="22" r="18" fill="none" stroke={msColor(ms)} strokeWidth="3" strokeDasharray={`${(ms/100)*circumference} ${circumference}`} strokeLinecap="round"/>
+                  </svg>
+                  <span style={{fontSize:12,fontWeight:600,color:msColor(ms)}}>{ms}%</span>
+                </div>
+              ) : (
+                <div style={{width:44,height:44}}/>
+              )}
+              <span style={{fontSize:12,color:'#c4956a',fontWeight:600}}>{c.creditCost||2} cr</span>
+              {on && <div style={{width:22,height:22,borderRadius:'50%',background:'#c4956a',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700}}>✓</div>}
             </div>
-          </div>
-          <div style={{display:"flex",gap:4,marginTop:6,flexWrap:"wrap"}}>
-            {c.genres.slice(0,6).map(g => <span key={g} style={{fontSize:"0.62rem",padding:"0.1rem 0.4rem",borderRadius:5,background:"#222222",color:"#c0bdb5"}}>{g}</span>)}
-            {c.genres.length > 6 && <span style={{fontSize:"0.62rem",color:"#7a7870"}}>+{c.genres.length-6}</span>}
-          </div>
-        </div>;
-      })}
+          </div>;
+        });
+      })()}
     </div>
     {/* Floating action bar when curators selected */}
     {selected.length > 0 && <div style={{position:"sticky",bottom:0,left:0,right:0,background:"linear-gradient(0deg,#1a1a1a 70%,transparent)",padding:"1rem 0 0.5rem",marginTop:"0.5rem"}}>

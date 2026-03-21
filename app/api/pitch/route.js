@@ -1,11 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
+import { describeTrackCharacteristics } from '@/lib/track-description';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder' });
 
 export async function POST(request) {
   try {
-    const { artist, curator, style, links, followers, userName } = await request.json();
+    const { artist, curator, style, links, followers, userName, trackFeatures } = await request.json();
 
     if (!artist?.name || !artist?.genre) {
       return NextResponse.json({ error: 'Artist name and genre required' }, { status: 400 });
@@ -36,6 +37,16 @@ export async function POST(request) {
     if (links?.twitter) linkLines.push(`X: ${links.twitter}`);
     if (links?.website) linkLines.push(`Website: ${links.website}`);
 
+    // Build audio features section if data is available
+    const trackDesc = describeTrackCharacteristics(trackFeatures);
+    const audioSection = trackDesc.characteristics ? `
+═══ TRACK ANALYSIS DATA ═══
+Musical characteristics: ${trackDesc.characteristics}
+${trackDesc.genreText ? trackDesc.genreText : ''}
+${trackDesc.moodText ? trackDesc.moodText : ''}
+Use these characteristics naturally in the pitch — weave them into vivid sound descriptions rather than listing them as data points.
+` : '';
+
     const prompt = `You are an expert music publicist who has successfully pitched hundreds of Japanese artists to international curators, playlist editors, bloggers, and radio hosts. You understand what makes curators open emails, click play, and add tracks.
 
 ═══ TASK ═══
@@ -52,6 +63,7 @@ Influences/Similar: ${artist.influences || 'N/A'}
 Achievements: ${artist.achievements || 'None listed'}
 ${socialLines.length > 0 ? `Social Proof: ${socialLines.join(', ')}` : ''}
 ${linkLines.length > 0 ? `Links:\n${linkLines.join('\n')}` : ''}
+${audioSection}
 
 ═══ TARGET CURATOR ═══
 ${curatorInfo}
@@ -63,7 +75,7 @@ ${style === 'casual' ? 'Warm, personal tone — like messaging a fellow music fa
 1. Subject line: Compelling, under 60 characters, include genre + "from Japan"
 2. Greeting: "Hi ${curator?.name || '[Curator Name]'},"
 3. Hook: ${style === 'storytelling' ? 'Vivid sensory description of the sound' : style === 'casual' ? 'Personal connection to curator\'s work' : 'Strongest credential or unique angle'}
-4. Body: Describe the SOUND with vivid language. Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}
+4. Body: Describe the SOUND with vivid language. Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}${trackDesc.characteristics ? ` Use the track analysis data above to give specific, concrete sound descriptions (e.g. energy level, tempo feel, mood).` : ''}
 5. Listen link: Use the "Listen (Primary)" URL from the Links section below. Write it as "Listen: <url>" or "Stream: <url>". If no primary link, use the first available streaming link.
 6. CTA: Clear ask appropriate for curator type (${curator?.type || 'blog'})
 7. Links section: List all available platform links with follower counts

@@ -1187,7 +1187,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     try {
       const lnk = {...links, songLink: getSongLink()};
       const rep = targets[0] || {name:"Curator",type:"blog",platform:"Music Platform"};
-      const result = await API.generatePitch(artist, rep, pitchStyle, lnk, followers, user.name);
+      const result = await API.generatePitch(artist, rep, pitchStyle, lnk, followers, user.name, trackData?.audioFeatures);
       setPitchText(result.pitch);
       setEpk(result.epk);
       setPitchTab("ja");

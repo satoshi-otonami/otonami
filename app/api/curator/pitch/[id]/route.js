@@ -148,25 +148,6 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
   }
 
-  // キュレーターが初めてピッチ詳細を開いた時にopened_atを記録
-  if (!data.opened_at) {
-    const now = new Date().toISOString();
-    const { error: openError } = await db
-      .from('pitches')
-      .update({
-        opened_at: now,
-        status: data.status === 'sent' ? 'opened' : data.status,
-      })
-      .eq('id', pitchId);
-    if (openError) {
-      console.error(`[pitch-detail] opened_at update failed for pitch ${pitchId}:`, openError.message);
-    } else {
-      data.opened_at = now;
-      if (data.status === 'sent') data.status = 'opened';
-      console.log(`[pitch-detail] First view recorded for pitch ${pitchId}`);
-    }
-  }
-
   return NextResponse.json({ pitch: data });
 }
 
@@ -176,33 +157,11 @@ export async function PATCH(request, { params }) {
   if (!curator) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json();
-  const { action, status, feedback_message, placement_platform, placement_url, placement_date } = body;
+  const { status, feedback_message, placement_platform, placement_url, placement_date } = body;
 
   const db = getServiceSupabase();
   const pitchId = params.id;
   const now = new Date().toISOString();
-
-  // 楽曲試聴記録（初回のみ）
-  if (action === 'listen') {
-    const { data: current } = await db
-      .from('pitches')
-      .select('listened_at, status')
-      .eq('id', pitchId)
-      .single();
-    if (current && !current.listened_at) {
-      const listenUpdates = {
-        listened_at: now,
-        status: ['sent', 'opened'].includes(current.status) ? 'listened' : current.status,
-      };
-      const { error: listenError } = await db.from('pitches').update(listenUpdates).eq('id', pitchId);
-      if (listenError) {
-        console.error(`[pitch-detail] listened_at update failed for pitch ${pitchId}:`, listenError.message);
-      } else {
-        console.log(`[pitch-detail] Listen recorded for pitch ${pitchId}`);
-      }
-    }
-    return NextResponse.json({ success: true });
-  }
 
   if (!['accepted', 'declined', 'feedback', 'sent'].includes(status)) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });

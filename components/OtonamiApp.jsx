@@ -1902,13 +1902,12 @@ function PitchDetailModal({pitch, curators, savePitches, allPitches, onClose, no
       {/* Body */}
       <div style={{flex:1,overflowY:'auto',padding:'1.2rem 1.4rem'}}>
         {activeTab==='feedback' && <div>
-          {pitch.feedback ? <>
+          {pitch.feedbackMessage ? <>
             <div style={{fontWeight:700,fontSize:'0.82rem',marginBottom:8,color:'#334155'}}>{pitch.curatorName}からのフィードバック</div>
-            <div style={{background:'#f8fafc',borderRadius:12,padding:'1rem',fontSize:'0.85rem',lineHeight:1.7,color:'#475569',marginBottom:10}}>{pitch.feedback}</div>
-            {pitch.rating>0 && <div style={{fontSize:'0.85rem',color:'#f59e0b',marginBottom:10}}>{"★".repeat(pitch.rating)}{"☆".repeat(5-pitch.rating)}</div>}
-            {pitch.actionType && <div style={{background:'#ecfdf5',borderRadius:10,padding:'0.8rem',border:'1px solid #bbf7d0',fontSize:'0.82rem',color:'#16a34a',fontWeight:600}}>
-              {ACTION_TYPES.find(a=>a.id===pitch.actionType)?.icon} {ACTION_TYPES.find(a=>a.id===pitch.actionType)?.label}
-              {pitch.actionNote && <div style={{fontWeight:400,color:'#15803d',marginTop:4}}>{pitch.actionNote}</div>}
+            <div style={{background:'#f8fafc',borderRadius:12,padding:'1rem',fontSize:'0.85rem',lineHeight:1.7,color:'#475569',marginBottom:10}}>{pitch.feedbackMessage}</div>
+            {pitch.placementUrl && <div style={{background:'#ecfdf5',borderRadius:10,padding:'0.8rem',border:'1px solid #bbf7d0',fontSize:'0.82rem',color:'#16a34a',marginBottom:8}}>
+              <div style={{fontWeight:700,marginBottom:4}}>🎉 掲載済み{pitch.placementPlatform ? ` — ${pitch.placementPlatform}` : ''}</div>
+              <a href={pitch.placementUrl} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb',fontSize:'0.78rem',wordBreak:'break-all'}}>{pitch.placementUrl}</a>
             </div>}
           </> : <div style={{textAlign:'center',padding:'2.5rem',color:'#94a3b8',fontSize:'0.85rem'}}>まだフィードバックがありません<br/>キュレーターのレビュー待ちです</div>}
         </div>}
@@ -1986,33 +1985,36 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
   };
   const detailPitch = detailPitchId ? (allPitches||pitches).find(p=>p.id===detailPitchId) : null;
   const statusMap = {
-    sent:    {label:"📨 Sent",       color:"#94a3b8",bg:"#f8fafc",  icon:"📨",step:1},
-    opened:  {label:"📬 Opened",     color:"#0ea5e9",bg:"#f0f9ff",  icon:"📬",step:2},
-    listened:{label:"🎧 Listened",   color:"#22c55e",bg:"#f0fdf4",  icon:"🎧",step:3},
-    feedback:{label:"💬 Feedback",   color:"#10b981",bg:"#d1fae5",  icon:"💬",step:4},
-    accepted:{label:"🎉 Accepted",   color:"#059669",bg:"#ecfdf5",  icon:"🎉",step:5},
-    declined:{label:"✕ Declined",    color:"#ef4444",bg:"#fef2f2",  icon:"✕", step:5},
-    expired: {label:"⏰ Expired",    color:"#f59e0b",bg:"#fffbeb",  icon:"⏰",step:0},
+    sent:     {label:"📨 Sent",      color:"#94a3b8",bg:"#f8fafc", icon:"📨"},
+    opened:   {label:"📨 Sent",      color:"#94a3b8",bg:"#f8fafc", icon:"📨"},
+    listened: {label:"📨 Sent",      color:"#94a3b8",bg:"#f8fafc", icon:"📨"},
+    feedback: {label:"💬 Feedback",  color:"#10b981",bg:"#d1fae5", icon:"💬"},
+    accepted: {label:"✅ Interested",color:"#059669",bg:"#ecfdf5", icon:"✅"},
+    interested:{label:"✅ Interested",color:"#059669",bg:"#ecfdf5",icon:"✅"},
+    declined: {label:"❌ Declined",  color:"#ef4444",bg:"#fef2f2", icon:"❌"},
+    expired:  {label:"⏰ Expired",   color:"#f59e0b",bg:"#fffbeb", icon:"⏰"},
   };
-  const steps = ["送信","開封","試聴","FB","結果"];
+  const steps = [
+    { label: '送信', key: 'sent' },
+    { label: 'FB',   key: 'feedback' },
+    { label: '結果', key: 'result' },
+  ];
 
-  // Per-bar color: each bar only colored if its own timestamp/condition is met
+  function getReachedStep(pitch) {
+    if (['interested', 'accepted', 'declined'].includes(pitch.status)) return 3;
+    if (pitch.status === 'feedback') return 2;
+    return 1; // sent, opened, listened → 送信済み
+  }
+
   function getBarColor(pitch, barIndex) {
-    // Bar 4 (結果): only based on final status
-    if (barIndex === 4) {
-      if (pitch.status === 'accepted' || pitch.status === 'interested') return '#10b981';
+    // Bar 2 (結果): color depends on final decision
+    if (barIndex === 2) {
+      if (['accepted', 'interested'].includes(pitch.status)) return '#10b981';
       if (pitch.status === 'declined') return '#ef4444';
       return '#e2e8f0';
     }
-    // Bar 0 (送信): always reached if pitch exists
-    if (barIndex === 0) return 'linear-gradient(90deg,#0ea5e9,#38bdf8)';
-    // Bar 1 (開封): only if openedAt timestamp is set
-    if (barIndex === 1) return pitch.openedAt ? 'linear-gradient(90deg,#0ea5e9,#38bdf8)' : '#e2e8f0';
-    // Bar 2 (試聴): only if listenedAt timestamp is set
-    if (barIndex === 2) return pitch.listenedAt ? 'linear-gradient(90deg,#0ea5e9,#38bdf8)' : '#e2e8f0';
-    // Bar 3 (FB): only if feedbackAt timestamp is set or status is 'feedback'
-    if (barIndex === 3) return (pitch.feedbackAt || pitch.status === 'feedback') ? 'linear-gradient(90deg,#0ea5e9,#38bdf8)' : '#e2e8f0';
-    return '#e2e8f0';
+    // Bars 0-1: blue if reached
+    return barIndex < getReachedStep(pitch) ? 'linear-gradient(90deg,#0ea5e9,#38bdf8)' : '#e2e8f0';
   }
 
   const sendReply = async (pitchId) => {
@@ -2070,68 +2072,40 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
             {steps.map((st,i) => {
               const barColor = getBarColor(p, i);
               const isActive = barColor !== '#e2e8f0';
-              const textColor = p.status === 'declined' && i === 4 ? '#ef4444'
-                : p.status === 'accepted' && i === 4 ? '#10b981'
+              const textColor = i === 2 && p.status === 'declined' ? '#ef4444'
+                : i === 2 && ['accepted','interested'].includes(p.status) ? '#10b981'
                 : isActive ? '#0ea5e9' : '#cbd5e1';
               return <div key={i} style={{flex:1,textAlign:"center"}}>
                 <div style={{height:3,borderRadius:3,background:barColor,marginBottom:2}}/>
-                <div style={{fontSize:"0.58rem",color:textColor,fontWeight:isActive?700:400}}>{st}</div>
+                <div style={{fontSize:"0.58rem",color:textColor,fontWeight:isActive?700:400}}>{st.label}</div>
               </div>;
             })}
           </div>
           {isOpen && <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid #f1f5f9",animation:"fadeIn 0.2s ease"}} onClick={e=>e.stopPropagation()}>
-            <div style={{fontSize:"0.78rem",color:"#64748b"}}>
-              <div>📨 Sent: {new Date(p.sentAt || p.createdAt).toLocaleString("ja-JP")}</div>
-              {p.openedAt
-                ? <div style={{color:"#0ea5e9",fontWeight:600}}>📬 Opened: {new Date(p.openedAt).toLocaleString("ja-JP")}</div>
-                : <div style={{color:"#94a3b8"}}>📭 未開封</div>
-              }
-              {p.listenedAt && <div>🎧 試聴: {new Date(p.listenedAt).toLocaleString("ja-JP")} ({p.listenDuration}秒)</div>}
-              {p.feedbackAt && <div>💬 FB: {new Date(p.feedbackAt).toLocaleString("ja-JP")}</div>}
+            <div style={{fontSize:"0.75rem",color:"#94a3b8",marginBottom:8}}>
+              📨 Sent: {new Date(p.sentAt || p.createdAt).toLocaleString("ja-JP")}
             </div>
 
-            {/* Action Type (if accepted) */}
-            {p.status === "accepted" && actionInfo && <div style={{background:"linear-gradient(135deg,#ecfdf5,#d1fae5)",borderRadius:10,padding:"0.8rem",marginTop:10,border:"1px solid #bbf7d0"}}>
-              <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <span style={{fontSize:"1.2rem"}}>{actionInfo.icon}</span>
-                <div>
-                  <div style={{fontWeight:700,fontSize:"0.82rem",color:"#16a34a"}}>採用: {actionInfo.label}</div>
-                  {p.actionNote && <div style={{fontSize:"0.75rem",color:"#15803d",marginTop:2}}>{p.actionNote}</div>}
+            {/* Feedback from curator */}
+            {p.feedbackMessage ? (
+              <div style={{background:['accepted','interested'].includes(p.status)?"#f0fdf4":"#f8fafc",borderRadius:10,padding:"0.8rem",marginTop:4,border:`1px solid ${['accepted','interested'].includes(p.status)?"#bbf7d0":"#e2e8f0"}`}}>
+                <div style={{fontWeight:700,fontSize:"0.78rem",marginBottom:6,color:['accepted','interested'].includes(p.status)?"#16a34a":"#334155"}}>
+                  {['accepted','interested'].includes(p.status)?"✅":"💬"} {p.curatorName}からのフィードバック
                 </div>
+                <div style={{fontSize:"0.82rem",lineHeight:1.6,color:"#475569"}}>{p.feedbackMessage}</div>
               </div>
+            ) : (
+              ['feedback','accepted','interested','declined'].includes(p.status)
+                ? null
+                : <div style={{fontSize:"0.78rem",color:"#94a3b8",padding:"0.5rem 0"}}>キュレーターのレビュー待ちです</div>
+            )}
+
+            {p.placementUrl && <div style={{marginTop:8,padding:"0.6rem 0.8rem",background:"#f0fdf4",borderRadius:10,border:"1px solid #bbf7d0",fontSize:"0.78rem"}}>
+              <div style={{color:"#16a34a",fontWeight:700,marginBottom:4}}>🎉 掲載済み</div>
+              <a href={p.placementUrl} target="_blank" rel="noopener noreferrer" style={{color:"#2563eb",wordBreak:"break-all"}}>{p.placementUrl}</a>
             </div>}
 
-            {/* Feedback Display */}
-            {p.feedback && <div style={{background:p.status==="accepted"?"#f0fdf4":"#f8fafc",borderRadius:10,padding:"0.8rem",marginTop:10,border:`1px solid ${p.status==="accepted"?"#bbf7d0":"#e2e8f0"}`}}>
-              <div style={{fontWeight:700,fontSize:"0.78rem",marginBottom:6,color:p.status==="accepted"?"#16a34a":"#334155"}}>
-                {p.status==="accepted"?"🎉":"📋"} {p.curatorName}からのフィードバック
-              </div>
-              <div style={{fontSize:"0.82rem",lineHeight:1.6,color:"#475569"}}>{p.feedback}</div>
-              {p.rating > 0 && <div style={{marginTop:6,fontSize:"0.78rem",color:"#f59e0b"}}>{"★".repeat(p.rating)}{"☆".repeat(5-p.rating)}</div>}
-
-              {/* Artist Reply */}
-              {p.artistReply ? (
-                <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid #e2e8f0"}}>
-                  <div style={{fontSize:"0.72rem",color:"#0ea5e9",fontWeight:600,marginBottom:4}}>あなたの返信:</div>
-                  <div style={{fontSize:"0.78rem",color:"#475569"}}>{p.artistReply}</div>
-                  <div style={{fontSize:"0.65rem",color:"#94a3b8",marginTop:2}}>{p.artistReplyAt && new Date(p.artistReplyAt).toLocaleString("ja-JP")}</div>
-                </div>
-              ) : (
-                replyingTo === p.id ? (
-                  <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid #e2e8f0"}}>
-                    <textarea value={replyText} onChange={e=>setReplyText(e.target.value)} placeholder="キュレーターへの返信メッセージ（お礼等）" rows={2} style={{...css.input,fontSize:"0.82rem",minHeight:60}}/>
-                    <div style={{display:"flex",gap:6}}>
-                      <button onClick={()=>sendReply(p.id)} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem"}}>📧 返信を送信</button>
-                      <button onClick={()=>{setReplyingTo(null);setReplyText("");}} style={{...css.btnGhost,fontSize:"0.75rem",padding:"0.4rem 0.8rem"}}>キャンセル</button>
-                    </div>
-                  </div>
-                ) : (
-                  <button onClick={()=>setReplyingTo(p.id)} style={{marginTop:8,fontSize:"0.75rem",color:"#0ea5e9",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>💬 返信する</button>
-                )
-              )}
-            </div>}
-
-            <div style={{fontSize:"0.72rem",color:"#94a3b8",marginTop:8}}>⏰ 回答期限: {new Date(p.deadline).toLocaleDateString("ja-JP")} · 📧 メール通知: ON</div>
+            <div style={{fontSize:"0.72rem",color:"#94a3b8",marginTop:8}}>⏰ 回答期限: {new Date(p.deadline).toLocaleDateString("ja-JP")}</div>
           </div>}
         </div>;
       })}

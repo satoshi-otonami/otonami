@@ -258,6 +258,15 @@ const PaperPlaneIcon = () => (
 
 const STEP_ICONS = [WaveformIcon, NetworkIcon, PaperPlaneIcon];
 
+const ALBUMS = [
+  { src: 'https://static.wixstatic.com/media/c9f54b_1ac3bea98a904944b632ed372c144fc0~mv2.jpg', title: 'ジブリカバー' },
+  { src: 'https://static.wixstatic.com/media/c9f54b_167c45a5eacf4a2387f4a028cee4b64d~mv2.jpeg', title: 'Our Summer' },
+  { src: 'https://static.wixstatic.com/media/c9f54b_6904fc63da034a24accc520787ded1ef~mv2.jpeg', title: "Ain't no Distance" },
+  { src: 'https://static.wixstatic.com/media/c9f54b_d99da08f068d4ac087432af6172b3616~mv2.jpg', title: 'WHITE LINE' },
+  { src: 'https://static.wixstatic.com/media/c9f54b_71c6a29f03f248b8afe6e48de2c311fd~mv2.jpg', title: 'Sepia' },
+  { src: 'https://static.wixstatic.com/media/c9f54b_896f324d89d04ddcad06a9cbf0a86ebf~mv2.jpg', title: 'Feeling Good' },
+];
+
 /* ─────────────────────────────────────────
    Page
 ───────────────────────────────────────── */
@@ -385,6 +394,17 @@ export default function HomePage() {
           .footer-links { flex-direction: column !important; gap: 12px !important; }
           .lang-toggle { display: none !important; }
         }
+        @keyframes albumScroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .album-scroll-track {
+          display: flex; gap: 16px;
+          animation: albumScroll 28s linear infinite;
+          width: max-content;
+        }
+        .album-scroll-track:hover { animation-play-state: paused; }
+
         @media (max-width: 480px) {
           .hero-h1 { font-size: 28px !important; }
         }
@@ -679,6 +699,27 @@ export default function HomePage() {
                 <a href="/studio" className="cta-coral">{t.artists.cta}</a>
               </div>
             </AnimatedSection>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Album scroll band (DARK) ── */}
+      <section style={{ background: '#1a1a1a', padding: '60px 0', overflow: 'hidden' }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase' }}>
+            MUSIC ON OTONAMI
+          </div>
+        </div>
+        <div style={{ position: 'relative', width: '100%' }}>
+          {/* fade edges */}
+          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 80, background: 'linear-gradient(90deg, #1a1a1a, transparent)', zIndex: 1, pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 80, background: 'linear-gradient(270deg, #1a1a1a, transparent)', zIndex: 1, pointerEvents: 'none' }} />
+          <div className="album-scroll-track">
+            {[...ALBUMS, ...ALBUMS].map((album, i) => (
+              <div key={i} style={{ minWidth: 160, height: 160, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}>
+                <img src={album.src} alt={album.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            ))}
           </div>
         </div>
       </section>

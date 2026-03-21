@@ -763,6 +763,16 @@ function parseYTTitle(title, authorName) {
 function CuratorBrowser({curators, selected, setSelected, setPage, trackData, setTrackData, notify, artist}) {
   const [q, setQ] = useState(""); const [genre, setGenre] = useState(""); const [type, setType] = useState("");
   const [sortByMatch, setSortByMatch] = useState(false);
+  const [detailCurator, setDetailCurator] = useState(null);
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') setDetailCurator(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+  useEffect(() => {
+    document.body.style.overflow = detailCurator ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [detailCurator]);
   // Auto-enable match sorting when artist genre is already filled
   useEffect(() => { if (artist?.genre) setSortByMatch(true); }, [artist?.genre]);
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
@@ -856,7 +866,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   const matchColor = (score) => score >= 85 ? "#16a34a" : score >= 70 ? "#2563eb" : score >= 50 ? "#0ea5e9" : score >= 30 ? "#d97706" : "#dc2626";
 
   return <div>
-    <style>{`.curator-list-card { flex-direction: row !important; } @media (max-width: 480px) { .curator-list-card { flex-direction: column !important; } }`}</style>
+    <style>{`.curator-list-card { flex-direction: row !important; } @media (max-width: 480px) { .curator-list-card { flex-direction: column !important; } } @keyframes curatorModalIn { from { opacity: 0; transform: scale(0.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }`}</style>
     <div style={{marginBottom:"1.2rem"}}>
       <div style={{fontSize:"0.68rem",letterSpacing:"0.12em",color:"#c4956a",fontWeight:600,marginBottom:6,textTransform:"uppercase"}}>Curators</div>
       <h1 style={{fontSize:"1.7rem",fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6",lineHeight:1.1}}>キュレーター</h1>
@@ -958,7 +968,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
           const initials = c.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
           const typeBadge = typeBadgeMap[c.type];
           const flag = c.region ? (regionFlags[c.region] || null) : null;
-          return <div key={c.id} onClick={()=>toggle(c.id)} className="curator-list-card" style={{background:on?'rgba(196,149,106,0.1)':'#222222',border:on?'1px solid rgba(196,149,106,0.4)':'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:'20px',display:'flex',gap:16,alignItems:'flex-start',cursor:'pointer',transition:'all 0.2s ease'}}>
+          return <div key={c.id} onClick={()=>setDetailCurator(c)} className="curator-list-card" style={{background:on?'rgba(196,149,106,0.1)':'#222222',border:on?'1px solid rgba(196,149,106,0.4)':'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:'20px',display:'flex',gap:16,alignItems:'flex-start',cursor:'pointer',transition:'all 0.2s ease'}}>
             {/* Avatar */}
             <div style={{width:48,height:48,borderRadius:'50%',flexShrink:0,position:'relative',overflow:'hidden'}}>
               {c.iconUrl && <img src={c.iconUrl} alt={c.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',border:'2px solid rgba(255,255,255,0.08)'}} onError={e=>{e.target.style.display='none';}} />}
@@ -980,8 +990,8 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
                 {c.genres.length > 4 && <span style={{fontSize:'0.62rem',color:'#7a7870',alignSelf:'center'}}>+{c.genres.length-4}</span>}
               </div>
             </div>
-            {/* Right: match gauge + credits */}
-            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,flexShrink:0}}>
+            {/* Right: match gauge + select button */}
+            <div onClick={e=>{e.stopPropagation();toggle(c.id);}} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,flexShrink:0,borderRadius:10,padding:'6px',transition:'background 0.15s',cursor:'pointer'}} title={on?'選択解除':'選択する'}>
               {ms != null ? (
                 <div style={{position:'relative',width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center'}}>
                   <svg width="44" height="44" style={{position:'absolute',transform:'rotate(-90deg)'}}>
@@ -994,7 +1004,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
                 <div style={{width:44,height:44}}/>
               )}
               <span style={{fontSize:12,color:'#c4956a',fontWeight:600}}>{c.creditCost||2} cr</span>
-              {on && <div style={{width:22,height:22,borderRadius:'50%',background:'#c4956a',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700}}>✓</div>}
+              <div style={{width:22,height:22,borderRadius:'50%',background:on?'#c4956a':'rgba(255,255,255,0.08)',border:on?'none':'1px solid rgba(255,255,255,0.2)',color:on?'#fff':'#7a7870',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700,transition:'all 0.15s'}}>{on?'✓':'+'}</div>
             </div>
           </div>;
         });
@@ -1004,6 +1014,64 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
     {selected.length > 0 && <div style={{position:"sticky",bottom:0,left:0,right:0,background:"linear-gradient(0deg,#1a1a1a 70%,transparent)",padding:"1rem 0 0.5rem",marginTop:"0.5rem"}}>
       <button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,width:"100%",padding:"0.9rem",fontSize:"0.95rem"}}>🚀 {selected.length}人のキュレーターにピッチ作成 ({curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}cr)</button>
     </div>}
+
+    {/* Curator Detail Modal */}
+    {detailCurator && (() => {
+      const dc = detailCurator;
+      const dcOn = selected.includes(dc.id);
+      const dcMs = dc.matchScore;
+      const dcMsColor = dcMs >= 85 ? '#4ade80' : dcMs >= 70 ? '#60a5fa' : '#fbbf24';
+      const dcAv = [{bg:'rgba(196,149,106,0.2)',text:'#c4956a'},{bg:'rgba(232,93,58,0.15)',text:'#e85d3a'},{bg:'rgba(74,222,128,0.12)',text:'#4ade80'},{bg:'rgba(96,165,250,0.12)',text:'#60a5fa'},{bg:'rgba(251,191,36,0.12)',text:'#fbbf24'},{bg:'rgba(168,85,247,0.12)',text:'#a855f7'}][dc.name.charCodeAt(0) % 6];
+      const dcInitials = dc.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+      const dcFollowers = dc.followers || dc.audience;
+      return <div onClick={()=>setDetailCurator(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.65)',backdropFilter:'blur(8px)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}}>
+        <div onClick={e=>e.stopPropagation()} style={{background:'#222222',borderRadius:16,border:'1px solid rgba(255,255,255,0.08)',maxWidth:560,width:'100%',maxHeight:'90vh',overflowY:'auto',animation:'curatorModalIn 0.2s ease'}}>
+          {/* Header */}
+          <div style={{padding:'24px 24px 20px',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',gap:16}}>
+            <div style={{width:64,height:64,borderRadius:'50%',flexShrink:0,position:'relative',overflow:'hidden'}}>
+              {dc.iconUrl && <img src={dc.iconUrl} alt={dc.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover'}} onError={e=>{e.target.style.display='none';}}/>}
+              <div style={{width:'100%',height:'100%',borderRadius:'50%',background:dcAv.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,fontWeight:600,color:dcAv.text}}>{dcInitials}</div>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <h3 style={{fontSize:20,fontWeight:500,color:'#f0ede6',fontFamily:"'Playfair Display',Georgia,serif",margin:'0 0 4px'}}>{dc.name}</h3>
+              <div style={{fontSize:13,color:'#7a7870'}}>
+                {dc.platform}{dcFollowers ? ' · '+( dcFollowers>=1000?(dcFollowers/1000).toFixed(1)+'K followers':dcFollowers+' followers') : ''}
+              </div>
+            </div>
+            <button onClick={()=>setDetailCurator(null)} style={{background:'transparent',border:'none',color:'#7a7870',fontSize:24,cursor:'pointer',padding:4,lineHeight:1,flexShrink:0}}>×</button>
+          </div>
+          {/* Body */}
+          <div style={{padding:'24px',display:'flex',flexDirection:'column',gap:20}}>
+            {dc.bio && <p style={{fontSize:14,color:'#c0bdb5',lineHeight:1.7,margin:0}}>{dc.bio}</p>}
+            {dc.url && <a href={dc.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{display:'inline-flex',alignItems:'center',gap:6,color:'#c4956a',fontSize:13,textDecoration:'none',wordBreak:'break-all'}}>🔗 {dc.url}</a>}
+            {dc.genres?.length > 0 && <div>
+              <div style={{fontSize:11,color:'#7a7870',textTransform:'uppercase',letterSpacing:'1px',marginBottom:10,fontWeight:600}}>Genres</div>
+              <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                {dc.genres.map((g,i) => <span key={i} style={{background:'rgba(196,149,106,0.08)',border:'1px solid rgba(196,149,106,0.15)',color:'#c4956a',padding:'4px 12px',borderRadius:20,fontSize:12}}>{g}</span>)}
+              </div>
+            </div>}
+            {dc.accepts?.length > 0 && <div>
+              <div style={{fontSize:11,color:'#7a7870',textTransform:'uppercase',letterSpacing:'1px',marginBottom:10,fontWeight:600}}>Accepts</div>
+              <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                {dc.accepts.map((a,i) => <span key={i} style={{background:'rgba(74,222,128,0.08)',border:'1px solid rgba(74,222,128,0.15)',color:'#4ade80',padding:'4px 12px',borderRadius:20,fontSize:12}}>{a}</span>)}
+              </div>
+            </div>}
+            {dcMs != null && <div style={{background:dcMs>=85?'rgba(74,222,128,0.08)':dcMs>=70?'rgba(96,165,250,0.08)':'rgba(251,191,36,0.08)',borderRadius:10,padding:16,textAlign:'center'}}>
+              <div style={{fontSize:11,color:'#7a7870',marginBottom:4}}>Match Score</div>
+              <div style={{fontSize:32,fontWeight:600,color:dcMsColor}}>{dcMs}%</div>
+              {dc.matchReasons?.length > 0 && <div style={{fontSize:12,color:'#7a7870',marginTop:6}}>{dc.matchReasons.join(' · ')}</div>}
+            </div>}
+          </div>
+          {/* Footer */}
+          <div style={{padding:'16px 24px',borderTop:'1px solid rgba(255,255,255,0.06)',display:'flex',justifyContent:'flex-end',gap:12}}>
+            <button onClick={()=>setDetailCurator(null)} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.12)',color:'#c0bdb5',borderRadius:8,padding:'10px 20px',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>閉じる</button>
+            <button onClick={()=>{toggle(dc.id);setDetailCurator(null);}} style={{background:dcOn?'transparent':'#c4956a',border:dcOn?'1px solid #ef4444':'none',color:dcOn?'#ef4444':'#fff',borderRadius:8,padding:'10px 20px',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>
+              {dcOn ? '選択解除' : `選択 · ${dc.creditCost||2}cr`}
+            </button>
+          </div>
+        </div>
+      </div>;
+    })()}
   </div>;
 }
 

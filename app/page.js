@@ -1,106 +1,191 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { T } from '@/lib/design-tokens';
+import AnimatedSection from '@/components/AnimatedSection';
+import { DT as D } from '@/lib/design-tokens';
 
-/* ── i18n copy ── */
+/* ─────────────────────────────────────────
+   Bilingual copy
+───────────────────────────────────────── */
 const COPY = {
   en: {
-    navHow: 'How It Works', navCurators: 'Find Curators', navArtists: 'For Artists',
-    navCta: 'Join as Curator',
-    heroTag: '♪ Curator Network — AI-Powered Matching',
-    heroH1a: "Japan's indie music,", heroH1b: "to the world's curators",
-    heroSub: "OTONAMI connects handpicked Japanese indie artists with curators worldwide. Get paid to review. No spam — only quality pitches matched to your taste.",
-    ctaPrimary: 'Join as Curator →', ctaGhost: 'See How It Works',
-
-    stat1n: '3,449', stat1l: 'Curators & Pros',
-    stat2n: '70+',   stat2l: 'Japanese Labels',
-    stat3n: '93%',   stat3l: 'Response Rate',
-    stat4n: '10yr',  stat4l: 'SXSW Track Record',
-
-    whyLabel: 'Why OTONAMI', whyTitle: 'Built for Curators Who Value Quality',
-    whySub: 'We filter the noise so you only hear music that genuinely fits your audience.',
-    why1ic: '🎯', why1t: 'AI-Matched Pitches',
-    why1d: "Our Match Score engine compares each artist's audio features, genre, and mood against your profile. Only high-match submissions reach your inbox.",
-    why2ic: '💰', why2t: 'Get Paid to Listen',
-    why2d: 'Earn $3–5 per review, paid directly via PayPal. Transparent, guaranteed compensation for your time and expertise.',
-    why3ic: '🇯🇵', why3t: "Japan's Hidden Gems",
-    why3d: "Access 70+ independent labels through ILCJ, Japan's largest indie label coalition. Discover artists before they go global.",
-
-    howTitle: 'How OTONAMI Works',
-    step1ic: '🎵', step1s: '01', step1t: 'Submit Your Track',
-    step1d: 'Add your Spotify or YouTube link. Our AI analyzes your sound profile and generates an English pitch automatically.',
-    step2ic: '🎯', step2s: '02', step2t: 'Find Matching Curators',
-    step2d: 'Browse 3,400+ curators with AI match scores. Filter by genre, country, and type to find your perfect fit.',
-    step3ic: '💬', step3s: '03', step3t: 'Get Real Feedback',
-    step3d: 'Curators listen and respond within 7 days. Get playlist placements, blog features, or constructive feedback.',
-
-    artLabel: 'For Artists & Labels', artTitle: 'Are you a Japanese artist or label?',
-    artBody: 'OTONAMI helps you reach international curators with AI-generated English pitches. Input your track, get a professional pitch email, and submit to curators who match your sound — in minutes.',
-    artCta: 'Submit Your Music →',
-
-    ctaBannerTitle: 'Ready to reach the world?',
-    ctaBannerSub: 'Join 70+ Japanese labels already using OTONAMI',
-    ctaBannerBtn: 'Start Your First Pitch →',
-    footerCopy: 'OTONAMI — Connecting Japanese Music to the World',
-    footerBy: 'TYCompany LLC / ILCJ',
+    nav: {
+      how: 'How It Works', curators: 'For Curators', artists: 'For Artists',
+      cta: 'Join as Curator →', lang: 'JA',
+    },
+    hero: {
+      tag: 'AI-POWERED MUSIC PITCH PLATFORM',
+      h1: ["Connect Japanese", "indie artists with", "the world's curators"],
+      sub: 'AI-matched pitches. Real music industry connections.\nTrusted by 70+ independent labels.',
+      ctaPrimary: 'Start Pitching →',
+      ctaGhost: 'Join as Curator',
+    },
+    stats: [
+      { n: '3,449', l: 'Curators & Pros' },
+      { n: '70+',   l: 'Japanese Labels' },
+      { n: '11×',   l: 'SXSW Consecutive' },
+      { n: '6',     l: 'Countries' },
+    ],
+    how: {
+      label: 'HOW IT WORKS',
+      title: 'From studio to playlist in three steps',
+      steps: [
+        { num: '1', t: 'Upload & Analyze', d: 'Add your Spotify or YouTube link. Our AI analyzes your sound profile and generates a professional English pitch automatically.' },
+        { num: '2', t: 'AI Matches',       d: 'Our AI finds the best-fit curators for your sound. Browse 3,400+ curators with match scores — filter by genre, country, and type.' },
+        { num: '3', t: 'Direct Pitch',     d: 'Send a personalized pitch directly to their inbox. Curators listen and respond within 7 days.' },
+      ],
+    },
+    trust: {
+      label: 'TRUSTED BY',
+      orgs: ['ILCJ — 70+ Independent Labels', 'SXSW — 11 Consecutive Years', 'Blue Note Tokyo'],
+      quote: '"OTONAMI is the most efficient tool for bringing Japanese indie music to the world."',
+      quoteBy: '— ILCJ Representative',
+    },
+    curators: {
+      label: 'FOR CURATORS',
+      title: "Discover Japan's next breakout artist",
+      sub: 'We send only high-match pitches. No spam — only music that genuinely fits your audience.',
+      features: [
+        'AI-matched recommendations based on your taste profile',
+        'Listen before you commit — embedded players in every pitch',
+        'Respond at your pace — no pressure, no spam',
+        'Compensation for your expertise ($3–5 per review, paid via PayPal)',
+      ],
+      cta: 'Join as Curator →',
+    },
+    artists: {
+      label: 'FOR ARTISTS',
+      title: 'Your music deserves a global audience',
+      sub: 'Input your track, get a professional pitch email, and submit to curators who match your sound — in minutes.',
+      features: [
+        'AI-generated pitch letters in professional English',
+        'Audio analysis highlights what makes your track unique',
+        'Direct access to curators, bloggers, and playlist makers worldwide',
+        'Track every pitch — from send to placement',
+      ],
+      cta: 'Start Pitching →',
+    },
+    cta: {
+      title: 'Ready to reach the world?',
+      sub: 'Join 70+ Japanese labels already using OTONAMI',
+      btn: 'Start Your First Pitch →',
+    },
+    footer: {
+      tagline: 'Connecting Japanese Music to the World',
+      links: [
+        { label: 'For Curators', href: '/curator' },
+        { label: 'For Artists',  href: '/studio' },
+        { label: 'About ILCJ',   href: 'https://ilcj.jp' },
+        { label: 'Contact',      href: 'mailto:info@otonami.io' },
+      ],
+      copy: '© 2025 TYCompany LLC / ILCJ. All rights reserved.',
+      email: 'info@otonami.io',
+    },
   },
   ja: {
-    navHow: '使い方', navCurators: 'キュレーターを探す', navArtists: 'アーティストの方',
-    navCta: 'キュレーター登録',
-    heroTag: '♪ キュレーターネットワーク — AIマッチング搭載',
-    heroH1a: '日本のインディー音楽を、', heroH1b: '世界のキュレーターへ',
-    heroSub: 'OTONAMIは厳選された日本のインディーアーティストとキュレーターをつなぎます。レビューで報酬を獲得。スパムなし — あなたの好みにマッチした楽曲だけが届きます。',
-    ctaPrimary: 'キュレーターとして参加 →', ctaGhost: '使い方を見る',
-
-    stat1n: '3,449', stat1l: 'Curators & Pros',
-    stat2n: '70+',   stat2l: '加盟レーベル',
-    stat3n: '93%',   stat3l: '回答率',
-    stat4n: '10yr',  stat4l: 'SXSW 連続出演',
-
-    whyLabel: 'なぜOTONAMI？', whyTitle: 'クオリティを重視するキュレーターのために',
-    whySub: 'ノイズをフィルタリングし、あなたのオーディエンスに本当に合う音楽だけをお届けします。',
-    why1ic: '🎯', why1t: 'AIマッチングピッチ',
-    why1d: 'Match Scoreエンジンがアーティストの音響特性・ジャンル・ムードをあなたのプロファイルと比較。高マッチのピッチだけが届きます。ランダムな投稿は届きません。',
-    why2ic: '💰', why2t: '聴いて報酬を獲得',
-    why2d: '1件のレビューで$3〜5をPayPalで直接受け取れます。透明性があり、保証された報酬体系。あなたの時間と専門性に見合った対価です。',
-    why3ic: '🇯🇵', why3t: '日本の隠れた名曲',
-    why3d: '日本最大のインディーレーベル連合ILCJを通じて70以上のレーベルにアクセス。世界進出前のアーティストをいち早く発見しましょう。',
-
-    howTitle: 'How OTONAMI Works',
-    step1ic: '🎵', step1s: '01', step1t: '楽曲を送信',
-    step1d: 'SpotifyまたはYouTubeのリンクを追加。AIが音楽プロファイルを分析し、英語ピッチを自動生成します。',
-    step2ic: '🎯', step2s: '02', step2t: 'マッチするキュレーターを探す',
-    step2d: 'AIマッチスコア付きで3,400以上のキュレーターを閲覧。ジャンル・国・タイプで絞り込めます。',
-    step3ic: '💬', step3s: '03', step3t: 'リアルなフィードバックを獲得',
-    step3d: 'キュレーターが7日以内にリスニング・返信。プレイリスト掲載、ブログ記事、または建設的なフィードバックを受け取れます。',
-
-    artLabel: 'アーティスト・レーベルの方へ', artTitle: '日本のアーティスト・レーベルの方へ',
-    artBody: 'OTONAMIはAI生成の英語ピッチメールで、日本のアーティストが海外キュレーターにリーチするお手伝いをします。楽曲を入力してプロのピッチメールを生成、相性の良いキュレーターに数分で送信できます。',
-    artCta: '楽曲を投稿する →',
-
-    ctaBannerTitle: 'Ready to reach the world?',
-    ctaBannerSub: 'すでに70以上の日本のレーベルが利用中',
-    ctaBannerBtn: '最初のピッチを始める →',
-    footerCopy: 'OTONAMI — Connecting Japanese Music to the World',
-    footerBy: 'TYCompany LLC / ILCJ',
+    nav: {
+      how: '使い方', curators: 'キュレーター向け', artists: 'アーティスト向け',
+      cta: 'キュレーター登録 →', lang: 'EN',
+    },
+    hero: {
+      tag: 'AIパワード・ミュージックピッチプラットフォーム',
+      h1: ['日本のインディー音楽を、', '世界のキュレーターへ', 'つなぐ'],
+      sub: 'AIマッチングピッチ。リアルな音楽業界コネクション。\n70以上のインディーレーベルに信頼されています。',
+      ctaPrimary: 'ピッチを始める →',
+      ctaGhost: 'キュレーターとして参加',
+    },
+    stats: [
+      { n: '3,449', l: 'Curators & Pros' },
+      { n: '70+',   l: '加盟レーベル' },
+      { n: '11回',  l: 'SXSW 連続出演' },
+      { n: '6',     l: '対応国' },
+    ],
+    how: {
+      label: 'HOW IT WORKS',
+      title: '3ステップでスタジオからプレイリストへ',
+      steps: [
+        { num: '1', t: 'アップロード＆分析', d: 'SpotifyまたはYouTubeのリンクを追加。AIが音楽プロファイルを分析し、プロの英語ピッチを自動生成します。' },
+        { num: '2', t: 'AIマッチング',       d: 'AIがあなたのサウンドに最適なキュレーターを見つけます。3,400以上のキュレーターをスコア付きで閲覧。' },
+        { num: '3', t: 'ダイレクトピッチ',   d: 'キュレーターのInboxに直接パーソナライズされたピッチを送信。7日以内にフィードバックを受け取れます。' },
+      ],
+    },
+    trust: {
+      label: 'TRUSTED BY',
+      orgs: ['ILCJ — 70以上のインディーレーベル', 'SXSW — 11年連続', 'ブルーノート東京'],
+      quote: '"OTONAMIは日本のインディー音楽を世界に届ける最も効率的なツールです"',
+      quoteBy: '— ILCJ 理事',
+    },
+    curators: {
+      label: 'FOR CURATORS',
+      title: '日本の次のブレイクアーティストを発見',
+      sub: '高マッチのピッチのみをお送りします。スパムなし — あなたのオーディエンスに合う音楽だけが届きます。',
+      features: [
+        'あなたの好みに基づくAIマッチング推薦',
+        'コミットする前に試聴 — すべてのピッチに埋め込みプレイヤー',
+        '自分のペースで返信 — プレッシャーなし、スパムなし',
+        '専門性への報酬（レビュー1件$3〜5、PayPalで直接支払い）',
+      ],
+      cta: 'キュレーターとして参加 →',
+    },
+    artists: {
+      label: 'FOR ARTISTS',
+      title: 'あなたの音楽は世界規模のオーディエンスに値する',
+      sub: '楽曲を入力してプロのピッチメールを生成し、相性の良いキュレーターに数分で送信。',
+      features: [
+        'プロフェッショナルな英語ピッチレターをAIが自動生成',
+        '音楽分析があなたのトラックのユニークさを強調',
+        '世界中のキュレーター、ブロガー、プレイリストメーカーへの直接アクセス',
+        '送信からプレイスメントまで全ピッチを追跡',
+      ],
+      cta: 'ピッチを始める →',
+    },
+    cta: {
+      title: '世界へ届ける準備はできていますか？',
+      sub: 'すでに70以上の日本のレーベルが利用しています',
+      btn: '最初のピッチを始める →',
+    },
+    footer: {
+      tagline: '日本の音楽を世界へ',
+      links: [
+        { label: 'キュレーター向け', href: '/curator' },
+        { label: 'アーティスト向け', href: '/studio' },
+        { label: 'ILCJについて',     href: 'https://ilcj.jp' },
+        { label: 'お問い合わせ',     href: 'mailto:info@otonami.io' },
+      ],
+      copy: '© 2025 TYCompany LLC / ILCJ. All rights reserved.',
+      email: 'info@otonami.io',
+    },
   },
 };
 
+/* ─────────────────────────────────────────
+   Shared layout helpers
+───────────────────────────────────────── */
+const wrap  = { maxWidth: 1200, margin: '0 auto', padding: '0 24px' };
+const label = { fontSize: 11, fontWeight: 600, letterSpacing: '3px', color: D.accent, textTransform: 'uppercase', marginBottom: 20 };
+
+/* ─────────────────────────────────────────
+   Page component
+───────────────────────────────────────── */
 export default function HomePage() {
   const [lang, setLang] = useState('ja');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem('otonami_locale');
       if (saved === 'ja' || saved === 'en') { setLang(saved); return; }
-      if (navigator.language?.startsWith('ja')) setLang('ja');
-      else setLang('en');
+      setLang(navigator.language?.startsWith('ja') ? 'ja' : 'en');
     } catch {}
   }, []);
 
-  // Close menu on outside click
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   useEffect(() => {
     if (!menuOpen) return;
     const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
@@ -108,7 +193,6 @@ export default function HomePage() {
     return () => document.removeEventListener('mousedown', handler);
   }, [menuOpen]);
 
-  // Prevent body scroll when menu open
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
@@ -121,463 +205,362 @@ export default function HomePage() {
 
   const t = COPY[lang];
 
-  const navItems = [
-    { href: '#how-it-works', label: t.navHow },
-    { href: '/curators',     label: t.navCurators },
-    { href: '/studio',       label: t.navArtists },
-  ];
-
   return (
-    <div style={{ minHeight: '100vh', background: T.bg, fontFamily: T.font }}>
+    <div style={{ minHeight: '100vh', background: D.bg, fontFamily: D.fBody, color: D.text }}>
+
+      {/* ── Global styles ── */}
       <style>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
-        body { background: ${T.bg}; overflow-x: hidden; }
-        ::selection { background: ${T.accentLight}; color: ${T.accent}; }
+        body { background: ${D.bg}; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        ::selection { background: rgba(196,149,106,0.3); color: ${D.text}; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: ${T.border}; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
 
-        /* ── Desktop defaults ── */
-        .hamburger-btn { display: none; }
-        .mobile-menu-overlay { display: none; }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .hero-line { opacity: 0; animation: fadeInUp 0.7s ease forwards; }
+        .hero-line:nth-child(1) { animation-delay: 0.12s; }
+        .hero-line:nth-child(2) { animation-delay: 0.25s; }
+        .hero-line:nth-child(3) { animation-delay: 0.38s; }
+        .hero-tag-anim { opacity: 0; animation: fadeInUp 0.6s ease 0.02s forwards; }
+        .hero-sub-anim  { opacity: 0; animation: fadeInUp 0.6s ease 0.52s forwards; }
+        .hero-cta-anim  { opacity: 0; animation: fadeInUp 0.6s ease 0.64s forwards; }
+        .hero-stat-anim { opacity: 0; animation: fadeInUp 0.6s ease 0.78s forwards; }
 
-        /* ── Mobile breakpoint ── */
+        .cta-coral {
+          background: ${D.cta}; color: #fff; border: none;
+          padding: 14px 28px; border-radius: 8px;
+          font-size: 15px; font-weight: 600; cursor: pointer;
+          transition: background 0.2s, transform 0.1s;
+          text-decoration: none; display: inline-block; font-family: inherit;
+          white-space: nowrap;
+        }
+        .cta-coral:hover { background: ${D.ctaHover}; transform: translateY(-1px); }
+
+        .cta-ghost {
+          background: transparent; color: ${D.textSec};
+          border: 1px solid rgba(255,255,255,0.18);
+          padding: 14px 28px; border-radius: 8px;
+          font-size: 15px; font-weight: 500; cursor: pointer;
+          transition: border-color 0.2s, color 0.2s, transform 0.1s;
+          text-decoration: none; display: inline-block; font-family: inherit;
+          white-space: nowrap;
+        }
+        .cta-ghost:hover { border-color: rgba(255,255,255,0.35); color: ${D.text}; transform: translateY(-1px); }
+
+        .nav-link {
+          color: ${D.textSec}; text-decoration: none;
+          font-size: 13px; font-weight: 400;
+          transition: color 0.2s; white-space: nowrap;
+        }
+        .nav-link:hover { color: ${D.text}; }
+
+        .feature-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+
+        .trust-org {
+          color: ${D.textMuted}; font-size: 13px; font-weight: 500;
+          letter-spacing: 0.5px; transition: color 0.2s;
+          padding: 6px 0; white-space: nowrap;
+        }
+        .trust-org:hover { color: ${D.textSec}; }
+
+        .how-card {
+          background: ${D.surfaceAlt};
+          border: 1px solid ${D.border};
+          border-radius: 12px;
+          padding: 32px 28px;
+          transition: border-color 0.2s;
+        }
+        .how-card:hover { border-color: ${D.accentBorder}; }
+
+        /* ── Responsive ── */
         @media (max-width: 768px) {
-          body { overflow-x: hidden; }
-
-          /* Header */
-          .nav-links-center { display: none !important; }
-          .hamburger-btn {
-            display: flex !important;
-            align-items: center; justify-content: center;
-            background: none; border: 1px solid ${T.border};
-            border-radius: 8px; width: 44px; height: 44px;
-            font-size: 20px; cursor: pointer; color: ${T.text};
-            flex-shrink: 0; touch-action: manipulation;
-          }
-          .logo-text { font-size: 18px !important; }
-          .header-pad { padding: 0 16px !important; }
-          .nav-cta-label { display: none; }
-          .nav-cta-short { display: inline !important; }
-          .lang-btn { padding: 6px 9px !important; font-size: 11px !important; min-height: 36px !important; }
-          .header-cta { padding: 8px 11px !important; font-size: 12px !important; min-height: 36px !important; }
-
-          /* Mobile menu overlay */
-          .mobile-menu-overlay {
-            display: flex !important;
-            position: fixed; inset: 0; z-index: 200;
-            background: #fff;
-            flex-direction: column;
-          }
-
-          /* Hero */
-          .hero-section { padding: 72px 18px 56px !important; }
-          .hero-h1 { font-size: 30px !important; }
-          .hero-sub { font-size: 15px !important; max-width: 100% !important; }
-          .hero-tag { font-size: 12px !important; padding: 5px 14px !important; }
-          .hero-cta-group {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 12px !important;
-          }
-          .hero-cta-a {
-            width: 100% !important;
-            min-height: 48px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            text-align: center !important;
-            padding: 14px 20px !important;
-            font-size: 15px !important;
-          }
-
-          /* Stats */
-          .stats-inner {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            gap: 20px 16px !important;
-            justify-items: center;
-          }
-          .stat-num { font-size: 24px !important; }
-
-          /* Why / How cards */
-          .three-col { grid-template-columns: 1fr !important; }
-          .step-card { padding: 24px !important; }
-          .why-card { padding: 24px 20px !important; }
-
-          /* Artist / Industry sections */
-          .artist-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
-
-          /* CTA banner */
-          .cta-banner { padding: 48px 18px !important; }
-          .cta-banner-title { font-size: 24px !important; }
-          .cta-banner-sub { font-size: 14px !important; }
-          .cta-banner-btn {
-            display: block !important;
-            width: 100% !important;
-            min-height: 48px !important;
-            line-height: 48px !important;
-            padding: 0 20px !important;
-            font-size: 15px !important;
-          }
-
-          /* Footer */
-          .footer-inner {
-            display: flex; flex-direction: column; gap: 4px;
-            font-size: 12px !important;
-          }
-          .footer-sep { display: block !important; visibility: hidden; height: 0; }
-
-          /* Section headings */
-          .section-h2 { font-size: 26px !important; }
-          .section-pad { padding: 56px 18px !important; }
-
-          /* Images */
-          img { max-width: 100%; height: auto; }
+          .nav-desktop-links { display: none !important; }
+          .hamburger-btn { display: flex !important; }
+          .hero-h1 { font-size: 34px !important; }
+          .hero-sub { font-size: 16px !important; }
+          .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 28px 20px !important; }
+          .how-grid { grid-template-columns: 1fr !important; }
+          .cta-group { flex-direction: column !important; width: 100% !important; }
+          .cta-group .cta-coral,
+          .cta-group .cta-ghost { width: 100% !important; text-align: center !important; }
+          .trust-orgs { flex-direction: column !important; gap: 12px !important; }
+          .section-pad { padding: 72px 0 !important; }
+          .footer-links { flex-direction: column !important; gap: 12px !important; }
+          .lang-toggle { display: none !important; }
+        }
+        @media (max-width: 480px) {
+          .hero-h1 { font-size: 28px !important; }
         }
       `}</style>
 
-      {/* ── Mobile Menu Overlay ── */}
+      {/* ─────────────────────────── Mobile menu overlay ─────────────────────────── */}
       {menuOpen && (
-        <div className="mobile-menu-overlay" ref={menuRef}>
-          {/* Overlay header */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0 16px', height: 64, borderBottom: `1px solid ${T.border}`, flexShrink: 0,
-          }}>
-            <a href="/" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 16 }}>O</div>
-              <span style={{ fontFamily: T.fontDisplay, fontSize: 18, fontWeight: 700, color: T.accent }}>OTONAMI</span>
-            </a>
-            <button onClick={() => setMenuOpen(false)} style={{
-              background: 'none', border: `1px solid ${T.border}`, borderRadius: 8,
-              width: 40, height: 40, fontSize: 20, cursor: 'pointer', color: T.text,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>✕</button>
+        <div ref={menuRef} style={{
+          position: 'fixed', inset: 0, zIndex: 300,
+          background: '#181818', display: 'flex', flexDirection: 'column',
+          padding: '0 24px',
+        }}>
+          {/* Top bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 64, borderBottom: `1px solid ${D.border}` }}>
+            <span style={{ fontFamily: D.fHead, fontSize: 18, letterSpacing: '2px', color: D.text }}>OTONAMI</span>
+            <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', color: D.textSec, fontSize: 28, cursor: 'pointer', lineHeight: 1, padding: 4 }}>✕</button>
           </div>
-          {/* Nav links */}
-          <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px 0' }}>
-            {navItems.map(item => (
-              <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{
-                display: 'block', padding: '16px 24px',
-                fontSize: 16, fontWeight: 600, color: T.text,
-                textDecoration: 'none', borderBottom: `1px solid ${T.borderLight}`,
-                fontFamily: T.font,
-              }}>{item.label}</a>
-            ))}
-            <a href="/curator" onClick={() => setMenuOpen(false)} style={{
-              display: 'block', margin: '20px 24px 0',
-              padding: '14px 20px', fontSize: 15, fontWeight: 600,
-              background: T.accent, color: '#fff', borderRadius: T.radius,
-              textDecoration: 'none', fontFamily: T.font, textAlign: 'center',
-              minHeight: 48, lineHeight: '20px',
-            }}>{t.navCta}</a>
-          </nav>
-        </div>
-      )}
-
-      {/* ── Header ── */}
-      <header className="header-pad" style={{
-        position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
-        borderBottom: `1px solid ${T.border}`,
-        padding: '0 24px', height: 64,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        fontFamily: T.font,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
-          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 17 }}>O</div>
-            <span className="logo-text" style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.accent, letterSpacing: -0.3 }}>OTONAMI</span>
-          </a>
-          <nav className="nav-links-center" style={{ display: 'flex', gap: 4 }}>
-            {navItems.map(item => (
-              <a key={item.href} href={item.href} style={{
-                background: 'transparent', color: T.textSub,
-                padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 500,
-                textDecoration: 'none', transition: 'all 0.15s', fontFamily: T.font,
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = T.accentLight; e.currentTarget.style.color = T.accent; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = T.textSub; }}
+          {/* Links */}
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 24 }}>
+            {[
+              { href: '#how-it-works', label: t.nav.how },
+              { href: '/curator',      label: t.nav.curators },
+              { href: '/studio',       label: t.nav.artists },
+            ].map(item => (
+              <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{ color: D.textSec, textDecoration: 'none', fontSize: 20, fontWeight: 400, padding: '14px 0', borderBottom: `1px solid ${D.border}`, transition: 'color 0.2s' }}
+                onMouseEnter={e => e.target.style.color = D.text}
+                onMouseLeave={e => e.target.style.color = D.textSec}
               >{item.label}</a>
             ))}
           </nav>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', border: `1px solid ${T.border}` }}>
-            {['EN', 'JP'].map(l => (
-              <button key={l} className="lang-btn" onClick={() => switchLang(l === 'JP' ? 'ja' : 'en')} style={{
-                padding: '6px 12px', fontSize: 12, fontWeight: 600,
-                fontFamily: T.font, border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-                background: (l === 'JP' ? lang === 'ja' : lang === 'en') ? T.text : 'transparent',
-                color:      (l === 'JP' ? lang === 'ja' : lang === 'en') ? '#fff' : T.textSub,
-              }}>{l === 'JP' ? '日本語' : l}</button>
-            ))}
+          <div style={{ marginTop: 32 }}>
+            <a href="/curator" className="cta-coral" style={{ width: '100%', textAlign: 'center', display: 'block' }}>{t.nav.cta}</a>
           </div>
-          <a href="/curator" className="header-cta" style={{
-            padding: '8px 16px', fontSize: 13, fontWeight: 600,
-            background: T.accent, color: '#fff', borderRadius: T.radius,
-            textDecoration: 'none', fontFamily: T.font, transition: 'background 0.15s',
-            whiteSpace: 'nowrap',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = T.accentDark}
-          onMouseLeave={e => e.currentTarget.style.background = T.accent}
-          >
-            <span className="nav-cta-label">{t.navCta}</span>
-            <span className="nav-cta-short" style={{ display: 'none' }}>登録</span>
+        </div>
+      )}
+
+      {/* ─────────────────────────── Fixed Nav ─────────────────────────── */}
+      <header style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
+        background: scrolled ? 'rgba(26,26,26,0.92)' : 'rgba(26,26,26,0.75)',
+        backdropFilter: 'blur(16px)',
+        borderBottom: `1px solid ${D.border}`,
+        transition: 'background 0.3s',
+      }}>
+        <div style={{ ...wrap, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+          {/* Logo */}
+          <a href="/" style={{ textDecoration: 'none', fontFamily: D.fHead, fontSize: 20, letterSpacing: '2px', color: D.text, fontWeight: 500 }}>
+            OTONAMI
           </a>
-          {/* Hamburger — mobile only */}
-          <button className="hamburger-btn" onClick={() => setMenuOpen(true)} aria-label="メニューを開く">☰</button>
+
+          {/* Desktop links */}
+          <nav className="nav-desktop-links" style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
+            <a href="#how-it-works" className="nav-link">{t.nav.how}</a>
+            <a href="/curator"      className="nav-link">{t.nav.curators}</a>
+            <a href="/studio"       className="nav-link">{t.nav.artists}</a>
+          </nav>
+
+          {/* Right cluster */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* Lang toggle */}
+            <button className="lang-toggle" onClick={() => switchLang(lang === 'ja' ? 'en' : 'ja')} style={{
+              background: 'none', border: `1px solid ${D.border}`, color: D.textMuted,
+              fontSize: 11, fontWeight: 600, letterSpacing: '1px', padding: '6px 10px',
+              borderRadius: 6, cursor: 'pointer', transition: 'border-color 0.2s, color 0.2s', fontFamily: D.fBody,
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = D.borderHover; e.currentTarget.style.color = D.textSec; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = D.border; e.currentTarget.style.color = D.textMuted; }}
+            >{t.nav.lang}</button>
+
+            <a href="/curator" className="cta-coral" style={{ padding: '8px 20px', fontSize: 13 }}>{t.nav.cta}</a>
+
+            {/* Hamburger */}
+            <button className="hamburger-btn" onClick={() => setMenuOpen(true)} style={{
+              display: 'none', background: 'none', border: `1px solid ${D.border}`,
+              borderRadius: 8, width: 44, height: 44, fontSize: 18, cursor: 'pointer',
+              color: D.textSec, alignItems: 'center', justifyContent: 'center',
+            }}>☰</button>
+          </div>
         </div>
       </header>
 
-      {/* ── Hero ── */}
-      <section className="hero-section" style={{
-        position: 'relative', overflow: 'hidden',
-        textAlign: 'center', padding: '120px 24px 100px',
-        backgroundImage: "linear-gradient(180deg, rgba(15,23,42,0.68) 0%, rgba(15,23,42,0.78) 100%), url('/images/hero-sxsw-crowd.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundColor: '#0f172a',
-      }}>
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 100%, rgba(14,165,233,0.12) 0%, transparent 60%)', zIndex: 1 }}/>
-        <div style={{ maxWidth: 740, margin: '0 auto', position: 'relative', zIndex: 2 }}>
-          <div className="hero-tag" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 18px',
-            background: 'rgba(14,165,233,0.15)', borderRadius: 24, fontSize: 13,
-            fontWeight: 600, color: '#7dd3fc', marginBottom: 28,
-            border: '1px solid rgba(14,165,233,0.3)', backdropFilter: 'blur(8px)',
-          }}>{t.heroTag}</div>
-          <h1 className="hero-h1" style={{
-            fontFamily: T.fontDisplay, fontSize: 50, fontWeight: 700,
-            color: '#fff', lineHeight: 1.18, marginBottom: 24, letterSpacing: -0.5,
-          }}>
-            {t.heroH1a}<br/>
-            <span style={{ color: '#38bdf8' }}>{t.heroH1b}</span>
+      {/* ─────────────────────────── Hero ─────────────────────────── */}
+      <section style={{ background: D.bg, paddingTop: 160, paddingBottom: 100 }}>
+        <div style={{ ...wrap, textAlign: 'center' }}>
+
+          {/* Tag */}
+          <div className="hero-tag-anim" style={{ fontSize: 11, fontWeight: 600, letterSpacing: '3px', color: D.accent, textTransform: 'uppercase', marginBottom: 28 }}>
+            {t.hero.tag}
+          </div>
+
+          {/* H1 — staggered lines */}
+          <h1 className="hero-h1" style={{ fontFamily: D.fHead, fontSize: 52, fontWeight: 500, lineHeight: 1.2, color: D.text, marginBottom: 28, letterSpacing: '-0.5px' }}>
+            {t.hero.h1.map((line, i) => (
+              <span key={i} className="hero-line" style={{ display: 'block' }}>{line}</span>
+            ))}
           </h1>
-          <p className="hero-sub" style={{ fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.75, maxWidth: 560, margin: '0 auto 44px', fontFamily: T.font }}>
-            {t.heroSub}
+
+          {/* Sub */}
+          <p className="hero-sub hero-sub-anim" style={{ fontSize: 18, color: D.textSec, lineHeight: 1.75, maxWidth: 520, margin: '0 auto 44px', whiteSpace: 'pre-line' }}>
+            {t.hero.sub}
           </p>
-          <div className="hero-cta-group" style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/curator" className="hero-cta-a" style={{
-              padding: '16px 36px', fontSize: 16, fontWeight: 600, background: '#10b981', color: '#fff',
-              borderRadius: T.radius, textDecoration: 'none', fontFamily: T.font,
-              boxShadow: '0 4px 20px rgba(16,185,129,0.35)', transition: 'transform 0.15s, box-shadow 0.15s', display: 'inline-block',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 28px rgba(16,185,129,0.45)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 20px rgba(16,185,129,0.35)'; }}
-            >{t.ctaPrimary}</a>
-            <a href="#how-it-works" className="hero-cta-a" style={{
-              padding: '16px 32px', fontSize: 16, fontWeight: 600, color: '#fff',
-              borderRadius: T.radius, textDecoration: 'none', fontFamily: T.font,
-              border: '1.5px solid rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.05)',
-              display: 'inline-block', transition: 'background 0.15s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-            >{t.ctaGhost}</a>
+
+          {/* CTAs */}
+          <div className="cta-group hero-cta-anim" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginBottom: 80, flexWrap: 'wrap' }}>
+            <a href="/studio"  className="cta-coral" style={{ fontSize: 16, padding: '15px 32px' }}>{t.hero.ctaPrimary}</a>
+            <a href="/curator" className="cta-ghost" style={{ fontSize: 16, padding: '15px 32px' }}>{t.hero.ctaGhost}</a>
           </div>
-        </div>
-      </section>
 
-      {/* ── Stats bar ── */}
-      <section style={{ padding: '36px 24px', background: T.white, borderBottom: `1px solid ${T.border}` }}>
-        <div className="stats-inner" style={{ maxWidth: 900, margin: '0 auto', display: 'flex', justifyContent: 'center', gap: 64, flexWrap: 'wrap' }}>
-          {[
-            { n: t.stat1n, l: t.stat1l },
-            { n: t.stat2n, l: t.stat2l },
-            { n: t.stat3n, l: t.stat3l },
-            { n: t.stat4n, l: t.stat4l },
-          ].map((s, i) => (
-            <div key={i} style={{ textAlign: 'center' }}>
-              <div className="stat-num" style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.accent }}>{s.n}</div>
-              <div style={{ fontSize: 13, color: T.textMuted, fontFamily: T.font, marginTop: 4 }}>{s.l}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Why OTONAMI ── */}
-      <section className="section-pad" style={{ padding: '80px 24px', background: T.white }}>
-        <div style={{ maxWidth: 960, margin: '0 auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>{t.whyLabel}</div>
-          <h2 className="section-h2" style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.text, marginBottom: 12 }}>{t.whyTitle}</h2>
-          <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.7, maxWidth: 520, marginBottom: 48, fontFamily: T.font }}>{t.whySub}</p>
-          <div className="three-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
-            {[
-              { ic: t.why1ic, title: t.why1t, desc: t.why1d, bg: 'rgba(99,102,241,0.08)' },
-              { ic: t.why2ic, title: t.why2t, desc: t.why2d, bg: 'rgba(16,185,129,0.08)' },
-              { ic: t.why3ic, title: t.why3t, desc: t.why3d, bg: 'rgba(14,165,233,0.08)' },
-            ].map((card, i) => (
-              <div key={i} className="why-card" style={{
-                background: T.bg, borderRadius: T.radiusLg, padding: '32px 28px',
-                border: `1px solid ${T.border}`, transition: 'transform 0.2s, box-shadow 0.2s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = T.shadowMd; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = 'none'; }}
-              >
-                <div style={{ width: 52, height: 52, borderRadius: 14, background: card.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, marginBottom: 20 }}>{card.ic}</div>
-                <h3 style={{ fontFamily: T.font, fontSize: 17, fontWeight: 700, color: T.text, marginBottom: 10 }}>{card.title}</h3>
-                <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.75, fontFamily: T.font }}>{card.desc}</p>
+          {/* Stats bar */}
+          <div className="stats-grid hero-stat-anim" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0 32px', maxWidth: 640, margin: '0 auto' }}>
+            {t.stats.map((s, i) => (
+              <div key={i} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 36, fontWeight: 600, color: D.accent, fontFamily: D.fHead, lineHeight: 1 }}>{s.n}</div>
+                <div style={{ fontSize: 11, color: D.textMuted, marginTop: 6, letterSpacing: '0.5px' }}>{s.l}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── How It Works ── */}
-      <section id="how-it-works" className="section-pad" style={{ padding: '80px 24px', background: T.bg }}>
-        <div style={{ maxWidth: 960, margin: '0 auto' }}>
-          <h2 className="section-h2" style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.text, textAlign: 'center', marginBottom: 56 }}>{t.howTitle}</h2>
-          <div className="three-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 28 }}>
-            {[
-              { ic: t.step1ic, s: t.step1s, title: t.step1t, desc: t.step1d },
-              { ic: t.step2ic, s: t.step2s, title: t.step2t, desc: t.step2d },
-              { ic: t.step3ic, s: t.step3s, title: t.step3t, desc: t.step3d },
-            ].map((item, i) => (
-              <div key={i} className="step-card" style={{
-                background: T.white, borderRadius: T.radiusLg, padding: 36,
-                border: `1px solid ${T.border}`, position: 'relative', overflow: 'hidden',
-              }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: T.accentGrad }}/>
-                <div style={{ width: 52, height: 52, borderRadius: 14, background: T.accentLight, border: `1px solid ${T.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, marginBottom: 20 }}>{item.ic}</div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, marginBottom: 8, fontFamily: T.font, letterSpacing: 1.5 }}>STEP {item.s}</div>
-                <h3 style={{ fontFamily: T.font, fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 12 }}>{item.title}</h3>
-                <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.75, fontFamily: T.font }}>{item.desc}</p>
-              </div>
+      {/* ─────────────────────────── How It Works ─────────────────────────── */}
+      <section id="how-it-works" style={{ background: D.surface, padding: '100px 0' }} className="section-pad">
+        <div style={wrap}>
+          <AnimatedSection>
+            <div style={{ textAlign: 'center', marginBottom: 56 }}>
+              <div style={label}>{t.how.label}</div>
+              <h2 style={{ fontFamily: D.fHead, fontSize: 36, fontWeight: 500, color: D.text, lineHeight: 1.25 }}>{t.how.title}</h2>
+            </div>
+          </AnimatedSection>
+
+          <div className="how-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
+            {t.how.steps.map((step, i) => (
+              <AnimatedSection key={i} delay={i * 100}>
+                <div className="how-card" style={{ height: '100%' }}>
+                  <div style={{ fontFamily: D.fHead, fontSize: 42, color: D.accent, marginBottom: 20, lineHeight: 1, opacity: 0.9 }}>{step.num}</div>
+                  <h3 style={{ fontSize: 17, fontWeight: 600, color: D.text, marginBottom: 12 }}>{step.t}</h3>
+                  <p style={{ fontSize: 14, color: D.textSec, lineHeight: 1.7 }}>{step.d}</p>
+                </div>
+              </AnimatedSection>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── From Japan to the World Stage ── */}
-      <section className="section-pad" style={{ padding: '80px 24px', background: T.white }}>
-        <div style={{ maxWidth: 960, margin: '0 auto' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>
-            {lang === 'ja' ? 'トラックレコード' : 'Track Record'}
-          </div>
-          <h2 className="section-h2" style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: T.text, marginBottom: 48 }}>
-            {lang === 'ja' ? '日本から世界のステージへ' : 'From Japan to the World Stage'}
-          </h2>
-          <div className="three-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-            {[
-              { src: '/images/sxsw-trumpet.jpg', caption: 'SXSW 2025 — Tokyo Night' },
-              { src: '/images/outdoor-live.jpg', caption: lang === 'ja' ? '国際ツアー' : 'International Tour' },
-              { src: '/images/stage-performance.jpg', caption: 'ROUTE14 × OTONAMI' },
-            ].map((img, i) => (
-              <div key={i} style={{ borderRadius: T.radiusLg, overflow: 'hidden', aspectRatio: '4/3', position: 'relative' }}>
-                <img src={img.src} alt={img.caption} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                <div style={{
-                  position: 'absolute', bottom: 0, left: 0, right: 0,
-                  padding: '28px 16px 14px',
-                  background: 'linear-gradient(to top, rgba(0,0,0,0.72), transparent)',
-                  color: '#fff', fontSize: 12, fontWeight: 600, fontFamily: T.font,
-                }}>{img.caption}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ─────────────────────────── Trust / Social Proof ─────────────────────────── */}
+      <section style={{ background: D.bg, padding: '100px 0' }} className="section-pad">
+        <div style={wrap}>
+          <AnimatedSection>
+            <div style={{ textAlign: 'center', marginBottom: 48 }}>
+              <div style={label}>{t.trust.label}</div>
+            </div>
+          </AnimatedSection>
 
-      {/* ── For Artists ── */}
-      <section id="for-artists" className="section-pad" style={{ padding: '80px 24px', background: T.bg }}>
-        <div style={{ maxWidth: 960, margin: '0 auto' }}>
-          <div className="artist-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>{t.artLabel}</div>
-              <h2 className="section-h2" style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 16, lineHeight: 1.25 }}>{t.artTitle}</h2>
-              <p style={{ fontSize: 15, color: T.textSub, lineHeight: 1.75, marginBottom: 32, fontFamily: T.font }}>{t.artBody}</p>
-              <a href="/studio" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '14px 28px', fontSize: 15, fontWeight: 600,
-                background: '#10b981', color: '#fff', borderRadius: T.radius,
-                textDecoration: 'none', fontFamily: T.font,
-                boxShadow: '0 4px 16px rgba(16,185,129,0.28)', transition: 'transform 0.15s, box-shadow 0.15s',
-                minHeight: 48,
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(16,185,129,0.4)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,185,129,0.28)'; }}
-              >{t.artCta}</a>
+          <AnimatedSection delay={100}>
+            <div className="trust-orgs" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 48, marginBottom: 64, flexWrap: 'wrap' }}>
+              {t.trust.orgs.map((org, i) => (
+                <span key={i} className="trust-org">{org}</span>
+              ))}
             </div>
-            {/* Live performance photo */}
-            <div style={{ borderRadius: T.radiusXl, overflow: 'hidden', aspectRatio: '4/3', boxShadow: T.shadowLg }}>
-              <img
-                src="/images/outdoor-live.jpg"
-                alt="Live performance"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+          </AnimatedSection>
 
-      {/* ── Backed by the Industry ── */}
-      <section className="section-pad" style={{ padding: '80px 24px', background: T.white }}>
-        <div style={{ maxWidth: 960, margin: '0 auto' }}>
-          <div className="artist-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
-            <div style={{ borderRadius: T.radiusXl, overflow: 'hidden', aspectRatio: '16/10', boxShadow: T.shadowLg }}>
-              <img
-                src="/images/hero-sxsw-crowd.jpg"
-                alt="SXSW performance"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
-            </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: T.accent, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8, fontFamily: T.font }}>
-                {lang === 'ja' ? '業界の信頼' : 'Industry Backing'}
-              </div>
-              <h2 className="section-h2" style={{ fontFamily: T.fontDisplay, fontSize: 28, fontWeight: 700, color: T.text, marginBottom: 16, lineHeight: 1.25 }}>
-                {lang === 'ja' ? '業界に支持されたネットワーク' : 'Backed by the Industry'}
-              </h2>
-              <p style={{ fontSize: 15, color: T.textSub, lineHeight: 1.75, marginBottom: 28, fontFamily: T.font }}>
-                {lang === 'ja'
-                  ? 'SXSW連続10年出演、ILCJ加盟70以上のレーベル。業界の第一線で培った信頼が、アーティストの国際展開を加速します。'
-                  : '10 consecutive years at SXSW. 70+ labels through ILCJ. A decade of trust built on the frontlines of the international music industry.'}
+          {/* Pull quote */}
+          <AnimatedSection delay={200}>
+            <div style={{ maxWidth: 680, margin: '0 auto', borderLeft: `3px solid ${D.accent}`, paddingLeft: 28 }}>
+              <p style={{ fontFamily: D.fHead, fontStyle: 'italic', fontSize: 20, color: D.text, lineHeight: 1.6, marginBottom: 12 }}>
+                {t.trust.quote}
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {[
-                  { label: lang === 'ja' ? 'SXSW 連続10年出演' : '10 Years at SXSW', sub: 'Austin, Texas' },
-                  { label: lang === 'ja' ? 'ILCJ加盟レーベル70以上' : '70+ ILCJ Member Labels', sub: lang === 'ja' ? '日本最大インディー連合' : "Japan's largest indie coalition" },
-                  { label: lang === 'ja' ? 'キュレーター・プロ 3,449名' : '3,449 Curators & Pros', sub: lang === 'ja' ? '世界各国のメディア・プレイリスト' : 'Global media & playlists' },
-                ].map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: T.bg, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: T.accent, flexShrink: 0 }}/>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: T.text, fontFamily: T.font }}>{item.label}</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>{item.sub}</div>
-                    </div>
+              <p style={{ fontSize: 13, color: D.textMuted }}>{t.trust.quoteBy}</p>
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ─────────────────────────── For Curators ─────────────────────────── */}
+      <section style={{ background: D.surface, padding: '100px 0' }} className="section-pad">
+        <div style={wrap}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+            <AnimatedSection>
+              <div>
+                <div style={label}>{t.curators.label}</div>
+                <h2 style={{ fontFamily: D.fHead, fontSize: 36, fontWeight: 500, color: D.text, lineHeight: 1.25, marginBottom: 16 }}>{t.curators.title}</h2>
+                <p style={{ fontSize: 15, color: D.textSec, lineHeight: 1.7, marginBottom: 36 }}>{t.curators.sub}</p>
+                <a href="/curator" className="cta-coral">{t.curators.cta}</a>
+              </div>
+            </AnimatedSection>
+
+            <AnimatedSection delay={120}>
+              <div style={{ background: D.surfaceAlt, border: `1px solid ${D.border}`, borderRadius: 16, padding: '32px 28px' }}>
+                {t.curators.features.map((f, i) => (
+                  <div key={i} className="feature-row">
+                    <span style={{ color: D.accent, fontSize: 18, flexShrink: 0, marginTop: 1 }}>✦</span>
+                    <span style={{ fontSize: 15, color: D.textSec, lineHeight: 1.65 }}>{f}</span>
                   </div>
                 ))}
               </div>
-            </div>
+            </AnimatedSection>
           </div>
         </div>
       </section>
 
-      {/* ── CTA Banner ── */}
-      <section className="cta-banner" style={{ padding: '64px 24px', background: T.accentGrad, textAlign: 'center' }}>
-        <h2 className="cta-banner-title" style={{ fontFamily: T.fontDisplay, fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.ctaBannerTitle}</h2>
-        <p className="cta-banner-sub" style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', marginBottom: 36, fontFamily: T.font }}>{t.ctaBannerSub}</p>
-        <a href="/studio" className="cta-banner-btn" style={{
-          padding: '16px 36px', fontSize: 16, fontWeight: 600,
-          background: '#fff', color: T.accent, borderRadius: T.radius,
-          textDecoration: 'none', fontFamily: T.font, display: 'inline-block',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.1)', transition: 'box-shadow 0.15s, transform 0.15s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'; e.currentTarget.style.transform = ''; }}
-        >{t.ctaBannerBtn}</a>
+      {/* ─────────────────────────── For Artists ─────────────────────────── */}
+      <section style={{ background: D.bg, padding: '100px 0' }} className="section-pad">
+        <div style={wrap}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+            <AnimatedSection delay={120}>
+              <div style={{ background: D.surfaceAlt, border: `1px solid ${D.border}`, borderRadius: 16, padding: '32px 28px' }}>
+                {t.artists.features.map((f, i) => (
+                  <div key={i} className="feature-row">
+                    <span style={{ color: D.accent, fontSize: 18, flexShrink: 0, marginTop: 1 }}>✦</span>
+                    <span style={{ fontSize: 15, color: D.textSec, lineHeight: 1.65 }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </AnimatedSection>
+
+            <AnimatedSection>
+              <div>
+                <div style={label}>{t.artists.label}</div>
+                <h2 style={{ fontFamily: D.fHead, fontSize: 36, fontWeight: 500, color: D.text, lineHeight: 1.25, marginBottom: 16 }}>{t.artists.title}</h2>
+                <p style={{ fontSize: 15, color: D.textSec, lineHeight: 1.7, marginBottom: 36 }}>{t.artists.sub}</p>
+                <a href="/studio" className="cta-coral">{t.artists.cta}</a>
+              </div>
+            </AnimatedSection>
+          </div>
+        </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer style={{ padding: '32px 24px', background: T.white, borderTop: `1px solid ${T.border}`, textAlign: 'center', fontFamily: T.font, fontSize: 13, color: T.textMuted }}>
-        <div className="footer-inner">
-          <span>{t.footerCopy}</span>
-          <span>{t.footerBy}</span>
+      {/* ─────────────────────────── CTA Banner ─────────────────────────── */}
+      <section style={{ background: D.surface, padding: '80px 0', borderTop: `1px solid ${D.border}`, borderBottom: `1px solid ${D.border}` }}>
+        <AnimatedSection>
+          <div style={{ ...wrap, textAlign: 'center' }}>
+            <h2 style={{ fontFamily: D.fHead, fontSize: 40, fontWeight: 500, color: D.text, marginBottom: 12 }}>{t.cta.title}</h2>
+            <p style={{ fontSize: 16, color: D.textSec, marginBottom: 36 }}>{t.cta.sub}</p>
+            <a href="/studio" className="cta-coral" style={{ fontSize: 16, padding: '16px 36px' }}>{t.cta.btn}</a>
+          </div>
+        </AnimatedSection>
+      </section>
+
+      {/* ─────────────────────────── Footer ─────────────────────────── */}
+      <footer style={{ background: '#151515', padding: '60px 0 40px', borderTop: `1px solid ${D.border}` }}>
+        <div style={wrap}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 32, flexWrap: 'wrap', marginBottom: 48 }}>
+            {/* Brand */}
+            <div>
+              <div style={{ fontFamily: D.fHead, fontSize: 22, letterSpacing: '2px', color: D.accent, marginBottom: 8 }}>OTONAMI</div>
+              <div style={{ fontSize: 13, color: D.textMuted, lineHeight: 1.6 }}>{t.footer.tagline}</div>
+            </div>
+            {/* Links */}
+            <nav className="footer-links" style={{ display: 'flex', gap: 32, flexWrap: 'wrap', alignItems: 'center' }}>
+              {t.footer.links.map((l, i) => (
+                <a key={i} href={l.href} style={{ color: D.textMuted, textDecoration: 'none', fontSize: 13, transition: 'color 0.2s' }}
+                  onMouseEnter={e => e.target.style.color = D.textSec}
+                  onMouseLeave={e => e.target.style.color = D.textMuted}
+                >{l.label}</a>
+              ))}
+            </nav>
+          </div>
+          {/* Bottom bar */}
+          <div style={{ borderTop: `1px solid ${D.border}`, paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <span style={{ fontSize: 12, color: D.textMuted }}>{t.footer.copy}</span>
+            <a href={`mailto:${t.footer.email}`} style={{ fontSize: 12, color: D.textMuted, textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseEnter={e => e.target.style.color = D.textSec}
+              onMouseLeave={e => e.target.style.color = D.textMuted}
+            >{t.footer.email}</a>
+          </div>
         </div>
       </footer>
+
     </div>
   );
 }

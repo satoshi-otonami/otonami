@@ -164,15 +164,22 @@ async function fetchSoundNetFeatures(songName, artistName) {
     }
 
     raw = await res.json();
+    console.log('[SoundNet] raw response from', endpoint, ':', JSON.stringify(raw).slice(0, 300));
     break;
   }
 
   if (!raw) throw new Error(lastError || 'All SoundNet endpoints failed');
 
+  // Handle array response — some endpoints return [{...}] instead of {...}
+  if (Array.isArray(raw)) {
+    raw = raw[0] ?? null;
+    if (!raw) throw new Error('SoundNet returned empty array');
+  }
+
   // Normalize 0-100 → 0-1 (SoundNet returns 0-100 scale for most features)
   const normalize = (v) => (v != null ? Math.min(1, Math.max(0, v / 100)) : null);
 
-  return {
+  const features = {
     energy:           normalize(raw.energy),
     danceability:     normalize(raw.danceability),
     acousticness:     normalize(raw.acousticness),
@@ -181,8 +188,9 @@ async function fetchSoundNetFeatures(songName, artistName) {
     tempo:            raw.tempo ?? raw.bpm ?? null,   // BPM — keep as-is
     key:              raw.key ?? null,
     loudness:         raw.loudness ?? null,
-    _raw: raw,   // 全フィールドを返して確認できるようにする
   };
+  console.log('[SoundNet] parsed features:', JSON.stringify(features));
+  return features;
 }
 
 // ── POST /api/track/analyze ──
@@ -228,10 +236,11 @@ export async function POST(request) {
     }
 
     if (!songName) {
-      return NextResponse.json(
-        { error: 'Could not determine song name. Please provide songName.' },
-        { status: 400 }
-      );
+      // If a URL was provided but song name couldn't be determined, return gracefully
+      // (don't 400 — let the UI show "no analysis data" without blocking pitch creation)
+      const hint = trackUrl ? 'Could not extract song name from URL. Enter song title manually.' : 'Please provide songName.';
+      console.warn('[analyze] no songName:', hint);
+      return NextResponse.json({ songName: '', artistName, audioFeatures: null, source: 'url', metadata, soundnetError: hint });
     }
 
     // 2. SoundNet APIでaudio features取得

@@ -1103,6 +1103,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         songName: (songName || '').trim(),
         artistName: (artistName || '').trim(),
       });
+      console.log('[analyzeTrack] result:', { songName: result.songName, artistName: result.artistName, audioFeatures: result.audioFeatures, soundnetError: result.soundnetError });
       if (setTrackData) setTrackData({ ...result, genre: artist.genre, mood: artist.mood });
       setTrackAnalysisStatus('done');
     } catch (e) {
@@ -1403,14 +1404,16 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
             </div>
           );
         })()}
-        {trackAnalysisStatus === 'done' && !trackData?.audioFeatures && (
+        {(trackAnalysisStatus === 'done' && !trackData?.audioFeatures) && (
           <div style={{marginTop:6,fontSize:"0.62rem",color:"#0284c7",background:"#f0f9ff",borderRadius:6,padding:"0.35rem 0.5rem",border:"1px solid #bae6fd"}}>
             ℹ️ 楽曲分析データなし — ジャンル情報でピッチを生成します
+            {trackData?.soundnetError && <span style={{display:"block",color:"#94a3b8",marginTop:2}}>({trackData.soundnetError})</span>}
           </div>
         )}
         {trackAnalysisStatus === 'error' && (
           <div style={{marginTop:6,fontSize:"0.62rem",color:"#0284c7",background:"#f0f9ff",borderRadius:6,padding:"0.35rem 0.5rem",border:"1px solid #bae6fd"}}>
             ℹ️ 楽曲分析データなし — ジャンル情報でピッチを生成します
+            <span style={{display:"block",color:"#94a3b8",marginTop:2}}>(サーバーログでエラー詳細を確認してください)</span>
           </div>
         )}
         {/* Embed preview so artist can confirm correct track */}

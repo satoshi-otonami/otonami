@@ -960,7 +960,10 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
           const flag = c.region ? (regionFlags[c.region] || null) : null;
           return <div key={c.id} onClick={()=>toggle(c.id)} className="curator-list-card" style={{background:on?'rgba(196,149,106,0.1)':'#222222',border:on?'1px solid rgba(196,149,106,0.4)':'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:'20px',display:'flex',gap:16,alignItems:'flex-start',cursor:'pointer',transition:'all 0.2s ease'}}>
             {/* Avatar */}
-            <div style={{width:48,height:48,borderRadius:'50%',background:on?'linear-gradient(135deg,#c4956a,#e85d3a)':av.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:600,color:on?'#fff':av.text,flexShrink:0,letterSpacing:'-0.5px'}}>{initials}</div>
+            <div style={{width:48,height:48,borderRadius:'50%',flexShrink:0,position:'relative',overflow:'hidden'}}>
+              {c.iconUrl && <img src={c.iconUrl} alt={c.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',border:'2px solid rgba(255,255,255,0.08)'}} onError={e=>{e.target.style.display='none';}} />}
+              <div style={{width:'100%',height:'100%',borderRadius:'50%',background:on?'linear-gradient(135deg,#c4956a,#e85d3a)':av.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:600,color:on?'#fff':av.text,letterSpacing:'-0.5px'}}>{initials}</div>
+            </div>
             {/* Info */}
             <div style={{flex:1,minWidth:0}}>
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>

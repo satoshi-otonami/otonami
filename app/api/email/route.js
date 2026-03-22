@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
-const FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+const FROM = process.env.EMAIL_FROM || 'info@otonami.io';
 
 export async function POST(request) {
   try {
@@ -122,8 +122,12 @@ export async function POST(request) {
     const { data, error } = await resend.emails.send({
       from: `OTONAMI <${FROM}>`,
       to: [toEmail],
+      reply_to: 'info@otonami.io',
       subject: emailSubject || 'OTONAMI Notification',
       html: htmlBody,
+      headers: {
+        'List-Unsubscribe': '<mailto:info@otonami.io?subject=unsubscribe>',
+      },
     });
 
     if (error) {

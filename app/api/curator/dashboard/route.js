@@ -154,7 +154,12 @@ export async function PATCH(request) {
       resend.emails.send({
         from: `OTONAMI <${FROM}>`,
         to: [data.artist_email],
+        reply_to: 'info@otonami.io',
         subject: `OTONAMI — ${data.curator_name || 'A curator'} responded to your pitch`,
+        text: `${data.curator_name || 'A curator'} responded to your pitch "${data.subject || ''}".\n\nStatus: ${statusLabel}${data.feedback_message ? `\n\nFeedback: ${data.feedback_message}` : ''}${data.placement_url ? `\n\nPlacement: ${data.placement_url}` : ''}\n\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
+        headers: {
+          'List-Unsubscribe': '<mailto:info@otonami.io?subject=unsubscribe>',
+        },
         html: `
           <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#0a0a18;color:#fff;padding:32px;border-radius:16px;">
             <div style="text-align:center;margin-bottom:24px;">

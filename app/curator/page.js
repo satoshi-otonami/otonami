@@ -200,6 +200,9 @@ export default function CuratorRegistrationPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Registration failed');
+      if (data.token) {
+        try { localStorage.setItem('curator_token', data.token); } catch {}
+      }
       setStatus('success');
     } catch (e) { setError(e.message); setStatus('error'); }
   };

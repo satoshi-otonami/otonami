@@ -1,13 +1,13 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { T } from '@/lib/design-tokens';
+import { D as T } from '@/lib/design-tokens';
 import { supabase } from '@/lib/supabase';
 
 const STATUS_LABELS = {
-  sent:     { en: 'Pending',  ja: '未対応',  color: '#92400e', bg: '#fef3c7' },
-  accepted: { en: 'Accepted', ja: '承認済み', color: '#065f46', bg: '#d1fae5' },
-  declined: { en: 'Declined', ja: '却下済み', color: '#991b1b', bg: '#fee2e2' },
-  feedback: { en: 'Feedback', ja: 'FB受信',   color: '#1e40af', bg: '#dbeafe' },
+  sent:     { en: 'Pending',  ja: '未対応',  color: '#eab308', bg: 'rgba(234,179,8,0.12)' },
+  accepted: { en: 'Accepted', ja: '承認済み', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+  declined: { en: 'Declined', ja: '却下済み', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
+  feedback: { en: 'Feedback', ja: 'FB受信',   color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
 };
 
 const FILTER_TABS = [
@@ -58,12 +58,12 @@ const OPPORTUNITY_OPTIONS = [
 ];
 
 const TYPE_BADGE = {
-  playlist: { bg: '#ede9fe', color: '#7c3aed', label: 'Playlist' },
-  blog:     { bg: '#fef3c7', color: '#d97706', label: 'Blog' },
-  media:    { bg: '#dbeafe', color: '#1d4ed8', label: 'Media' },
-  radio:    { bg: '#d1fae5', color: '#059669', label: 'Radio' },
-  label:    { bg: '#fce7f3', color: '#db2777', label: 'Label' },
-  other:    { bg: T.bg,      color: T.textSub,  label: 'Other' },
+  playlist: { bg: 'rgba(139,92,246,0.15)', color: '#a78bfa', label: 'Playlist' },
+  blog:     { bg: 'rgba(234,179,8,0.15)',  color: '#fbbf24', label: 'Blog' },
+  media:    { bg: 'rgba(96,165,250,0.15)', color: '#60a5fa', label: 'Media' },
+  radio:    { bg: 'rgba(16,185,129,0.15)', color: '#34d399', label: 'Radio' },
+  label:    { bg: 'rgba(236,72,153,0.15)', color: '#f472b6', label: 'Label' },
+  other:    { bg: 'rgba(255,255,255,0.06)', color: T.textSub, label: 'Other' },
 };
 
 // ── ピル表示ヘルパー ──
@@ -323,7 +323,7 @@ export default function CuratorDashboard() {
     border: `1px solid ${T.border}`, background: T.white, color: T.text,
     fontSize: 13, outline: 'none', boxSizing: 'border-box', fontFamily: T.font, minHeight: 44,
   };
-  const editLbl = { fontSize: 12, color: '#374151', display: 'block', marginBottom: 5, fontWeight: 600, fontFamily: T.font };
+  const editLbl = { fontSize: 12, color: T.textMuted, display: 'block', marginBottom: 5, fontWeight: 600, fontFamily: T.font };
 
   const typeBadge = curator ? (TYPE_BADGE[curator.type] || TYPE_BADGE.other) : TYPE_BADGE.other;
   const editTypeBadge = editMode ? (TYPE_BADGE[editForm.type] || TYPE_BADGE.other) : null;
@@ -334,11 +334,11 @@ export default function CuratorDashboard() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: ${T.bg}; overflow-x: hidden; }
         .pitch-card { transition: box-shadow 0.2s, transform 0.2s; }
-        .pitch-card:hover { box-shadow: 0 4px 16px rgba(14,165,233,0.08), 0 2px 8px rgba(0,0,0,0.06) !important; transform: translateY(-1px); }
+        .pitch-card:hover { box-shadow: 0 4px 16px rgba(196,149,106,0.12), 0 2px 8px rgba(0,0,0,0.2) !important; transform: translateY(-1px); }
         .dash-tab-btn { transition: all 0.2s; }
         .dash-tab-btn:hover { color: ${T.accent} !important; }
-        .fb-input:focus { border-color: ${T.accent} !important; box-shadow: 0 0 0 3px rgba(14,165,233,0.1) !important; outline: none !important; }
-        .edit-input:focus { border-color: ${T.accent} !important; box-shadow: 0 0 0 3px rgba(14,165,233,0.1) !important; outline: none !important; }
+        .fb-input:focus { border-color: ${T.accent} !important; box-shadow: 0 0 0 3px rgba(196,149,106,0.15) !important; outline: none !important; }
+        .edit-input:focus { border-color: ${T.accent} !important; box-shadow: 0 0 0 3px rgba(196,149,106,0.15) !important; outline: none !important; }
         .pill-tag-edit { transition: all 0.12s; }
         .pill-tag-edit:hover { border-color: ${T.accent} !important; background: ${T.accentLight} !important; color: ${T.accent} !important; }
         @media (max-width: 768px) {
@@ -371,8 +371,8 @@ export default function CuratorDashboard() {
       {toast && (
         <div style={{
           position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-          background: T.white, border: `1px solid #bbf7d0`, borderRadius: 10,
-          padding: '12px 24px', color: '#065f46', fontWeight: 700, fontSize: 14,
+          background: T.white, border: `1px solid ${T.greenBorder}`, borderRadius: 10,
+          padding: '12px 24px', color: T.green, fontWeight: 700, fontSize: 14,
           zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', fontFamily: T.font,
           whiteSpace: 'nowrap',
         }}>{toast}</div>
@@ -381,7 +381,7 @@ export default function CuratorDashboard() {
       {/* ── Header ── */}
       <header className="dash-header" style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
+        background: 'rgba(26,26,26,0.85)', backdropFilter: 'blur(12px)',
         borderBottom: `1px solid ${T.border}`,
         padding: '0 24px', height: 64,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -446,7 +446,7 @@ export default function CuratorDashboard() {
                       onDrop={e => { e.preventDefault(); setEditAvatarDragOver(false); applyEditAvatar(e.dataTransfer.files?.[0]); }}
                       style={{
                         width: 80, height: 80, borderRadius: '50%', flexShrink: 0,
-                        border: `2px dashed ${editAvatarDragOver ? T.accentDark : editAvatarPreview ? T.accent : '#d1d5db'}`,
+                        border: `2px dashed ${editAvatarDragOver ? T.accentDark : editAvatarPreview ? T.accent : T.border}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         cursor: editAvatarUploading ? 'default' : 'pointer',
                         overflow: 'hidden', background: editAvatarDragOver ? T.accentLight : T.bg,
@@ -551,7 +551,7 @@ export default function CuratorDashboard() {
                       const sel = editForm.preferred_moods?.includes(m);
                       return (
                         <button key={m} onClick={() => toggleEditArray('preferred_moods', m, null)} className="pill-tag-edit"
-                          style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, cursor: 'pointer', border: '1px solid', borderColor: sel ? '#8b5cf6' : T.border, background: sel ? '#ede9fe' : T.white, color: sel ? '#7c3aed' : T.textSub, fontFamily: T.font }}>{m}</button>
+                          style={{ padding: '3px 10px', borderRadius: 20, fontSize: 11, cursor: 'pointer', border: '1px solid', borderColor: sel ? '#a78bfa' : T.border, background: sel ? 'rgba(139,92,246,0.15)' : T.white, color: sel ? '#a78bfa' : T.textSub, fontFamily: T.font }}>{m}</button>
                       );
                     })}
                   </div>
@@ -579,7 +579,7 @@ export default function CuratorDashboard() {
                   <input className="edit-input" style={editInp} value={editForm.similar_artists} placeholder="e.g. Snarky Puppy, Nujabes, Khruangbin" onChange={e => setEditForm(f => ({ ...f, similar_artists: e.target.value }))} />
                 </div>
 
-                {saveError && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 14, padding: '10px 14px', background: '#fef2f2', borderRadius: 8, fontFamily: T.font }}>{saveError}</div>}
+                {saveError && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 14, padding: '10px 14px', background: 'rgba(239,68,68,0.1)', borderRadius: 8, fontFamily: T.font }}>{saveError}</div>}
 
                 <div className="edit-save-btns" style={{ display: 'flex', gap: 10 }}>
                   <button onClick={() => setEditMode(false)} style={{ padding: '11px 22px', border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>
@@ -674,25 +674,25 @@ export default function CuratorDashboard() {
                   {curator.accepts?.length > 0 && (
                     <div>
                       <SectionLabel>Also Accepts / その他受付</SectionLabel>
-                      <PillRow items={curator.accepts} color="#0369a1" bg="#e0f2fe" border="#bae6fd" />
+                      <PillRow items={curator.accepts} color="#60a5fa" bg="rgba(96,165,250,0.12)" border="rgba(96,165,250,0.25)" />
                     </div>
                   )}
                   {curator.preferred_moods?.length > 0 && (
                     <div>
                       <SectionLabel>Moods / ムード</SectionLabel>
-                      <PillRow items={curator.preferred_moods} color="#7c3aed" bg="#ede9fe" border="#ddd6fe" />
+                      <PillRow items={curator.preferred_moods} color="#a78bfa" bg="rgba(139,92,246,0.15)" border="rgba(139,92,246,0.25)" />
                     </div>
                   )}
                   {curator.opportunities?.length > 0 && (
                     <div>
                       <SectionLabel>Opportunities / 提供できる機会</SectionLabel>
-                      <PillRow items={curator.opportunities.map(v => OPPORTUNITY_OPTIONS.find(o => o.value === v)?.en || v)} color="#059669" bg="#d1fae5" border="#a7f3d0" />
+                      <PillRow items={curator.opportunities.map(v => OPPORTUNITY_OPTIONS.find(o => o.value === v)?.en || v)} color="#34d399" bg="rgba(16,185,129,0.12)" border="rgba(16,185,129,0.25)" />
                     </div>
                   )}
                   {curator.similar_artists?.length > 0 && (
                     <div>
                       <SectionLabel>Music Similar To / こんな音楽が好き</SectionLabel>
-                      <PillRow items={curator.similar_artists} color="#b45309" bg="#fef3c7" border="#fde68a" />
+                      <PillRow items={curator.similar_artists} color="#fbbf24" bg="rgba(234,179,8,0.12)" border="rgba(234,179,8,0.25)" />
                     </div>
                   )}
                 </div>
@@ -708,9 +708,9 @@ export default function CuratorDashboard() {
           }}>
             {[
               { label: 'Total', ja: '合計', val: counts.all, color: T.text, bg: T.white },
-              { label: 'Pending', ja: '未対応', val: counts.sent, color: '#d97706', bg: '#fef3c7' },
-              { label: 'Accepted', ja: '承認', val: counts.accepted, color: '#059669', bg: '#d1fae5' },
-              { label: 'Declined', ja: '却下', val: counts.declined, color: '#dc2626', bg: '#fee2e2' },
+              { label: 'Pending', ja: '未対応', val: counts.sent, color: '#fbbf24', bg: 'rgba(234,179,8,0.1)' },
+              { label: 'Accepted', ja: '承認', val: counts.accepted, color: '#34d399', bg: 'rgba(16,185,129,0.1)' },
+              { label: 'Declined', ja: '却下', val: counts.declined, color: '#f87171', bg: 'rgba(248,113,113,0.1)' },
             ].map(s => (
               <div key={s.label} style={{
                 background: s.bg, border: `1px solid ${T.border}`, borderRadius: 12,
@@ -768,7 +768,7 @@ export default function CuratorDashboard() {
                       {pitch.artist_genre && <span style={{ color: T.textMuted, fontSize: 12, fontFamily: T.font }}>{pitch.artist_genre}</span>}
                       <span style={{ padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, color: s.color, background: s.bg, fontFamily: T.font }}>{s.en} / {s.ja}</span>
                     </div>
-                    <div style={{ color: '#374151', fontSize: 13, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: T.font }}>
+                    <div style={{ color: T.textSub, fontSize: 13, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: T.font }}>
                       {pitch.subject || '(no subject)'}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
@@ -792,7 +792,7 @@ export default function CuratorDashboard() {
                           style={{
                             display: 'inline-flex', alignItems: 'center', gap: 4,
                             padding: '2px 10px', borderRadius: 10, fontSize: 11, fontWeight: 600,
-                            background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0',
+                            background: 'rgba(16,185,129,0.1)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)',
                             textDecoration: 'none', fontFamily: T.font,
                           }}>▶ Listen</a>
                       )}
@@ -815,7 +815,7 @@ export default function CuratorDashboard() {
                 {isExpanded && (
                   <div style={{ marginTop: 18, paddingTop: 18, borderTop: `1px solid ${T.border}` }}>
                     {pitch.body ? (
-                      <pre style={{ color: '#374151', fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: T.font, margin: '0 0 20px', background: T.bg, borderRadius: 10, padding: '16px 18px', border: `1px solid ${T.border}` }}>
+                      <pre style={{ color: T.textSub, fontSize: 13, lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: T.font, margin: '0 0 20px', background: T.bg, borderRadius: 10, padding: '16px 18px', border: `1px solid ${T.border}` }}>
                         {renderBody(pitch.body)}
                       </pre>
                     ) : (
@@ -829,7 +829,7 @@ export default function CuratorDashboard() {
                       <div style={{ color: T.textSub, fontSize: 12, fontWeight: 700, marginBottom: 12, letterSpacing: 0.5, fontFamily: T.font }}>FEEDBACK / フィードバック</div>
                       <div className="pitch-fb-stars" style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
                         {[1,2,3,4,5].map(star => (
-                          <button key={star} onClick={() => setDraft(pitch.id, 'rating', star === (feedbackDraft[pitch.id]?.rating) ? 0 : star)} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 3px', color: star <= (feedbackDraft[pitch.id]?.rating || 0) ? '#f59e0b' : '#d1d5db', minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>★</button>
+                          <button key={star} onClick={() => setDraft(pitch.id, 'rating', star === (feedbackDraft[pitch.id]?.rating) ? 0 : star)} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 3px', color: star <= (feedbackDraft[pitch.id]?.rating || 0) ? '#f59e0b' : T.border, minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>★</button>
                         ))}
                         {feedbackDraft[pitch.id]?.rating > 0 && <span style={{ color: '#f59e0b', fontSize: 12, alignSelf: 'center', fontFamily: T.font }}>{feedbackDraft[pitch.id].rating}/5</span>}
                       </div>

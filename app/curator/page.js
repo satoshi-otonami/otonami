@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { T } from '@/lib/design-tokens';
+import { D as T } from '@/lib/design-tokens';
 import { supabase } from '@/lib/supabase';
 
 const TYPE_OPTIONS = [
@@ -232,7 +232,7 @@ export default function CuratorRegistrationPage() {
     fontSize: 14, outline: 'none', marginTop: 6, boxSizing: 'border-box',
     fontFamily: T.font, minHeight: 48,
   };
-  const lbl = { fontSize: 13, color: '#374151', display: 'block', marginTop: 18, fontWeight: 500, fontFamily: T.font };
+  const lbl = { fontSize: 13, color: T.textMuted, display: 'block', marginTop: 18, fontWeight: 500, fontFamily: T.font };
   const sub = { fontSize: 11, color: T.textMuted, marginLeft: 6, fontWeight: 400 };
 
   // ── ログイン成功画面 ──
@@ -295,13 +295,13 @@ export default function CuratorRegistrationPage() {
           .header-cta { padding: 8px 11px !important; font-size: 12px !important; }
           .mobile-menu-overlay {
             display: flex !important; position: fixed; inset: 0; z-index: 200;
-            background: #fff; flex-direction: column;
+            background: #1a1a1a; flex-direction: column;
           }
           .curator-hero { padding: 56px 18px 48px !important; }
           .curator-form-wrap { padding: 0 0 80px !important; }
         }
-        .curator-input:focus { border-color: ${T.accent} !important; box-shadow: 0 0 0 3px rgba(14,165,233,0.12) !important; }
-        .curator-input:hover { border-color: #94a3b8 !important; }
+        .curator-input:focus { border-color: ${T.accent} !important; box-shadow: 0 0 0 3px rgba(196,149,106,0.15) !important; }
+        .curator-input:hover { border-color: ${T.textMuted} !important; }
         .pill-tag { transition: all 0.15s; }
         .pill-tag:hover { border-color: ${T.accent} !important; background: ${T.accentLight} !important; color: ${T.accent} !important; }
         .curator-tab-btn { transition: all 0.2s; }
@@ -339,7 +339,7 @@ export default function CuratorRegistrationPage() {
       )}
 
       {/* ── Header ── */}
-      <header className="header-pad" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${T.border}`, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: T.font }}>
+      <header className="header-pad" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(26,26,26,0.85)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${T.border}`, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: T.font }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 17 }}>O</div>
@@ -372,7 +372,7 @@ export default function CuratorRegistrationPage() {
       </header>
 
       {/* ── Hero ── */}
-      <section className="curator-hero" style={{ textAlign: 'center', padding: '72px 24px 60px', background: 'linear-gradient(180deg, rgba(14,165,233,0.06) 0%, rgba(248,250,252,0) 100%)', borderBottom: `1px solid ${T.border}` }}>
+      <section className="curator-hero" style={{ textAlign: 'center', padding: '72px 24px 60px', background: 'linear-gradient(135deg, #1a1a1a 0%, #2a1f1a 50%, #1a1a1a 100%)', borderBottom: `1px solid ${T.border}` }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 16px', background: T.accentLight, borderRadius: 24, fontSize: 12, fontWeight: 600, color: T.accent, border: `1px solid ${T.accentBorder}`, marginBottom: 24 }}>♪ Curator Network</div>
           <h1 style={{ fontFamily: T.fontDisplay, fontSize: 36, fontWeight: 700, color: T.text, lineHeight: 1.2, marginBottom: 16 }}>
@@ -525,7 +525,7 @@ export default function CuratorRegistrationPage() {
 
                     {/* ── Profile Image ── */}
                     <div style={{ marginBottom: 4 }}>
-                      <div style={{ fontSize: 13, color: '#374151', fontWeight: 600, marginBottom: 14, fontFamily: T.font }}>
+                      <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 14, fontFamily: T.font }}>
                         Profile Photo <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 400, marginLeft: 4 }}>プロフィール写真（任意）</span>
                       </div>
                       <div className="avatar-upload-row" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
@@ -536,7 +536,7 @@ export default function CuratorRegistrationPage() {
                           onDrop={handleAvatarDrop}
                           style={{
                             width: 96, height: 96, borderRadius: '50%',
-                            border: `2px dashed ${avatarDragOver ? T.accentDark : avatarPreview ? T.accent : '#d1d5db'}`,
+                            border: `2px dashed ${avatarDragOver ? T.accentDark : avatarPreview ? T.accent : T.border}`,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             cursor: avatarUploading ? 'default' : 'pointer',
                             overflow: 'hidden', background: avatarDragOver ? T.accentLight : T.bg,

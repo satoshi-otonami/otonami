@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { T } from '@/lib/design-tokens';
+import { D as T } from '@/lib/design-tokens';
 
 function renderBody(text) {
   if (!text) return null;
@@ -14,10 +14,10 @@ function renderBody(text) {
 }
 
 const STATUS_COLORS = {
-  sent:     { color: '#92400e', bg: '#fef3c7', label: 'Pending / 未対応' },
-  accepted: { color: '#065f46', bg: '#d1fae5', label: 'Accepted / 承認済み' },
-  declined: { color: '#991b1b', bg: '#fee2e2', label: 'Declined / 却下済み' },
-  feedback: { color: '#1e40af', bg: '#dbeafe', label: 'Feedback Sent / FB送信済み' },
+  sent:     { color: '#fbbf24', bg: 'rgba(234,179,8,0.12)',    label: 'Pending / 未対応' },
+  accepted: { color: '#34d399', bg: 'rgba(16,185,129,0.12)',   label: 'Accepted / 承認済み' },
+  declined: { color: '#f87171', bg: 'rgba(248,113,113,0.12)',  label: 'Declined / 却下済み' },
+  feedback: { color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',   label: 'Feedback Sent / FB送信済み' },
 };
 
 /* ── ログインフォーム ── */
@@ -83,7 +83,7 @@ function LoginForm({ onLogin }) {
           borderRadius: T.radiusLg, padding: '28px 24px', boxShadow: T.shadow,
         }}>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', color: '#374151', fontSize: 13, fontWeight: 500, marginBottom: 6, fontFamily: T.font }}>
+            <label style={{ display: 'block', color: T.textMuted, fontSize: 13, fontWeight: 500, marginBottom: 6, fontFamily: T.font }}>
               Email Address <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>メールアドレス</span>
             </label>
             <input
@@ -92,7 +92,7 @@ function LoginForm({ onLogin }) {
             />
           </div>
           <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', color: '#374151', fontSize: 13, fontWeight: 500, marginBottom: 6, fontFamily: T.font }}>
+            <label style={{ display: 'block', color: T.textMuted, fontSize: 13, fontWeight: 500, marginBottom: 6, fontFamily: T.font }}>
               Password <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>パスワード</span>
             </label>
             <input
@@ -114,7 +114,7 @@ function LoginForm({ onLogin }) {
             </div>
           )}
           {error && (
-            <div style={{ color: '#ef4444', fontSize: 12, marginBottom: 14, padding: '8px 12px', background: '#fef2f2', borderRadius: 8, fontFamily: T.font }}>
+            <div style={{ color: '#ef4444', fontSize: 12, marginBottom: 14, padding: '8px 12px', background: 'rgba(239,68,68,0.1)', borderRadius: 8, fontFamily: T.font }}>
               {error}
             </div>
           )}
@@ -234,8 +234,8 @@ function PitchView({ pitchId }) {
       {toast && (
         <div style={{
           position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
-          background: T.white, border: '1px solid #bbf7d0', borderRadius: 10,
-          padding: '10px 22px', color: '#065f46', fontWeight: 700, fontSize: 14,
+          background: T.white, border: `1px solid ${T.greenBorder}`, borderRadius: 10,
+          padding: '10px 22px', color: T.green, fontWeight: 700, fontSize: 14,
           zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', whiteSpace: 'nowrap',
           fontFamily: T.font,
         }}>{toast}</div>
@@ -302,7 +302,7 @@ function PitchView({ pitchId }) {
         <div style={{ color: T.textSub, fontSize: 11, fontWeight: 700, marginBottom: 12, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: T.font }}>Pitch Message</div>
         {pitch.body ? (
           <pre style={{
-            color: '#374151', fontSize: 13, lineHeight: 1.85,
+            color: T.textSub, fontSize: 13, lineHeight: 1.85,
             whiteSpace: 'pre-wrap', wordBreak: 'break-word',
             fontFamily: T.font, margin: 0,
           }}>
@@ -327,7 +327,7 @@ function PitchView({ pitchId }) {
         {done || (alreadyResponded && pitch.feedback_message) ? (
           /* 送信済み */
           <div>
-            <div style={{ color: '#065f46', fontWeight: 700, fontSize: 15, marginBottom: 12, fontFamily: T.font }}>
+            <div style={{ color: T.green, fontWeight: 700, fontSize: 15, marginBottom: 12, fontFamily: T.font }}>
               ✅ Feedback submitted! / フィードバックを送信しました
             </div>
             {pitch.feedback_message && (
@@ -515,7 +515,7 @@ export default function PitchRespondPage() {
       {/* ── Header ── */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
+        background: 'rgba(26,26,26,0.85)', backdropFilter: 'blur(12px)',
         borderBottom: `1px solid ${T.border}`,
         padding: '0 24px', height: 64,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',

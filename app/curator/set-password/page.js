@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { T } from '@/lib/design-tokens';
+import { D as T } from '@/lib/design-tokens';
 
 const inp = {
   width: '100%', padding: '12px 16px', borderRadius: 8,
@@ -10,7 +10,7 @@ const inp = {
   fontFamily: T.font,
 };
 const lbl = {
-  fontSize: 13, color: '#374151', display: 'block', marginTop: 18,
+  fontSize: 13, color: T.textMuted, display: 'block', marginTop: 18,
   fontWeight: 500, fontFamily: T.font,
 };
 
@@ -77,7 +77,7 @@ function EmailForm() {
       />
 
       {error && (
-        <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12, padding: '8px 12px', background: '#fef2f2', borderRadius: 8, fontFamily: T.font }}>
+        <p style={{ color: '#ef4444', fontSize: 13, marginTop: 12, padding: '8px 12px', background: 'rgba(239,68,68,0.1)', borderRadius: 8, fontFamily: T.font }}>
           {error}
         </p>
       )}
@@ -138,7 +138,7 @@ function SetPasswordForm({ token, email: initialEmail }) {
   if (status === 'success') return (
     <div style={{ textAlign: 'center', padding: '20px 0' }}>
       <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
-      <h2 style={{ color: '#065f46', fontSize: 20, fontWeight: 800, marginBottom: 12, fontFamily: T.fontDisplay }}>
+      <h2 style={{ color: '#10b981', fontSize: 20, fontWeight: 800, marginBottom: 12, fontFamily: T.fontDisplay }}>
         Password set successfully!
       </h2>
       <p style={{ color: T.textSub, fontSize: 14, lineHeight: 1.75, fontFamily: T.font }}>
@@ -207,7 +207,7 @@ function SetPasswordForm({ token, email: initialEmail }) {
       )}
 
       {error && (
-        <p style={{ color: '#ef4444', fontSize: 13, marginTop: 14, padding: '8px 12px', background: '#fef2f2', borderRadius: 8, fontFamily: T.font }}>
+        <p style={{ color: '#ef4444', fontSize: 13, marginTop: 14, padding: '8px 12px', background: 'rgba(239,68,68,0.1)', borderRadius: 8, fontFamily: T.font }}>
           {error === 'Invalid or expired reset link. Please request a new one.' ? (
             <>
               {error}{' '}
@@ -254,7 +254,7 @@ function SetPasswordContent() {
       {/* ── Header ── */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
+        background: 'rgba(26,26,26,0.85)', backdropFilter: 'blur(12px)',
         borderBottom: `1px solid ${T.border}`,
         padding: '0 24px', height: 64,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',

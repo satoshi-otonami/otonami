@@ -22,25 +22,36 @@ const REGION_OPTIONS = [
 ];
 
 const GENRE_OPTIONS = [
-  'Jazz', 'Rock', 'Pop', 'Hip-hop', 'R&B', 'Electronic', 'Folk',
-  'Classical', 'Indie', 'Alternative', 'Latin', 'Ambient', 'Experimental',
-  'Instrumental', 'Dance music', 'Jazz fusion', 'Film music', 'Lo-fi',
-  'Rap', 'Trap', 'Disco', 'Funk', 'Soul', 'World music', 'J-Pop', 'J-Rock',
+  'Rock', 'Pop', 'Hip-hop', 'R&B', 'Jazz', 'Electronic', 'Folk',
+  'Classical', 'Indie', 'Alternative', 'Soul', 'Funk', 'Reggae',
+  'Latin', 'World music', 'J-Pop', 'J-Rock', 'City Pop',
+  'Ambient', 'Experimental', 'Metal', 'Punk', 'Singer-Songwriter',
+  'Instrumental', 'Dance music', 'Jazz fusion', 'Film music',
+  'Lo-fi', 'Rap', 'Trap', 'Disco',
 ];
 
 const MOOD_OPTIONS = [
-  'Authentic', 'Eclectic', 'Creative', 'Danceable', 'Downbeat',
-  'Engaged', 'Energetic', 'Melancholic', 'Uplifting', 'Chill',
-  'Dramatic', 'Groovy', 'Atmospheric', 'Experimental',
+  'Chill', 'Energetic', 'Melancholic', 'Upbeat', 'Dark', 'Dreamy',
+  'Aggressive', 'Romantic', 'Nostalgic', 'Funky', 'Ethereal', 'Raw',
+  'Groovy', 'Atmospheric', 'Playful',
 ];
 
 const OPPORTUNITY_OPTIONS = [
-  { value: 'playlist',   en: 'Add to my playlist(s)',               ja: 'プレイリストに追加' },
-  { value: 'blog',       en: 'Write a blog post / review',          ja: 'ブログ記事・レビューを書く' },
-  { value: 'social',     en: 'Feature on social media',             ja: 'SNSで紹介' },
-  { value: 'radio',      en: 'Radio play',                          ja: 'ラジオで放送' },
-  { value: 'reel',       en: 'Create post or reel on social media', ja: 'SNS投稿・リールを作成' },
-  { value: 'interview',  en: 'Interview',                           ja: 'インタビュー' },
+  { value: 'playlist',  icon: '🎵', en: 'Playlist Add',       ja: 'プレイリストに追加' },
+  { value: 'blog',      icon: '📝', en: 'Written Review',      ja: 'ブログ記事・レビュー' },
+  { value: 'social',    icon: '📱', en: 'Social Media Share',  ja: 'SNSで紹介' },
+  { value: 'radio',     icon: '📻', en: 'Radio Play',          ja: 'ラジオで放送' },
+  { value: 'reel',      icon: '🎬', en: 'Post / Reel',         ja: 'SNS投稿・リール' },
+  { value: 'interview', icon: '🎤', en: 'Interview',           ja: 'インタビュー' },
+  { value: 'event',     icon: '🎪', en: 'Event / Festival',    ja: 'イベント・フェス' },
+  { value: 'label',     icon: '💿', en: 'Label Consideration', ja: 'レーベル検討' },
+];
+
+const RESPONSE_TIME_OPTIONS = [
+  { value: '24h',    en: 'Within 24 hours', ja: '24時間以内' },
+  { value: '3days',  en: '1–3 days',        ja: '1〜3日' },
+  { value: '7days',  en: '3–7 days',        ja: '3〜7日' },
+  { value: '2weeks', en: '1–2 weeks',       ja: '1〜2週間' },
 ];
 
 export default function CuratorRegistrationPage() {
@@ -51,27 +62,30 @@ export default function CuratorRegistrationPage() {
   const menuRef = useRef(null);
   const avatarInputRef = useRef(null);
 
-  // Login state
+  // Login
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [loginStatus, setLoginStatus] = useState(null);
   const [loginError, setLoginError] = useState('');
   const [loggedInCurator, setLoggedInCurator] = useState(null);
 
-  // Register state
+  // Register
   const [form, setForm] = useState({
-    // Step 1
     name: '', email: '', password: '', type: 'playlist',
     outletName: '', url: '', region: 'Global',
-    // Step 2
-    bio: '', followers: '', paypalEmail: '',
-    genres: [], accepts: [], moods: [], opportunities: [],
-    similarArtists: '', playlistUrl: '',
+    genres: [], rejectedGenres: [], moods: [], similarArtists: [],
+    playlistUrl: '',
+    bio: '', followers: '', paypalEmail: '', opportunities: [],
+    responseTime: '', featuredTrackUrl: '',
+    socialWebsite: '', socialTwitter: '', socialInstagram: '',
+    submissionGuidelines: '',
   });
+  const [artistInput, setArtistInput] = useState('');
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarDragOver, setAvatarDragOver] = useState(false);
   const [step1Error, setStep1Error] = useState('');
+  const [step2Error, setStep2Error] = useState('');
   const [status, setStatus] = useState(null);
   const [error, setError] = useState('');
 
@@ -96,13 +110,8 @@ export default function CuratorRegistrationPage() {
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
-  const switchLang = (l) => {
-    setLang(l);
-    try { localStorage.setItem('otonami_locale', l); } catch {}
-  };
-
+  const switchLang = (l) => { setLang(l); try { localStorage.setItem('otonami_locale', l); } catch {} };
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
-
   const toggleArray = (key, val, max) => {
     setForm(f => {
       const arr = f[key] || [];
@@ -112,57 +121,40 @@ export default function CuratorRegistrationPage() {
     });
   };
 
+  const addArtist = () => {
+    const val = artistInput.trim();
+    if (!val || form.similarArtists.length >= 10) return;
+    if (!form.similarArtists.includes(val)) set('similarArtists', [...form.similarArtists, val]);
+    setArtistInput('');
+  };
+
   const applyAvatarFile = (file) => {
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      alert('Please select an image file. / 画像ファイルを選択してください。');
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      alert('File size must be under 2MB. / ファイルサイズは2MB以下にしてください。');
-      return;
-    }
+    if (!file.type.startsWith('image/')) { alert('Please select an image file.'); return; }
+    if (file.size > 2 * 1024 * 1024) { alert('File size must be under 2MB.'); return; }
     setAvatarFile(file);
     const reader = new FileReader();
     reader.onload = (ev) => setAvatarPreview(ev.target.result);
     reader.readAsDataURL(file);
   };
 
-  const handleAvatarChange = (e) => applyAvatarFile(e.target.files?.[0]);
-
-  const handleAvatarDrop = (e) => {
-    e.preventDefault();
-    setAvatarDragOver(false);
-    applyAvatarFile(e.dataTransfer.files?.[0]);
-  };
-
   const handleLogin = async () => {
     if (!loginForm.email || !loginForm.password) {
-      setLoginError('Email and password are required. / メールとパスワードを入力してください。');
-      return;
+      setLoginError('Email and password are required. / メールとパスワードを入力してください。'); return;
     }
-    setLoginStatus('loading');
-    setLoginError('');
+    setLoginStatus('loading'); setLoginError('');
     try {
       const res = await fetch('/api/curators/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'login', email: loginForm.email, password: loginForm.password }),
       });
       const data = await res.json();
-      if (res.status === 409 && data.error === 'password_not_set') {
-        setLoginStatus('password_not_set');
-        return;
-      }
+      if (res.status === 409 && data.error === 'password_not_set') { setLoginStatus('password_not_set'); return; }
       if (!res.ok) throw new Error(data.error || 'Login failed');
       localStorage.setItem('curator_token', data.token);
-      setLoggedInCurator(data.curator);
-      setLoginStatus('success');
+      setLoggedInCurator(data.curator); setLoginStatus('success');
       window.location.href = '/curator/dashboard';
-    } catch (e) {
-      setLoginError(e.message);
-      setLoginStatus('error');
-    }
+    } catch (e) { setLoginError(e.message); setLoginStatus('error'); }
   };
 
   const goToStep2 = () => {
@@ -171,15 +163,17 @@ export default function CuratorRegistrationPage() {
     if (!form.email.trim()) { setStep1Error('Email is required. / メールアドレスは必須です。'); return; }
     if (form.password.length < 8) { setStep1Error('Password must be at least 8 characters. / パスワードは8文字以上にしてください。'); return; }
     if (!form.outletName.trim()) { setStep1Error('Platform name is required. / プラットフォーム名は必須です。'); return; }
-    setRegisterStep(2);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setRegisterStep(2); window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goToStep3 = () => {
+    setStep2Error('');
+    if (form.genres.length === 0) { setStep2Error('Please select at least one genre. / ジャンルを1つ以上選択してください。'); return; }
+    setRegisterStep(3); window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async () => {
-    setStatus('loading');
-    setError('');
-
-    // Upload avatar if selected
+    setStatus('loading'); setError('');
     let iconUrl = '';
     if (avatarFile) {
       setAvatarUploading(true);
@@ -188,35 +182,26 @@ export default function CuratorRegistrationPage() {
         const slug = form.email.replace(/[^a-z0-9]/gi, '-').toLowerCase();
         const fileName = `curator-${slug}-${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(fileName, avatarFile, { contentType: avatarFile.type, upsert: true });
+          .from('avatars').upload(fileName, avatarFile, { contentType: avatarFile.type, upsert: true });
         if (!uploadError) {
-          const { data: { publicUrl } } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(fileName);
+          const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
           iconUrl = publicUrl;
         }
-      } catch { /* skip image on error */ } finally {
-        setAvatarUploading(false);
-      }
+      } catch { /* skip */ } finally { setAvatarUploading(false); }
     }
-
     try {
-      const similarArtistsArr = form.similarArtists
-        .split(',').map(s => s.trim()).filter(Boolean).slice(0, 5);
-
+      const socialLinks = {};
+      if (form.socialWebsite.trim()) socialLinks.website = form.socialWebsite.trim();
+      if (form.socialTwitter.trim()) socialLinks.twitter = form.socialTwitter.trim();
+      if (form.socialInstagram.trim()) socialLinks.instagram = form.socialInstagram.trim();
       const res = await fetch('/api/curator', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, iconUrl, similarArtists: similarArtistsArr }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, iconUrl, socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : null }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Registration failed');
       setStatus('success');
-    } catch (e) {
-      setError(e.message);
-      setStatus('error');
-    }
+    } catch (e) { setError(e.message); setStatus('error'); }
   };
 
   const navItems = [
@@ -235,7 +220,7 @@ export default function CuratorRegistrationPage() {
   const lbl = { fontSize: 13, color: T.textMuted, display: 'block', marginTop: 18, fontWeight: 500, fontFamily: T.font };
   const sub = { fontSize: 11, color: T.textMuted, marginLeft: 6, fontWeight: 400 };
 
-  // ── ログイン成功画面 ──
+  // ── Login success screen ──
   if (loginStatus === 'success' && loggedInCurator) return (
     <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 480 }}>
@@ -252,21 +237,47 @@ export default function CuratorRegistrationPage() {
     </div>
   );
 
-  // ── 登録成功画面 ──
+  // ── Register success screen ──
   if (status === 'success') return (
     <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ textAlign: 'center', maxWidth: 480 }}>
-        <div style={{ fontSize: 72, marginBottom: 20 }}>🎉</div>
+      <div style={{ textAlign: 'center', maxWidth: 520 }}>
+        <div style={{ width: 80, height: 80, borderRadius: '50%', background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 24px' }}>✅</div>
         <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12, color: T.text, fontFamily: T.fontDisplay }}>
-          Registration Received!
+          Welcome to OTONAMI!
         </h1>
-        <p style={{ color: T.textSub, lineHeight: 1.8, fontSize: 15, fontFamily: T.font }}>
-          Thank you for joining OTONAMI as a curator.<br />
-          <span style={{ color: T.textMuted, fontSize: 13 }}>キュレーターとしてご登録いただきありがとうございます。</span><br /><br />
-          We'll review your profile and be in touch within 2–3 business days.<br />
-          <span style={{ color: T.textMuted, fontSize: 13 }}>2〜3営業日以内にご連絡いたします。</span>
+        <p style={{ color: T.textSub, lineHeight: 1.8, fontSize: 15, fontFamily: T.font, marginBottom: 8 }}>
+          Your profile is ready. Artists will start matching with you based on your preferences.<br />
+          <span style={{ color: T.textMuted, fontSize: 13 }}>プロフィールが完成しました。好みに基づいてアーティストとのマッチングが始まります。</span>
         </p>
-        <a href="/" style={{ display: 'inline-block', marginTop: 28, padding: '13px 32px', background: T.accentGrad, borderRadius: 24, color: '#fff', textDecoration: 'none', fontWeight: 700, fontFamily: T.font }}>← Back to OTONAMI</a>
+        <p style={{ color: T.textMuted, fontSize: 13, lineHeight: 1.7, fontFamily: T.font, marginBottom: 28 }}>
+          We&apos;ll review your profile within 2–3 business days.<br />
+          <span style={{ fontSize: 12 }}>2〜3営業日以内にご連絡いたします。</span>
+        </p>
+        {/* Mini profile preview */}
+        <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: T.radiusLg, padding: '20px 24px', marginBottom: 28, boxShadow: T.shadow, textAlign: 'left' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, overflow: 'hidden' }}>
+              {avatarPreview ? <img src={avatarPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🎵'}
+            </div>
+            <div>
+              <div style={{ color: T.text, fontWeight: 700, fontSize: 16, fontFamily: T.fontDisplay }}>{form.name}</div>
+              <div style={{ color: T.textMuted, fontSize: 12, fontFamily: T.font }}>{form.outletName} · {form.region}</div>
+            </div>
+          </div>
+          {form.genres.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 12 }}>
+              {form.genres.slice(0, 6).map(g => (
+                <span key={g} style={{ padding: '2px 9px', borderRadius: 12, fontSize: 11, background: T.accentLight, color: T.accent, border: `1px solid ${T.accentBorder}`, fontFamily: T.font }}>{g}</span>
+              ))}
+            </div>
+          )}
+        </div>
+        <a href="/curator/dashboard" style={{ display: 'inline-block', padding: '14px 36px', background: T.accentGrad, borderRadius: 24, color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 15, fontFamily: T.font }}>
+          Go to Dashboard →
+        </a>
+        <div style={{ marginTop: 16 }}>
+          <a href="/" style={{ color: T.textMuted, fontSize: 12, textDecoration: 'none', fontFamily: T.font }}>← Back to OTONAMI</a>
+        </div>
       </div>
     </div>
   );
@@ -304,22 +315,21 @@ export default function CuratorRegistrationPage() {
         .curator-input:hover { border-color: ${T.textMuted} !important; }
         .pill-tag { transition: all 0.15s; }
         .pill-tag:hover { border-color: ${T.accent} !important; background: ${T.accentLight} !important; color: ${T.accent} !important; }
+        .pill-tag-sel:hover { opacity: 0.85 !important; }
         .curator-tab-btn { transition: all 0.2s; }
         .curator-tab-btn:hover { color: ${T.accent} !important; }
         @media (max-width: 768px) {
           .curator-input { min-height: 48px !important; font-size: 16px !important; }
-          .pill-tag { min-height: 36px !important; padding: 8px 16px !important; font-size: 13px !important; }
+          .pill-tag { min-height: 36px !important; padding: 8px 14px !important; font-size: 13px !important; }
           .step-btns-row { flex-direction: column !important; }
           .step-btn-back { width: 100% !important; }
           .avatar-upload-row { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
-          .step-indicator { flex-wrap: wrap !important; gap: 8px !important; }
-          .step-label { white-space: normal !important; font-size: 11px !important; }
           .register-card { padding: 20px 16px !important; }
           .payout-notice { padding: 12px 14px !important; }
         }
       `}</style>
 
-      {/* ── Mobile Menu Overlay ── */}
+      {/* Mobile Menu */}
       {menuOpen && (
         <div className="mobile-menu-overlay" ref={menuRef}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', height: 64, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
@@ -338,7 +348,7 @@ export default function CuratorRegistrationPage() {
         </div>
       )}
 
-      {/* ── Header ── */}
+      {/* Header */}
       <header className="header-pad" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(26,26,26,0.85)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${T.border}`, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: T.font }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
@@ -347,7 +357,7 @@ export default function CuratorRegistrationPage() {
           </a>
           <nav className="nav-links-center" style={{ display: 'flex', gap: 4 }}>
             {navItems.map(item => (
-              <a key={item.href} href={item.href} style={{ background: 'transparent', color: T.textSub, padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'all 0.15s', fontFamily: T.font }}
+              <a key={item.href} href={item.href} style={{ background: 'transparent', color: T.textSub, padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 500, textDecoration: 'none', fontFamily: T.font }}
               onMouseEnter={e => { e.currentTarget.style.background = T.accentLight; e.currentTarget.style.color = T.accent; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = T.textSub; }}
               >{item.label}</a>
@@ -371,7 +381,7 @@ export default function CuratorRegistrationPage() {
         </div>
       </header>
 
-      {/* ── Hero ── */}
+      {/* Hero */}
       <section className="curator-hero" style={{ textAlign: 'center', padding: '72px 24px 60px', background: 'linear-gradient(135deg, #1a1a1a 0%, #2a1f1a 50%, #1a1a1a 100%)', borderBottom: `1px solid ${T.border}` }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 16px', background: T.accentLight, borderRadius: 24, fontSize: 12, fontWeight: 600, color: T.accent, border: `1px solid ${T.accentBorder}`, marginBottom: 24 }}>♪ Curator Network</div>
@@ -386,7 +396,7 @@ export default function CuratorRegistrationPage() {
         </div>
       </section>
 
-      {/* ── Form area ── */}
+      {/* Form area */}
       <div className="curator-form-wrap" style={{ padding: '48px 16px 96px' }}>
         <div style={{ maxWidth: 580, margin: '0 auto' }}>
 
@@ -445,19 +455,16 @@ export default function CuratorRegistrationPage() {
           {/* ── REGISTER TAB ── */}
           {tab === 'register' && (
             <>
-              {/* Progress bar */}
+              {/* 3-step progress bar */}
               <div style={{ marginBottom: 28 }}>
-                <div className="step-indicator" style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 8 }}>
-                  {[1, 2].map((s, i) => (
-                    <div key={s} style={{ display: 'flex', alignItems: 'center', flex: i < 1 ? 'none' : 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <div style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, fontFamily: T.font, background: registerStep >= s ? T.accent : T.border, color: registerStep >= s ? '#fff' : T.textSub, flexShrink: 0 }}>{s}</div>
-                        <span className="step-label" style={{ fontSize: 12, fontWeight: registerStep === s ? 700 : 400, color: registerStep >= s ? T.accent : T.textMuted, fontFamily: T.font, whiteSpace: 'nowrap' }}>
-                          {s === 1 ? 'Basic Info / 基本情報' : 'Profile / プロフィール'}
-                        </span>
-                      </div>
-                      {i < 1 && <div style={{ flex: 1, height: 2, background: registerStep > 1 ? T.accent : T.border, margin: '0 10px' }}/>}
-                    </div>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                  {[1, 2, 3].map(s => (
+                    <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: registerStep >= s ? T.accent : '#3a3a3a', transition: 'background 0.3s' }} />
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {['Basic Info', 'Music Taste', 'Profile'].map((label, i) => (
+                    <div key={i} style={{ flex: 1, fontSize: 10, fontWeight: registerStep === i + 1 ? 700 : 400, color: registerStep > i + 1 ? T.accent : registerStep === i + 1 ? T.text : T.textMuted, fontFamily: T.font, textAlign: 'center' }}>{label}</div>
                   ))}
                 </div>
               </div>
@@ -465,10 +472,42 @@ export default function CuratorRegistrationPage() {
               {/* ── STEP 1: Basic Info ── */}
               {registerStep === 1 && (
                 <div className="register-card" style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
-                  <p style={{ color: T.textSub, fontSize: 13, marginTop: 0, marginBottom: 24, lineHeight: 1.6, fontFamily: T.font }}>
-                    Discover emerging Japanese indie artists and receive curated pitches.<br />
-                    <span style={{ color: T.textMuted, fontSize: 12 }}>日本のインディーアーティストから厳選されたピッチを受け取れます。</span>
-                  </p>
+                  <h2 style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.text, margin: '0 0 4px' }}>Tell us about yourself</h2>
+                  <p style={{ color: T.textMuted, fontSize: 12, marginBottom: 24, fontFamily: T.font }}>自己紹介を教えてください</p>
+
+                  {/* Profile photo */}
+                  <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 12, color: T.textMuted, fontWeight: 600, marginBottom: 12, fontFamily: T.font }}>
+                      Profile Photo <span style={{ fontWeight: 400 }}>プロフィール写真（任意）</span>
+                    </div>
+                    <div className="avatar-upload-row" style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                      <div
+                        onClick={() => avatarInputRef.current?.click()}
+                        onDragOver={e => { e.preventDefault(); setAvatarDragOver(true); }}
+                        onDragLeave={() => setAvatarDragOver(false)}
+                        onDrop={e => { e.preventDefault(); setAvatarDragOver(false); applyAvatarFile(e.dataTransfer.files?.[0]); }}
+                        style={{ width: 80, height: 80, borderRadius: '50%', border: `2px dashed ${avatarDragOver ? T.accentDark : avatarPreview ? T.accent : T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', background: avatarDragOver ? T.accentLight : T.bg, flexShrink: 0, transition: 'all 0.15s' }}
+                      >
+                        {avatarPreview
+                          ? <img src={avatarPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : <div style={{ textAlign: 'center', color: avatarDragOver ? T.accent : T.textMuted }}>
+                              <div style={{ fontSize: 20 }}>📷</div>
+                              <div style={{ fontSize: 9, marginTop: 2, fontFamily: T.font }}>{avatarDragOver ? 'Drop!' : 'Upload'}</div>
+                            </div>
+                        }
+                      </div>
+                      <div>
+                        <button onClick={() => avatarInputRef.current?.click()} style={{ padding: '7px 14px', border: `1px solid ${T.border}`, borderRadius: 8, background: T.white, color: T.textSub, fontSize: 12, cursor: 'pointer', fontFamily: T.font }}>
+                          {avatarPreview ? 'Change / 変更' : '📷 Upload Photo'}
+                        </button>
+                        {avatarPreview && (
+                          <button onClick={() => { setAvatarFile(null); setAvatarPreview(null); }} style={{ marginLeft: 8, background: 'none', border: 'none', color: '#ef4444', fontSize: 12, cursor: 'pointer', fontFamily: T.font }}>Remove</button>
+                        )}
+                        <p style={{ color: T.textMuted, fontSize: 10, marginTop: 5, fontFamily: T.font }}>JPG / PNG / WebP · max 2MB</p>
+                      </div>
+                      <input ref={avatarInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" onChange={e => applyAvatarFile(e.target.files?.[0])} style={{ display: 'none' }} />
+                    </div>
+                  </div>
 
                   <label style={lbl}>Your Name * <span style={sub}>お名前</span></label>
                   <input className="curator-input" style={inp} value={form.name} placeholder="e.g. Taro Yamada" autoComplete="name" autoCorrect="off" onChange={e => set('name', e.target.value)} />
@@ -485,9 +524,9 @@ export default function CuratorRegistrationPage() {
                   </select>
 
                   <label style={lbl}>Platform Name * <span style={sub}>プラットフォーム名・媒体名</span></label>
-                  <input className="curator-input" style={inp} value={form.outletName} placeholder="e.g. Tokyo Sound Journal, My Indie Playlist" autoComplete="organization" autoCorrect="off" onChange={e => set('outletName', e.target.value)} />
+                  <input className="curator-input" style={inp} value={form.outletName} placeholder="e.g. Make Believe Melodies, My Indie Playlist" autoComplete="organization" autoCorrect="off" onChange={e => set('outletName', e.target.value)} />
 
-                  <label style={lbl}>Platform URL <span style={sub}>ウェブサイト・URL（任意）</span></label>
+                  <label style={lbl}>Platform URL <span style={sub}>ウェブサイト（任意）</span></label>
                   <input className="curator-input" style={inp} type="url" value={form.url} placeholder="https://your-site.com" autoComplete="url" onChange={e => set('url', e.target.value)} />
 
                   <label style={lbl}>Country / Region <span style={sub}>国・地域</span></label>
@@ -497,19 +536,122 @@ export default function CuratorRegistrationPage() {
 
                   {step1Error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 16, fontFamily: T.font }}>{step1Error}</p>}
 
-                  <button onClick={goToStep2} style={{ width: '100%', marginTop: 28, padding: '14px', height: 48, background: T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
+                  <button onClick={goToStep2} style={{ width: '100%', marginTop: 28, padding: '14px', height: 48, background: T.accent, border: 'none', borderRadius: 10, color: T.bg, fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
                   onMouseEnter={e => e.currentTarget.style.background = T.accentDark}
                   onMouseLeave={e => e.currentTarget.style.background = T.accent}
-                  >
-                    Next → / 次へ
-                  </button>
+                  >Next → / 次へ</button>
                 </div>
               )}
 
-              {/* ── STEP 2: Detailed Profile ── */}
+              {/* ── STEP 2: Music Taste ── */}
               {registerStep === 2 && (
+                <div className="register-card" style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+                  <h2 style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.text, margin: '0 0 4px' }}>What music do you love?</h2>
+                  <p style={{ color: T.textMuted, fontSize: 12, marginBottom: 24, fontFamily: T.font }}>どんな音楽が好きですか？</p>
+
+                  {/* Genres */}
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 10, fontFamily: T.font }}>
+                      Genres You Cover * <span style={{ fontWeight: 400, fontSize: 11 }}>カバーするジャンル（必須・最大10個）</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                      {GENRE_OPTIONS.map(g => {
+                        const sel = form.genres.includes(g);
+                        const maxed = !sel && form.genres.length >= 10;
+                        return (
+                          <button key={g} onClick={() => toggleArray('genres', g, 10)} className={sel ? 'pill-tag pill-tag-sel' : 'pill-tag'} disabled={maxed}
+                            style={{ padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: maxed ? 'not-allowed' : 'pointer', border: '1px solid', borderColor: sel ? T.accent : T.border, background: sel ? T.accent : T.white, color: sel ? T.bg : maxed ? T.textMuted : T.textSub, fontFamily: T.font, opacity: maxed ? 0.5 : 1, fontWeight: sel ? 600 : 400 }}>{g}</button>
+                        );
+                      })}
+                    </div>
+                    {form.genres.length >= 10 && <p style={{ color: T.textMuted, fontSize: 11, marginTop: 6, fontFamily: T.font }}>Maximum 10 selected / 最大10個</p>}
+                  </div>
+
+                  {/* Rejected genres */}
+                  <div style={{ marginBottom: 24, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 10, fontFamily: T.font }}>
+                      Genres You <span style={{ color: '#e85d3a' }}>DON&apos;T</span> Want <span style={{ fontWeight: 400, fontSize: 11 }}>受け取りたくないジャンル（任意）</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                      {GENRE_OPTIONS.map(g => {
+                        const sel = form.rejectedGenres.includes(g);
+                        return (
+                          <button key={g} onClick={() => toggleArray('rejectedGenres', g, null)} className={sel ? 'pill-tag pill-tag-sel' : 'pill-tag'}
+                            style={{ padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: sel ? '#e85d3a' : T.border, background: sel ? '#e85d3a' : T.white, color: sel ? '#fff' : T.textSub, fontFamily: T.font, fontWeight: sel ? 600 : 400 }}>{g}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Moods */}
+                  <div style={{ marginBottom: 24, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 10, fontFamily: T.font }}>
+                      Moods You Love <span style={{ fontWeight: 400, fontSize: 11 }}>好きなムード（任意）</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                      {MOOD_OPTIONS.map(m => {
+                        const sel = form.moods.includes(m);
+                        return (
+                          <button key={m} onClick={() => toggleArray('moods', m, null)} className={sel ? 'pill-tag pill-tag-sel' : 'pill-tag'}
+                            style={{ padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: sel ? T.accent : T.border, background: sel ? T.accent : T.white, color: sel ? T.bg : T.textSub, fontFamily: T.font, fontWeight: sel ? 600 : 400 }}>{m}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Similar Artists tag input */}
+                  <div style={{ marginBottom: 24, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 10, fontFamily: T.font }}>
+                      Artists Similar To Your Taste <span style={{ fontWeight: 400, fontSize: 11 }}>こんな音楽が好き（任意・最大10）</span>
+                    </div>
+                    {form.similarArtists.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                        {form.similarArtists.map((a, i) => (
+                          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 8px 3px 11px', borderRadius: 20, background: T.white, border: `1px solid ${T.border}`, fontSize: 12, color: T.text, fontFamily: T.font }}>
+                            {a}
+                            <button onClick={() => set('similarArtists', form.similarArtists.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.textMuted, fontSize: 14, lineHeight: 1, padding: 0 }}>×</button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <input
+                        className="curator-input"
+                        style={{ ...inp, marginTop: 0, flex: 1 }}
+                        value={artistInput}
+                        placeholder="e.g. Snarky Puppy, Hiatus Kaiyote, toe"
+                        onChange={e => setArtistInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addArtist(); } }}
+                        disabled={form.similarArtists.length >= 10}
+                      />
+                      <button onClick={addArtist} disabled={!artistInput.trim() || form.similarArtists.length >= 10} style={{ padding: '0 16px', height: 48, border: `1px solid ${T.border}`, borderRadius: 8, background: T.white, color: T.textSub, fontSize: 12, cursor: 'pointer', fontFamily: T.font, flexShrink: 0 }}>Add</button>
+                    </div>
+                    <p style={{ color: T.textMuted, fontSize: 11, marginTop: 5, fontFamily: T.font }}>Press Enter or click Add / Enterキーまたは「Add」で追加</p>
+                  </div>
+
+                  {/* Playlist URL */}
+                  <div style={{ paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
+                      Your Playlist or Show URL <span style={{ fontWeight: 400, fontSize: 11 }}>プレイリスト・番組URL（任意）</span>
+                    </div>
+                    <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="url" value={form.playlistUrl} placeholder="Spotify playlist, YouTube channel, radio show URL..." onChange={e => set('playlistUrl', e.target.value)} />
+                  </div>
+
+                  {step2Error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 16, fontFamily: T.font }}>{step2Error}</p>}
+
+                  <div className="step-btns-row" style={{ display: 'flex', gap: 10, marginTop: 28 }}>
+                    <button onClick={() => setRegisterStep(1)} className="step-btn-back" style={{ padding: '14px 20px', height: 48, border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>
+                    <button onClick={goToStep3} style={{ flex: 1, padding: '14px', height: 48, background: T.accent, border: 'none', borderRadius: 10, color: T.bg, fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = T.accentDark}
+                    onMouseLeave={e => e.currentTarget.style.background = T.accent}
+                    >Next → / 次へ</button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 3: Profile Details ── */}
+              {registerStep === 3 && (
                 <>
-                  {/* Payout notice */}
                   <div className="payout-notice" style={{ background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                     <span style={{ fontSize: 20 }}>💰</span>
                     <div>
@@ -522,148 +664,109 @@ export default function CuratorRegistrationPage() {
                   </div>
 
                   <div className="register-card" style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
-
-                    {/* ── Profile Image ── */}
-                    <div style={{ marginBottom: 4 }}>
-                      <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 14, fontFamily: T.font }}>
-                        Profile Photo <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 400, marginLeft: 4 }}>プロフィール写真（任意）</span>
-                      </div>
-                      <div className="avatar-upload-row" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                        <div
-                          onClick={() => !avatarUploading && avatarInputRef.current?.click()}
-                          onDragOver={e => { e.preventDefault(); setAvatarDragOver(true); }}
-                          onDragLeave={() => setAvatarDragOver(false)}
-                          onDrop={handleAvatarDrop}
-                          style={{
-                            width: 96, height: 96, borderRadius: '50%',
-                            border: `2px dashed ${avatarDragOver ? T.accentDark : avatarPreview ? T.accent : T.border}`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            cursor: avatarUploading ? 'default' : 'pointer',
-                            overflow: 'hidden', background: avatarDragOver ? T.accentLight : T.bg,
-                            flexShrink: 0, transition: 'all 0.15s',
-                          }}
-                        >
-                          {avatarUploading
-                            ? <div style={{ textAlign: 'center', color: T.accent }}>
-                                <div style={{ fontSize: 18 }}>⏳</div>
-                                <div style={{ fontSize: 9, marginTop: 3, fontFamily: T.font }}>Uploading...</div>
-                              </div>
-                            : avatarPreview
-                              ? <img src={avatarPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                              : <div style={{ textAlign: 'center', color: avatarDragOver ? T.accent : T.textMuted }}>
-                                  <div style={{ fontSize: 24 }}>📷</div>
-                                  <div style={{ fontSize: 10, marginTop: 3, fontFamily: T.font }}>
-                                    {avatarDragOver ? 'Drop!' : 'Upload'}
-                                  </div>
-                                </div>
-                          }
-                        </div>
-                        <div>
-                          <button onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading} style={{ padding: '8px 16px', border: `1px solid ${T.border}`, borderRadius: 8, background: T.white, color: T.textSub, fontSize: 13, cursor: avatarUploading ? 'not-allowed' : 'pointer', fontFamily: T.font }}>
-                            {avatarPreview ? 'Change Photo / 変更' : '📷 Upload Photo / 写真を追加'}
-                          </button>
-                          {avatarPreview && !avatarUploading && (
-                            <button onClick={() => { setAvatarFile(null); setAvatarPreview(null); }} style={{ marginLeft: 8, padding: '8px 12px', border: 'none', background: 'none', color: '#ef4444', fontSize: 12, cursor: 'pointer', fontFamily: T.font }}>Remove</button>
-                          )}
-                          <p style={{ color: T.textMuted, fontSize: 11, marginTop: 6, fontFamily: T.font }}>
-                            JPG, PNG, WebP — max 2MB<br />
-                            <span style={{ color: T.textMuted }}>ドラッグ&ドロップも可</span>
-                          </p>
-                        </div>
-                        <input ref={avatarInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" onChange={handleAvatarChange} style={{ display: 'none' }} />
-                      </div>
-                    </div>
+                    <h2 style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.text, margin: '0 0 4px' }}>Complete your profile</h2>
+                    <p style={{ color: T.textMuted, fontSize: 12, marginBottom: 24, fontFamily: T.font }}>プロフィールを完成させましょう</p>
 
                     {/* Bio */}
-                    <label style={lbl}>Bio / 自己紹介 <span style={sub}>最大500文字</span></label>
-                    <textarea className="curator-input" value={form.bio} onChange={e => { if (e.target.value.length <= 500) set('bio', e.target.value); }} placeholder="Tell artists about your platform and what you're looking for..." rows={4} style={{ ...inp, minHeight: 120, height: 120, resize: 'vertical' }} />
-                    {form.bio.length > 400 && <p style={{ color: form.bio.length > 480 ? '#ef4444' : T.textMuted, fontSize: 11, marginTop: 4, fontFamily: T.font }}>{form.bio.length}/500</p>}
-
-                    {/* Genres accepted most often */}
-                    <label style={lbl}>Genres You Cover <span style={sub}>カバーするジャンル（最大10個）</span></label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 10 }}>
-                      {GENRE_OPTIONS.map(g => {
-                        const sel = form.genres.includes(g);
-                        const maxed = !sel && form.genres.length >= 10;
-                        return (
-                          <button key={g} onClick={() => toggleArray('genres', g, 10)} className="pill-tag" disabled={maxed} style={{ padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: maxed ? 'not-allowed' : 'pointer', border: '1px solid', borderColor: sel ? T.accent : T.border, background: sel ? T.accentLight : T.white, color: sel ? T.accent : maxed ? T.textMuted : T.textSub, fontFamily: T.font, opacity: maxed ? 0.5 : 1 }}>{g}</button>
-                        );
-                      })}
-                    </div>
-                    {form.genres.length >= 10 && <p style={{ color: T.textMuted, fontSize: 11, marginTop: 6, fontFamily: T.font }}>Maximum 10 genres selected / 最大10ジャンル選択済み</p>}
-
-                    {/* Also open to */}
-                    <label style={lbl}>Also Open To <span style={sub}>こちらも受け付けます（任意）</span></label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 10 }}>
-                      {GENRE_OPTIONS.map(g => {
-                        const sel = form.accepts.includes(g);
-                        return (
-                          <button key={g} onClick={() => toggleArray('accepts', g, null)} className="pill-tag" style={{ padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: sel ? T.accent : T.border, background: sel ? T.accentLight : T.white, color: sel ? T.accent : T.textSub, fontFamily: T.font }}>{g}</button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Moods */}
-                    <label style={lbl}>Moods You Love <span style={sub}>好きなムード</span></label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 10 }}>
-                      {MOOD_OPTIONS.map(m => {
-                        const sel = form.moods.includes(m);
-                        return (
-                          <button key={m} onClick={() => toggleArray('moods', m, null)} className="pill-tag" style={{ padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: sel ? T.accent : T.border, background: sel ? T.accentLight : T.white, color: sel ? T.accent : T.textSub, fontFamily: T.font }}>{m}</button>
-                        );
-                      })}
+                    <div style={{ marginBottom: 24 }}>
+                      <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
+                        Bio / 自己紹介 <span style={{ fontWeight: 400, fontSize: 11 }}>最大500文字</span>
+                      </div>
+                      <textarea className="curator-input" value={form.bio} onChange={e => { if (e.target.value.length <= 500) set('bio', e.target.value); }} placeholder="Tell artists about yourself, your platform, and what kind of music you're looking for..." rows={4} style={{ ...inp, minHeight: 100, height: 100, resize: 'vertical', marginTop: 8 }} />
+                      {form.bio.length > 400 && <p style={{ color: form.bio.length > 480 ? '#ef4444' : T.textMuted, fontSize: 11, marginTop: 4, fontFamily: T.font }}>{form.bio.length}/500</p>}
                     </div>
 
                     {/* Opportunities */}
-                    <label style={lbl}>Opportunities You Offer <span style={sub}>提供できる機会</span></label>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
-                      {OPPORTUNITY_OPTIONS.map(o => {
-                        const sel = form.opportunities.includes(o.value);
-                        return (
-                          <label key={o.value} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '10px 14px', borderRadius: 8, border: `1px solid ${sel ? T.accent : T.border}`, background: sel ? T.accentLight : T.white, transition: 'all 0.15s' }}>
-                            <input type="checkbox" checked={sel} onChange={() => toggleArray('opportunities', o.value, null)} style={{ accentColor: T.accent, width: 15, height: 15, flexShrink: 0 }} />
-                            <div>
-                              <div style={{ fontSize: 13, fontWeight: 500, color: sel ? T.accent : T.text, fontFamily: T.font }}>{o.en}</div>
-                              <div style={{ fontSize: 11, color: sel ? T.accent : T.textMuted, fontFamily: T.font }}>{o.ja}</div>
-                            </div>
-                          </label>
-                        );
-                      })}
+                    <div style={{ marginBottom: 24, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
+                      <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 10, fontFamily: T.font }}>
+                        What opportunities can you offer? <span style={{ fontWeight: 400, fontSize: 11 }}>提供できる機会（任意）</span>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {OPPORTUNITY_OPTIONS.map(o => {
+                          const sel = form.opportunities.includes(o.value);
+                          return (
+                            <button key={o.value} onClick={() => toggleArray('opportunities', o.value, null)} className={sel ? 'pill-tag pill-tag-sel' : 'pill-tag'}
+                              style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: sel ? T.accent : T.border, background: sel ? T.accent : T.white, color: sel ? T.bg : T.textSub, fontFamily: T.font, display: 'flex', alignItems: 'center', gap: 5, fontWeight: sel ? 600 : 400 }}>
+                              <span>{o.icon}</span><span>{o.en}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    {/* Similar Artists */}
-                    <label style={lbl}>Music Similar To... <span style={sub}>こんな音楽が好き（カンマ区切り、最大5アーティスト）</span></label>
-                    <input className="curator-input" style={inp} value={form.similarArtists} placeholder="e.g. Snarky Puppy, Nujabes, Khruangbin" onChange={e => set('similarArtists', e.target.value)} />
-                    <p style={{ color: T.textMuted, fontSize: 11, marginTop: 5, fontFamily: T.font }}>Separate with commas / カンマ区切りで入力</p>
+                    {/* Response time */}
+                    <div style={{ marginBottom: 24, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
+                      <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
+                        Typical response time <span style={{ fontWeight: 400, fontSize: 11 }}>通常の回答目安（任意）</span>
+                      </div>
+                      <select className="curator-input" style={{ ...inp, marginTop: 8 }} value={form.responseTime} onChange={e => set('responseTime', e.target.value)}>
+                        <option value="">Select... / 選択してください</option>
+                        {RESPONSE_TIME_OPTIONS.map(r => (
+                          <option key={r.value} value={r.value}>{r.en} / {r.ja}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                    {/* Playlist URL */}
-                    <label style={lbl}>Spotify / YouTube Playlist URL <span style={sub}>プレイリストURL（任意）</span></label>
-                    <input className="curator-input" style={inp} type="url" value={form.playlistUrl} placeholder="https://open.spotify.com/playlist/..." onChange={e => set('playlistUrl', e.target.value)} />
+                    {/* Featured track */}
+                    <div style={{ marginBottom: 24, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
+                      <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
+                        A track you recently loved <span style={{ fontWeight: 400, fontSize: 11 }}>最近気に入った曲（任意）</span>
+                      </div>
+                      <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="url" value={form.featuredTrackUrl} placeholder="Spotify or YouTube URL..." onChange={e => set('featuredTrackUrl', e.target.value)} />
+                    </div>
+
+                    {/* Social links */}
+                    <div style={{ marginBottom: 24, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
+                      <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 12, fontFamily: T.font }}>
+                        Social links <span style={{ fontWeight: 400, fontSize: 11 }}>SNSリンク（任意）</span>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {[
+                          { icon: '🌐', key: 'socialWebsite',   ph: 'https://your-website.com' },
+                          { icon: '𝕏',  key: 'socialTwitter',   ph: 'https://x.com/yourhandle' },
+                          { icon: '📸', key: 'socialInstagram', ph: 'https://instagram.com/yourhandle' },
+                        ].map(({ icon, key, ph }) => (
+                          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span style={{ fontSize: 18, flexShrink: 0, width: 24, textAlign: 'center' }}>{icon}</span>
+                            <input className="curator-input" style={{ ...inp, marginTop: 0, flex: 1 }} type="url" value={form[key]} placeholder={ph} onChange={e => set(key, e.target.value)} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Submission guidelines */}
+                    <div style={{ marginBottom: 24, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
+                      <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
+                        Submission guidelines <span style={{ fontWeight: 400, fontSize: 11 }}>受付ガイドライン（任意・最大300文字）</span>
+                      </div>
+                      <textarea className="curator-input" value={form.submissionGuidelines} onChange={e => { if (e.target.value.length <= 300) set('submissionGuidelines', e.target.value); }} placeholder="Any specific instructions for artists submitting to you?" rows={3} style={{ ...inp, minHeight: 80, height: 80, resize: 'vertical', marginTop: 8 }} />
+                      {form.submissionGuidelines.length > 200 && <p style={{ color: form.submissionGuidelines.length > 280 ? '#ef4444' : T.textMuted, fontSize: 11, marginTop: 4, fontFamily: T.font }}>{form.submissionGuidelines.length}/300</p>}
+                    </div>
 
                     {/* Followers + PayPal */}
-                    <label style={lbl}>Followers / Subscribers <span style={sub}>フォロワー・読者数</span></label>
-                    <input className="curator-input" style={inp} type="number" value={form.followers} placeholder="e.g. 5000" onChange={e => set('followers', e.target.value)} />
-
-                    <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '16px', marginTop: 20 }}>
-                      <label style={{ ...lbl, marginTop: 0, color: T.accent }}>
-                        💰 PayPal Email <span style={sub}>支払い受取用PayPalメール</span>
-                      </label>
-                      <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="email" value={form.paypalEmail} placeholder="paypal@email.com" onChange={e => set('paypalEmail', e.target.value)} />
-                      <p style={{ color: T.textMuted, fontSize: 11, marginTop: 8, lineHeight: 1.6, fontFamily: T.font }}>
-                        Payouts processed via PayPal when balance reaches ¥5,000 / $50 USD.<br />
-                        残高が5,000円/$50に達した時点でPayPal経由でお支払いします。
-                      </p>
+                    <div style={{ paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
+                      <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
+                        Followers / Subscribers <span style={{ fontWeight: 400, fontSize: 11 }}>フォロワー・読者数</span>
+                      </div>
+                      <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="number" value={form.followers} placeholder="e.g. 5000" onChange={e => set('followers', e.target.value)} />
+                      <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginTop: 20 }}>
+                        <div style={{ fontSize: 13, color: T.accent, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
+                          💰 PayPal Email <span style={{ fontWeight: 400, fontSize: 11, color: T.textMuted }}>支払い受取用PayPalメール</span>
+                        </div>
+                        <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="email" value={form.paypalEmail} placeholder="paypal@email.com" onChange={e => set('paypalEmail', e.target.value)} />
+                        <p style={{ color: T.textMuted, fontSize: 11, marginTop: 8, lineHeight: 1.6, fontFamily: T.font }}>
+                          Payouts processed via PayPal when balance reaches ¥5,000 / $50 USD.<br />
+                          残高が5,000円/$50に達した時点でPayPal経由でお支払いします。
+                        </p>
+                      </div>
                     </div>
 
                     {error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 14, fontFamily: T.font }}>{error}</p>}
 
                     <div className="step-btns-row" style={{ display: 'flex', gap: 10, marginTop: 28 }}>
-                      <button onClick={() => setRegisterStep(1)} className="step-btn-back" style={{ padding: '14px 20px', height: 48, border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>
-                      <button onClick={handleSubmit} disabled={status === 'loading' || avatarUploading} style={{ flex: 1, padding: '14px', height: 48, background: (status === 'loading' || avatarUploading) ? T.border : T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: (status === 'loading' || avatarUploading) ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
-                      onMouseEnter={e => { if (status !== 'loading' && !avatarUploading) e.currentTarget.style.background = T.accentDark; }}
-                      onMouseLeave={e => { if (status !== 'loading' && !avatarUploading) e.currentTarget.style.background = T.accent; }}
-                      >
-                        {avatarUploading ? 'Uploading image... / 画像アップロード中...' : status === 'loading' ? 'Submitting... / 送信中...' : 'Complete Registration / 登録完了 →'}
+                      <button onClick={() => setRegisterStep(2)} className="step-btn-back" style={{ padding: '14px 20px', height: 48, border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>
+                      <button onClick={handleSubmit} disabled={status === 'loading' || avatarUploading} style={{ flex: 1, padding: '14px', height: 48, background: (status === 'loading' || avatarUploading) ? T.border : '#e85d3a', border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: (status === 'loading' || avatarUploading) ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}>
+                        {avatarUploading ? 'Uploading... / アップロード中...' : status === 'loading' ? 'Submitting... / 送信中...' : 'Complete Registration / 登録完了 →'}
                       </button>
                     </div>
                   </div>
@@ -680,7 +783,7 @@ export default function CuratorRegistrationPage() {
         </div>
       </div>
 
-      {/* ── Footer ── */}
+      {/* Footer */}
       <footer style={{ padding: '32px 24px', background: T.white, borderTop: `1px solid ${T.border}`, textAlign: 'center', fontFamily: T.font, fontSize: 13, color: T.textMuted }}>
         <div>
           <span>OTONAMI — Connecting Japanese Music to the World</span>

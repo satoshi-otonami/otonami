@@ -79,6 +79,11 @@ export async function POST(request) {
         opportunities: form.opportunities || [],
         similar_artists: form.similarArtists || [],
         playlist_url: form.playlistUrl || null,
+        rejected_genres: form.rejectedGenres || [],
+        response_time: form.responseTime || null,
+        social_links: form.socialLinks || null,
+        submission_guidelines: form.submissionGuidelines || null,
+        featured_track_url: form.featuredTrackUrl || null,
         tags: ['pending_review'],
         tier: 3,
         is_seed: false,
@@ -207,6 +212,8 @@ export async function PUT(request) {
       'type', 'playlist', 'url', 'region', 'bio', 'followers',
       'genres', 'accepts', 'preferred_moods', 'opportunities',
       'similar_artists', 'playlist_url', 'icon_url',
+      'rejected_genres', 'response_time', 'social_links',
+      'submission_guidelines', 'featured_track_url',
     ];
     const updateData = {};
     for (const key of ALLOWED) {
@@ -220,7 +227,7 @@ export async function PUT(request) {
       .from('curators')
       .update(updateData)
       .eq('id', payload.id)
-      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url')
+      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, rejected_genres, response_time, social_links, submission_guidelines, featured_track_url')
       .single();
 
     if (error) throw new Error(error.message);

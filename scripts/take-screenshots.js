@@ -44,45 +44,37 @@ async function run() {
   // ── 3. キュレーター登録フォーム（Step 1） ──
   console.log('📸 4/9: Curator Registration Form');
   // 「Join as Curator / 新規登録」タブをクリック
-  const registerTab = await page.$x("//button[contains(text(), 'Join') or contains(text(), '新規登録')]");
-  if (registerTab.length > 0) {
-    await registerTab[0].click();
-    await sleep(1000);
-  }
+  const registerTab = await findButtonByText(page, ['Join', '新規登録']);
+  if (registerTab) { await registerTab.click(); await sleep(1000); }
   await page.screenshot({ path: p('04_curator_register.png'), fullPage: false });
 
   // ── 4. キュレーターダッシュボード（ログイン） ──
   console.log('📸 5/9: Curator Dashboard');
   // ログインタブに戻る
-  const loginTab = await page.$x("//button[contains(text(), 'Login') or contains(text(), 'ログイン')]");
-  if (loginTab.length > 0) {
-    await loginTab[0].click();
-    await sleep(500);
-  }
+  const loginTab = await findButtonByText(page, ['Login', 'ログイン']);
+  if (loginTab) { await loginTab.click(); await sleep(500); }
 
   // メールアドレス入力
-  const emailInputs = await page.$$('input[type="email"], input[placeholder*="email"]');
-  if (emailInputs.length > 0) {
-    await emailInputs[0].click({ clickCount: 3 });
-    await emailInputs[0].type(CURATOR_EMAIL);
+  const emailInput = await page.$('input[type="email"]') || await page.$('input[placeholder*="mail"]');
+  if (emailInput) {
+    await emailInput.click({ clickCount: 3 });
+    await emailInput.type(CURATOR_EMAIL);
   }
 
   // パスワード入力
-  const passwordInputs = await page.$$('input[type="password"]');
-  if (passwordInputs.length > 0) {
-    await passwordInputs[0].click({ clickCount: 3 });
-    await passwordInputs[0].type(CURATOR_PASSWORD);
+  const passwordInput = await page.$('input[type="password"]');
+  if (passwordInput) {
+    await passwordInput.click({ clickCount: 3 });
+    await passwordInput.type(CURATOR_PASSWORD);
   }
 
   // ログインボタンクリック（formのsubmitボタンを優先）
-  const submitBtns = await page.$$('button[type="submit"]');
-  if (submitBtns.length > 0) {
-    await submitBtns[0].click();
+  const submitBtn = await page.$('button[type="submit"]');
+  if (submitBtn) {
+    await submitBtn.click();
   } else {
-    const loginBtn = await page.$x("//button[contains(text(), 'Login') or contains(text(), 'ログイン')]");
-    if (loginBtn.length > 1) {
-      await loginBtn[1].click();  // 2番目のLoginボタン（フォーム内）
-    }
+    const btn = await findButtonByText(page, ['Sign in', 'Log in', 'ログイン']);
+    if (btn) await btn.click();
   }
 
   await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }).catch(() => {});
@@ -95,10 +87,9 @@ async function run() {
 
   // ── 5. ピッチ詳細画面 ──
   console.log('📸 7/9: Pitch Detail');
-  // 「Read / 読む」ボタンを探してクリック
-  const readBtn = await page.$x("//button[contains(text(), 'Read') or contains(text(), '読む')]");
-  if (readBtn.length > 0) {
-    await readBtn[0].click();
+  const readBtn = await findButtonByText(page, ['Read', '読む', '開く']);
+  if (readBtn) {
+    await readBtn.click();
     await sleep(2000);
     await page.screenshot({ path: p('07_pitch_detail.png'), fullPage: false });
   } else {
@@ -130,6 +121,16 @@ function p(filename) {
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ボタンテキストで要素を探す（$x廃止の代替）
+async function findButtonByText(page, texts) {
+  const buttons = await page.$$('button');
+  for (const btn of buttons) {
+    const text = await btn.evaluate(el => el.textContent || '');
+    if (texts.some(t => text.includes(t))) return btn;
+  }
+  return null;
 }
 
 run().catch(err => {

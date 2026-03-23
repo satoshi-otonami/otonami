@@ -680,11 +680,25 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
 
   return <div>
     <div style={{marginBottom:"2rem"}}><h1 style={{fontSize:"1.5rem",fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6"}}>おかえりなさい、{user.name}</h1><p style={{color:"#c0bdb5",margin:"0.3rem 0 0",fontSize:"0.88rem"}}>日本の音楽を世界へ届けましょう</p></div>
+
+    {/* Welcome Guide — only when 0 pitches */}
+    {pitches.length === 0 && (
+      <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.2)",borderRadius:16,padding:"28px",marginBottom:"1.5rem"}}>
+        <div style={{fontSize:20,marginBottom:4}}>👋</div>
+        <h3 style={{fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6",fontSize:20,fontWeight:700,margin:"0 0 8px"}}>はじめましょう！</h3>
+        <p style={{color:"#b8b0a3",fontSize:14,margin:"0 0 16px",lineHeight:1.6}}>まずは「キュレーター検索」から、あなたの音楽に合う海外メディアを探してみましょう。</p>
+        <button onClick={()=>setPage("curators")} style={{background:"linear-gradient(135deg,#c4956a,#b8845e)",color:"#1a1a1a",padding:"10px 24px",borderRadius:8,fontWeight:600,border:"none",cursor:"pointer",fontSize:14,fontFamily:"'DM Sans',sans-serif",transition:"opacity 0.15s"}}
+          onMouseEnter={e=>e.currentTarget.style.opacity="0.88"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}
+        >キュレーターを探す →</button>
+      </div>
+    )}
+
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:"0.8rem",marginBottom:"1.5rem"}}>
-      {[{v:credits,l:"クレジット残",c:"#f59e0b"},{v:pitches.length,l:"送信済み",c:"#3b82f6"},{v:listened,l:"試聴済み",c:"#8b5cf6"},{v:fb,l:"FB受信",c:"#06b6d4"},{v:acc,l:"採用",c:"#10b981"}].map((s,i) =>
+      {[{v:credits,l:"クレジット残",c:"#f59e0b",sub:""},{v:pitches.length,l:"送信済み",c:"#3b82f6",sub:"キュレーターに送った数"},{v:listened,l:"試聴済み",c:"#8b5cf6",sub:"曲を聴いてもらえた数"},{v:fb,l:"FB受信",c:"#06b6d4",sub:"フィードバックをもらった数"},{v:acc,l:"採用",c:"#10b981",sub:"プレイリストやブログに採用された数"}].map((s,i) =>
         <div key={i} style={{background:"#2a2a2a",borderRadius:16,padding:"1.2rem",border:"1px solid rgba(255,255,255,0.06)",textAlign:"center"}}>
           <div style={{fontSize:"1.6rem",fontWeight:800,color:s.c}}>{s.v}</div>
           <div style={{fontSize:"0.72rem",color:"#7a7870"}}>{s.l}</div>
+          {s.sub && <div style={{fontSize:"0.65rem",color:"#7a7870",marginTop:4,opacity:0.7}}>{s.sub}</div>}
         </div>
       )}
     </div>
@@ -695,13 +709,23 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
       <div style={{...css.btnPrimary,background:"linear-gradient(135deg,#f59e0b,#ea580c)",fontSize:"0.78rem",padding:"0.5rem 1rem"}}>+ 購入する →</div>
     </div>
 
-    {/* Quick Actions */}
+    {/* Flow indicator */}
+    <div style={{textAlign:"center",marginBottom:16,fontSize:14,color:"#b8b0a3"}}>
+      <span style={{fontWeight:600,color:"#f0ede6"}}>使い方はかんたん</span>
+      <span style={{margin:"0 6px"}}>──</span>
+      <span>4つのステップ</span>
+    </div>
+
+    {/* Quick Actions with step numbers */}
+    <style>{`.step-arrow{display:none}@media(min-width:769px){.step-arrow{display:flex;align-items:center;color:#b8b0a3;opacity:0.5;font-size:20px}}`}</style>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.8rem",marginBottom:"1.5rem"}}>
-      {[{icon:"◎",title:"キュレーター検索",desc:"ジャンル・タイプでフィルタ",p:"curators"},{icon:"△",title:"AIピッチ生成",desc:"Web検索で自動入力",p:"pitch"},{icon:"◐",title:"トラッキング",desc:"開封・試聴・FB確認",p:"tracking"},{icon:"◫",title:"分析",desc:"成果を可視化",p:"analytics"}].map((a,i) =>
-        <div key={i} onClick={()=>setPage(a.p)} style={{background:"#2a2a2a",borderRadius:16,padding:"1.2rem",border:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",transition:"all 0.15s"}}>
+      {[{icon:"◎",title:"キュレーター検索",desc:"あなたの曲に合う海外メディアを探す",p:"curators",step:1},{icon:"△",title:"AIピッチ生成",desc:"AIが英語の紹介文を自動作成",p:"pitch",step:2},{icon:"◐",title:"トラッキング",desc:"開封・試聴・フィードバックを確認",p:"tracking",step:3},{icon:"◫",title:"分析",desc:"あなたの成果を可視化",p:"analytics",step:4}].map((a,i) =>
+        <div key={i} onClick={()=>setPage(a.p)} style={{background:"#2a2a2a",borderRadius:16,padding:"1.2rem",border:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",transition:"all 0.15s"}}
+          onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(196,149,106,0.4)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.06)";}}>
+          <div style={{fontSize:"0.65rem",fontWeight:600,color:"#c4956a",letterSpacing:"1px",marginBottom:6}}>STEP {a.step}</div>
           <div style={{fontSize:"1.2rem",marginBottom:4}}>{a.icon}</div>
           <div style={{fontWeight:700,fontSize:"0.88rem",color:"#f0ede6"}}>{a.title}</div>
-          <div style={{fontSize:"0.72rem",color:"#7a7870"}}>{a.desc}</div>
+          <div style={{fontSize:"0.75rem",color:"#7a7870",marginTop:4,lineHeight:1.4}}>{a.desc}</div>
         </div>
       )}
     </div>

@@ -434,7 +434,7 @@ export default function HomePage() {
           .trust-orgs { flex-direction: column !important; gap: 12px !important; }
           .section-pad { padding: 72px 0 !important; }
           .footer-links { flex-direction: column !important; gap: 12px !important; }
-          .lang-toggle { display: none !important; }
+          .lang-toggle { order: -1; }
         }
         @media (max-width: 480px) {
           .hero-h1 { font-size: 28px !important; }
@@ -449,6 +449,10 @@ export default function HomePage() {
             <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', color: D.textSec, fontSize: 28, cursor: 'pointer', lineHeight: 1, padding: 4 }}>✕</button>
           </div>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 24 }}>
+            <button onClick={() => { switchLang(lang === 'ja' ? 'en' : 'ja'); setMenuOpen(false); }}
+              style={{ color: D.textSec, textDecoration: 'none', fontSize: 20, fontWeight: 400, padding: '14px 0', borderBottom: `1px solid ${D.border}`, background: 'none', border: 'none', borderBottom: `1px solid ${D.border}`, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
+              🌐 {lang === 'ja' ? 'English' : '日本語'}
+            </button>
             {[{ href: '#for-artists', label: t.nav.how }, { href: '#for-curators', label: t.nav.curators }, { href: '#for-artists', label: t.nav.artists }].map(item => (
               <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
                 style={{ color: D.textSec, textDecoration: 'none', fontSize: 20, fontWeight: 400, padding: '14px 0', borderBottom: `1px solid ${D.border}`, transition: 'color 0.2s' }}

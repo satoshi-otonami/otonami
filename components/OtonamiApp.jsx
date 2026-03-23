@@ -736,8 +736,14 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
       <div style={{background:"#c4956a",color:"#1a1a1a",fontSize:13,fontWeight:600,padding:"8px 20px",borderRadius:8,fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>+ 購入する →</div>
     </div>
 
+    {/* Quick Actions — always visible */}
+    <div style={{display:"flex",gap:12,marginBottom:24,justifyContent:"center"}}>
+      <button onClick={()=>setPage("curators")} style={{background:"linear-gradient(135deg,#c4956a,#b8845e)",color:"#1a1a1a",padding:"12px 28px",borderRadius:10,border:"none",fontWeight:600,fontSize:14,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>🎯 キュレーターを探す</button>
+      <button onClick={()=>setPage("pitch")} style={{background:"transparent",color:"#f0ede6",padding:"12px 28px",borderRadius:10,border:"1px solid #3a3a3a",fontWeight:500,fontSize:14,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>✉️ ピッチを作成</button>
+    </div>
+
     {/* Flow indicator */}
-    <div style={{textAlign:"center",margin:"28px 0 16px",fontSize:13,color:"#b8b0a3",letterSpacing:"0.5px",fontFamily:"'DM Sans',sans-serif"}}>
+    <div style={{textAlign:"center",margin:"4px 0 16px",fontSize:13,color:"#b8b0a3",letterSpacing:"0.5px",fontFamily:"'DM Sans',sans-serif"}}>
       <span style={{fontWeight:600,color:"#f0ede6"}}>使い方はかんたん</span>
       <span style={{margin:"0 8px",opacity:0.4}}>──</span>
       <span>4つのステップ</span>

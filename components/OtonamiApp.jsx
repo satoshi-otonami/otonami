@@ -453,42 +453,42 @@ const saveCredits = async (c) => {
 // LANDING PAGE
 // ═══════════════════════════════════════
 function Landing({onArtist, onCurator}) {
-  return <div style={{minHeight:"100vh",background:"#1a1a1a",color:"#f0ede6",fontFamily:"'DM Sans',system-ui,sans-serif"}}>
+  return <div style={{minHeight:"100vh",background:"#f8f7f4",color:"#1a1a1a",fontFamily:"'DM Sans',system-ui,sans-serif"}}>
     <div style={{maxWidth:900,margin:"0 auto",padding:"2rem 1.5rem"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"4rem"}}>
         <div style={{fontSize:"1.5rem",fontWeight:800,letterSpacing:"2px",color:"#c4956a",fontFamily:"'Playfair Display',Georgia,serif"}}>
           OTONAMI
-          <span style={{fontSize:"0.6rem",color:"#7a7870",marginLeft:6,verticalAlign:"super"}}>β</span>
+          <span style={{fontSize:"0.6rem",color:"#9a958e",marginLeft:6,verticalAlign:"super"}}>β</span>
         </div>
         <button onClick={onCurator} style={{padding:"0.5rem 1.2rem",background:"transparent",border:"1px solid rgba(196,149,106,0.3)",color:"#c4956a",borderRadius:8,fontSize:"0.82rem",cursor:"pointer",fontFamily:"inherit"}}>キュレーターとして参加</button>
       </div>
 
       <div style={{textAlign:"center",marginBottom:"3rem"}}>
         <div style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600,marginBottom:"0.8rem",letterSpacing:"0.1em"}}>JAPANESE INDIE MUSIC × WORLD</div>
-        <h1 style={{fontSize:"clamp(2rem,5vw,3.2rem)",fontWeight:800,lineHeight:1.15,marginBottom:"1.2rem",letterSpacing:"-0.02em",color:"#f0ede6",fontFamily:"'Playfair Display',Georgia,serif"}}>
+        <h1 style={{fontSize:"clamp(2rem,5vw,3.2rem)",fontWeight:800,lineHeight:1.15,marginBottom:"1.2rem",letterSpacing:"-0.02em",color:"#1a1a1a",fontFamily:"'Playfair Display',Georgia,serif"}}>
           日本の音楽を、<br/>
           <span style={{color:"#c4956a"}}>世界のキュレーターへ</span>
         </h1>
-        <p style={{fontSize:"1.05rem",color:"#c0bdb5",maxWidth:520,margin:"0 auto 2rem",lineHeight:1.7}}>
+        <p style={{fontSize:"1.05rem",color:"#6b6560",maxWidth:520,margin:"0 auto 2rem",lineHeight:1.7}}>
           AIが生成するプロ品質の英語ピッチ。アプリ内で直接送信し、<br/>開封・試聴・フィードバックまで全てトラッキング。
         </p>
         <div style={{display:"flex",gap:"0.8rem",justifyContent:"center",flexWrap:"wrap"}}>
           <button onClick={onArtist} style={{padding:"0.85rem 2rem",background:"#e85d3a",color:"#fff",border:"none",borderRadius:12,fontSize:"1rem",fontWeight:700,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 16px rgba(232,93,58,0.25)"}}>🎵 アーティスト / レーベルとして始める</button>
-          <button onClick={() => { window.location.href = '/curator'; }} style={{padding:"0.85rem 2rem",background:"#2a2a2a",color:"#f0ede6",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,fontSize:"1rem",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>🎧 キュレーターとして登録</button>
+          <button onClick={() => { window.location.href = '/curator'; }} style={{padding:"0.85rem 2rem",background:"#ffffff",color:"#1a1a1a",border:"1px solid rgba(0,0,0,0.06)",borderRadius:12,fontSize:"1rem",fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>🎧 キュレーターとして登録</button>
         </div>
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"1rem",marginBottom:"3rem"}}>
         {[["6","登録キュレーター"],["7日","フィードバック保証"],["¥0","キュレーター登録無料"],["AI","英語ピッチ自動生成"]].map(([n,l],i) =>
-          <div key={i} style={{background:"#2a2a2a",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"1.5rem",textAlign:"center"}}>
+          <div key={i} style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"1.5rem",textAlign:"center"}}>
             <div style={{fontSize:"1.8rem",fontWeight:800,color:"#c4956a"}}>{n}</div>
-            <div style={{fontSize:"0.78rem",color:"#c0bdb5",marginTop:4}}>{l}</div>
+            <div style={{fontSize:"0.78rem",color:"#6b6560",marginTop:4}}>{l}</div>
           </div>
         )}
       </div>
 
-      <div style={{background:"#2a2a2a",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"2rem",marginBottom:"2rem"}}>
-        <h2 style={{fontSize:"1.3rem",fontWeight:700,marginBottom:"1.5rem",textAlign:"center",color:"#f0ede6",fontFamily:"'Playfair Display',Georgia,serif"}}>仕組み</h2>
+      <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:20,padding:"2rem",marginBottom:"2rem"}}>
+        <h2 style={{fontSize:"1.3rem",fontWeight:700,marginBottom:"1.5rem",textAlign:"center",color:"#1a1a1a",fontFamily:"'Playfair Display',Georgia,serif"}}>仕組み</h2>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:"1.5rem"}}>
           {[
             ["1️⃣","アーティスト情報入力","曲のURL入力でAIが自動取得"],
@@ -499,15 +499,15 @@ function Landing({onArtist, onCurator}) {
           ].map(([icon,title,desc],i) =>
             <div key={i} style={{textAlign:"center"}}>
               <div style={{fontSize:"1.5rem",marginBottom:6}}>{icon}</div>
-              <div style={{fontWeight:700,fontSize:"0.88rem",marginBottom:4,color:"#f0ede6"}}>{title}</div>
-              <div style={{fontSize:"0.75rem",color:"#c0bdb5"}}>{desc}</div>
+              <div style={{fontWeight:700,fontSize:"0.88rem",marginBottom:4,color:"#1a1a1a"}}>{title}</div>
+              <div style={{fontSize:"0.75rem",color:"#6b6560"}}>{desc}</div>
             </div>
           )}
         </div>
       </div>
 
-      <div style={{textAlign:"center",padding:"2rem 0",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
-        <div style={{fontSize:"0.75rem",color:"#7a7870"}}>OTONAMI — Connecting Japanese Music to the World | TYCompany LLC / ILCJ</div>
+      <div style={{textAlign:"center",padding:"2rem 0",borderTop:"1px solid rgba(0,0,0,0.05)"}}>
+        <div style={{fontSize:"0.75rem",color:"#9a958e"}}>OTONAMI — Connecting Japanese Music to the World | TYCompany LLC / ILCJ</div>
       </div>
     </div>
   </div>;
@@ -563,16 +563,16 @@ if (found) { onLogin(found); return; }
 
   const isCuratorMode = mode === "curator";
 
-  return <div style={{minHeight:"100vh",background:"#1a1a1a",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',system-ui,sans-serif",padding:"1rem"}}>
-    <div style={{width:"100%",maxWidth:isCuratorMode && tab==="register" ? 580 : 420,background:"#222222",border:"1px solid rgba(255,255,255,0.08)",borderRadius:24,padding:"2rem",color:"#f0ede6"}}>
-      <button onClick={onBack} style={{background:"none",border:"none",color:"#c0bdb5",cursor:"pointer",fontSize:"0.82rem",marginBottom:"1rem",fontFamily:"inherit"}}>← 戻る</button>
-      <h2 style={{fontSize:"1.4rem",fontWeight:800,marginBottom:"0.3rem",color:"#f0ede6"}}>
+  return <div style={{minHeight:"100vh",background:"#f8f7f4",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',system-ui,sans-serif",padding:"1rem"}}>
+    <div style={{width:"100%",maxWidth:isCuratorMode && tab==="register" ? 580 : 420,background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:24,padding:"2rem",color:"#1a1a1a"}}>
+      <button onClick={onBack} style={{background:"none",border:"none",color:"#6b6560",cursor:"pointer",fontSize:"0.82rem",marginBottom:"1rem",fontFamily:"inherit"}}>← 戻る</button>
+      <h2 style={{fontSize:"1.4rem",fontWeight:800,marginBottom:"0.3rem",color:"#1a1a1a"}}>
         {isCuratorMode ? "🎧 キュレーター" : "🎵 アーティスト / レーベル"}
       </h2>
-      <p style={{color:"#c0bdb5",fontSize:"0.85rem",marginBottom:"1.5rem"}}>{isCuratorMode ? "登録して新しい音楽を発見しましょう" : "日本の音楽を世界へ届けましょう"}</p>
+      <p style={{color:"#6b6560",fontSize:"0.85rem",marginBottom:"1.5rem"}}>{isCuratorMode ? "登録して新しい音楽を発見しましょう" : "日本の音楽を世界へ届けましょう"}</p>
 
       {isCuratorMode && <div style={{display:"flex",gap:8,marginBottom:"1.5rem"}}>
-        {["login","register"].map(t => <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"0.6rem",background:tab===t?"rgba(196,149,106,0.1)":"transparent",border:tab===t?"1px solid rgba(196,149,106,0.3)":"1px solid rgba(255,255,255,0.08)",color:tab===t?"#c4956a":"#c0bdb5",borderRadius:10,cursor:"pointer",fontSize:"0.82rem",fontWeight:600,fontFamily:"inherit"}}>{t==="login"?"ログイン":"新規登録"}</button>)}
+        {["login","register"].map(t => <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"0.6rem",background:tab===t?"rgba(196,149,106,0.08)":"transparent",border:tab===t?"1px solid rgba(196,149,106,0.3)":"1px solid rgba(0,0,0,0.06)",color:tab===t?"#c4956a":"#6b6560",borderRadius:10,cursor:"pointer",fontSize:"0.82rem",fontWeight:600,fontFamily:"inherit"}}>{t==="login"?"ログイン":"新規登録"}</button>)}
       </div>}
 
       <input value={name} onChange={e=>setName(e.target.value)} placeholder="名前 / Your Name" style={css.authInput}/>
@@ -581,7 +581,7 @@ if (found) { onLogin(found); return; }
       {isCuratorMode && tab === "register" && <>
         <div style={{fontSize:"0.78rem",color:"#c4956a",fontWeight:600,marginTop:"1rem",marginBottom:"0.5rem"}}>プラットフォームタイプ</div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:"1rem"}}>
-          {CURATOR_TYPES.map(t => <button key={t.id} onClick={()=>setCType(t.id)} style={{padding:"0.4rem 0.8rem",background:cType===t.id?"rgba(196,149,106,0.1)":"transparent",border:cType===t.id?"1px solid #c4956a":"1px solid rgba(255,255,255,0.08)",color:cType===t.id?"#c4956a":"#c0bdb5",borderRadius:8,cursor:"pointer",fontSize:"0.75rem",fontFamily:"inherit"}}>{t.icon} {t.label}</button>)}
+          {CURATOR_TYPES.map(t => <button key={t.id} onClick={()=>setCType(t.id)} style={{padding:"0.4rem 0.8rem",background:cType===t.id?"rgba(196,149,106,0.08)":"transparent",border:cType===t.id?"1px solid #c4956a":"1px solid rgba(0,0,0,0.06)",color:cType===t.id?"#c4956a":"#6b6560",borderRadius:8,cursor:"pointer",fontSize:"0.75rem",fontFamily:"inherit"}}>{t.icon} {t.label}</button>)}
         </div>
         <input value={cPlatform} onChange={e=>setCPlatform(e.target.value)} placeholder="プラットフォーム名（例: My Jazz Playlist）" style={css.authInput}/>
         <input value={cUrl} onChange={e=>setCUrl(e.target.value)} placeholder="URL（Spotify, ブログ等）" style={css.authInput}/>
@@ -589,12 +589,12 @@ if (found) { onLogin(found); return; }
 
         <div style={{fontSize:"0.78rem",color:"#c4956a",fontWeight:600,marginTop:"0.5rem",marginBottom:"0.5rem"}}>受付ジャンル（必須）</div>
         <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:"1rem"}}>
-          {GENRES.map(g => <button key={g} onClick={()=>toggleGenre(g)} style={{padding:"0.25rem 0.6rem",background:cGenres.includes(g)?"rgba(196,149,106,0.2)":"transparent",border:cGenres.includes(g)?"1px solid #c4956a":"1px solid rgba(255,255,255,0.08)",color:cGenres.includes(g)?"#c4956a":"#c0bdb5",borderRadius:6,cursor:"pointer",fontSize:"0.68rem",fontFamily:"inherit"}}>{g}</button>)}
+          {GENRES.map(g => <button key={g} onClick={()=>toggleGenre(g)} style={{padding:"0.25rem 0.6rem",background:cGenres.includes(g)?"rgba(196,149,106,0.15)":"transparent",border:cGenres.includes(g)?"1px solid #c4956a":"1px solid rgba(0,0,0,0.06)",color:cGenres.includes(g)?"#c4956a":"#6b6560",borderRadius:6,cursor:"pointer",fontSize:"0.68rem",fontFamily:"inherit"}}>{g}</button>)}
         </div>
 
         <div style={{fontSize:"0.78rem",color:"#c4956a",fontWeight:600,marginBottom:"0.5rem"}}>提供できるもの</div>
         <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:"1rem"}}>
-          {offerOptions.map(o => <button key={o} onClick={()=>toggleOffer(o)} style={{padding:"0.25rem 0.6rem",background:cOffers.includes(o)?"rgba(196,149,106,0.2)":"transparent",border:cOffers.includes(o)?"1px solid #c4956a":"1px solid rgba(255,255,255,0.08)",color:cOffers.includes(o)?"#c4956a":"#c0bdb5",borderRadius:6,cursor:"pointer",fontSize:"0.68rem",fontFamily:"inherit"}}>{o}</button>)}
+          {offerOptions.map(o => <button key={o} onClick={()=>toggleOffer(o)} style={{padding:"0.25rem 0.6rem",background:cOffers.includes(o)?"rgba(196,149,106,0.15)":"transparent",border:cOffers.includes(o)?"1px solid #c4956a":"1px solid rgba(0,0,0,0.06)",color:cOffers.includes(o)?"#c4956a":"#6b6560",borderRadius:6,cursor:"pointer",fontSize:"0.68rem",fontFamily:"inherit"}}>{o}</button>)}
         </div>
 
         <textarea value={cBio} onChange={e=>setCBio(e.target.value)} placeholder="自己紹介・編集方針..." rows={3} style={{...css.authInput,resize:"vertical",minHeight:60}}/>
@@ -604,7 +604,7 @@ if (found) { onLogin(found); return; }
         {isCuratorMode && tab==="register" ? "キュレーター登録" : "ログイン"}
       </button>
 
-      {!isCuratorMode && <button onClick={()=>{ onLogin({id:"demo",name:"Satoshi (Demo)",email:"satoshi@ilcj.org",type:"artist"}); }} style={{width:"100%",padding:"0.65rem",background:"transparent",color:"#c0bdb5",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,fontSize:"0.82rem",cursor:"pointer",marginTop:"0.6rem",fontFamily:"inherit"}}>✨ デモモードで体験</button>}
+      {!isCuratorMode && <button onClick={()=>{ onLogin({id:"demo",name:"Satoshi (Demo)",email:"satoshi@ilcj.org",type:"artist"}); }} style={{width:"100%",padding:"0.65rem",background:"transparent",color:"#6b6560",border:"1px solid rgba(0,0,0,0.06)",borderRadius:12,fontSize:"0.82rem",cursor:"pointer",marginTop:"0.6rem",fontFamily:"inherit"}}>✨ デモモードで体験</button>}
     </div>
   </div>;
 }
@@ -655,7 +655,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       <div style={{display:"flex",gap:4,flex:1,justifyContent:"center"}}>
         {navItems.map(n => <button key={n.id} onClick={()=>setPage(n.id)} style={{...css.navBtn,...(page===n.id?css.navBtnActive:{})}}>{n.icon} {n.label}{n.badge && <span style={css.navBadge}>{n.badge}</span>}</button>)}
       </div>
-      <div style={{fontSize:"0.75rem",color:"#c0bdb5"}}>
+      <div style={{fontSize:"0.75rem",color:"#6b6560"}}>
         <span style={{color:"#f59e0b",fontWeight:700}}>{credits}</span> クレジット
         <button onClick={()=>setPage("shop")} style={{marginLeft:8,...css.btnSm,background:"linear-gradient(135deg,rgba(245,158,11,0.15),rgba(234,88,12,0.1))",color:"#f59e0b",border:"1px solid rgba(245,158,11,0.3)",fontWeight:600}}>+ 購入</button>
       </div>
@@ -668,7 +668,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       {page==="analytics" && <Analytics pitches={myPitches}/>}
       {page==="shop" && <CreditShop user={user} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage}/>}
     </main>
-    <footer style={{borderTop:"1px solid rgba(255,255,255,0.06)",padding:"1.2rem 1.5rem",textAlign:"center",background:"#1a1a1a",fontSize:"0.72rem",color:"#7a7870"}}>
+    <footer style={{borderTop:"1px solid rgba(0,0,0,0.05)",padding:"1.2rem 1.5rem",textAlign:"center",background:"#f8f7f4",fontSize:"0.72rem",color:"#9a958e"}}>
       OTONAMI — Connecting Japanese Music to the World | TYCompany LLC / ILCJ
     </footer>
   </>;
@@ -690,26 +690,26 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
   return <div style={{maxWidth:1100,margin:"0 auto"}}>
     <style>{`
       .dash-stat{transition:all 0.2s ease;cursor:default}
-      .dash-stat:hover{border-color:#4a4a4a !important;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+      .dash-stat:hover{border-color:#c4956a !important;transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,0.08)}
       .dash-step{transition:all 0.2s ease}
-      .dash-step:hover{border-color:#c4956a !important;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3)}
-      .dash-activity:hover{background:rgba(255,255,255,0.02)}
+      .dash-step:hover{border-color:#c4956a !important;transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+      .dash-activity:hover{background:rgba(0,0,0,0.02)}
       @media(max-width:768px){.dash-steps-grid{grid-template-columns:repeat(2,1fr) !important}.dash-stats-grid{grid-template-columns:repeat(2,1fr) !important}}
       @media(max-width:480px){.dash-steps-grid{grid-template-columns:1fr !important}}
     `}</style>
 
     {/* Header */}
     <div style={{marginBottom:24}}>
-      <h1 style={{fontSize:28,fontWeight:600,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6"}}>おかえりなさい、{user.name}</h1>
-      <p style={{color:"#b8b0a3",margin:"6px 0 0",fontSize:15,fontFamily:"'DM Sans',sans-serif"}}>日本の音楽を世界へ届けましょう</p>
+      <h1 style={{fontSize:28,fontWeight:600,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#1a1a1a"}}>おかえりなさい、{user.name}</h1>
+      <p style={{color:"#6b6560",margin:"6px 0 0",fontSize:15,fontFamily:"'DM Sans',sans-serif"}}>日本の音楽を世界へ届けましょう</p>
     </div>
 
     {/* Welcome Guide — only when 0 pitches */}
     {pitches.length === 0 && (
-      <div style={{background:"linear-gradient(135deg,rgba(196,149,106,0.08),rgba(196,149,106,0.03))",border:"1px solid rgba(196,149,106,0.2)",borderRadius:16,padding:"28px 32px",marginBottom:24}}>
+      <div style={{background:"linear-gradient(135deg,rgba(196,149,106,0.06),rgba(196,149,106,0.03))",border:"1px solid rgba(196,149,106,0.15)",borderRadius:16,padding:"28px 32px",marginBottom:24}}>
         <div style={{fontSize:28,marginBottom:4}}>👋</div>
-        <h3 style={{fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6",fontSize:22,fontWeight:600,margin:"0 0 8px"}}>はじめましょう！</h3>
-        <p style={{color:"#b8b0a3",fontSize:14,margin:"0 0 16px",lineHeight:1.6,fontFamily:"'DM Sans',sans-serif"}}>まずは「キュレーター検索」から、あなたの音楽に合う海外メディアを探してみましょう。</p>
+        <h3 style={{fontFamily:"'Playfair Display',Georgia,serif",color:"#1a1a1a",fontSize:22,fontWeight:600,margin:"0 0 8px"}}>はじめましょう！</h3>
+        <p style={{color:"#6b6560",fontSize:14,margin:"0 0 16px",lineHeight:1.6,fontFamily:"'DM Sans',sans-serif"}}>まずは「キュレーター検索」から、あなたの音楽に合う海外メディアを探してみましょう。</p>
         <button onClick={()=>setPage("curators")} style={{background:"linear-gradient(135deg,#c4956a,#b8845e)",color:"#1a1a1a",padding:"10px 28px",borderRadius:10,fontWeight:600,border:"none",cursor:"pointer",fontSize:14,fontFamily:"'DM Sans',sans-serif",transition:"all 0.2s"}}
           onMouseEnter={e=>{e.currentTarget.style.background="linear-gradient(135deg,#d4a57a,#c4956a)";e.currentTarget.style.boxShadow="0 4px 12px rgba(196,149,106,0.3)";}}
           onMouseLeave={e=>{e.currentTarget.style.background="linear-gradient(135deg,#c4956a,#b8845e)";e.currentTarget.style.boxShadow="none";}}
@@ -719,10 +719,10 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
 
     {/* Stats Cards */}
     <div className="dash-stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:24}}>
-      {[{v:credits,l:"クレジット残",c:"#c4956a",sub:""},{v:pitches.length,l:"送信済み",c:"#f0ede6",sub:"キュレーターに送った数"},{v:listened,l:"試聴済み",c:"#60a5fa",sub:"曲を聴いてもらえた数"},{v:fb,l:"FB受信",c:"#c084fc",sub:"フィードバックをもらった数"},{v:acc,l:"採用",c:"#34d399",sub:"プレイリストやブログに採用された数"}].map((s,i) =>
-        <div key={i} className="dash-stat" style={{background:"#232323",borderRadius:14,padding:20,border:"1px solid #3a3a3a",textAlign:"center"}}>
+      {[{v:credits,l:"クレジット残",c:"#c4956a",sub:""},{v:pitches.length,l:"送信済み",c:"#1a1a1a",sub:"キュレーターに送った数"},{v:listened,l:"試聴済み",c:"#60a5fa",sub:"曲を聴いてもらえた数"},{v:fb,l:"FB受信",c:"#c084fc",sub:"フィードバックをもらった数"},{v:acc,l:"採用",c:"#34d399",sub:"プレイリストやブログに採用された数"}].map((s,i) =>
+        <div key={i} className="dash-stat" style={{background:"#ffffff",borderRadius:14,padding:20,border:"1px solid #e5e2dc",textAlign:"center"}}>
           <div style={{fontSize:32,fontWeight:700,color:s.c,fontFamily:"'Playfair Display',Georgia,serif",lineHeight:1}}>{s.v}</div>
-          <div style={{fontSize:12,color:"#b8b0a3",marginTop:8,fontFamily:"'DM Sans',sans-serif"}}>{s.l}</div>
+          <div style={{fontSize:12,color:"#6b6560",marginTop:8,fontFamily:"'DM Sans',sans-serif"}}>{s.l}</div>
           {s.sub && <div style={{fontSize:11,color:"rgba(184,176,163,0.6)",marginTop:4,fontFamily:"'DM Sans',sans-serif"}}>{s.sub}</div>}
         </div>
       )}
@@ -732,8 +732,8 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
     <div onClick={()=>setPage("shop")} style={{background:"linear-gradient(135deg,rgba(196,149,106,0.12),rgba(196,149,106,0.05))",border:"1px solid rgba(196,149,106,0.25)",borderRadius:14,padding:"16px 24px",marginBottom:24,display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"border-color 0.2s"}}
       onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(196,149,106,0.45)"} onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(196,149,106,0.25)"}>
       <div>
-        <div style={{fontWeight:500,fontSize:15,color:"#f0ede6",fontFamily:"'DM Sans',sans-serif"}}>💰 クレジット残高: {credits}</div>
-        <div style={{fontSize:12,color:"#b8b0a3",marginTop:2,fontFamily:"'DM Sans',sans-serif"}}>1クレジット = ¥160 · キュレーターにより1〜4cr</div>
+        <div style={{fontWeight:500,fontSize:15,color:"#1a1a1a",fontFamily:"'DM Sans',sans-serif"}}>💰 クレジット残高: {credits}</div>
+        <div style={{fontSize:12,color:"#6b6560",marginTop:2,fontFamily:"'DM Sans',sans-serif"}}>1クレジット = ¥160 · キュレーターにより1〜4cr</div>
       </div>
       <div style={{background:"#c4956a",color:"#1a1a1a",fontSize:13,fontWeight:600,padding:"8px 20px",borderRadius:8,fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>+ 購入する →</div>
     </div>
@@ -741,12 +741,12 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
     {/* Quick Actions — always visible */}
     <div style={{display:"flex",gap:12,marginBottom:24,justifyContent:"center"}}>
       <button onClick={()=>setPage("curators")} style={{background:"linear-gradient(135deg,#c4956a,#b8845e)",color:"#1a1a1a",padding:"12px 28px",borderRadius:10,border:"none",fontWeight:600,fontSize:14,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>🎯 キュレーターを探す</button>
-      <button onClick={()=>setPage("pitch")} style={{background:"transparent",color:"#f0ede6",padding:"12px 28px",borderRadius:10,border:"1px solid #3a3a3a",fontWeight:500,fontSize:14,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>✉️ ピッチを作成</button>
+      <button onClick={()=>setPage("pitch")} style={{background:"transparent",color:"#1a1a1a",padding:"12px 28px",borderRadius:10,border:"1px solid #e5e2dc",fontWeight:500,fontSize:14,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>✉️ ピッチを作成</button>
     </div>
 
     {/* Flow indicator */}
-    <div style={{textAlign:"center",margin:"4px 0 16px",fontSize:13,color:"#b8b0a3",letterSpacing:"0.5px",fontFamily:"'DM Sans',sans-serif"}}>
-      <span style={{fontWeight:600,color:"#f0ede6"}}>使い方はかんたん</span>
+    <div style={{textAlign:"center",margin:"4px 0 16px",fontSize:13,color:"#6b6560",letterSpacing:"0.5px",fontFamily:"'DM Sans',sans-serif"}}>
+      <span style={{fontWeight:600,color:"#1a1a1a"}}>使い方はかんたん</span>
       <span style={{margin:"0 8px",opacity:0.4}}>──</span>
       <span>4つのステップ</span>
     </div>
@@ -754,27 +754,27 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
     {/* Step Cards */}
     <div className="dash-steps-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
       {[{icon:"◎",title:"キュレーター検索",desc:"あなたの曲に合う海外メディアを探す",p:"curators",step:1},{icon:"△",title:"AIピッチ生成",desc:"AIが英語の紹介文を自動作成",p:"pitch",step:2},{icon:"◐",title:"トラッキング",desc:"開封・試聴・フィードバックを確認",p:"tracking",step:3},{icon:"◫",title:"分析",desc:"あなたの成果を可視化",p:"analytics",step:4}].map((a,i) =>
-        <div key={i} className="dash-step" onClick={()=>setPage(a.p)} style={{background:"#232323",borderRadius:14,padding:"24px 20px",border:"1px solid #3a3a3a",cursor:"pointer"}}>
+        <div key={i} className="dash-step" onClick={()=>setPage(a.p)} style={{background:"#ffffff",borderRadius:14,padding:"24px 20px",border:"1px solid #e5e2dc",cursor:"pointer"}}>
           <div style={{fontSize:10,fontWeight:600,color:"#c4956a",letterSpacing:"1.5px",marginBottom:12,fontFamily:"'DM Sans',sans-serif"}}>STEP {a.step}</div>
           <div style={{fontSize:24,marginBottom:8}}>{a.icon}</div>
-          <div style={{fontWeight:500,fontSize:15,color:"#f0ede6",marginBottom:4,fontFamily:"'DM Sans',sans-serif"}}>{a.title}</div>
-          <div style={{fontSize:13,color:"#b8b0a3",lineHeight:1.5,fontFamily:"'DM Sans',sans-serif"}}>{a.desc}</div>
+          <div style={{fontWeight:500,fontSize:15,color:"#1a1a1a",marginBottom:4,fontFamily:"'DM Sans',sans-serif"}}>{a.title}</div>
+          <div style={{fontSize:13,color:"#6b6560",lineHeight:1.5,fontFamily:"'DM Sans',sans-serif"}}>{a.desc}</div>
         </div>
       )}
     </div>
 
     {/* Recent Activity Feed */}
-    {recent.length > 0 && <div style={{borderTop:"1px solid #3a3a3a",paddingTop:20}}>
-      <div style={{fontSize:13,fontWeight:600,marginBottom:12,color:"#b8b0a3",letterSpacing:"0.5px",textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif"}}>📋 最近のアクティビティ</div>
+    {recent.length > 0 && <div style={{borderTop:"1px solid #e5e2dc",paddingTop:20}}>
+      <div style={{fontSize:13,fontWeight:600,marginBottom:12,color:"#6b6560",letterSpacing:"0.5px",textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif"}}>📋 最近のアクティビティ</div>
       <div>
         {recent.map((p,i) => (
           <div key={p.id} className="dash-activity" style={{padding:"12px 0",borderBottom:i<recent.length-1?"1px solid rgba(58,58,58,0.5)":"none",display:"flex",alignItems:"center",gap:10,transition:"background 0.15s",borderRadius:4}}>
             <span style={{fontSize:16}}>{statusIcon[p.status]||"📤"}</span>
             <div style={{flex:1}}>
-              <div style={{fontSize:14,fontWeight:500,color:"#f0ede6",fontFamily:"'DM Sans',sans-serif"}}>{p.curatorName} <span style={{fontWeight:400,color:"#b8b0a3"}}>— {statusLabel[p.status]||p.status}</span></div>
-              <div style={{fontSize:13,color:"#b8b0a3",fontFamily:"'DM Sans',sans-serif"}}>{p.artistName} "{p.songTitle}"</div>
+              <div style={{fontSize:14,fontWeight:500,color:"#1a1a1a",fontFamily:"'DM Sans',sans-serif"}}>{p.curatorName} <span style={{fontWeight:400,color:"#6b6560"}}>— {statusLabel[p.status]||p.status}</span></div>
+              <div style={{fontSize:13,color:"#6b6560",fontFamily:"'DM Sans',sans-serif"}}>{p.artistName} "{p.songTitle}"</div>
             </div>
-            <div style={{fontSize:12,color:"#b8b0a3",opacity:0.6,fontFamily:"'DM Sans',sans-serif"}}>{timeAgo(p.feedbackAt||p.listenedAt||p.openedAt||p.sentAt)}</div>
+            <div style={{fontSize:12,color:"#6b6560",opacity:0.6,fontFamily:"'DM Sans',sans-serif"}}>{timeAgo(p.feedbackAt||p.listenedAt||p.openedAt||p.sentAt)}</div>
           </div>
         ))}
       </div>
@@ -925,25 +925,25 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   return <div>
     <style>{`.curator-list-card { flex-direction: row !important; } @media (max-width: 480px) { .curator-list-card { flex-direction: column !important; } } @media (max-width: 768px) { .pitch-step-labels { display: none !important; } } @keyframes curatorModalIn { from { opacity: 0; transform: scale(0.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }`}</style>
     <div style={{marginBottom:"1.2rem"}}>
-      <div style={{fontSize:11,letterSpacing:"2px",color:"#b8b0a3",marginBottom:6,textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif"}}>CURATORS</div>
-      <h1 style={{fontSize:28,fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6",lineHeight:1.1}}>あなたの曲に合うメディアを探そう</h1>
-      <p style={{color:"#b8b0a3",fontSize:14,margin:"8px 0 0",fontFamily:"'DM Sans',sans-serif",lineHeight:1.5}}>曲名とアーティスト名を入力すると、AIがマッチ度を自動計算します {selected.length > 0 && <span style={{color:"#c4956a",fontWeight:600}}>· {selected.length}人選択中</span>}</p>
+      <div style={{fontSize:11,letterSpacing:"2px",color:"#6b6560",marginBottom:6,textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif"}}>CURATORS</div>
+      <h1 style={{fontSize:28,fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#1a1a1a",lineHeight:1.1}}>あなたの曲に合うメディアを探そう</h1>
+      <p style={{color:"#6b6560",fontSize:14,margin:"8px 0 0",fontFamily:"'DM Sans',sans-serif",lineHeight:1.5}}>曲名とアーティスト名を入力すると、AIがマッチ度を自動計算します {selected.length > 0 && <span style={{color:"#c4956a",fontWeight:600}}>· {selected.length}人選択中</span>}</p>
     </div>
 
     {/* ── Track Analysis Section ── */}
-    <div style={{background:"linear-gradient(135deg, rgba(196,149,106,0.08), rgba(196,149,106,0.03))",borderRadius:16,padding:24,marginBottom:"1rem",border:"1px solid rgba(196,149,106,0.25)"}}>
-      <div style={{fontSize:16,fontWeight:500,color:"#f0ede6",marginBottom:4,fontFamily:"'DM Sans',sans-serif"}}>🎵 まず、あなたの楽曲を教えてください</div>
-      <div style={{fontSize:13,color:"#b8b0a3",marginBottom:12,fontFamily:"'DM Sans',sans-serif"}}>曲名とアーティスト名を入力して「分析する」を押すと、各キュレーターとのマッチ度がわかります</div>
+    <div style={{background:"linear-gradient(135deg, rgba(196,149,106,0.06), rgba(196,149,106,0.03))",borderRadius:16,padding:24,marginBottom:"1rem",border:"1px solid rgba(196,149,106,0.25)"}}>
+      <div style={{fontSize:16,fontWeight:500,color:"#1a1a1a",marginBottom:4,fontFamily:"'DM Sans',sans-serif"}}>🎵 まず、あなたの楽曲を教えてください</div>
+      <div style={{fontSize:13,color:"#6b6560",marginBottom:12,fontFamily:"'DM Sans',sans-serif"}}>曲名とアーティスト名を入力して「分析する」を押すと、各キュレーターとのマッチ度がわかります</div>
       {/* Input row — always visible so user can re-enter */}
       <div style={{display:"flex",gap:8,marginBottom:8,alignItems:"center"}}>
-        <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"#2a2a2a",flex:1,fontSize:15,height:44,padding:"0 12px",marginBottom:0}} placeholder="例: Sepia" value={detectedSong} onChange={e=>setDetectedSong(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAnalyze()}/>
-        <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"#2a2a2a",flex:1,fontSize:15,height:44,padding:"0 12px",marginBottom:0}} placeholder="例: ROUTE14band" value={detectedArtist} onChange={e=>setDetectedArtist(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAnalyze()}/>
-        <button onClick={doAnalyze} disabled={analyzeLoading||!detectedSong} style={{background:analyzeLoading?"#333333":"#c4956a",color:analyzeLoading?"#7a7870":"#1a1a1a",border:"none",fontWeight:600,whiteSpace:"nowrap",flexShrink:0,opacity:!detectedSong?0.5:1,padding:"10px 20px",borderRadius:10,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>
+        <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"#ffffff",flex:1,fontSize:15,height:44,padding:"0 12px",marginBottom:0}} placeholder="例: Sepia" value={detectedSong} onChange={e=>setDetectedSong(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAnalyze()}/>
+        <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"#ffffff",flex:1,fontSize:15,height:44,padding:"0 12px",marginBottom:0}} placeholder="例: ROUTE14band" value={detectedArtist} onChange={e=>setDetectedArtist(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAnalyze()}/>
+        <button onClick={doAnalyze} disabled={analyzeLoading||!detectedSong} style={{background:analyzeLoading?"#e5e2dc":"#c4956a",color:analyzeLoading?"#9a958e":"#f8f7f4",border:"none",fontWeight:600,whiteSpace:"nowrap",flexShrink:0,opacity:!detectedSong?0.5:1,padding:"10px 20px",borderRadius:10,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>
           {analyzeLoading ? "分析中…" : "🔍 分析する"}
         </button>
       </div>
-      <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"#2a2a2a",fontSize:15,height:44,padding:"0 12px",marginBottom:2}} placeholder="楽曲のURL（YouTube / Spotify）" value={analyzeUrl} onChange={e=>setAnalyzeUrl(e.target.value)}/>
-      <div style={{fontSize:12,color:"#b8b0a3",opacity:0.6,fontFamily:"'DM Sans',sans-serif"}}>※ キュレーターがあなたの曲を聴くためのリンクです</div>
+      <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"#ffffff",fontSize:15,height:44,padding:"0 12px",marginBottom:2}} placeholder="楽曲のURL（YouTube / Spotify）" value={analyzeUrl} onChange={e=>setAnalyzeUrl(e.target.value)}/>
+      <div style={{fontSize:12,color:"#6b6560",opacity:0.6,fontFamily:"'DM Sans',sans-serif"}}>※ キュレーターがあなたの曲を聴くためのリンクです</div>
       {trackData && !trackData.audioFeatures && !trackData.genre && !artist?.genre && (
         <div style={{display:"flex",gap:6,marginBottom:6,alignItems:"center"}}>
           <input style={{...css.input,border:"1px solid #f59e0b",background:"#fffbeb",flex:1,fontSize:"0.78rem"}} placeholder="ジャンル（例: Jazz, Funk, Latin）" onKeyDown={e=>{
@@ -975,10 +975,10 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
             </span>
           )}
           <div style={{display:"flex",gap:6,flexShrink:0}}>
-            <button onClick={()=>setSortByMatch(p=>!p)} style={{...css.btnSm,background:sortByMatch?"#c4956a":"#333333",color:sortByMatch?"#fff":"#c0bdb5",border:"1px solid "+(sortByMatch?"#c4956a":"rgba(255,255,255,0.08)"),fontWeight:600,fontSize:"0.68rem"}}>
+            <button onClick={()=>setSortByMatch(p=>!p)} style={{...css.btnSm,background:sortByMatch?"#c4956a":"#f0ede6",color:sortByMatch?"#fff":"#6b6560",border:"1px solid "+(sortByMatch?"#c4956a":"rgba(0,0,0,0.06)"),fontWeight:600,fontSize:"0.68rem"}}>
               {sortByMatch ? "🎯 マッチ順" : "🎯 マッチ順で並べる"}
             </button>
-            <button onClick={()=>{setTrackData(null);setDetectedSong("");setDetectedArtist("");lastAnalyzedKeyRef.current="";setSortByMatch(false);}} style={{fontSize:"0.62rem",color:"#7a7870",background:"none",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,padding:"0.2rem 0.5rem",cursor:"pointer"}}>✕</button>
+            <button onClick={()=>{setTrackData(null);setDetectedSong("");setDetectedArtist("");lastAnalyzedKeyRef.current="";setSortByMatch(false);}} style={{fontSize:"0.62rem",color:"#9a958e",background:"none",border:"1px solid rgba(0,0,0,0.06)",borderRadius:6,padding:"0.2rem 0.5rem",cursor:"pointer"}}>✕</button>
           </div>
         </div>;
       })()}
@@ -989,17 +989,17 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 
     <div style={{display:"flex",gap:12,marginBottom:"1rem",flexWrap:"wrap"}}>
       <div style={{position:"relative",flex:"1 1 150px",minWidth:120}}>
-        <span style={{position:"absolute",left:"0.7rem",top:"50%",transform:"translateY(-50%)",fontSize:"0.85rem",pointerEvents:"none",color:"#7a7870"}}>🔍</span>
+        <span style={{position:"absolute",left:"0.7rem",top:"50%",transform:"translateY(-50%)",fontSize:"0.85rem",pointerEvents:"none",color:"#9a958e"}}>🔍</span>
         <input style={{...css.filterInput,flex:"unset",width:"100%",paddingLeft:"2rem",boxSizing:"border-box",fontSize:14,height:40}} placeholder="名前・プラットフォームで検索..." value={q} onChange={e=>setQ(e.target.value)}/>
       </div>
       <select style={{...css.filterSelect,flex:"1 1 120px",fontSize:14,height:40}} value={genre} onChange={e=>setGenre(e.target.value)}><option value="">全ジャンル</option>{GENRES.map(g=><option key={g}>{g}</option>)}</select>
       <select style={{...css.filterSelect,flex:"1 1 120px",fontSize:14,height:40}} value={type} onChange={e=>setType(e.target.value)}><option value="">全タイプ</option>{CURATOR_TYPES.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>
     </div>
-    {selected.length > 0 && <div style={{background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.4)",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600}}>{selected.length}人選択中 · 合計{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}cr (¥{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)*160})</span><div style={{display:"flex",gap:6}}><button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem"}}>🚀 ピッチ作成へ</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
+    {selected.length > 0 && <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.4)",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600}}>{selected.length}人選択中 · 合計{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}cr (¥{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)*160})</span><div style={{display:"flex",gap:6}}><button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem"}}>🚀 ピッチ作成へ</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {(() => {
         const avatarColors = [
-          {bg:'rgba(196,149,106,0.2)',text:'#c4956a'},
+          {bg:'rgba(196,149,106,0.15)',text:'#c4956a'},
           {bg:'rgba(232,93,58,0.15)',text:'#e85d3a'},
           {bg:'rgba(74,222,128,0.12)',text:'#4ade80'},
           {bg:'rgba(96,165,250,0.12)',text:'#60a5fa'},
@@ -1026,26 +1026,26 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
           const initials = c.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
           const typeBadge = typeBadgeMap[c.type];
           const flag = c.region ? (regionFlags[c.region] || null) : null;
-          return <div key={c.id} onClick={()=>setDetailCurator(c)} className="curator-list-card" style={{background:on?'rgba(196,149,106,0.1)':'#222222',border:on?'1px solid rgba(196,149,106,0.4)':'1px solid rgba(255,255,255,0.06)',borderRadius:12,padding:'20px',display:'flex',gap:16,alignItems:'flex-start',cursor:'pointer',transition:'all 0.2s ease'}}>
+          return <div key={c.id} onClick={()=>setDetailCurator(c)} className="curator-list-card" style={{background:on?'rgba(196,149,106,0.08)':'#ffffff',border:on?'1px solid rgba(196,149,106,0.4)':'1px solid rgba(0,0,0,0.05)',borderRadius:12,padding:'20px',display:'flex',gap:16,alignItems:'flex-start',cursor:'pointer',transition:'all 0.2s ease'}}>
             {/* Avatar */}
             <div style={{width:48,height:48,borderRadius:'50%',flexShrink:0,position:'relative',overflow:'hidden'}}>
-              {c.iconUrl && <img src={c.iconUrl} alt={c.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',border:'2px solid rgba(255,255,255,0.08)'}} onError={e=>{e.target.style.display='none';}} />}
+              {c.iconUrl && <img src={c.iconUrl} alt={c.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',border:'2px solid rgba(0,0,0,0.06)'}} onError={e=>{e.target.style.display='none';}} />}
               <div style={{width:'100%',height:'100%',borderRadius:'50%',background:on?'linear-gradient(135deg,#c4956a,#e85d3a)':av.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:600,color:on?'#fff':av.text,letterSpacing:'-0.5px'}}>{initials}</div>
             </div>
             {/* Info */}
             <div style={{flex:1,minWidth:0}}>
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>
-                <span style={{fontSize:16,fontWeight:600,color:'#f0ede6'}}>{c.name}</span>
+                <span style={{fontSize:16,fontWeight:600,color:'#1a1a1a'}}>{c.name}</span>
                 {flag && <span style={{fontSize:14}}>{flag}</span>}
                 {typeBadge && <span style={{padding:'3px 10px',borderRadius:20,fontSize:11,background:typeBadge.bg,color:typeBadge.text,fontWeight:500}}>{typeBadge.label}</span>}
                 {c.badges?.map(b => <span key={b} style={{fontSize:'0.6rem',padding:'0.1rem 0.4rem',borderRadius:6,background:b==='verified'?'#dcfce7':'#eff6ff',color:b==='verified'?'#16a34a':'#2563eb'}}>{BADGES[b]}</span>)}
               </div>
-              <div style={{fontSize:'0.75rem',color:'#7a7870',marginBottom:6}}>{c.platform}{c.audience ? ' · '+(c.audience>=1000?(c.audience/1000).toFixed(1)+'K':c.audience) : ''}</div>
-              {c.bio && <p style={{fontSize:14,color:'#7a7870',margin:'0 0 10px',lineHeight:1.5}}>{c.bio.length>80?c.bio.substring(0,80)+'…':c.bio}</p>}
+              <div style={{fontSize:'0.75rem',color:'#9a958e',marginBottom:6}}>{c.platform}{c.audience ? ' · '+(c.audience>=1000?(c.audience/1000).toFixed(1)+'K':c.audience) : ''}</div>
+              {c.bio && <p style={{fontSize:14,color:'#9a958e',margin:'0 0 10px',lineHeight:1.5}}>{c.bio.length>80?c.bio.substring(0,80)+'…':c.bio}</p>}
               {ml && c.matchReasons?.length > 0 && <div style={{fontSize:'0.62rem',color:'#c4956a',marginBottom:8}}>{c.matchReasons.slice(0,2).join(' · ')}</div>}
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-                {c.genres.slice(0,4).map(g => <span key={g} style={{fontSize:12,padding:'4px 10px',borderRadius:20,background:'rgba(196,149,106,0.08)',border:'1px solid rgba(196,149,106,0.15)',color:'#c4956a'}}>{g}</span>)}
-                {c.genres.length > 4 && <span style={{fontSize:'0.62rem',color:'#7a7870',alignSelf:'center'}}>+{c.genres.length-4}</span>}
+                {c.genres.slice(0,4).map(g => <span key={g} style={{fontSize:12,padding:'4px 10px',borderRadius:20,background:'rgba(196,149,106,0.06)',border:'1px solid rgba(196,149,106,0.1)',color:'#c4956a'}}>{g}</span>)}
+                {c.genres.length > 4 && <span style={{fontSize:'0.62rem',color:'#9a958e',alignSelf:'center'}}>+{c.genres.length-4}</span>}
               </div>
             </div>
             {/* Right: match gauge + select button */}
@@ -1053,7 +1053,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
               {ms != null ? (
                 <div style={{position:'relative',width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center'}}>
                   <svg width="44" height="44" style={{position:'absolute',transform:'rotate(-90deg)'}}>
-                    <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3"/>
+                    <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="3"/>
                     <circle cx="22" cy="22" r="18" fill="none" stroke={msColor(ms)} strokeWidth="3" strokeDasharray={`${(ms/100)*circumference} ${circumference}`} strokeLinecap="round"/>
                   </svg>
                   <span style={{fontSize:14,fontWeight:600,color:msColor(ms)}}>{ms}%</span>
@@ -1062,14 +1062,14 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
                 <div style={{width:44,height:44}}/>
               )}
               <span style={{fontSize:14,color:'#c4956a',fontWeight:600}}>{c.creditCost||2} cr</span>
-              <div style={{width:22,height:22,borderRadius:'50%',background:on?'#c4956a':'rgba(255,255,255,0.08)',border:on?'none':'1px solid rgba(255,255,255,0.2)',color:on?'#fff':'#7a7870',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700,transition:'all 0.15s'}}>{on?'✓':'+'}</div>
+              <div style={{width:22,height:22,borderRadius:'50%',background:on?'#c4956a':'rgba(0,0,0,0.06)',border:on?'none':'1px solid rgba(0,0,0,0.1)',color:on?'#fff':'#9a958e',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700,transition:'all 0.15s'}}>{on?'✓':'+'}</div>
             </div>
           </div>;
         });
       })()}
     </div>
     {/* Floating action bar when curators selected */}
-    {selected.length > 0 && <div style={{position:"sticky",bottom:0,left:0,right:0,background:"linear-gradient(0deg,#1a1a1a 70%,transparent)",padding:"1rem 0 0.5rem",marginTop:"0.5rem"}}>
+    {selected.length > 0 && <div style={{position:"sticky",bottom:0,left:0,right:0,background:"linear-gradient(0deg,#f8f7f4 70%,transparent)",padding:"1rem 0 0.5rem",marginTop:"0.5rem"}}>
       <button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,width:"100%",padding:"0.9rem",fontSize:"0.95rem"}}>🚀 {selected.length}人のキュレーターにピッチ作成 ({curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}cr)</button>
     </div>}
 
@@ -1079,7 +1079,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       const dcOn = selected.includes(dc.id);
       const dcMs = dc.matchScore;
       const dcMsColor = dcMs >= 85 ? '#4ade80' : dcMs >= 70 ? '#60a5fa' : '#fbbf24';
-      const dcAv = [{bg:'rgba(196,149,106,0.2)',text:'#c4956a'},{bg:'rgba(232,93,58,0.15)',text:'#e85d3a'},{bg:'rgba(74,222,128,0.12)',text:'#4ade80'},{bg:'rgba(96,165,250,0.12)',text:'#60a5fa'},{bg:'rgba(251,191,36,0.12)',text:'#fbbf24'},{bg:'rgba(168,85,247,0.12)',text:'#a855f7'}][dc.name.charCodeAt(0) % 6];
+      const dcAv = [{bg:'rgba(196,149,106,0.15)',text:'#c4956a'},{bg:'rgba(232,93,58,0.15)',text:'#e85d3a'},{bg:'rgba(74,222,128,0.12)',text:'#4ade80'},{bg:'rgba(96,165,250,0.12)',text:'#60a5fa'},{bg:'rgba(251,191,36,0.12)',text:'#fbbf24'},{bg:'rgba(168,85,247,0.12)',text:'#a855f7'}][dc.name.charCodeAt(0) % 6];
       const dcInitials = dc.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
       const dcFollowers = dc.followers || dc.audience;
       const artistGenres = (artist?.genre || '').split(',').map(g => g.trim().toLowerCase()).filter(Boolean);
@@ -1087,37 +1087,37 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
         ? (dc.genres || []).filter(g => artistGenres.includes(g.toLowerCase()))
         : [];
       return <div onClick={()=>setDetailCurator(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.65)',backdropFilter:'blur(8px)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}}>
-        <div onClick={e=>e.stopPropagation()} style={{background:'#222222',borderRadius:16,border:'1px solid rgba(255,255,255,0.08)',maxWidth:560,width:'100%',maxHeight:'90vh',overflowY:'auto',animation:'curatorModalIn 0.2s ease'}}>
+        <div onClick={e=>e.stopPropagation()} style={{background:'#ffffff',borderRadius:16,border:'1px solid rgba(0,0,0,0.06)',maxWidth:560,width:'100%',maxHeight:'90vh',overflowY:'auto',animation:'curatorModalIn 0.2s ease'}}>
 
           {/* Header */}
-          <div style={{padding:'24px 24px 20px',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',alignItems:'center',gap:16}}>
+          <div style={{padding:'24px 24px 20px',borderBottom:'1px solid rgba(0,0,0,0.05)',display:'flex',alignItems:'center',gap:16}}>
             <div style={{width:64,height:64,borderRadius:'50%',flexShrink:0,position:'relative',overflow:'hidden'}}>
               {dc.iconUrl && <img src={dc.iconUrl} alt={dc.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover'}} onError={e=>{e.target.style.display='none';}}/>}
               <div style={{width:'100%',height:'100%',borderRadius:'50%',background:dcAv.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,fontWeight:600,color:dcAv.text}}>{dcInitials}</div>
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <h3 style={{fontSize:20,fontWeight:500,color:'#f0ede6',fontFamily:"'Playfair Display',Georgia,serif",margin:'0 0 4px'}}>{dc.name}</h3>
-              <div style={{fontSize:13,color:'#7a7870'}}>
+              <h3 style={{fontSize:20,fontWeight:500,color:'#1a1a1a',fontFamily:"'Playfair Display',Georgia,serif",margin:'0 0 4px'}}>{dc.name}</h3>
+              <div style={{fontSize:13,color:'#9a958e'}}>
                 {dc.platform}{dcFollowers ? ' · '+(dcFollowers>=1000?(dcFollowers/1000).toFixed(1)+'K followers':dcFollowers+' followers') : ''}
               </div>
             </div>
-            <button onClick={()=>setDetailCurator(null)} style={{background:'transparent',border:'none',color:'#7a7870',fontSize:24,cursor:'pointer',padding:4,lineHeight:1,flexShrink:0}}>×</button>
+            <button onClick={()=>setDetailCurator(null)} style={{background:'transparent',border:'none',color:'#9a958e',fontSize:24,cursor:'pointer',padding:4,lineHeight:1,flexShrink:0}}>×</button>
           </div>
 
           {/* Body */}
           <div style={{padding:'24px',display:'flex',flexDirection:'column',gap:24}}>
 
             {/* Match section */}
-            {(dcMs != null || matchingGenres.length > 0) && <div style={{background:dcMs!=null?(dcMs>=85?'rgba(74,222,128,0.06)':dcMs>=70?'rgba(96,165,250,0.06)':'rgba(251,191,36,0.06)'):'rgba(255,255,255,0.03)',borderRadius:12,padding:16,border:'1px solid '+(dcMs!=null?(dcMs>=85?'rgba(74,222,128,0.15)':dcMs>=70?'rgba(96,165,250,0.15)':'rgba(251,191,36,0.15)'):'rgba(255,255,255,0.06)')}}>
+            {(dcMs != null || matchingGenres.length > 0) && <div style={{background:dcMs!=null?(dcMs>=85?'rgba(74,222,128,0.06)':dcMs>=70?'rgba(96,165,250,0.06)':'rgba(251,191,36,0.06)'):'rgba(255,255,255,0.03)',borderRadius:12,padding:16,border:'1px solid '+(dcMs!=null?(dcMs>=85?'rgba(74,222,128,0.15)':dcMs>=70?'rgba(96,165,250,0.15)':'rgba(251,191,36,0.15)'):'rgba(0,0,0,0.05)')}}>
               {dcMs != null && <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:matchingGenres.length>0?12:0}}>
                 <div style={{fontSize:32,fontWeight:600,color:dcMsColor,lineHeight:1}}>{dcMs}%</div>
                 <div>
-                  <div style={{fontSize:13,fontWeight:500,color:'#f0ede6'}}>Match Score</div>
-                  {dc.matchReasons?.length > 0 && <div style={{fontSize:12,color:'#7a7870',marginTop:2}}>{dc.matchReasons.join(' · ')}</div>}
+                  <div style={{fontSize:13,fontWeight:500,color:'#1a1a1a'}}>Match Score</div>
+                  {dc.matchReasons?.length > 0 && <div style={{fontSize:12,color:'#9a958e',marginTop:2}}>{dc.matchReasons.join(' · ')}</div>}
                 </div>
               </div>}
               {matchingGenres.length > 0 && <div>
-                <div style={{fontSize:12,color:'#7a7870',marginBottom:8}}>How well you match</div>
+                <div style={{fontSize:12,color:'#9a958e',marginBottom:8}}>How well you match</div>
                 <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                   {matchingGenres.map((g,i) => <span key={i} style={{background:'rgba(74,222,128,0.08)',border:'1px solid rgba(74,222,128,0.2)',color:'#4ade80',padding:'4px 12px',borderRadius:20,fontSize:12}}>✓ {g}</span>)}
                 </div>
@@ -1126,41 +1126,41 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 
             {/* Stats */}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
-              <div style={{background:'#2a2a2a',borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
-                <div style={{fontSize:20,fontWeight:600,color:'#f0ede6'}}>
+              <div style={{background:'#ffffff',borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
+                <div style={{fontSize:20,fontWeight:600,color:'#1a1a1a'}}>
                   {(dc.pitchesResponded && dc.pitchesReceived) ? Math.round((dc.pitchesResponded/dc.pitchesReceived)*100)+'%' : '--'}
                 </div>
-                <div style={{fontSize:11,color:'#7a7870',marginTop:3}}>Answer rate</div>
+                <div style={{fontSize:11,color:'#9a958e',marginTop:3}}>Answer rate</div>
               </div>
-              <div style={{background:'#2a2a2a',borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
-                <div style={{fontSize:20,fontWeight:600,color:'#f0ede6'}}>
+              <div style={{background:'#ffffff',borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
+                <div style={{fontSize:20,fontWeight:600,color:'#1a1a1a'}}>
                   {(dc.pitchesAccepted && dc.pitchesResponded) ? Math.round((dc.pitchesAccepted/dc.pitchesResponded)*100)+'%' : '--'}
                 </div>
-                <div style={{fontSize:11,color:'#7a7870',marginTop:3}}>Share rate</div>
+                <div style={{fontSize:11,color:'#9a958e',marginTop:3}}>Share rate</div>
               </div>
-              <div style={{background:'#2a2a2a',borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
-                <div style={{fontSize:17,fontWeight:600,color:'#f0ede6',lineHeight:1.2}}>{dc.responseTime || '7 days'}</div>
-                <div style={{fontSize:11,color:'#7a7870',marginTop:3}}>Responds in</div>
+              <div style={{background:'#ffffff',borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
+                <div style={{fontSize:17,fontWeight:600,color:'#1a1a1a',lineHeight:1.2}}>{dc.responseTime || '7 days'}</div>
+                <div style={{fontSize:11,color:'#9a958e',marginTop:3}}>Responds in</div>
               </div>
             </div>
 
             {/* Bio */}
-            {dc.bio && <p style={{fontSize:14,color:'#c0bdb5',lineHeight:1.7,margin:0}}>{dc.bio}</p>}
+            {dc.bio && <p style={{fontSize:14,color:'#6b6560',lineHeight:1.7,margin:0}}>{dc.bio}</p>}
 
             {/* Platform URL */}
             {dc.url && <a href={dc.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{display:'inline-flex',alignItems:'center',gap:6,color:'#c4956a',fontSize:13,textDecoration:'none',wordBreak:'break-all'}}>🔗 {dc.url}</a>}
 
             {/* Genres they love */}
             {dc.genres?.length > 0 && <div>
-              <div style={{fontSize:13,fontWeight:500,color:'#c0bdb5',marginBottom:10}}>Genres they love</div>
+              <div style={{fontSize:13,fontWeight:500,color:'#6b6560',marginBottom:10}}>Genres they love</div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-                {dc.genres.map((g,i) => <span key={i} style={{background:'rgba(196,149,106,0.08)',border:'1px solid rgba(196,149,106,0.15)',color:'#c4956a',padding:'4px 12px',borderRadius:20,fontSize:12}}>{g}</span>)}
+                {dc.genres.map((g,i) => <span key={i} style={{background:'rgba(196,149,106,0.06)',border:'1px solid rgba(196,149,106,0.1)',color:'#c4956a',padding:'4px 12px',borderRadius:20,fontSize:12}}>{g}</span>)}
               </div>
             </div>}
 
             {/* Genres they don't want */}
             {dc.rejectedGenres?.length > 0 && <div>
-              <div style={{fontSize:13,fontWeight:500,color:'#c0bdb5',marginBottom:10}}>They don't want to receive...</div>
+              <div style={{fontSize:13,fontWeight:500,color:'#6b6560',marginBottom:10}}>They don't want to receive...</div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                 {dc.rejectedGenres.map((g,i) => <span key={i} style={{background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.15)',color:'#ef4444',padding:'4px 12px',borderRadius:20,fontSize:12}}>{g}</span>)}
               </div>
@@ -1168,7 +1168,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 
             {/* Moods they love */}
             {dc.preferredMoods?.length > 0 && <div>
-              <div style={{fontSize:13,fontWeight:500,color:'#c0bdb5',marginBottom:10}}>Moods they love</div>
+              <div style={{fontSize:13,fontWeight:500,color:'#6b6560',marginBottom:10}}>Moods they love</div>
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                 {dc.preferredMoods.map((m,i) => <span key={i} style={{background:'rgba(168,85,247,0.08)',border:'1px solid rgba(168,85,247,0.15)',color:'#a855f7',padding:'4px 12px',borderRadius:20,fontSize:12}}>{m}</span>)}
               </div>
@@ -1176,31 +1176,31 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 
             {/* Similar artists */}
             {dc.preferredArtists?.length > 0 && <div>
-              <div style={{fontSize:13,fontWeight:500,color:'#c0bdb5',marginBottom:10}}>They want music similar to...</div>
+              <div style={{fontSize:13,fontWeight:500,color:'#6b6560',marginBottom:10}}>They want music similar to...</div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                {dc.preferredArtists.map((a,i) => <span key={i} style={{background:'#2a2a2a',border:'1px solid rgba(255,255,255,0.08)',color:'#f0ede6',padding:'6px 14px',borderRadius:20,fontSize:12}}>🎤 {a}</span>)}
+                {dc.preferredArtists.map((a,i) => <span key={i} style={{background:'#ffffff',border:'1px solid rgba(0,0,0,0.06)',color:'#1a1a1a',padding:'6px 14px',borderRadius:20,fontSize:12}}>🎤 {a}</span>)}
               </div>
             </div>}
 
             {/* Main opportunities */}
             {(dc.opportunities?.length > 0 || dc.accepts?.length > 0) && <div>
-              <div style={{fontSize:13,fontWeight:500,color:'#c0bdb5',marginBottom:10}}>Main opportunities</div>
+              <div style={{fontSize:13,fontWeight:500,color:'#6b6560',marginBottom:10}}>Main opportunities</div>
               <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                {(dc.opportunities?.length > 0 ? dc.opportunities : dc.accepts).map((o,i) => <div key={i} style={{background:'#2a2a2a',borderRadius:8,padding:'10px 14px',fontSize:13,color:'#c0bdb5',border:'1px solid rgba(255,255,255,0.04)'}}>{o}</div>)}
+                {(dc.opportunities?.length > 0 ? dc.opportunities : dc.accepts).map((o,i) => <div key={i} style={{background:'#ffffff',borderRadius:8,padding:'10px 14px',fontSize:13,color:'#6b6560',border:'1px solid rgba(0,0,0,0.04)'}}>{o}</div>)}
               </div>
             </div>}
 
             {/* Playlist link */}
             {dc.playlistUrl && <div>
-              <div style={{fontSize:13,fontWeight:500,color:'#c0bdb5',marginBottom:10}}>Their playlist</div>
-              <a href={dc.playlistUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{display:'flex',alignItems:'center',gap:10,background:'#2a2a2a',borderRadius:10,padding:14,color:'#c4956a',textDecoration:'none',fontSize:13,border:'1px solid rgba(255,255,255,0.06)',wordBreak:'break-all'}}>🎵 {dc.playlistUrl}</a>
+              <div style={{fontSize:13,fontWeight:500,color:'#6b6560',marginBottom:10}}>Their playlist</div>
+              <a href={dc.playlistUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{display:'flex',alignItems:'center',gap:10,background:'#ffffff',borderRadius:10,padding:14,color:'#c4956a',textDecoration:'none',fontSize:13,border:'1px solid rgba(0,0,0,0.05)',wordBreak:'break-all'}}>🎵 {dc.playlistUrl}</a>
             </div>}
 
           </div>
 
           {/* Footer */}
-          <div style={{padding:'16px 24px',borderTop:'1px solid rgba(255,255,255,0.06)',display:'flex',justifyContent:'flex-end',gap:12}}>
-            <button onClick={()=>setDetailCurator(null)} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.12)',color:'#c0bdb5',borderRadius:8,padding:'10px 20px',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>閉じる</button>
+          <div style={{padding:'16px 24px',borderTop:'1px solid rgba(0,0,0,0.05)',display:'flex',justifyContent:'flex-end',gap:12}}>
+            <button onClick={()=>setDetailCurator(null)} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.12)',color:'#6b6560',borderRadius:8,padding:'10px 20px',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>閉じる</button>
             <button onClick={()=>{toggle(dc.id);setDetailCurator(null);}} style={{background:dcOn?'transparent':'#c4956a',border:dcOn?'1px solid #ef4444':'none',color:dcOn?'#ef4444':'#fff',borderRadius:8,padding:'10px 20px',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>
               {dcOn ? '選択解除' : `選択 · ${dc.creditCost||2}cr`}
             </button>
@@ -1615,28 +1615,28 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const useSample = (s) => { setArtist({name:s.name,nameEn:s.nameEn,genre:s.genre,mood:s.mood,description:s.description,songTitle:s.songTitle,songLink:s.songLink,influences:s.influences,achievements:s.achievements,sns:""}); setLinks({spotify:s.songLink||"",apple:"",youtube:"",soundcloud:"",instagram:"",twitter:"",facebook:"",website:""}); setFollowers({spotify:0,youtube:0,soundcloud:0,instagram:0,twitter:0,facebook:0}); };
 
   if (targets.length === 0 && step === 0) {
-    return <div style={{textAlign:"center",padding:"3rem 1rem"}}><div style={{fontSize:"2.5rem",marginBottom:"1rem"}}>◎</div><h2 style={{fontWeight:700}}>キュレーターを選択してください</h2><p style={{color:"#7a7870",marginBottom:"1.5rem"}}>まずキュレーター検索で送信先を選んでください</p><button style={css.btnPrimary} onClick={()=>setPage("curators")}>キュレーターを探す</button></div>;
+    return <div style={{textAlign:"center",padding:"3rem 1rem"}}><div style={{fontSize:"2.5rem",marginBottom:"1rem"}}>◎</div><h2 style={{fontWeight:700}}>キュレーターを選択してください</h2><p style={{color:"#9a958e",marginBottom:"1.5rem"}}>まずキュレーター検索で送信先を選んでください</p><button style={css.btnPrimary} onClick={()=>setPage("curators")}>キュレーターを探す</button></div>;
   }
 
   return <div>
-    <div style={{marginBottom:"1.5rem"}}><h1 style={{fontSize:28,fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6"}}>AIピッチを作成</h1><p style={{color:"#b8b0a3",fontSize:15,margin:"8px 0 0",fontFamily:"'DM Sans',sans-serif"}}>AIがあなたの楽曲に合わせた英語の紹介文を自動作成します</p></div>
+    <div style={{marginBottom:"1.5rem"}}><h1 style={{fontSize:28,fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#1a1a1a"}}>AIピッチを作成</h1><p style={{color:"#6b6560",fontSize:15,margin:"8px 0 0",fontFamily:"'DM Sans',sans-serif"}}>AIがあなたの楽曲に合わせた英語の紹介文を自動作成します</p></div>
     <div style={{marginBottom:"1.5rem"}}>
       <div style={{display:"flex",gap:4}}>
-        {["情報入力","キュレーター","確認&編集","送信"].map((l,i) => <div key={i} style={{flex:1,height:4,borderRadius:4,background:i<=step?"linear-gradient(90deg,#c4956a,#e85d3a)":"rgba(255,255,255,0.1)"}}/>)}
+        {["情報入力","キュレーター","確認&編集","送信"].map((l,i) => <div key={i} style={{flex:1,height:4,borderRadius:4,background:i<=step?"linear-gradient(90deg,#c4956a,#e85d3a)":"rgba(0,0,0,0.06)"}}/>)}
       </div>
       <div className="pitch-step-labels" style={{display:"flex",gap:4,marginTop:6}}>
-        {["情報入力","キュレーター","確認&編集","送信"].map((l,i) => <div key={i} style={{flex:1,textAlign:"center",fontSize:11,fontFamily:"'DM Sans',sans-serif",color:i===step?"#f0ede6":"#b8b0a3",fontWeight:i===step?500:400}}>{l}</div>)}
+        {["情報入力","キュレーター","確認&編集","送信"].map((l,i) => <div key={i} style={{flex:1,textAlign:"center",fontSize:11,fontFamily:"'DM Sans',sans-serif",color:i===step?"#1a1a1a":"#6b6560",fontWeight:i===step?500:400}}>{l}</div>)}
       </div>
     </div>
-    <div style={{background:"#232323",border:"1px solid #3a3a3a",borderRadius:14,padding:"20px 24px",marginBottom:20}}>
-      <div style={{color:"#b8b0a3",fontSize:13,marginBottom:12,fontFamily:"'DM Sans',sans-serif"}}>📨 送信先 ({targets.length}人)</div>
+    <div style={{background:"#ffffff",border:"1px solid #e5e2dc",borderRadius:14,padding:"20px 24px",marginBottom:20}}>
+      <div style={{color:"#6b6560",fontSize:13,marginBottom:12,fontFamily:"'DM Sans',sans-serif"}}>📨 送信先 ({targets.length}人)</div>
       <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
         {targets.map(c => (
-          <div key={c.id} style={{background:"#2a2a2a",border:"1px solid #3a3a3a",borderRadius:10,padding:"10px 16px",display:"flex",alignItems:"center",gap:10}}>
+          <div key={c.id} style={{background:"#ffffff",border:"1px solid #e5e2dc",borderRadius:10,padding:"10px 16px",display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:32,height:32,borderRadius:"50%",background:"rgba(196,149,106,0.25)",color:"#c4956a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:600,flexShrink:0}}>{c.name?.charAt(0)}</div>
             <div>
-              <div style={{color:"#f0ede6",fontSize:14,fontWeight:500,fontFamily:"'DM Sans',sans-serif"}}>{c.name}</div>
-              <div style={{color:"#b8b0a3",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>{c.type}{c.platform ? ` · ${c.platform}` : ''}</div>
+              <div style={{color:"#1a1a1a",fontSize:14,fontWeight:500,fontFamily:"'DM Sans',sans-serif"}}>{c.name}</div>
+              <div style={{color:"#6b6560",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>{c.type}{c.platform ? ` · ${c.platform}` : ''}</div>
             </div>
           </div>
         ))}
@@ -1644,28 +1644,28 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     </div>
 
     {/* ═══ STEP 0 ═══ */}
-    {step === 0 && <div style={{background:"#2a2a2a",borderRadius:16,border:"1px solid rgba(255,255,255,0.06)",padding:"1.5rem"}}>
+    {step === 0 && <div style={{background:"#ffffff",borderRadius:16,border:"1px solid rgba(0,0,0,0.05)",padding:"1.5rem"}}>
 
       {/* Saved */}
       {savedArtists.length > 0 && (
-        <div style={{background:"rgba(196,149,106,0.08)",borderRadius:12,padding:"0.7rem 0.8rem",marginBottom:"1rem",border:"1px solid rgba(196,149,106,0.25)"}}>
+        <div style={{background:"rgba(196,149,106,0.06)",borderRadius:12,padding:"0.7rem 0.8rem",marginBottom:"1rem",border:"1px solid rgba(196,149,106,0.25)"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <span style={{fontSize:"0.82rem",fontWeight:700,color:"#c4956a"}}>💾 保存済み ({savedArtists.length})</span>
             <button style={{fontSize:"0.7rem",color:"#c4956a",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}} onClick={()=>setShowSaved(!showSaved)}>{showSaved?"▲":"▼"}</button>
           </div>
           {showSaved ? <div style={{display:"flex",flexDirection:"column",gap:5,marginTop:6}}>
             {savedArtists.map((a,i) => (
-              <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"0.35rem 0.5rem",background:"#333333",borderRadius:8,border:"1px solid rgba(196,149,106,0.25)"}}>
+              <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"0.35rem 0.5rem",background:"#f0ede6",borderRadius:8,border:"1px solid rgba(196,149,106,0.25)"}}>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontWeight:600,fontSize:"0.78rem",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#f0ede6"}}>{a.nameEn||a.name}</div>
-                  <div style={{fontSize:"0.66rem",color:"#c0bdb5"}}>{a.genre}</div>
+                  <div style={{fontWeight:600,fontSize:"0.78rem",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",color:"#1a1a1a"}}>{a.nameEn||a.name}</div>
+                  <div style={{fontSize:"0.66rem",color:"#6b6560"}}>{a.genre}</div>
                 </div>
-                <button style={{padding:"0.2rem 0.5rem",background:"rgba(196,149,106,0.15)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:6,fontSize:"0.68rem",color:"#c4956a",cursor:"pointer",fontWeight:600,fontFamily:"inherit"}} onClick={()=>{applyToForm(a);setShowSaved(false);notify((a.nameEn||a.name)+" 読込");}}>読込</button>
+                <button style={{padding:"0.2rem 0.5rem",background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:6,fontSize:"0.68rem",color:"#c4956a",cursor:"pointer",fontWeight:600,fontFamily:"inherit"}} onClick={()=>{applyToForm(a);setShowSaved(false);notify((a.nameEn||a.name)+" 読込");}}>読込</button>
                 <button style={{padding:"0.2rem 0.3rem",background:"none",border:"1px solid #fecaca",borderRadius:5,fontSize:"0.64rem",color:"#dc2626",cursor:"pointer",fontFamily:"inherit"}} onClick={()=>deleteFromStorage(a)}>✕</button>
               </div>
             ))}
           </div> : <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:5}}>
-            {savedArtists.slice(0,6).map((a,i) => <button key={i} style={{padding:"0.2rem 0.5rem",background:"#333333",border:"1px solid rgba(196,149,106,0.25)",borderRadius:6,fontSize:"0.7rem",color:"#c4956a",cursor:"pointer",fontFamily:"inherit"}} onClick={()=>{applyToForm(a);notify((a.nameEn||a.name)+" 読込");}}>{a.nameEn||a.name}</button>)}
+            {savedArtists.slice(0,6).map((a,i) => <button key={i} style={{padding:"0.2rem 0.5rem",background:"#f0ede6",border:"1px solid rgba(196,149,106,0.25)",borderRadius:6,fontSize:"0.7rem",color:"#c4956a",cursor:"pointer",fontFamily:"inherit"}} onClick={()=>{applyToForm(a);notify((a.nameEn||a.name)+" 読込");}}>{a.nameEn||a.name}</button>)}
           </div>}
         </div>
       )}
@@ -1683,25 +1683,25 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         </div>
       </div>
       {showSamples && <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:"0.8rem"}}>
-        {DEMO_ARTISTS.map(a => <button key={a.id} style={{display:"flex",alignItems:"center",gap:6,padding:"0.4rem",background:"#333333",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,cursor:"pointer",fontFamily:"inherit",textAlign:"left"}} onClick={()=>{useSample(a);setShowSamples(false);}}><span style={{fontSize:"1rem"}}>{a.image}</span><div><div style={{fontWeight:600,fontSize:"0.75rem",color:"#f0ede6"}}>{a.name}</div><div style={{fontSize:"0.62rem",color:"#7a7870"}}>{a.genre}</div></div></button>)}
+        {DEMO_ARTISTS.map(a => <button key={a.id} style={{display:"flex",alignItems:"center",gap:6,padding:"0.4rem",background:"#f0ede6",border:"1px solid rgba(0,0,0,0.06)",borderRadius:8,cursor:"pointer",fontFamily:"inherit",textAlign:"left"}} onClick={()=>{useSample(a);setShowSamples(false);}}><span style={{fontSize:"1rem"}}>{a.image}</span><div><div style={{fontWeight:600,fontSize:"0.75rem",color:"#1a1a1a"}}>{a.name}</div><div style={{fontSize:"0.62rem",color:"#9a958e"}}>{a.genre}</div></div></button>)}
       </div>}
 
       {/* ── Basic Info ── */}
-      <div style={{fontSize:"0.82rem",fontWeight:700,color:"#f0ede6",marginBottom:"0.3rem"}}>🎤 基本情報</div>
+      <div style={{fontSize:"0.82rem",fontWeight:700,color:"#1a1a1a",marginBottom:"0.3rem"}}>🎤 基本情報</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-        <div><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>アーティスト名 <span style={{color:"#e85d3a"}}>*</span></label><input style={{...css.input,...(validationError && !artist.name ? {border:"1px solid #e85d3a"} : {})}} value={artist.name} onChange={e=>setF("name",e.target.value)} placeholder="ROUTE14band"/></div>
-        <div><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>English Name <span style={{color:"#e85d3a"}}>*</span></label><input style={{...css.input,...(validationError && !artist.nameEn ? {border:"1px solid #e85d3a"} : {})}} value={artist.nameEn} onChange={e=>setF("nameEn",e.target.value)} placeholder="ROUTE14band"/></div>
-        <div><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>ムード</label><input style={css.input} value={artist.mood} onChange={e=>setF("mood",e.target.value)} placeholder="Energetic, Groovy"/></div>
-        <div><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>代表曲</label><input style={css.input} value={artist.songTitle} onChange={e=>setF("songTitle",e.target.value)} placeholder="Crossroad"/></div>
-        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>類似アーティスト</label><input style={css.input} value={artist.influences} onChange={e=>setF("influences",e.target.value)} placeholder="Snarky Puppy, WONK"/></div>
+        <div><label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>アーティスト名 <span style={{color:"#e85d3a"}}>*</span></label><input style={{...css.input,...(validationError && !artist.name ? {border:"1px solid #e85d3a"} : {})}} value={artist.name} onChange={e=>setF("name",e.target.value)} placeholder="ROUTE14band"/></div>
+        <div><label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>English Name <span style={{color:"#e85d3a"}}>*</span></label><input style={{...css.input,...(validationError && !artist.nameEn ? {border:"1px solid #e85d3a"} : {})}} value={artist.nameEn} onChange={e=>setF("nameEn",e.target.value)} placeholder="ROUTE14band"/></div>
+        <div><label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>ムード</label><input style={css.input} value={artist.mood} onChange={e=>setF("mood",e.target.value)} placeholder="Energetic, Groovy"/></div>
+        <div><label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>代表曲</label><input style={css.input} value={artist.songTitle} onChange={e=>setF("songTitle",e.target.value)} placeholder="Crossroad"/></div>
+        <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>類似アーティスト</label><input style={css.input} value={artist.influences} onChange={e=>setF("influences",e.target.value)} placeholder="Snarky Puppy, WONK"/></div>
       </div>
       {/* ── Genre Tag Selector ── */}
       <div style={{marginTop:4}}>
-        <label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>ジャンル <span style={{color:"#e85d3a"}}>*</span>（複数選択可）</label>
+        <label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>ジャンル <span style={{color:"#e85d3a"}}>*</span>（複数選択可）</label>
         <div style={{display:"flex",flexWrap:"wrap",gap:4,margin:"5px 0 6px"}}>
           {ARTIST_GENRES.map(g => {
             const sel = parseGenreTags(artist.genre).includes(g);
-            return <button key={g} type="button" onClick={()=>toggleGenreTag(g)} style={{padding:"0.18rem 0.5rem",borderRadius:6,fontSize:"0.7rem",cursor:"pointer",fontFamily:"inherit",background:sel?"rgba(196,149,106,0.2)":"#2a2a2a",color:sel?"#c4956a":"#c0bdb5",border:sel?"1px solid #c4956a":"1px solid rgba(255,255,255,0.08)",fontWeight:sel?600:400}}>{g}</button>;
+            return <button key={g} type="button" onClick={()=>toggleGenreTag(g)} style={{padding:"0.18rem 0.5rem",borderRadius:6,fontSize:"0.7rem",cursor:"pointer",fontFamily:"inherit",background:sel?"rgba(196,149,106,0.15)":"#ffffff",color:sel?"#c4956a":"#6b6560",border:sel?"1px solid #c4956a":"1px solid rgba(0,0,0,0.06)",fontWeight:sel?600:400}}>{g}</button>;
           })}
         </div>
         {artist.genre && <div style={{fontSize:"0.62rem",color:"#c4956a",marginBottom:4}}>選択中: {artist.genre}</div>}
@@ -1709,18 +1709,18 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       </div>
 
       {/* ── Pitch Track URL ── */}
-      <div style={{marginTop:8,background:"rgba(196,149,106,0.08)",borderRadius:10,padding:"0.7rem",border:"1px solid rgba(196,149,106,0.3)"}}>
+      <div style={{marginTop:8,background:"rgba(196,149,106,0.06)",borderRadius:10,padding:"0.7rem",border:"1px solid rgba(196,149,106,0.3)"}}>
         <label style={{fontSize:"0.72rem",color:"#c4956a",fontWeight:700}}>🎵 ピッチ楽曲URL <span style={{color:"#e85d3a"}}>*</span>（キュレーターに聴いてもらう曲）</label>
         <div style={{fontSize:"0.6rem",color:"#c4956a",marginBottom:4}}>Spotify, YouTube, SoundCloud等のURLを入力 — ピッチメールに自動挿入されます</div>
-        <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.08)"}} value={artist.songLink||""} onChange={e=>setF("songLink",e.target.value)} placeholder="https://open.spotify.com/track/... or https://youtube.com/watch?v=..."/>
+        <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.06)"}} value={artist.songLink||""} onChange={e=>setF("songLink",e.target.value)} placeholder="https://open.spotify.com/track/... or https://youtube.com/watch?v=..."/>
         {/* Pitch song title — auto-populated from oEmbed, editable */}
         <div style={{marginTop:6}}>
           <label style={{fontSize:"0.62rem",color:"#c4956a",fontWeight:600,display:"flex",alignItems:"center",gap:5}}>
             🎵 ピッチ対象曲名
-            {pitchSongTitleAuto && <span style={{fontWeight:400,color:"#7a7870",fontSize:"0.58rem"}}>URLから自動取得</span>}
+            {pitchSongTitleAuto && <span style={{fontWeight:400,color:"#9a958e",fontSize:"0.58rem"}}>URLから自動取得</span>}
           </label>
           <input
-            style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.08)",marginTop:2}}
+            style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.06)",marginTop:2}}
             value={pitchSongTitle}
             onChange={e=>{setPitchSongTitle(e.target.value);setPitchSongTitleAuto(false);}}
             placeholder={artist.songTitle ? `${artist.songTitle}（代表曲）` : "ピッチする曲名を入力"}
@@ -1728,8 +1728,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         </div>
         {/* Audio features analysis status */}
         {trackAnalysisStatus === 'loading' && (
-          <div style={{marginTop:6,display:"flex",alignItems:"center",gap:6,fontSize:"0.68rem",color:"#c0bdb5"}}>
-            <span style={{display:"inline-block",width:12,height:12,border:"2px solid rgba(255,255,255,0.1)",borderTopColor:"#c4956a",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
+          <div style={{marginTop:6,display:"flex",alignItems:"center",gap:6,fontSize:"0.68rem",color:"#6b6560"}}>
+            <span style={{display:"inline-block",width:12,height:12,border:"2px solid rgba(0,0,0,0.06)",borderTopColor:"#c4956a",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
             🔍 楽曲を分析中...
           </div>
         )}
@@ -1744,34 +1744,34 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           if (af.valence != null) pillTags.push({ icon: af.valence >= 0.6 ? '☀️' : af.valence >= 0.3 ? '🌤' : '🌧', label: af.valence >= 0.6 ? 'Positive' : af.valence >= 0.3 ? 'Balanced' : 'Dark' });
           if (af.tempo != null) pillTags.push({ icon: '⏱', label: Math.round(af.tempo) + ' BPM' });
           return (
-            <div style={{marginTop:6,padding:"0.5rem 0.6rem",background:"rgba(196,149,106,0.08)",borderRadius:8,border:"1px solid rgba(196,149,106,0.25)"}}>
+            <div style={{marginTop:6,padding:"0.5rem 0.6rem",background:"rgba(196,149,106,0.06)",borderRadius:8,border:"1px solid rgba(196,149,106,0.25)"}}>
               <div style={{fontSize:"0.62rem",fontWeight:700,color:"#c4956a",marginBottom:5}}>
                 ✅ 楽曲分析完了
-                {(pitchSongTitle || trackData.songName) && <span style={{fontWeight:400,color:"#c0bdb5",marginLeft:6}}>{pitchSongTitle || trackData.songName}{trackData.artistName ? ` — ${trackData.artistName}` : ''}</span>}
+                {(pitchSongTitle || trackData.songName) && <span style={{fontWeight:400,color:"#6b6560",marginLeft:6}}>{pitchSongTitle || trackData.songName}{trackData.artistName ? ` — ${trackData.artistName}` : ''}</span>}
               </div>
               <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
                 {pillTags.map(({icon,label}) => (
-                  <span key={label} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"0.18rem 0.55rem",background:"#2a2a2a",border:"1px solid rgba(196,149,106,0.25)",borderRadius:20,fontSize:"0.65rem",color:"#c4956a",fontWeight:500}}>
+                  <span key={label} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"0.18rem 0.55rem",background:"#ffffff",border:"1px solid rgba(196,149,106,0.25)",borderRadius:20,fontSize:"0.65rem",color:"#c4956a",fontWeight:500}}>
                     {icon} {label}
                   </span>
                 ))}
               </div>
               {desc.characteristics && (
-                <div style={{marginTop:4,fontSize:"0.6rem",color:"#7a7870",fontStyle:"italic"}}>ピッチ生成に使用: {desc.characteristics}</div>
+                <div style={{marginTop:4,fontSize:"0.6rem",color:"#9a958e",fontStyle:"italic"}}>ピッチ生成に使用: {desc.characteristics}</div>
               )}
             </div>
           );
         })()}
         {(trackAnalysisStatus === 'done' && !trackData?.audioFeatures) && (
-          <div style={{marginTop:6,fontSize:"0.62rem",color:"#c4956a",background:"rgba(196,149,106,0.08)",borderRadius:6,padding:"0.35rem 0.5rem",border:"1px solid rgba(196,149,106,0.3)"}}>
+          <div style={{marginTop:6,fontSize:"0.62rem",color:"#c4956a",background:"rgba(196,149,106,0.06)",borderRadius:6,padding:"0.35rem 0.5rem",border:"1px solid rgba(196,149,106,0.3)"}}>
             ℹ️ 楽曲分析データなし — ジャンル情報でピッチを生成します
-            {trackData?.soundnetError && <span style={{display:"block",color:"#7a7870",marginTop:2}}>({trackData.soundnetError})</span>}
+            {trackData?.soundnetError && <span style={{display:"block",color:"#9a958e",marginTop:2}}>({trackData.soundnetError})</span>}
           </div>
         )}
         {trackAnalysisStatus === 'error' && (
-          <div style={{marginTop:6,fontSize:"0.62rem",color:"#c4956a",background:"rgba(196,149,106,0.08)",borderRadius:6,padding:"0.35rem 0.5rem",border:"1px solid rgba(196,149,106,0.3)"}}>
+          <div style={{marginTop:6,fontSize:"0.62rem",color:"#c4956a",background:"rgba(196,149,106,0.06)",borderRadius:6,padding:"0.35rem 0.5rem",border:"1px solid rgba(196,149,106,0.3)"}}>
             ℹ️ 楽曲分析データなし — ジャンル情報でピッチを生成します
-            <span style={{display:"block",color:"#7a7870",marginTop:2}}>(サーバーログでエラー詳細を確認してください)</span>
+            <span style={{display:"block",color:"#9a958e",marginTop:2}}>(サーバーログでエラー詳細を確認してください)</span>
           </div>
         )}
         {/* Embed preview so artist can confirm correct track */}
@@ -1794,16 +1794,16 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           return null;
         })()}
       </div>
-      <div style={{marginTop:5}}><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>主な実績・数値</label><input style={css.input} value={artist.achievements} onChange={e=>setF("achievements",e.target.value)} placeholder="SXSW 10年連続出演, Spotify月間50万再生"/></div>
-      <div style={{marginTop:4}}><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>紹介文 <span style={{color:"#e85d3a"}}>*</span>（日本語OK）</label><textarea style={{...css.input,minHeight:60,resize:"vertical"}} value={artist.description} onChange={e=>setF("description",e.target.value)} placeholder="音楽性、特徴、ユニークなポイント"/></div>
+      <div style={{marginTop:5}}><label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>主な実績・数値</label><input style={css.input} value={artist.achievements} onChange={e=>setF("achievements",e.target.value)} placeholder="SXSW 10年連続出演, Spotify月間50万再生"/></div>
+      <div style={{marginTop:4}}><label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>紹介文 <span style={{color:"#e85d3a"}}>*</span>（日本語OK）</label><textarea style={{...css.input,minHeight:60,resize:"vertical"}} value={artist.description} onChange={e=>setF("description",e.target.value)} placeholder="音楽性、特徴、ユニークなポイント"/></div>
 
       {/* ── SNS & Links + Followers ── */}
-      <div style={{marginTop:"0.8rem",background:"rgba(196,149,106,0.08)",borderRadius:12,padding:"0.8rem",border:"1px solid rgba(196,149,106,0.3)"}}>
+      <div style={{marginTop:"0.8rem",background:"rgba(196,149,106,0.06)",borderRadius:12,padding:"0.8rem",border:"1px solid rgba(196,149,106,0.3)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
             <span style={{fontSize:"0.82rem",fontWeight:700,color:"#c4956a"}}>🔗 SNS＆ストリーミング</span>
-            {linkCount > 0 && <span style={{fontSize:"0.66rem",background:"rgba(196,149,106,0.15)",color:"#c4956a",padding:"1px 6px",borderRadius:10,fontWeight:600}}>{linkCount}件</span>}
-            {folCount > 0 && <span style={{fontSize:"0.66rem",background:"rgba(196,149,106,0.1)",color:"#c4956a",padding:"1px 6px",borderRadius:10,fontWeight:600}}>👥{folCount}</span>}
+            {linkCount > 0 && <span style={{fontSize:"0.66rem",background:"rgba(196,149,106,0.1)",color:"#c4956a",padding:"1px 6px",borderRadius:10,fontWeight:600}}>{linkCount}件</span>}
+            {folCount > 0 && <span style={{fontSize:"0.66rem",background:"rgba(196,149,106,0.08)",color:"#c4956a",padding:"1px 6px",borderRadius:10,fontWeight:600}}>👥{folCount}</span>}
           </div>
           <button style={{fontSize:"0.68rem",color:"#c4956a",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}} onClick={()=>setShowLinks(!showLinks)}>{showLinks?"▲":"▼ 開く"}</button>
         </div>
@@ -1815,7 +1815,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           <div style={{marginBottom:8,position:"relative"}}>
             <label style={{fontSize:"0.64rem",color:"#c4956a",fontWeight:600}}>📋 URLを入力/ペースト → 自動振り分け（Enterで確定）</label>
             <input
-              style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.08)"}}
+              style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.06)"}}
               placeholder="https://instagram.com/xxx や https://open.spotify.com/... を入力"
               value={quickUrl}
               onChange={e => handleQuickUrlChange(e.target.value)}
@@ -1839,11 +1839,11 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
             ].map(s => (
               <div key={s.key} style={{display:"flex",gap:4,alignItems:"flex-end"}}>
                 <div style={{flex:1}}>
-                  <label style={{fontSize:"0.6rem",color:"#c0bdb5"}}>{s.icon} {s.label}</label>
+                  <label style={{fontSize:"0.6rem",color:"#6b6560"}}>{s.icon} {s.label}</label>
                   <input style={{...css.input,fontSize:"0.72rem"}} value={links[s.key]||""} onChange={e=>setL(s.key,e.target.value)} onBlur={()=>normalizeOnBlur(s.key)} placeholder={s.ph}/>
                 </div>
                 {s.fLabel && <div style={{width:85}}>
-                  <label style={{fontSize:"0.58rem",color:"#7a7870"}}>{s.fLabel}</label>
+                  <label style={{fontSize:"0.58rem",color:"#9a958e"}}>{s.fLabel}</label>
                   <input type="number" style={{...css.input,fontSize:"0.72rem",textAlign:"right"}} value={followers[s.key]||""} onChange={e=>setFol(s.key,e.target.value)} placeholder="0"/>
                 </div>}
               </div>
@@ -1852,11 +1852,11 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
 
           {/* Follower summary → pitch preview */}
           {(links.youtube || links.spotify || links.soundcloud) && <div style={{marginTop:8}}>
-            <button onClick={autoFetchFollowers} disabled={fetchingFollowers} style={{width:"100%",padding:"0.4rem",background:fetchingFollowers?"#333333":"#c4956a",color:fetchingFollowers?"#7a7870":"#fff",border:"none",borderRadius:8,fontSize:"0.72rem",fontWeight:600,cursor:fetchingFollowers?"wait":"pointer",fontFamily:"inherit"}}>
+            <button onClick={autoFetchFollowers} disabled={fetchingFollowers} style={{width:"100%",padding:"0.4rem",background:fetchingFollowers?"#1a1a1a":"#c4956a",color:fetchingFollowers?"#9a958e":"#fff",border:"none",borderRadius:8,fontSize:"0.72rem",fontWeight:600,cursor:fetchingFollowers?"wait":"pointer",fontFamily:"inherit"}}>
               {fetchingFollowers ? "⏳ フォロワー数を取得中..." : "🔄 フォロワー数を自動取得（YouTube / Spotify / SoundCloud）"}
             </button>
           </div>}
-          {folCount > 0 && <div style={{marginTop:8,padding:"0.4rem 0.6rem",background:"rgba(196,149,106,0.15)",borderRadius:8,fontSize:"0.68rem",color:"#c4956a"}}>
+          {folCount > 0 && <div style={{marginTop:8,padding:"0.4rem 0.6rem",background:"rgba(196,149,106,0.1)",borderRadius:8,fontSize:"0.68rem",color:"#c4956a"}}>
             <strong>👥 ピッチに反映:</strong> {[
               followers.spotify ? fmtK(followers.spotify) + " Spotify followers" : "",
               followers.youtube ? fmtK(followers.youtube) + " YouTube subscribers" : "",
@@ -1880,62 +1880,62 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
 
     {/* ═══ STEP 1 ═══ */}
     {step === 1 && <div>
-      <h2 style={{fontSize:18,fontWeight:500,marginBottom:"0.8rem",color:"#f0ede6",fontFamily:"'DM Sans',sans-serif"}}>ピッチの設定</h2>
-      <div style={{background:"#333333",borderRadius:10,padding:"0.7rem",marginBottom:"0.8rem"}}>
-        <div style={{fontWeight:700,color:"#f0ede6"}}>🎵 {artist.nameEn||artist.name}</div>
-        <div style={{fontSize:"0.78rem",color:"#c0bdb5"}}>{artist.genre}{artist.songTitle?" · \""+artist.songTitle+"\"":""}</div>
+      <h2 style={{fontSize:18,fontWeight:500,marginBottom:"0.8rem",color:"#1a1a1a",fontFamily:"'DM Sans',sans-serif"}}>ピッチの設定</h2>
+      <div style={{background:"#f0ede6",borderRadius:10,padding:"0.7rem",marginBottom:"0.8rem"}}>
+        <div style={{fontWeight:700,color:"#1a1a1a"}}>🎵 {artist.nameEn||artist.name}</div>
+        <div style={{fontSize:"0.78rem",color:"#6b6560"}}>{artist.genre}{artist.songTitle?" · \""+artist.songTitle+"\"":""}</div>
         {artist.achievements && <div style={{fontSize:"0.7rem",color:"#059669",marginTop:2}}>📊 {artist.achievements}</div>}
         {(linkCount > 0 || folCount > 0) && <div style={{fontSize:"0.68rem",color:"#c4956a",marginTop:2}}>🔗{linkCount}件 {folCount > 0 ? "· 👥フォロワー"+folCount+"件" : ""}</div>}
       </div>
       <div style={{fontSize:14,fontWeight:700,marginBottom:5}}>📨 送信先 ({targets.length}人)</div>
-      {targets.map(c => <div key={c.id} style={{display:"flex",alignItems:"center",gap:6,padding:"0.4rem 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}><span>{c.avatar}</span><span style={{fontWeight:500,fontSize:14,color:"#f0ede6"}}>{c.name}</span><span style={{fontSize:13,color:"#c0bdb5"}}>{c.platform}</span><span style={{fontSize:13,color:"#7a7870",marginLeft:"auto",fontStyle:"italic"}}>{c.type}</span></div>)}
+      {targets.map(c => <div key={c.id} style={{display:"flex",alignItems:"center",gap:6,padding:"0.4rem 0",borderBottom:"1px solid rgba(0,0,0,0.05)"}}><span>{c.avatar}</span><span style={{fontWeight:500,fontSize:14,color:"#1a1a1a"}}>{c.name}</span><span style={{fontSize:13,color:"#6b6560"}}>{c.platform}</span><span style={{fontSize:13,color:"#9a958e",marginLeft:"auto",fontStyle:"italic"}}>{c.type}</span></div>)}
       <div style={{background:"linear-gradient(135deg, rgba(196,149,106,0.12), rgba(196,149,106,0.06))",borderRadius:12,padding:"12px 16px",marginTop:"0.6rem",fontSize:14,color:"#c4956a",border:"1px solid rgba(196,149,106,0.3)",fontWeight:500}}>💰 {cost}cr (残: {credits}→{credits-cost})</div>
-      <div style={{margin:"0.8rem 0",padding:"0.7rem",background:"rgba(196,149,106,0.08)",borderRadius:10,border:"1px solid rgba(196,149,106,0.3)"}}>
+      <div style={{margin:"0.8rem 0",padding:"0.7rem",background:"rgba(196,149,106,0.06)",borderRadius:10,border:"1px solid rgba(196,149,106,0.3)"}}>
         <div style={{fontSize:14,fontWeight:700,color:"#c4956a",marginBottom:6}}>🏷 ピッチスタイル</div>
         <div style={{display:"flex",gap:6}}>
-          {[{id:"professional",l:"📋 プロ",d:"業界標準"},{id:"casual",l:"💬 カジュアル",d:"親しみ"},{id:"storytelling",l:"📖 ストーリー",d:"描写重視"}].map(s => <button key={s.id} onClick={()=>setPitchStyle(s.id)} style={{flex:1,padding:"0.5rem",borderRadius:10,border:pitchStyle===s.id?"2px solid #c4956a":"1px solid #3a3a3a",background:pitchStyle===s.id?"rgba(196,149,106,0.15)":"#2a2a2a",cursor:"pointer",fontFamily:"inherit",textAlign:"center",boxShadow:pitchStyle===s.id?"0 0 12px rgba(196,149,106,0.15)":"none"}}><div style={{fontSize:14,fontWeight:600,color:pitchStyle===s.id?"#c4956a":"#f0ede6"}}>{s.l}</div><div style={{fontSize:12,color:"#b8b0a3"}}>{s.d}</div></button>)}
+          {[{id:"professional",l:"📋 プロ",d:"業界標準"},{id:"casual",l:"💬 カジュアル",d:"親しみ"},{id:"storytelling",l:"📖 ストーリー",d:"描写重視"}].map(s => <button key={s.id} onClick={()=>setPitchStyle(s.id)} style={{flex:1,padding:"0.5rem",borderRadius:10,border:pitchStyle===s.id?"2px solid #c4956a":"1px solid #e5e2dc",background:pitchStyle===s.id?"rgba(196,149,106,0.1)":"#ffffff",cursor:"pointer",fontFamily:"inherit",textAlign:"center",boxShadow:pitchStyle===s.id?"0 0 12px rgba(196,149,106,0.1)":"none"}}><div style={{fontSize:14,fontWeight:600,color:pitchStyle===s.id?"#c4956a":"#1a1a1a"}}>{s.l}</div><div style={{fontSize:12,color:"#6b6560"}}>{s.d}</div></button>)}
         </div>
       </div>
-      <div style={{fontSize:12,color:"#b8b0a3",textAlign:"center",marginBottom:8,fontFamily:"'DM Sans',sans-serif"}}>AIが英語のプロフェッショナルな紹介文を生成します（約30秒）</div>
+      <div style={{fontSize:12,color:"#6b6560",textAlign:"center",marginBottom:8,fontFamily:"'DM Sans',sans-serif"}}>AIが英語のプロフェッショナルな紹介文を生成します（約30秒）</div>
       <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(0)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} disabled={aiLoading} onClick={generateAIPitch}>{aiLoading ? "🤖 AI生成中..." : "🤖 AIピッチ生成"}</button><button style={css.btnGhost} onClick={generatePitch}>📝 テンプレ</button></div>
     </div>}
 
     {/* ═══ STEP 2 ═══ */}
     {step === 2 && <div>
-      <h2 style={{fontSize:18,fontWeight:500,marginBottom:"0.4rem",color:"#f0ede6",fontFamily:"'DM Sans',sans-serif"}}>ピッチレビュー</h2>
-      <div style={{fontSize:13,color:"#c0bdb5",marginBottom:"0.7rem",fontFamily:"'DM Sans',sans-serif"}}>✏️ 編集可。送信時は英語版が使われます。</div>
+      <h2 style={{fontSize:18,fontWeight:500,marginBottom:"0.4rem",color:"#1a1a1a",fontFamily:"'DM Sans',sans-serif"}}>ピッチレビュー</h2>
+      <div style={{fontSize:13,color:"#6b6560",marginBottom:"0.7rem",fontFamily:"'DM Sans',sans-serif"}}>✏️ 編集可。送信時は英語版が使われます。</div>
 
       {/* Tab bar */}
-      <div style={{display:"flex",gap:0,marginBottom:0,borderRadius:"10px 10px 0 0",overflow:"hidden",border:"1px solid rgba(255,255,255,0.08)",borderBottom:"none"}}>
+      <div style={{display:"flex",gap:0,marginBottom:0,borderRadius:"10px 10px 0 0",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)",borderBottom:"none"}}>
         {[{id:"ja",label:"🇯🇵 日本語",sub:"確認用"},{id:"en",label:"🇬🇧 English",sub:"送信版"}].map(t => (
-          <button key={t.id} onClick={()=>setPitchTab(t.id)} style={{flex:1,padding:"0.6rem 0.4rem",background:pitchTab===t.id?"#2a2a2a":"#222222",border:"none",borderRight:t.id==="ja"?"1px solid rgba(255,255,255,0.08)":"none",cursor:"pointer",fontFamily:"inherit",textAlign:"center",borderBottom:pitchTab===t.id?"2px solid #c4956a":"none"}}>
-            <div style={{fontSize:15,fontWeight:700,color:pitchTab===t.id?"#c4956a":"#c0bdb5"}}>{t.label}</div>
-            <div style={{fontSize:14,color:pitchTab===t.id?"#c4956a":"#7a7870"}}>{t.sub}</div>
+          <button key={t.id} onClick={()=>setPitchTab(t.id)} style={{flex:1,padding:"0.6rem 0.4rem",background:pitchTab===t.id?"#ffffff":"#ffffff",border:"none",borderRight:t.id==="ja"?"1px solid rgba(0,0,0,0.06)":"none",cursor:"pointer",fontFamily:"inherit",textAlign:"center",borderBottom:pitchTab===t.id?"2px solid #c4956a":"none"}}>
+            <div style={{fontSize:15,fontWeight:700,color:pitchTab===t.id?"#c4956a":"#6b6560"}}>{t.label}</div>
+            <div style={{fontSize:14,color:pitchTab===t.id?"#c4956a":"#9a958e"}}>{t.sub}</div>
           </button>
         ))}
       </div>
 
       {/* English tab */}
-      {pitchTab === "en" && <div style={{background:"#2a2a2a",border:"1px solid rgba(255,255,255,0.08)",borderTop:"none",borderRadius:"0 0 12px 12px",padding:"0.8rem",marginBottom:"0.8rem"}}>
+      {pitchTab === "en" && <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderTop:"none",borderRadius:"0 0 12px 12px",padding:"0.8rem",marginBottom:"0.8rem"}}>
         <div style={{fontSize:14,color:"#c4956a",fontWeight:600,marginBottom:6}}>📨 この英語版が送信されます</div>
-        <textarea value={pitchText} onChange={e=>setPitchText(e.target.value)} style={{width:"100%",minHeight:220,border:"none",fontFamily:"inherit",fontSize:15,lineHeight:1.8,color:"#f0ede6",outline:"none",resize:"vertical",boxSizing:"border-box",background:"transparent"}}/>
-        <button onClick={()=>{ translateToJa(pitchText); setPitchTab("ja"); }} disabled={translating} style={{marginTop:6,padding:"0.3rem 0.8rem",background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:8,cursor:"pointer",fontFamily:"inherit",fontSize:"0.72rem",color:"#c4956a",fontWeight:600}}>{translating ? "反映中..." : "🔄 日本語に反映"}</button>
-        <div style={{fontSize:"0.58rem",color:"#7a7870",marginTop:3}}>Claude AIで翻訳されます</div>
+        <textarea value={pitchText} onChange={e=>setPitchText(e.target.value)} style={{width:"100%",minHeight:220,border:"none",fontFamily:"inherit",fontSize:15,lineHeight:1.8,color:"#1a1a1a",outline:"none",resize:"vertical",boxSizing:"border-box",background:"transparent"}}/>
+        <button onClick={()=>{ translateToJa(pitchText); setPitchTab("ja"); }} disabled={translating} style={{marginTop:6,padding:"0.3rem 0.8rem",background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:8,cursor:"pointer",fontFamily:"inherit",fontSize:"0.72rem",color:"#c4956a",fontWeight:600}}>{translating ? "反映中..." : "🔄 日本語に反映"}</button>
+        <div style={{fontSize:"0.58rem",color:"#9a958e",marginTop:3}}>Claude AIで翻訳されます</div>
       </div>}
 
       {/* Japanese tab */}
-      {pitchTab === "ja" && <div style={{background:"#2a2a2a",border:"1px solid rgba(255,255,255,0.08)",borderTop:"none",borderRadius:"0 0 12px 12px",padding:"0.8rem",marginBottom:"0.8rem"}}>
-        <div style={{fontSize:"0.68rem",color:"#7a7870",fontWeight:600,marginBottom:6}}>👀 確認用の日本語訳です（送信されません）</div>
+      {pitchTab === "ja" && <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderTop:"none",borderRadius:"0 0 12px 12px",padding:"0.8rem",marginBottom:"0.8rem"}}>
+        <div style={{fontSize:"0.68rem",color:"#9a958e",fontWeight:600,marginBottom:6}}>👀 確認用の日本語訳です（送信されません）</div>
         {translating && !pitchJa ? (
-          <div style={{minHeight:120,display:"flex",alignItems:"center",justifyContent:"center",color:"#7a7870",fontSize:"0.8rem"}}>🤖 日本語訳を生成中...</div>
+          <div style={{minHeight:120,display:"flex",alignItems:"center",justifyContent:"center",color:"#9a958e",fontSize:"0.8rem"}}>🤖 日本語訳を生成中...</div>
         ) : (
-          <textarea value={pitchJa} onChange={e=>setPitchJa(e.target.value)} style={{width:"100%",minHeight:220,border:"none",fontFamily:"inherit",fontSize:15,lineHeight:1.8,color:"#f0ede6",outline:"none",resize:"vertical",boxSizing:"border-box",background:"transparent"}}/>
+          <textarea value={pitchJa} onChange={e=>setPitchJa(e.target.value)} style={{width:"100%",minHeight:220,border:"none",fontFamily:"inherit",fontSize:15,lineHeight:1.8,color:"#1a1a1a",outline:"none",resize:"vertical",boxSizing:"border-box",background:"transparent"}}/>
         )}
-        <button onClick={()=>{ translateToEn(); setPitchTab("en"); }} disabled={translating || !pitchJa} style={{marginTop:6,padding:"0.3rem 0.8rem",background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:8,cursor:"pointer",fontFamily:"inherit",fontSize:"0.72rem",color:"#c4956a",fontWeight:600}}>{translating ? "反映中..." : "🔄 英語に反映"}</button>
-        <div style={{fontSize:"0.58rem",color:"#7a7870",marginTop:3}}>Claude AIで翻訳されます</div>
+        <button onClick={()=>{ translateToEn(); setPitchTab("en"); }} disabled={translating || !pitchJa} style={{marginTop:6,padding:"0.3rem 0.8rem",background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:8,cursor:"pointer",fontFamily:"inherit",fontSize:"0.72rem",color:"#c4956a",fontWeight:600}}>{translating ? "反映中..." : "🔄 英語に反映"}</button>
+        <div style={{fontSize:"0.58rem",color:"#9a958e",marginTop:3}}>Claude AIで翻訳されます</div>
       </div>}
 
-      {epk && <details style={{marginBottom:"0.8rem"}}><summary style={{cursor:"pointer",fontSize:"0.78rem",fontWeight:600,color:"#c4956a"}}>📄 EPK（英語・確認用）</summary><pre style={{whiteSpace:"pre-wrap",fontFamily:"inherit",fontSize:"0.74rem",background:"#222222",padding:"0.7rem",borderRadius:8,marginTop:6,color:"#c0bdb5"}}>{epk}</pre></details>}
+      {epk && <details style={{marginBottom:"0.8rem"}}><summary style={{cursor:"pointer",fontSize:"0.78rem",fontWeight:600,color:"#c4956a"}}>📄 EPK（英語・確認用）</summary><pre style={{whiteSpace:"pre-wrap",fontFamily:"inherit",fontSize:"0.74rem",background:"#ffffff",padding:"0.7rem",borderRadius:8,marginTop:6,color:"#6b6560"}}>{epk}</pre></details>}
       <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(1)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} onClick={()=>setStep(3)}>送信へ →</button><button style={css.btnGhost} onClick={generatePitch}>🔄</button></div>
     </div>}
 
@@ -1943,10 +1943,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     {step === 3 && <div>
       {pitchSent ? (
         <div>
-          <div style={{background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:16,padding:"2rem 1.5rem",textAlign:"center",marginBottom:"1.5rem"}}>
+          <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:16,padding:"2rem 1.5rem",textAlign:"center",marginBottom:"1.5rem"}}>
             <div style={{fontSize:"2.5rem",marginBottom:12}}>✅</div>
             <h2 style={{fontSize:18,fontWeight:700,margin:"0 0 8px",color:"#c4956a",fontFamily:"'DM Sans',sans-serif"}}>{targets.length}人のキュレーターにピッチを送信しました</h2>
-            <p style={{fontSize:14,color:"#b8b0a3",margin:"0 0 4px",fontFamily:"'DM Sans',sans-serif"}}>フィードバックは通常3〜7日以内に届きます</p>
+            <p style={{fontSize:14,color:"#6b6560",margin:"0 0 4px",fontFamily:"'DM Sans',sans-serif"}}>フィードバックは通常3〜7日以内に届きます</p>
             <p style={{fontSize:13,color:"#c4956a",marginTop:8}}>7日以内にFB保証 · 未回答はクレジット返還</p>
           </div>
           <div style={{display:"flex",gap:8,justifyContent:"center"}}>
@@ -1956,10 +1956,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         </div>
       ) : (
         <div>
-          <div style={{background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:16,padding:"1.5rem",textAlign:"center",marginBottom:"1rem"}}>
+          <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:16,padding:"1.5rem",textAlign:"center",marginBottom:"1rem"}}>
             <div style={{fontSize:"2rem",marginBottom:8}}>📨</div>
-            <h2 style={{fontSize:"1.15rem",fontWeight:800,margin:"0 0 0.3rem",color:"#f0ede6"}}>送信確認</h2>
-            <p style={{fontSize:"0.82rem",color:"#c0bdb5"}}>{targets.length}人に個別最適化ピッチを送信</p>
+            <h2 style={{fontSize:"1.15rem",fontWeight:800,margin:"0 0 0.3rem",color:"#1a1a1a"}}>送信確認</h2>
+            <p style={{fontSize:"0.82rem",color:"#6b6560"}}>{targets.length}人に個別最適化ピッチを送信</p>
             <p style={{fontSize:14,color:"#c4956a",marginTop:8,fontWeight:600}}>💰 {cost}cr (残: {credits}→{credits-cost})</p>
           </div>
           <div style={{display:"flex",gap:8,justifyContent:"center"}}><button style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem"}} onClick={sendAll}>✅ 送信 ({cost}cr)</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
@@ -1969,7 +1969,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   </div>;
 }
 const CREDIT_PACKAGES = [
-  {id:"trial",credits:5,price:800,unit:160,label:"Trial",desc:"お試し",icon:"🎵",color:"#7a7870"},
+  {id:"trial",credits:5,price:800,unit:160,label:"Trial",desc:"お試し",icon:"🎵",color:"#9a958e"},
   {id:"starter",credits:15,price:2000,unit:133,label:"Starter",desc:"17%お得",icon:"🎶",color:"#3b82f6"},
   {id:"standard",credits:30,price:3800,unit:127,label:"Standard",desc:"21%お得",icon:"🎸",color:"#7c3aed",pop:true},
   {id:"pro",credits:60,price:7000,unit:117,label:"Pro",desc:"27%お得",icon:"🔥",color:"#ea580c"},
@@ -2064,22 +2064,22 @@ function CreditShop({user, credits, saveCredits, notify, setPage}) {
     const price = selectedPkg.id === "monthly" ? SUBSCRIPTION.price : selectedPkg.price;
     return <div>
       <div style={{textAlign:"center",padding:"2rem 0"}}>
-        <div style={{width:80,height:80,borderRadius:"50%",background:"linear-gradient(135deg,rgba(196,149,106,0.2),rgba(196,149,106,0.35))",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:"2.5rem",marginBottom:"1.2rem"}}>✓</div>
+        <div style={{width:80,height:80,borderRadius:"50%",background:"linear-gradient(135deg,rgba(196,149,106,0.15),rgba(196,149,106,0.35))",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:"2.5rem",marginBottom:"1.2rem"}}>✓</div>
         <h1 style={{fontSize:"1.5rem",fontWeight:800,marginBottom:"0.5rem"}}>購入完了</h1>
-        <p style={{color:"#c0bdb5",marginBottom:"2rem"}}>ありがとうございます！</p>
+        <p style={{color:"#6b6560",marginBottom:"2rem"}}>ありがとうございます！</p>
       </div>
       {/* Receipt */}
-      <div style={{background:"#2a2a2a",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"1.5rem",marginBottom:"1.5rem"}}>
+      <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"1.5rem",marginBottom:"1.5rem"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
-          <div style={{fontWeight:800,fontSize:"0.95rem",color:"#f0ede6"}}>OTONAMI 領収書</div>
-          <div style={{fontSize:"0.72rem",color:"#7a7870"}}>{new Date().toLocaleString("ja-JP")}</div>
+          <div style={{fontWeight:800,fontSize:"0.95rem",color:"#1a1a1a"}}>OTONAMI 領収書</div>
+          <div style={{fontSize:"0.72rem",color:"#9a958e"}}>{new Date().toLocaleString("ja-JP")}</div>
         </div>
-        <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:"1rem"}}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:8,fontSize:"0.85rem",color:"#f0ede6"}}><span>{selectedPkg.label} ({amt}クレジット)</span><span style={{fontWeight:700}}>¥{price.toLocaleString()}</span></div>
+        <div style={{borderTop:"1px solid rgba(0,0,0,0.05)",paddingTop:"1rem"}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:8,fontSize:"0.85rem",color:"#1a1a1a"}}><span>{selectedPkg.label} ({amt}クレジット)</span><span style={{fontWeight:700}}>¥{price.toLocaleString()}</span></div>
           {selectedPkg.id !== "starter" && <div style={{display:"flex",justifyContent:"space-between",marginBottom:8,fontSize:"0.78rem",color:"#10b981"}}><span>割引</span><span>-¥{(amt * 100 - price).toLocaleString()}</span></div>}
-          <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:8,display:"flex",justifyContent:"space-between",fontWeight:800,fontSize:"0.95rem",color:"#f0ede6"}}><span>合計（税込）</span><span>¥{price.toLocaleString()}</span></div>
+          <div style={{borderTop:"1px solid rgba(0,0,0,0.05)",paddingTop:8,display:"flex",justifyContent:"space-between",fontWeight:800,fontSize:"0.95rem",color:"#1a1a1a"}}><span>合計（税込）</span><span>¥{price.toLocaleString()}</span></div>
         </div>
-        <div style={{background:"#333333",borderRadius:10,padding:"0.8rem",marginTop:"1rem",fontSize:"0.78rem",color:"#c0bdb5"}}>
+        <div style={{background:"#f0ede6",borderRadius:10,padding:"0.8rem",marginTop:"1rem",fontSize:"0.78rem",color:"#6b6560"}}>
           <div>お支払い方法: {payMethod === "card" ? "クレジットカード" : payMethod === "applepay" ? "Apple Pay" : "PayPay"}</div>
           {payMethod === "card" && cardNum && <div>カード末尾: **** {cardNum.replace(/\s/g, "").slice(-4)}</div>}
           <div>注文ID: pur_{Date.now()}</div>
@@ -2095,9 +2095,9 @@ function CreditShop({user, credits, saveCredits, notify, setPage}) {
   // ── Processing Screen ──
   if (payStep === "processing") {
     return <div style={{textAlign:"center",padding:"4rem 1rem"}}>
-      <div style={{width:60,height:60,border:"3px solid rgba(255,255,255,0.08)",borderTopColor:"#c4956a",borderRadius:"50%",animation:"spin 0.8s linear infinite",margin:"0 auto 1.5rem"}}/>
-      <h2 style={{fontSize:"1.2rem",fontWeight:700,marginBottom:4,color:"#f0ede6"}}>決済処理中...</h2>
-      <p style={{fontSize:"0.82rem",color:"#c0bdb5"}}>{payMethod === "card" ? "カード情報を確認しています" : payMethod === "applepay" ? "Apple Payで認証中" : "PayPay決済を処理中"}</p>
+      <div style={{width:60,height:60,border:"3px solid rgba(0,0,0,0.06)",borderTopColor:"#c4956a",borderRadius:"50%",animation:"spin 0.8s linear infinite",margin:"0 auto 1.5rem"}}/>
+      <h2 style={{fontSize:"1.2rem",fontWeight:700,marginBottom:4,color:"#1a1a1a"}}>決済処理中...</h2>
+      <p style={{fontSize:"0.82rem",color:"#6b6560"}}>{payMethod === "card" ? "カード情報を確認しています" : payMethod === "applepay" ? "Apple Payで認証中" : "PayPay決済を処理中"}</p>
     </div>;
   }
 
@@ -2123,67 +2123,67 @@ function CreditShop({user, credits, saveCredits, notify, setPage}) {
           {id:"applepay",label:" Apple Pay",desc:"Touch ID / Face ID"},
           {id:"paypay",label:"₱ PayPay",desc:"QRコード決済"},
         ].map(m => (
-          <button key={m.id} onClick={()=>setPayMethod(m.id)} style={{flex:1,padding:"0.7rem 0.5rem",borderRadius:12,border:payMethod===m.id?"2px solid #c4956a":"1px solid rgba(255,255,255,0.08)",background:payMethod===m.id?"rgba(196,149,106,0.1)":"#2a2a2a",cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
-            <div style={{fontWeight:payMethod===m.id?700:500,fontSize:"0.82rem",color:payMethod===m.id?"#c4956a":"#f0ede6"}}>{m.label}</div>
-            <div style={{fontSize:"0.62rem",color:"#7a7870"}}>{m.desc}</div>
+          <button key={m.id} onClick={()=>setPayMethod(m.id)} style={{flex:1,padding:"0.7rem 0.5rem",borderRadius:12,border:payMethod===m.id?"2px solid #c4956a":"1px solid rgba(0,0,0,0.06)",background:payMethod===m.id?"rgba(196,149,106,0.08)":"#ffffff",cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
+            <div style={{fontWeight:payMethod===m.id?700:500,fontSize:"0.82rem",color:payMethod===m.id?"#c4956a":"#1a1a1a"}}>{m.label}</div>
+            <div style={{fontSize:"0.62rem",color:"#9a958e"}}>{m.desc}</div>
           </button>
         ))}
       </div>
 
       {/* Card Form */}
-      {payMethod === "card" && <div style={{background:"#2a2a2a",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"1.5rem"}}>
+      {payMethod === "card" && <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"1.5rem"}}>
         <div style={{display:"flex",gap:8,marginBottom:"0.5rem",alignItems:"center"}}>
           <span style={{fontSize:"1.2rem"}}>💳</span>
           <span style={{fontWeight:700,fontSize:"0.88rem"}}>カード情報</span>
           <div style={{marginLeft:"auto",display:"flex",gap:4}}>
-            {["VISA","Master","AMEX","JCB"].map(b => <span key={b} style={{fontSize:"0.55rem",padding:"0.15rem 0.35rem",borderRadius:4,background:"#333333",color:"#c0bdb5",fontWeight:600}}>{b}</span>)}
+            {["VISA","Master","AMEX","JCB"].map(b => <span key={b} style={{fontSize:"0.55rem",padding:"0.15rem 0.35rem",borderRadius:4,background:"#f0ede6",color:"#6b6560",fontWeight:600}}>{b}</span>)}
           </div>
         </div>
         <div style={{marginBottom:8}}>
-          <label style={{fontSize:"0.72rem",color:"#c0bdb5",fontWeight:600}}>カード番号</label>
+          <label style={{fontSize:"0.72rem",color:"#6b6560",fontWeight:600}}>カード番号</label>
           <input value={cardNum} onChange={e=>setCardNum(formatCard(e.target.value))} placeholder="4242 4242 4242 4242" style={{...css.input,fontVariantNumeric:"tabular-nums",letterSpacing:"0.05em",fontSize:"1rem"}} maxLength={19}/>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-          <div><label style={{fontSize:"0.72rem",color:"#c0bdb5",fontWeight:600}}>有効期限</label><input value={cardExp} onChange={e=>setCardExp(formatExp(e.target.value))} placeholder="MM/YY" style={{...css.input,fontSize:"1rem"}} maxLength={5}/></div>
-          <div><label style={{fontSize:"0.72rem",color:"#c0bdb5",fontWeight:600}}>CVC</label><input value={cardCvc} onChange={e=>setCardCvc(e.target.value.replace(/\D/g,"").substring(0,4))} placeholder="123" type="password" style={{...css.input,fontSize:"1rem"}} maxLength={4}/></div>
+          <div><label style={{fontSize:"0.72rem",color:"#6b6560",fontWeight:600}}>有効期限</label><input value={cardExp} onChange={e=>setCardExp(formatExp(e.target.value))} placeholder="MM/YY" style={{...css.input,fontSize:"1rem"}} maxLength={5}/></div>
+          <div><label style={{fontSize:"0.72rem",color:"#6b6560",fontWeight:600}}>CVC</label><input value={cardCvc} onChange={e=>setCardCvc(e.target.value.replace(/\D/g,"").substring(0,4))} placeholder="123" type="password" style={{...css.input,fontSize:"1rem"}} maxLength={4}/></div>
         </div>
-        <div><label style={{fontSize:"0.72rem",color:"#c0bdb5",fontWeight:600}}>カード名義</label><input value={cardName} onChange={e=>setCardName(e.target.value.toUpperCase())} placeholder="TARO YAMADA" style={{...css.input,textTransform:"uppercase",fontSize:"0.95rem"}}/></div>
-        <div style={{fontSize:"0.65rem",color:"#7a7870",marginTop:4,display:"flex",alignItems:"center",gap:4}}>🔒 SSL暗号化通信 · カード情報はStripeが安全に管理します</div>
+        <div><label style={{fontSize:"0.72rem",color:"#6b6560",fontWeight:600}}>カード名義</label><input value={cardName} onChange={e=>setCardName(e.target.value.toUpperCase())} placeholder="TARO YAMADA" style={{...css.input,textTransform:"uppercase",fontSize:"0.95rem"}}/></div>
+        <div style={{fontSize:"0.65rem",color:"#9a958e",marginTop:4,display:"flex",alignItems:"center",gap:4}}>🔒 SSL暗号化通信 · カード情報はStripeが安全に管理します</div>
       </div>}
 
       {/* Apple Pay */}
-      {payMethod === "applepay" && <div style={{background:"#2a2a2a",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"2rem",textAlign:"center"}}>
+      {payMethod === "applepay" && <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"2rem",textAlign:"center"}}>
         <div style={{fontSize:"3rem",marginBottom:"0.8rem"}}></div>
         <div style={{fontWeight:700,marginBottom:4}}>Apple Pay で支払う</div>
-        <div style={{fontSize:"0.78rem",color:"#c0bdb5",marginBottom:"1rem"}}>Touch ID または Face ID で認証</div>
+        <div style={{fontSize:"0.78rem",color:"#6b6560",marginBottom:"1rem"}}>Touch ID または Face ID で認証</div>
         <div style={{background:"#000",color:"#fff",borderRadius:12,padding:"0.8rem",fontWeight:600,fontSize:"0.95rem",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}> Pay ¥{price.toLocaleString()}</div>
-        <div style={{fontSize:"0.65rem",color:"#7a7870",marginTop:8}}>※ デモモード: 実際の決済は行われません</div>
+        <div style={{fontSize:"0.65rem",color:"#9a958e",marginTop:8}}>※ デモモード: 実際の決済は行われません</div>
       </div>}
 
       {/* PayPay */}
-      {payMethod === "paypay" && <div style={{background:"#2a2a2a",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"2rem",textAlign:"center"}}>
+      {payMethod === "paypay" && <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"2rem",textAlign:"center"}}>
         <div style={{width:80,height:80,borderRadius:16,background:"#ff0033",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:"1rem"}}>
           <span style={{color:"#fff",fontWeight:800,fontSize:"1.1rem"}}>Pay<br/>Pay</span>
         </div>
         <div style={{fontWeight:700,marginBottom:4}}>PayPay で支払う</div>
-        <div style={{fontSize:"0.78rem",color:"#c0bdb5",marginBottom:"1rem"}}>アプリでQRコードをスキャン</div>
+        <div style={{fontSize:"0.78rem",color:"#6b6560",marginBottom:"1rem"}}>アプリでQRコードをスキャン</div>
         {/* QR Code placeholder */}
-        <div style={{width:160,height:160,margin:"0 auto",background:"#222222",border:"2px solid rgba(255,255,255,0.08)",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{width:160,height:160,margin:"0 auto",background:"#ffffff",border:"2px solid rgba(0,0,0,0.06)",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center"}}>
           <div style={{textAlign:"center"}}>
             <div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:1,width:80,margin:"0 auto"}}>
-              {Array.from({length:64}).map((_,i) => <div key={i} style={{width:8,height:8,background:Math.random()>0.5?"#f0ede6":"#222222",borderRadius:1}}/>)}
+              {Array.from({length:64}).map((_,i) => <div key={i} style={{width:8,height:8,background:Math.random()>0.5?"#1a1a1a":"#ffffff",borderRadius:1}}/>)}
             </div>
-            <div style={{fontSize:"0.6rem",color:"#7a7870",marginTop:6}}>DEMO QR</div>
+            <div style={{fontSize:"0.6rem",color:"#9a958e",marginTop:6}}>DEMO QR</div>
           </div>
         </div>
-        <div style={{fontSize:"0.65rem",color:"#7a7870",marginTop:8}}>※ デモモード: 実際の決済は行われません</div>
+        <div style={{fontSize:"0.65rem",color:"#9a958e",marginTop:8}}>※ デモモード: 実際の決済は行われません</div>
       </div>}
 
       {/* Purchase Button */}
       <button onClick={handlePurchase} style={{...css.btnPrimary,width:"100%",marginTop:"1.2rem",padding:"0.9rem",fontSize:"1rem",background:"linear-gradient(135deg,#f59e0b,#ea580c)"}}>
         {payMethod === "applepay" ? " Pay で" : payMethod === "paypay" ? "PayPay で" : "💳 "}¥{price.toLocaleString()} を支払う
       </button>
-      <div style={{textAlign:"center",marginTop:8,fontSize:"0.68rem",color:"#7a7870"}}>🔒 Stripe社のセキュリティ基準で保護 · PCI DSS準拠 · いつでもキャンセル可能</div>
+      <div style={{textAlign:"center",marginTop:8,fontSize:"0.68rem",color:"#9a958e"}}>🔒 Stripe社のセキュリティ基準で保護 · PCI DSS準拠 · いつでもキャンセル可能</div>
     </div>;
   }
 
@@ -2191,7 +2191,7 @@ function CreditShop({user, credits, saveCredits, notify, setPage}) {
   return <div>
     <div style={{marginBottom:"1.5rem"}}>
       <h1 style={{fontSize:"1.4rem",fontWeight:800,margin:0}}>クレジット購入</h1>
-      <p style={{color:"#c0bdb5",fontSize:"0.85rem",margin:"0.3rem 0 0"}}>残高: <span style={{color:"#f59e0b",fontWeight:700}}>{credits}クレジット</span> · 1クレジット = ¥160基本単価 · キュレーターにより1〜4cr</p>
+      <p style={{color:"#6b6560",fontSize:"0.85rem",margin:"0.3rem 0 0"}}>残高: <span style={{color:"#f59e0b",fontWeight:700}}>{credits}クレジット</span> · 1クレジット = ¥160基本単価 · キュレーターにより1〜4cr</p>
     </div>
 
     {/* Package Cards */}
@@ -2199,61 +2199,61 @@ function CreditShop({user, credits, saveCredits, notify, setPage}) {
       {CREDIT_PACKAGES.map(pkg => {
         const selected = selectedPkg?.id === pkg.id;
         const savings = pkg.credits * 100 - pkg.price;
-        return <button key={pkg.id} onClick={()=>setSelectedPkg(pkg)} style={{padding:"1.2rem",borderRadius:16,border:selected?"2px solid "+pkg.color:pkg.pop?"2px solid rgba(255,255,255,0.2)":"1px solid rgba(255,255,255,0.08)",background:selected?"rgba(196,149,106,0.1)":pkg.pop?"#2a2a2a":"#222222",cursor:"pointer",fontFamily:"inherit",textAlign:"center",position:"relative",transition:"all 0.15s"}}>
+        return <button key={pkg.id} onClick={()=>setSelectedPkg(pkg)} style={{padding:"1.2rem",borderRadius:16,border:selected?"2px solid "+pkg.color:pkg.pop?"2px solid rgba(0,0,0,0.1)":"1px solid rgba(0,0,0,0.06)",background:selected?"rgba(196,149,106,0.08)":pkg.pop?"#ffffff":"#ffffff",cursor:"pointer",fontFamily:"inherit",textAlign:"center",position:"relative",transition:"all 0.15s"}}>
           {pkg.pop && <div style={{position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#3b82f6,#06b6d4)",color:"#fff",fontSize:"0.6rem",fontWeight:700,padding:"0.15rem 0.5rem",borderRadius:6}}>人気 No.1</div>}
           <div style={{fontSize:"1.5rem",marginBottom:4}}>{pkg.icon}</div>
           <div style={{fontWeight:800,fontSize:"1rem",color:pkg.color}}>{pkg.credits}</div>
-          <div style={{fontSize:"0.72rem",color:"#c0bdb5"}}>クレジット</div>
-          <div style={{fontSize:"1.1rem",fontWeight:800,color:"#f0ede6",marginTop:6}}>¥{pkg.price.toLocaleString()}</div>
-          <div style={{fontSize:"0.68rem",color:savings>0?"#10b981":"#7a7870",fontWeight:savings>0?600:400}}>{savings>0?"¥"+savings.toLocaleString()+"お得！":"¥"+pkg.unit+"/credit"}</div>
-          <div style={{fontSize:"0.65rem",color:"#7a7870",marginTop:2}}>{pkg.desc}</div>
+          <div style={{fontSize:"0.72rem",color:"#6b6560"}}>クレジット</div>
+          <div style={{fontSize:"1.1rem",fontWeight:800,color:"#1a1a1a",marginTop:6}}>¥{pkg.price.toLocaleString()}</div>
+          <div style={{fontSize:"0.68rem",color:savings>0?"#10b981":"#9a958e",fontWeight:savings>0?600:400}}>{savings>0?"¥"+savings.toLocaleString()+"お得！":"¥"+pkg.unit+"/credit"}</div>
+          <div style={{fontSize:"0.65rem",color:"#9a958e",marginTop:2}}>{pkg.desc}</div>
           {selected && <div style={{position:"absolute",top:8,right:8,width:20,height:20,borderRadius:"50%",background:pkg.color,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.65rem",fontWeight:700}}>✓</div>}
         </button>;
       })}
     </div>
 
     {/* Subscription Option */}
-    <div onClick={()=>setSelectedPkg(SUBSCRIPTION)} style={{background:selectedPkg?.id==="monthly"?"rgba(196,149,106,0.1)":"#2a2a2a",border:selectedPkg?.id==="monthly"?"2px solid #c4956a":"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"1.2rem",marginBottom:"1.5rem",cursor:"pointer",transition:"all 0.15s"}}>
+    <div onClick={()=>setSelectedPkg(SUBSCRIPTION)} style={{background:selectedPkg?.id==="monthly"?"rgba(196,149,106,0.08)":"#ffffff",border:selectedPkg?.id==="monthly"?"2px solid #c4956a":"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"1.2rem",marginBottom:"1.5rem",cursor:"pointer",transition:"all 0.15s"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:44,height:44,borderRadius:12,background:"linear-gradient(135deg,#c4956a,#e85d3a)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.2rem"}}>♾️</div>
           <div>
-            <div style={{fontWeight:800,fontSize:"0.95rem",color:"#f0ede6"}}>月額プラン</div>
+            <div style={{fontWeight:800,fontSize:"0.95rem",color:"#1a1a1a"}}>月額プラン</div>
             <div style={{fontSize:"0.75rem",color:"#c4956a"}}>{SUBSCRIPTION.desc}</div>
           </div>
         </div>
         <div style={{textAlign:"right"}}>
-          <div style={{fontWeight:800,fontSize:"1.1rem",color:"#f0ede6"}}>¥{SUBSCRIPTION.price.toLocaleString()}<span style={{fontSize:"0.72rem",fontWeight:400,color:"#c0bdb5"}}>/月</span></div>
+          <div style={{fontWeight:800,fontSize:"1.1rem",color:"#1a1a1a"}}>¥{SUBSCRIPTION.price.toLocaleString()}<span style={{fontSize:"0.72rem",fontWeight:400,color:"#6b6560"}}>/月</span></div>
           <div style={{fontSize:"0.65rem",color:"#10b981",fontWeight:600}}>35%お得</div>
         </div>
       </div>
     </div>
 
     {/* Purchase CTA */}
-    <button onClick={()=>{if(selectedPkg)setPayStep("payment");else notify("パッケージを選択してください","error");}} disabled={!selectedPkg} style={{...css.btnPrimary,width:"100%",padding:"0.9rem",fontSize:"1rem",background:selectedPkg?"linear-gradient(135deg,#f59e0b,#ea580c)":"rgba(255,255,255,0.08)",color:selectedPkg?"#fff":"#7a7870",cursor:selectedPkg?"pointer":"default",marginBottom:"1rem"}}>
+    <button onClick={()=>{if(selectedPkg)setPayStep("payment");else notify("パッケージを選択してください","error");}} disabled={!selectedPkg} style={{...css.btnPrimary,width:"100%",padding:"0.9rem",fontSize:"1rem",background:selectedPkg?"linear-gradient(135deg,#f59e0b,#ea580c)":"rgba(0,0,0,0.06)",color:selectedPkg?"#fff":"#9a958e",cursor:selectedPkg?"pointer":"default",marginBottom:"1rem"}}>
       {selectedPkg ? "💳 決済へ進む — ¥" + (selectedPkg.id==="monthly"?SUBSCRIPTION.price:selectedPkg.price).toLocaleString() : "パッケージを選択してください"}
     </button>
 
     {/* Payment Methods */}
     <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginBottom:"1.5rem"}}>
-      <span style={{fontSize:"0.68rem",color:"#7a7870"}}>対応決済:</span>
-      {["VISA","Master","AMEX","JCB","Apple Pay","Google Pay","PayPay"].map(m => <span key={m} style={{fontSize:"0.58rem",padding:"0.15rem 0.35rem",borderRadius:4,background:"#333333",color:"#c0bdb5",fontWeight:500}}>{m}</span>)}
+      <span style={{fontSize:"0.68rem",color:"#9a958e"}}>対応決済:</span>
+      {["VISA","Master","AMEX","JCB","Apple Pay","Google Pay","PayPay"].map(m => <span key={m} style={{fontSize:"0.58rem",padding:"0.15rem 0.35rem",borderRadius:4,background:"#f0ede6",color:"#6b6560",fontWeight:500}}>{m}</span>)}
     </div>
 
     {/* Purchase History */}
-    <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:"1rem"}}>
+    <div style={{borderTop:"1px solid rgba(0,0,0,0.05)",paddingTop:"1rem"}}>
       <button onClick={()=>setShowHistory(!showHistory)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",padding:"0.5rem 0"}}>
-        <span style={{fontWeight:700,fontSize:"0.85rem",color:"#f0ede6"}}>📋 購入履歴</span>
-        <span style={{fontSize:"0.75rem",color:"#7a7870"}}>{showHistory?"▲":"▼"}</span>
+        <span style={{fontWeight:700,fontSize:"0.85rem",color:"#1a1a1a"}}>📋 購入履歴</span>
+        <span style={{fontSize:"0.75rem",color:"#9a958e"}}>{showHistory?"▲":"▼"}</span>
       </button>
       {showHistory && <div>
-        {history.length === 0 && <div style={{textAlign:"center",padding:"1.5rem",color:"#7a7870",fontSize:"0.82rem"}}>まだ購入履歴はありません</div>}
+        {history.length === 0 && <div style={{textAlign:"center",padding:"1.5rem",color:"#9a958e",fontSize:"0.82rem"}}>まだ購入履歴はありません</div>}
         {history.map(h => (
-          <div key={h.id} style={{display:"flex",alignItems:"center",gap:10,padding:"0.7rem 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
-            <div style={{width:36,height:36,borderRadius:10,background:"#333333",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.9rem"}}>💰</div>
+          <div key={h.id} style={{display:"flex",alignItems:"center",gap:10,padding:"0.7rem 0",borderBottom:"1px solid rgba(0,0,0,0.05)"}}>
+            <div style={{width:36,height:36,borderRadius:10,background:"#f0ede6",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.9rem"}}>💰</div>
             <div style={{flex:1}}>
               <div style={{fontSize:"0.82rem",fontWeight:600}}>{h.label} — {h.credits}クレジット</div>
-              <div style={{fontSize:"0.68rem",color:"#7a7870"}}>{h.method}{h.cardLast4?" (****"+h.cardLast4+")":""} · {new Date(h.date).toLocaleString("ja-JP")}</div>
+              <div style={{fontSize:"0.68rem",color:"#9a958e"}}>{h.method}{h.cardLast4?" (****"+h.cardLast4+")":""} · {new Date(h.date).toLocaleString("ja-JP")}</div>
             </div>
             <div style={{fontWeight:700,fontSize:"0.82rem"}}>¥{h.price.toLocaleString()}</div>
           </div>
@@ -2262,11 +2262,11 @@ function CreditShop({user, credits, saveCredits, notify, setPage}) {
     </div>
 
     {/* Trust Badges */}
-    <div style={{background:"#222222",borderRadius:12,padding:"1rem",marginTop:"1rem"}}>
+    <div style={{background:"#ffffff",borderRadius:12,padding:"1rem",marginTop:"1rem"}}>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center"}}>
         {[{i:"🔒",l:"SSL暗号化"},{i:"🛡️",l:"PCI DSS準拠"},{i:"↩️",l:"返金保証"}].map((t,i) => <div key={i}>
           <div style={{fontSize:"1.2rem"}}>{t.i}</div>
-          <div style={{fontSize:"0.65rem",color:"#c0bdb5",marginTop:2}}>{t.l}</div>
+          <div style={{fontSize:"0.65rem",color:"#6b6560",marginTop:2}}>{t.l}</div>
         </div>)}
       </div>
     </div>
@@ -2310,45 +2310,45 @@ function PitchDetailModal({pitch, curators, savePitches, allPitches, onClose, no
   ];
 
   return <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}} onClick={onClose}>
-    <div style={{background:'#222222',borderRadius:20,width:'100%',maxWidth:580,maxHeight:'90vh',overflow:'hidden',display:'flex',flexDirection:'column'}} onClick={e=>e.stopPropagation()}>
+    <div style={{background:'#ffffff',borderRadius:20,width:'100%',maxWidth:580,maxHeight:'90vh',overflow:'hidden',display:'flex',flexDirection:'column'}} onClick={e=>e.stopPropagation()}>
       {/* Header */}
-      <div style={{padding:'1rem 1.4rem',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',justifyContent:'space-between',alignItems:'center',background:'rgba(196,149,106,0.08)'}}>
+      <div style={{padding:'1rem 1.4rem',borderBottom:'1px solid rgba(0,0,0,0.05)',display:'flex',justifyContent:'space-between',alignItems:'center',background:'rgba(196,149,106,0.06)'}}>
         <div>
-          <div style={{fontWeight:700,fontSize:'0.95rem',color:'#f0ede6'}}>{pitch.curatorName}</div>
-          <div style={{fontSize:'0.72rem',color:'#c0bdb5'}}>"{pitch.songTitle}" · {pitch.artistName}</div>
+          <div style={{fontWeight:700,fontSize:'0.95rem',color:'#1a1a1a'}}>{pitch.curatorName}</div>
+          <div style={{fontSize:'0.72rem',color:'#6b6560'}}>"{pitch.songTitle}" · {pitch.artistName}</div>
         </div>
-        <button onClick={onClose} style={{background:'none',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'0.3rem 0.6rem',cursor:'pointer',fontSize:'0.78rem',fontFamily:'inherit',color:'#c0bdb5'}}>✕</button>
+        <button onClick={onClose} style={{background:'none',border:'1px solid rgba(0,0,0,0.06)',borderRadius:8,padding:'0.3rem 0.6rem',cursor:'pointer',fontSize:'0.78rem',fontFamily:'inherit',color:'#6b6560'}}>✕</button>
       </div>
       {/* Tabs */}
-      <div style={{display:'flex',borderBottom:'1px solid rgba(255,255,255,0.06)',padding:'0 1rem',overflowX:'auto'}}>
-        {tabs.map(([id,label]) => <button key={id} onClick={()=>setActiveTab(id)} style={{padding:'0.65rem 0.9rem',background:'none',border:'none',borderBottom:activeTab===id?'2px solid #c4956a':'2px solid transparent',color:activeTab===id?'#c4956a':'#c0bdb5',fontSize:'0.75rem',fontWeight:activeTab===id?700:400,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>{label}</button>)}
+      <div style={{display:'flex',borderBottom:'1px solid rgba(0,0,0,0.05)',padding:'0 1rem',overflowX:'auto'}}>
+        {tabs.map(([id,label]) => <button key={id} onClick={()=>setActiveTab(id)} style={{padding:'0.65rem 0.9rem',background:'none',border:'none',borderBottom:activeTab===id?'2px solid #c4956a':'2px solid transparent',color:activeTab===id?'#c4956a':'#6b6560',fontSize:'0.75rem',fontWeight:activeTab===id?700:400,cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>{label}</button>)}
       </div>
       {/* Body */}
       <div style={{flex:1,overflowY:'auto',padding:'1.2rem 1.4rem'}}>
         {activeTab==='feedback' && <div>
           {pitch.feedbackMessage ? <>
-            <div style={{fontWeight:700,fontSize:'0.82rem',marginBottom:8,color:'#f0ede6'}}>{pitch.curatorName}からのフィードバック</div>
-            <div style={{background:'#333333',borderRadius:12,padding:'1rem',fontSize:'0.85rem',lineHeight:1.7,color:'#c0bdb5',marginBottom:10}}>{pitch.feedbackMessage}</div>
-            {pitch.placementUrl && <div style={{background:'rgba(196,149,106,0.08)',borderRadius:10,padding:'0.8rem',border:'1px solid rgba(196,149,106,0.25)',fontSize:'0.82rem',color:'#c4956a',marginBottom:8}}>
+            <div style={{fontWeight:700,fontSize:'0.82rem',marginBottom:8,color:'#1a1a1a'}}>{pitch.curatorName}からのフィードバック</div>
+            <div style={{background:'#f0ede6',borderRadius:12,padding:'1rem',fontSize:'0.85rem',lineHeight:1.7,color:'#6b6560',marginBottom:10}}>{pitch.feedbackMessage}</div>
+            {pitch.placementUrl && <div style={{background:'rgba(196,149,106,0.06)',borderRadius:10,padding:'0.8rem',border:'1px solid rgba(196,149,106,0.25)',fontSize:'0.82rem',color:'#c4956a',marginBottom:8}}>
               <div style={{fontWeight:700,marginBottom:4}}>🎉 掲載済み{pitch.placementPlatform ? ` — ${pitch.placementPlatform}` : ''}</div>
               <a href={pitch.placementUrl} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb',fontSize:'0.78rem',wordBreak:'break-all'}}>{pitch.placementUrl}</a>
             </div>}
-          </> : <div style={{textAlign:'center',padding:'2.5rem',color:'#7a7870',fontSize:'0.85rem'}}>まだフィードバックがありません<br/>キュレーターのレビュー待ちです</div>}
+          </> : <div style={{textAlign:'center',padding:'2.5rem',color:'#9a958e',fontSize:'0.85rem'}}>まだフィードバックがありません<br/>キュレーターのレビュー待ちです</div>}
         </div>}
 
         {activeTab==='placement' && <div>
           <div style={{fontWeight:700,fontSize:'0.82rem',marginBottom:12}}>📍 掲載情報を記録</div>
-          <label style={{fontSize:'0.7rem',color:'#c0bdb5',fontWeight:600}}>掲載プラットフォーム</label>
+          <label style={{fontSize:'0.7rem',color:'#6b6560',fontWeight:600}}>掲載プラットフォーム</label>
           <select value={placementPlatform} onChange={e=>setPlacementPlatform(e.target.value)} style={{...css.input}}>
             <option value="">選択してください</option>
             {[['youtube','YouTube'],['spotify','Spotify Playlist'],['blog','ブログ記事'],['apple_music','Apple Music'],['instagram','Instagram'],['other','その他']].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
           </select>
-          <label style={{fontSize:'0.7rem',color:'#c0bdb5',fontWeight:600}}>掲載URL</label>
+          <label style={{fontSize:'0.7rem',color:'#6b6560',fontWeight:600}}>掲載URL</label>
           <input value={placementUrl} onChange={e=>setPlacementUrl(e.target.value)} placeholder="https://..." style={{...css.input}}/>
-          <label style={{fontSize:'0.7rem',color:'#c0bdb5',fontWeight:600}}>掲載日</label>
+          <label style={{fontSize:'0.7rem',color:'#6b6560',fontWeight:600}}>掲載日</label>
           <input type="date" value={placementDate} onChange={e=>setPlacementDate(e.target.value)} style={{...css.input}}/>
           <button onClick={savePlacement} style={{...css.btnPrimary,width:'100%',marginTop:4}}>💾 保存</button>
-          {pitch.placementUrl && <div style={{marginTop:10,padding:'0.7rem',background:'rgba(196,149,106,0.08)',borderRadius:10,border:'1px solid rgba(196,149,106,0.25)',fontSize:'0.78rem'}}>
+          {pitch.placementUrl && <div style={{marginTop:10,padding:'0.7rem',background:'rgba(196,149,106,0.06)',borderRadius:10,border:'1px solid rgba(196,149,106,0.25)',fontSize:'0.78rem'}}>
             <div style={{fontWeight:600,color:'#c4956a',marginBottom:4}}>✅ 掲載済み</div>
             <a href={pitch.placementUrl} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb',fontSize:'0.75rem'}}>{pitch.placementUrl}</a>
           </div>}
@@ -2356,9 +2356,9 @@ function PitchDetailModal({pitch, curators, savePitches, allPitches, onClose, no
 
         {activeTab==='messages' && <div>
           <div style={{fontWeight:700,fontSize:'0.82rem',marginBottom:10}}>メッセージスレッド</div>
-          <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:14,minHeight:120,maxHeight:280,overflowY:'auto',padding:'0.5rem',background:'#1a1a1a',borderRadius:12,border:'1px solid rgba(255,255,255,0.06)'}}>
-            {messages.length===0 && <div style={{textAlign:'center',color:'#7a7870',fontSize:'0.78rem',padding:'2rem 0'}}>まだメッセージがありません</div>}
-            {messages.map((m,i) => <div key={i} style={{alignSelf:m.from==='artist'?'flex-end':'flex-start',maxWidth:'82%',background:m.from==='artist'?'#c4956a':'#333333',color:m.from==='artist'?'#fff':'#f0ede6',borderRadius:12,padding:'0.55rem 0.85rem',fontSize:'0.8rem',border:m.from==='artist'?'none':'1px solid rgba(255,255,255,0.08)'}}>
+          <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:14,minHeight:120,maxHeight:280,overflowY:'auto',padding:'0.5rem',background:'#f8f7f4',borderRadius:12,border:'1px solid rgba(0,0,0,0.05)'}}>
+            {messages.length===0 && <div style={{textAlign:'center',color:'#9a958e',fontSize:'0.78rem',padding:'2rem 0'}}>まだメッセージがありません</div>}
+            {messages.map((m,i) => <div key={i} style={{alignSelf:m.from==='artist'?'flex-end':'flex-start',maxWidth:'82%',background:m.from==='artist'?'#c4956a':'#1a1a1a',color:m.from==='artist'?'#fff':'#1a1a1a',borderRadius:12,padding:'0.55rem 0.85rem',fontSize:'0.8rem',border:m.from==='artist'?'none':'1px solid rgba(0,0,0,0.06)'}}>
               <div style={{fontSize:'0.6rem',opacity:0.65,marginBottom:2}}>{m.from==='artist'?'あなた':pitch.curatorName} · {new Date(m.timestamp).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
               <div>{m.text}</div>
             </div>)}
@@ -2372,10 +2372,10 @@ function PitchDetailModal({pitch, curators, savePitches, allPitches, onClose, no
         {activeTab==='deal' && <div>
           <div style={{fontWeight:700,fontSize:'0.82rem',marginBottom:12}}>🤝 契約交渉ステータス</div>
           <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:16}}>
-            {[['none','交渉なし','#7a7870'],['in_progress','交渉中','#f59e0b'],['deal_offered','契約提示あり','#3b82f6'],['signed','契約締結','#10b981']].map(([v,l,color]) =>
-              <button key={v} onClick={()=>setNegotiationStatus(v)} style={{padding:'0.8rem 1rem',borderRadius:12,border:negotiationStatus===v?`2px solid ${color}`:'1px solid rgba(255,255,255,0.08)',background:negotiationStatus===v?color+'18':'#2a2a2a',cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',gap:10,textAlign:'left'}}>
+            {[['none','交渉なし','#9a958e'],['in_progress','交渉中','#f59e0b'],['deal_offered','契約提示あり','#3b82f6'],['signed','契約締結','#10b981']].map(([v,l,color]) =>
+              <button key={v} onClick={()=>setNegotiationStatus(v)} style={{padding:'0.8rem 1rem',borderRadius:12,border:negotiationStatus===v?`2px solid ${color}`:'1px solid rgba(0,0,0,0.06)',background:negotiationStatus===v?color+'18':'#ffffff',cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',gap:10,textAlign:'left'}}>
                 <div style={{width:12,height:12,borderRadius:'50%',background:color,flexShrink:0}}/>
-                <span style={{fontWeight:negotiationStatus===v?700:400,color:negotiationStatus===v?color:'#f0ede6',fontSize:'0.85rem'}}>{l}</span>
+                <span style={{fontWeight:negotiationStatus===v?700:400,color:negotiationStatus===v?color:'#1a1a1a',fontSize:'0.85rem'}}>{l}</span>
                 {negotiationStatus===v && <span style={{marginLeft:'auto',fontSize:'0.7rem',color}}>✓ 選択中</span>}
               </button>
             )}
@@ -2409,9 +2409,9 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
   };
   const detailPitch = detailPitchId ? (allPitches||pitches).find(p=>p.id===detailPitchId) : null;
   const statusMap = {
-    sent:     {label:"📨 Sent",      color:"#7a7870",bg:"#2a2a2a", icon:"📨"},
-    opened:   {label:"📨 Sent",      color:"#7a7870",bg:"#2a2a2a", icon:"📨"},
-    listened: {label:"📨 Sent",      color:"#7a7870",bg:"#2a2a2a", icon:"📨"},
+    sent:     {label:"📨 Sent",      color:"#9a958e",bg:"#ffffff", icon:"📨"},
+    opened:   {label:"📨 Sent",      color:"#9a958e",bg:"#ffffff", icon:"📨"},
+    listened: {label:"📨 Sent",      color:"#9a958e",bg:"#ffffff", icon:"📨"},
     feedback: {label:"💬 Feedback",  color:"#10b981",bg:"rgba(16,185,129,0.1)", icon:"💬"},
     accepted: {label:"✅ Interested",color:"#059669",bg:"rgba(5,150,105,0.1)", icon:"✅"},
     interested:{label:"✅ Interested",color:"#059669",bg:"rgba(5,150,105,0.1)",icon:"✅"},
@@ -2435,10 +2435,10 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
     if (barIndex === 2) {
       if (['accepted', 'interested'].includes(pitch.status)) return '#10b981';
       if (pitch.status === 'declined') return '#ef4444';
-      return 'rgba(255,255,255,0.08)';
+      return 'rgba(0,0,0,0.06)';
     }
     // Bars 0-1: warm gold if reached
-    return barIndex < getReachedStep(pitch) ? 'linear-gradient(90deg,#c4956a,#e85d3a)' : 'rgba(255,255,255,0.1)';
+    return barIndex < getReachedStep(pitch) ? 'linear-gradient(90deg,#c4956a,#e85d3a)' : 'rgba(0,0,0,0.06)';
   }
 
   const sendReply = async (pitchId) => {
@@ -2461,7 +2461,7 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
     setReplyText(""); setReplyingTo(null);
   };
 
-  if (pitches.length === 0) return <div style={{textAlign:"center",padding:"3rem"}}><div style={{fontSize:"2rem",marginBottom:8}}>📭</div><p style={{color:"#7a7870"}}>まだピッチを送信していません</p></div>;
+  if (pitches.length === 0) return <div style={{textAlign:"center",padding:"3rem"}}><div style={{fontSize:"2rem",marginBottom:8}}>📭</div><p style={{color:"#9a958e"}}>まだピッチを送信していません</p></div>;
 
   const inProgress = pitches.filter(p=>!["accepted","declined","expired"].includes(p.status)).length;
   const accepted = pitches.filter(p=>p.status==="accepted").length;
@@ -2469,36 +2469,36 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
   return <div>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.3rem"}}>
       <h1 style={{fontSize:"1.4rem",fontWeight:800,margin:0}}>トラッキング</h1>
-      <button onClick={handleRefresh} disabled={refreshing} style={{padding:"5px 12px",fontSize:"0.78rem",fontWeight:600,border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,background:"#2a2a2a",color:"#c0bdb5",cursor:refreshing?"not-allowed":"pointer",fontFamily:"inherit"}}>
+      <button onClick={handleRefresh} disabled={refreshing} style={{padding:"5px 12px",fontSize:"0.78rem",fontWeight:600,border:"1px solid rgba(0,0,0,0.06)",borderRadius:8,background:"#ffffff",color:"#6b6560",cursor:refreshing?"not-allowed":"pointer",fontFamily:"inherit"}}>
         {refreshing ? '更新中...' : '↻ 更新'}
       </button>
     </div>
-    <p style={{color:"#c0bdb5",fontSize:"0.82rem",marginBottom:"1.5rem"}}>{pitches.length}件送信 · {inProgress}件進行中 · {accepted}件採用</p>
+    <p style={{color:"#6b6560",fontSize:"0.82rem",marginBottom:"1.5rem"}}>{pitches.length}件送信 · {inProgress}件進行中 · {accepted}件採用</p>
     <div style={{display:"flex",flexDirection:"column",gap:8}}>
       {pitches.map(p => {
         const s = statusMap[p.status] || statusMap.sent;
         const isOpen = expanded === p.id;
         const actionInfo = p.actionType ? ACTION_TYPES.find(a=>a.id===p.actionType) : null;
-        return <div key={p.id} style={{background:"#2a2a2a",border:`1px solid ${p.status==="accepted"?"rgba(196,149,106,0.25)":"rgba(255,255,255,0.06)"}`,borderRadius:14,padding:"1rem",cursor:"pointer",transition:"all 0.12s"}} onClick={()=>setExpanded(isOpen?null:p.id)}>
+        return <div key={p.id} style={{background:"#ffffff",border:`1px solid ${p.status==="accepted"?"rgba(196,149,106,0.25)":"rgba(0,0,0,0.05)"}`,borderRadius:14,padding:"1rem",cursor:"pointer",transition:"all 0.12s"}} onClick={()=>setExpanded(isOpen?null:p.id)}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <span style={{fontSize:"1.1rem"}}>{s.icon}</span>
             <div style={{flex:1,minWidth:0}}>
-              <div style={{fontWeight:700,fontSize:"0.88rem",color:"#f0ede6"}}>{p.curatorName}</div>
-              <div style={{fontSize:"0.72rem",color:"#7a7870"}}>{(p.curatorPlatform || curators.find(c=>c.id===p.curatorId)?.platform || '')}{p.songTitle ? ` · "${p.songTitle}"` : ''}</div>
+              <div style={{fontWeight:700,fontSize:"0.88rem",color:"#1a1a1a"}}>{p.curatorName}</div>
+              <div style={{fontSize:"0.72rem",color:"#9a958e"}}>{(p.curatorPlatform || curators.find(c=>c.id===p.curatorId)?.platform || '')}{p.songTitle ? ` · "${p.songTitle}"` : ''}</div>
             </div>
             <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:3,flexShrink:0}}>
               <div style={{display:"flex",gap:5,alignItems:"center"}}>
                 <div style={{padding:"0.2rem 0.6rem",borderRadius:8,background:s.bg,color:s.color,fontSize:"0.72rem",fontWeight:600}}>{s.label}</div>
-                <button onClick={e=>{e.stopPropagation();setDetailPitchId(p.id);}} style={{...css.btnSm,fontSize:"0.62rem",padding:"0.12rem 0.4rem",color:"#c4956a",border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.08)"}}>詳細</button>
+                <button onClick={e=>{e.stopPropagation();setDetailPitchId(p.id);}} style={{...css.btnSm,fontSize:"0.62rem",padding:"0.12rem 0.4rem",color:"#c4956a",border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.06)"}}>詳細</button>
               </div>
-              {p.sentAt && <div style={{fontSize:12,color:"#b8b0a3",fontFamily:"'DM Sans',sans-serif"}}>{(() => { const d = new Date(p.sentAt); const now = new Date(); const isToday = d.toDateString() === now.toDateString(); const time = d.toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"}); return isToday ? `今日 ${time}` : `${d.getMonth()+1}/${d.getDate()} ${time}`; })()}</div>}
+              {p.sentAt && <div style={{fontSize:12,color:"#6b6560",fontFamily:"'DM Sans',sans-serif"}}>{(() => { const d = new Date(p.sentAt); const now = new Date(); const isToday = d.toDateString() === now.toDateString(); const time = d.toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"}); return isToday ? `今日 ${time}` : `${d.getMonth()+1}/${d.getDate()} ${time}`; })()}</div>}
             </div>
           </div>
           {/* Progress bar */}
           <div style={{display:"flex",gap:2,marginTop:8}}>
             {steps.map((st,i) => {
               const barColor = getBarColor(p, i);
-              const isActive = barColor !== 'rgba(255,255,255,0.08)';
+              const isActive = barColor !== 'rgba(0,0,0,0.06)';
               const textColor = i === 2 && p.status === 'declined' ? '#ef4444'
                 : i === 2 && ['accepted','interested'].includes(p.status) ? '#10b981'
                 : isActive ? '#c4956a' : '#5a5855';
@@ -2508,31 +2508,31 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
               </div>;
             })}
           </div>
-          {isOpen && <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid rgba(255,255,255,0.04)",animation:"fadeIn 0.2s ease"}} onClick={e=>e.stopPropagation()}>
-            <div style={{fontSize:"0.75rem",color:"#7a7870",marginBottom:8}}>
+          {isOpen && <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid rgba(0,0,0,0.04)",animation:"fadeIn 0.2s ease"}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:"0.75rem",color:"#9a958e",marginBottom:8}}>
               📨 Sent: {new Date(p.sentAt || p.createdAt).toLocaleString("ja-JP")}
             </div>
 
             {/* Feedback from curator */}
             {p.feedbackMessage ? (
-              <div style={{background:['accepted','interested'].includes(p.status)?"rgba(196,149,106,0.08)":"#333333",borderRadius:10,padding:"0.8rem",marginTop:4,border:`1px solid ${['accepted','interested'].includes(p.status)?"rgba(196,149,106,0.3)":"rgba(255,255,255,0.06)"}`}}>
-                <div style={{fontWeight:700,fontSize:"0.78rem",marginBottom:6,color:['accepted','interested'].includes(p.status)?"#c4956a":"#f0ede6"}}>
+              <div style={{background:['accepted','interested'].includes(p.status)?"rgba(196,149,106,0.06)":"#f0ede6",borderRadius:10,padding:"0.8rem",marginTop:4,border:`1px solid ${['accepted','interested'].includes(p.status)?"rgba(196,149,106,0.3)":"rgba(0,0,0,0.05)"}`}}>
+                <div style={{fontWeight:700,fontSize:"0.78rem",marginBottom:6,color:['accepted','interested'].includes(p.status)?"#c4956a":"#1a1a1a"}}>
                   {['accepted','interested'].includes(p.status)?"✅":"💬"} {p.curatorName}からのフィードバック
                 </div>
-                <div style={{fontSize:"0.82rem",lineHeight:1.6,color:"#c0bdb5"}}>{p.feedbackMessage}</div>
+                <div style={{fontSize:"0.82rem",lineHeight:1.6,color:"#6b6560"}}>{p.feedbackMessage}</div>
               </div>
             ) : (
               ['feedback','accepted','interested','declined'].includes(p.status)
                 ? null
-                : <div style={{fontSize:"0.78rem",color:"#7a7870",padding:"0.5rem 0"}}>キュレーターのレビュー待ちです</div>
+                : <div style={{fontSize:"0.78rem",color:"#9a958e",padding:"0.5rem 0"}}>キュレーターのレビュー待ちです</div>
             )}
 
-            {p.placementUrl && <div style={{marginTop:8,padding:"0.6rem 0.8rem",background:"rgba(196,149,106,0.08)",borderRadius:10,border:"1px solid rgba(196,149,106,0.3)",fontSize:"0.78rem"}}>
+            {p.placementUrl && <div style={{marginTop:8,padding:"0.6rem 0.8rem",background:"rgba(196,149,106,0.06)",borderRadius:10,border:"1px solid rgba(196,149,106,0.3)",fontSize:"0.78rem"}}>
               <div style={{color:"#c4956a",fontWeight:700,marginBottom:4}}>🎉 掲載済み</div>
               <a href={p.placementUrl} target="_blank" rel="noopener noreferrer" style={{color:"#c4956a",wordBreak:"break-all"}}>{p.placementUrl}</a>
             </div>}
 
-            <div style={{fontSize:"0.72rem",color:"#7a7870",marginTop:8}}>⏰ 回答期限: {(() => { const d = p.deadline ? new Date(p.deadline) : (p.sentAt ? new Date(new Date(p.sentAt).getTime() + 7*24*60*60*1000) : null); return d && d.getFullYear() > 2000 ? d.toLocaleDateString("ja-JP") : "—"; })()}</div>
+            <div style={{fontSize:"0.72rem",color:"#9a958e",marginTop:8}}>⏰ 回答期限: {(() => { const d = p.deadline ? new Date(p.deadline) : (p.sentAt ? new Date(new Date(p.sentAt).getTime() + 7*24*60*60*1000) : null); return d && d.getFullYear() > 2000 ? d.toLocaleDateString("ja-JP") : "—"; })()}</div>
           </div>}
         </div>;
       })}
@@ -2550,7 +2550,7 @@ function Analytics({pitches}) {
   const cumulListen = (stats.listened||0)+(stats.feedback||0)+(stats.accepted||0)+(stats.declined||0);
   const cumulFB = (stats.feedback||0)+(stats.accepted||0)+(stats.declined||0);
   const data = [
-    {label:"送信",value:pitches.length,color:"#7a7870"},
+    {label:"送信",value:pitches.length,color:"#9a958e"},
     {label:"開封",value:cumulOpen,color:"#3b82f6"},
     {label:"試聴",value:cumulListen,color:"#8b5cf6"},
     {label:"FB",value:cumulFB,color:"#06b6d4"},
@@ -2589,7 +2589,7 @@ function Analytics({pitches}) {
   });
   const curatorList = Object.entries(curatorMap).sort((a,b) => b[1].accepted - a[1].accepted).slice(0, 5);
 
-  if (pitches.length === 0) return <div style={{textAlign:"center",padding:"3rem"}}><div style={{fontSize:"2rem",marginBottom:8}}>📊</div><p style={{color:"#7a7870"}}>ピッチを送信すると分析データが表示されます</p></div>;
+  if (pitches.length === 0) return <div style={{textAlign:"center",padding:"3rem"}}><div style={{fontSize:"2rem",marginBottom:8}}>📊</div><p style={{color:"#9a958e"}}>ピッチを送信すると分析データが表示されます</p></div>;
 
   return <div>
     <h1 style={{fontSize:"1.4rem",fontWeight:800,marginBottom:"1.5rem"}}>分析</h1>
@@ -2602,55 +2602,55 @@ function Analytics({pitches}) {
         {v:avgResponseH?avgResponseH+"h":"—",l:"平均応答",c:"#8b5cf6"},
         {v:avgListen?avgListen+"秒":"—",l:"平均試聴",c:"#06b6d4"},
         {v:avgRating?avgRating+"★":"—",l:"平均評価",c:"#f59e0b"},
-      ].map((s,i) => <div key={i} style={{background:"#2a2a2a",borderRadius:12,padding:"0.8rem",border:"1px solid rgba(255,255,255,0.06)",textAlign:"center"}}>
+      ].map((s,i) => <div key={i} style={{background:"#ffffff",borderRadius:12,padding:"0.8rem",border:"1px solid rgba(0,0,0,0.05)",textAlign:"center"}}>
         <div style={{fontSize:"1.2rem",fontWeight:800,color:s.c}}>{s.v}</div>
-        <div style={{fontSize:"0.65rem",color:"#7a7870"}}>{s.l}</div>
+        <div style={{fontSize:"0.65rem",color:"#9a958e"}}>{s.l}</div>
       </div>)}
     </div>
 
     {/* Funnel */}
-    <div style={{background:"#2a2a2a",borderRadius:16,padding:"1.5rem",border:"1px solid rgba(255,255,255,0.06)",marginBottom:"1rem"}}>
-      <div style={{fontSize:"0.85rem",fontWeight:700,marginBottom:"1rem",color:"#f0ede6"}}>📊 ファネル分析</div>
+    <div style={{background:"#ffffff",borderRadius:16,padding:"1.5rem",border:"1px solid rgba(0,0,0,0.05)",marginBottom:"1rem"}}>
+      <div style={{fontSize:"0.85rem",fontWeight:700,marginBottom:"1rem",color:"#1a1a1a"}}>📊 ファネル分析</div>
       {data.map((d,i) => <div key={i} style={{marginBottom:10}}>
-        <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.78rem",marginBottom:3,color:"#f0ede6"}}><span>{d.label}</span><span style={{fontWeight:700}}>{d.value} ({Math.round(d.value/total*100)}%)</span></div>
-        <div style={{height:8,background:"rgba(255,255,255,0.06)",borderRadius:4}}><div style={{height:"100%",background:d.color,borderRadius:4,width:Math.max(2,d.value/total*100)+"%",transition:"width 0.5s"}}/></div>
+        <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.78rem",marginBottom:3,color:"#1a1a1a"}}><span>{d.label}</span><span style={{fontWeight:700}}>{d.value} ({Math.round(d.value/total*100)}%)</span></div>
+        <div style={{height:8,background:"rgba(0,0,0,0.05)",borderRadius:4}}><div style={{height:"100%",background:d.color,borderRadius:4,width:Math.max(2,d.value/total*100)+"%",transition:"width 0.5s"}}/></div>
       </div>)}
     </div>
 
     {/* Genre Breakdown */}
-    {genreList.length > 0 && <div style={{background:"#2a2a2a",borderRadius:16,padding:"1.5rem",border:"1px solid rgba(255,255,255,0.06)",marginBottom:"1rem"}}>
-      <div style={{fontSize:"0.85rem",fontWeight:700,marginBottom:"1rem",color:"#f0ede6"}}>🎵 ジャンル別成果</div>
+    {genreList.length > 0 && <div style={{background:"#ffffff",borderRadius:16,padding:"1.5rem",border:"1px solid rgba(0,0,0,0.05)",marginBottom:"1rem"}}>
+      <div style={{fontSize:"0.85rem",fontWeight:700,marginBottom:"1rem",color:"#1a1a1a"}}>🎵 ジャンル別成果</div>
       {genreList.map(([g, v], i) => <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-        <span style={{fontSize:"0.78rem",fontWeight:600,minWidth:80,color:"#f0ede6"}}>{g}</span>
-        <div style={{flex:1,height:6,background:"rgba(255,255,255,0.06)",borderRadius:3}}><div style={{height:"100%",background:v.accepted>0?"linear-gradient(90deg,#c4956a,#10b981)":"#7a7870",borderRadius:3,width:Math.max(4,v.total/total*100)+"%"}}/></div>
-        <span style={{fontSize:"0.72rem",color:"#c0bdb5",minWidth:50,textAlign:"right"}}>{v.accepted}/{v.total}</span>
+        <span style={{fontSize:"0.78rem",fontWeight:600,minWidth:80,color:"#1a1a1a"}}>{g}</span>
+        <div style={{flex:1,height:6,background:"rgba(0,0,0,0.05)",borderRadius:3}}><div style={{height:"100%",background:v.accepted>0?"linear-gradient(90deg,#c4956a,#10b981)":"#9a958e",borderRadius:3,width:Math.max(4,v.total/total*100)+"%"}}/></div>
+        <span style={{fontSize:"0.72rem",color:"#6b6560",minWidth:50,textAlign:"right"}}>{v.accepted}/{v.total}</span>
       </div>)}
     </div>}
 
     {/* Top Curators */}
-    {curatorList.length > 0 && <div style={{background:"#2a2a2a",borderRadius:16,padding:"1.5rem",border:"1px solid rgba(255,255,255,0.06)",marginBottom:"1rem"}}>
-      <div style={{fontSize:"0.85rem",fontWeight:700,marginBottom:"1rem",color:"#f0ede6"}}>🏆 キュレーター別成果</div>
-      {curatorList.map(([name, v], i) => <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"0.5rem 0",borderBottom:i<curatorList.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
-        <div style={{width:24,height:24,borderRadius:6,background:v.accepted>0?"rgba(196,149,106,0.15)":"#333333",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.65rem",fontWeight:700,color:v.accepted>0?"#c4956a":"#7a7870"}}>{i+1}</div>
-        <div style={{flex:1}}><div style={{fontSize:"0.82rem",fontWeight:600,color:"#f0ede6"}}>{name}</div><div style={{fontSize:"0.68rem",color:"#7a7870"}}>{v.platform}</div></div>
-        <div style={{fontSize:"0.75rem"}}>{v.accepted>0?<span style={{color:"#10b981",fontWeight:600}}>✓{v.accepted}</span>:""} <span style={{color:"#7a7870"}}>/{v.total}件</span></div>
+    {curatorList.length > 0 && <div style={{background:"#ffffff",borderRadius:16,padding:"1.5rem",border:"1px solid rgba(0,0,0,0.05)",marginBottom:"1rem"}}>
+      <div style={{fontSize:"0.85rem",fontWeight:700,marginBottom:"1rem",color:"#1a1a1a"}}>🏆 キュレーター別成果</div>
+      {curatorList.map(([name, v], i) => <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"0.5rem 0",borderBottom:i<curatorList.length-1?"1px solid rgba(0,0,0,0.04)":"none"}}>
+        <div style={{width:24,height:24,borderRadius:6,background:v.accepted>0?"rgba(196,149,106,0.1)":"#e5e2dc",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.65rem",fontWeight:700,color:v.accepted>0?"#c4956a":"#9a958e"}}>{i+1}</div>
+        <div style={{flex:1}}><div style={{fontSize:"0.82rem",fontWeight:600,color:"#1a1a1a"}}>{name}</div><div style={{fontSize:"0.68rem",color:"#9a958e"}}>{v.platform}</div></div>
+        <div style={{fontSize:"0.75rem"}}>{v.accepted>0?<span style={{color:"#10b981",fontWeight:600}}>✓{v.accepted}</span>:""} <span style={{color:"#9a958e"}}>/{v.total}件</span></div>
       </div>)}
     </div>}
 
     {/* All Pitches List */}
-    {pitches.length > 0 && <div style={{background:"#2a2a2a",borderRadius:16,padding:"1.5rem",border:"1px solid rgba(255,255,255,0.06)"}}>
-      <div style={{fontSize:"0.85rem",fontWeight:700,marginBottom:"1rem",color:"#f0ede6"}}>📋 全ピッチ一覧 ({pitches.length}件)</div>
+    {pitches.length > 0 && <div style={{background:"#ffffff",borderRadius:16,padding:"1.5rem",border:"1px solid rgba(0,0,0,0.05)"}}>
+      <div style={{fontSize:"0.85rem",fontWeight:700,marginBottom:"1rem",color:"#1a1a1a"}}>📋 全ピッチ一覧 ({pitches.length}件)</div>
       {[...pitches].sort((a,b) => new Date(b.sentAt||b.createdAt||0) - new Date(a.sentAt||a.createdAt||0)).map((p,i) => {
         const statusLabels = {sent:"📨 Sent",opened:"👀 Opened",listened:"🎧 Listened",feedback:"💬 Feedback",accepted:"✅ Accepted",interested:"✅ Interested",declined:"❌ Declined",expired:"⏰ Expired"};
         const statusColors = {sent:"#7a7870",opened:"#3b82f6",listened:"#8b5cf6",feedback:"#06b6d4",accepted:"#10b981",interested:"#10b981",declined:"#ef4444",expired:"#f59e0b"};
         const sentDate = p.sentAt ? new Date(p.sentAt) : (p.createdAt ? new Date(p.createdAt) : null);
-        return <div key={p.id||i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:i<pitches.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+        return <div key={p.id||i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:i<pitches.length-1?"1px solid rgba(0,0,0,0.04)":"none"}}>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:14,fontWeight:500,color:"#f0ede6"}}>{p.curatorName || "—"}</div>
-            <div style={{fontSize:12,color:"#7a7870"}}>{p.songTitle || p.subject || "—"}</div>
+            <div style={{fontSize:14,fontWeight:500,color:"#1a1a1a"}}>{p.curatorName || "—"}</div>
+            <div style={{fontSize:12,color:"#9a958e"}}>{p.songTitle || p.subject || "—"}</div>
           </div>
-          <div style={{fontSize:12,color:"#b8b0a3",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>{sentDate ? `${sentDate.getMonth()+1}/${sentDate.getDate()}` : "—"}</div>
-          <div style={{padding:"2px 8px",borderRadius:6,fontSize:11,fontWeight:600,color:statusColors[p.status]||"#7a7870",background:`${statusColors[p.status]||"#7a7870"}15`}}>{statusLabels[p.status]||p.status}</div>
+          <div style={{fontSize:12,color:"#6b6560",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>{sentDate ? `${sentDate.getMonth()+1}/${sentDate.getDate()}` : "—"}</div>
+          <div style={{padding:"2px 8px",borderRadius:6,fontSize:11,fontWeight:600,color:statusColors[p.status]||"#9a958e",background:`${statusColors[p.status]||"#9a958e"}15`}}>{statusLabels[p.status]||p.status}</div>
         </div>;
       })}
     </div>}
@@ -3069,19 +3069,19 @@ function CuratorProfile({user, curators, saveCurators, notify, stats}) {
 // STYLES
 // ═══════════════════════════════════════
 const css = {
-  shell:{fontFamily:"'DM Sans',system-ui,sans-serif",minHeight:"100vh",background:"#1a1a1a",color:"#f0ede6"},
-  nav:{display:"flex",alignItems:"center",padding:"0.6rem 1.5rem",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"rgba(26,26,26,0.95)",backdropFilter:"blur(16px)",position:"sticky",top:0,zIndex:50},
-  navBrand:{fontSize:"1.1rem",fontWeight:800,color:"#c4956a",marginRight:16,fontFamily:"'Playfair Display',Georgia,serif",letterSpacing:"2px"},
-  navBtn:{background:"none",border:"none",padding:"0.45rem 0.7rem",borderRadius:8,fontSize:"0.75rem",color:"#c0bdb5",cursor:"pointer",fontFamily:"inherit",position:"relative",fontWeight:500},
-  navBtnActive:{background:"rgba(196,149,106,0.1)",color:"#c4956a",fontWeight:700,borderBottom:"2px solid #c4956a"},
+  shell:{fontFamily:"'DM Sans',system-ui,sans-serif",minHeight:"100vh",background:"#f8f7f4",color:"#1a1a1a"},
+  nav:{display:"flex",alignItems:"center",padding:"0.6rem 1.5rem",borderBottom:"1px solid #e5e2dc",background:"rgba(248,247,244,0.92)",backdropFilter:"blur(12px)",position:"sticky",top:0,zIndex:50},
+  navBrand:{fontSize:"1.1rem",fontWeight:800,color:"#1a1a1a",marginRight:16,fontFamily:"'Playfair Display',Georgia,serif",letterSpacing:"2px"},
+  navBtn:{background:"none",border:"none",padding:"0.45rem 0.7rem",borderRadius:20,fontSize:"0.75rem",color:"#6b6560",cursor:"pointer",fontFamily:"inherit",position:"relative",fontWeight:500},
+  navBtnActive:{background:"rgba(196,149,106,0.12)",color:"#c4956a",fontWeight:700},
   navBadge:{position:"absolute",top:-2,right:-4,background:"#ef4444",color:"#fff",fontSize:"0.55rem",width:16,height:16,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700},
   main:{maxWidth:720,margin:"0 auto",padding:"1.5rem"},
   toast:{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",padding:"0.7rem 1.4rem",borderRadius:14,color:"#fff",fontSize:"0.85rem",fontWeight:600,zIndex:100,boxShadow:"0 8px 30px rgba(0,0,0,0.12)",animation:"fadeIn 0.3s ease"},
   btnPrimary:{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:6,padding:"0.7rem 1.4rem",background:"#e85d3a",color:"#fff",border:"none",borderRadius:12,fontSize:"0.88rem",fontWeight:700,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 16px rgba(232,93,58,0.25)"},
-  btnGhost:{display:"inline-flex",alignItems:"center",gap:6,padding:"0.65rem 1rem",background:"transparent",color:"#c0bdb5",border:"1px solid rgba(255,255,255,0.15)",borderRadius:12,fontSize:"0.82rem",fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
-  btnSm:{padding:"0.3rem 0.7rem",borderRadius:8,fontSize:"0.72rem",border:"1px solid rgba(255,255,255,0.08)",background:"#2a2a2a",cursor:"pointer",fontFamily:"inherit",color:"#c0bdb5"},
-  input:{width:"100%",padding:"0.7rem 0.9rem",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,fontSize:"0.85rem",fontFamily:"inherit",outline:"none",marginBottom:8,background:"#2a2a2a",color:"#f0ede6"},
-  authInput:{width:"100%",padding:"0.7rem 0.9rem",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,fontSize:"0.85rem",fontFamily:"inherit",outline:"none",marginBottom:8,background:"#2a2a2a",color:"#f0ede6"},
-  filterInput:{padding:"0.55rem 0.8rem",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,fontSize:"0.82rem",fontFamily:"inherit",outline:"none",flex:"1 1 150px",minWidth:120,background:"#2a2a2a",color:"#f0ede6"},
-  filterSelect:{padding:"0.55rem 0.8rem",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,fontSize:"0.82rem",fontFamily:"inherit",outline:"none",background:"#2a2a2a",color:"#f0ede6"},
+  btnGhost:{display:"inline-flex",alignItems:"center",gap:6,padding:"0.65rem 1rem",background:"transparent",color:"#6b6560",border:"1px solid #e5e2dc",borderRadius:12,fontSize:"0.82rem",fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
+  btnSm:{padding:"0.3rem 0.7rem",borderRadius:8,fontSize:"0.72rem",border:"1px solid #e5e2dc",background:"#ffffff",cursor:"pointer",fontFamily:"inherit",color:"#6b6560"},
+  input:{width:"100%",padding:"0.7rem 0.9rem",border:"1px solid #e5e2dc",borderRadius:10,fontSize:"0.85rem",fontFamily:"inherit",outline:"none",marginBottom:8,background:"#ffffff",color:"#1a1a1a"},
+  authInput:{width:"100%",padding:"0.7rem 0.9rem",border:"1px solid #e5e2dc",borderRadius:10,fontSize:"0.85rem",fontFamily:"inherit",outline:"none",marginBottom:8,background:"#ffffff",color:"#1a1a1a"},
+  filterInput:{padding:"0.55rem 0.8rem",border:"1px solid #e5e2dc",borderRadius:10,fontSize:"0.82rem",fontFamily:"inherit",outline:"none",flex:"1 1 150px",minWidth:120,background:"#ffffff",color:"#1a1a1a"},
+  filterSelect:{padding:"0.55rem 0.8rem",border:"1px solid #e5e2dc",borderRadius:10,fontSize:"0.82rem",fontFamily:"inherit",outline:"none",background:"#ffffff",color:"#1a1a1a"},
 };

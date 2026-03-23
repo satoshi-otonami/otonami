@@ -196,7 +196,7 @@ export async function POST(request) {
                 </table>
               </div>
               <div style="text-align:center;margin:32px 0;">
-                <a href="${APP_URL}/curator" style="display:inline-block;background:linear-gradient(135deg,#c4956a,#b8845e);color:#1a1a1a;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">
+                <a href="${APP_URL}/curator" style="display:inline-block;background-color:#c4956a;color:#1a1a1a;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">
                   Go to Your Dashboard →
                 </a>
               </div>

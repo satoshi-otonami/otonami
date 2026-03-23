@@ -228,7 +228,7 @@ const sectionLabel = (light = false) => ({
 });
 
 /* Animated count-up number */
-function AnimatedNumber({ target, suffix = '' }) {
+function AnimatedNumber({ target, suffix = '', delay = 0 }) {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
   const started = useRef(false);
@@ -238,22 +238,25 @@ function AnimatedNumber({ target, suffix = '' }) {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !started.current) {
         started.current = true;
-        const duration = 1400;
-        const startTime = performance.now();
-        const tick = (now) => {
-          const p = Math.min((now - startTime) / duration, 1);
-          const eased = 1 - Math.pow(1 - p, 3);
-          setCount(Math.floor(eased * target));
-          if (p < 1) requestAnimationFrame(tick);
-          else setCount(target);
+        const run = () => {
+          const duration = 1800;
+          const startTime = performance.now();
+          const tick = (now) => {
+            const p = Math.min((now - startTime) / duration, 1);
+            const eased = 1 - Math.pow(1 - p, 4);
+            setCount(Math.floor(eased * target));
+            if (p < 1) requestAnimationFrame(tick);
+            else setCount(target);
+          };
+          requestAnimationFrame(tick);
         };
-        requestAnimationFrame(tick);
+        if (delay > 0) setTimeout(run, delay); else run();
         observer.disconnect();
       }
-    }, { threshold: 0.5 });
+    }, { threshold: 0.3 });
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
-  }, [target]);
+  }, [target, delay]);
 
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
@@ -317,6 +320,78 @@ export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const menuRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  /* ── Canvas waveform animation ── */
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let raf;
+
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+      ctx.scale(dpr, dpr);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const draw = (time) => {
+      const W = canvas.width / (window.devicePixelRatio || 1);
+      const H = canvas.height / (window.devicePixelRatio || 1);
+      const t = time * 0.001;
+      ctx.clearRect(0, 0, W, H);
+
+      /* Layer A: waveform bars */
+      const barCount = 56;
+      const barW = (W / barCount) * 0.5;
+      const barGap = W / barCount;
+      ctx.fillStyle = 'rgba(196, 149, 106, 0.10)';
+      for (let i = 0; i < barCount; i++) {
+        const x = i * barGap + (barGap - barW) / 2;
+        const baseH = H * 0.12;
+        const h = baseH + Math.sin(i * 0.35 + t * 0.8) * baseH * 0.7
+                + Math.sin(i * 0.15 + t * 1.2) * baseH * 0.3;
+        const y = H * 0.32 - h / 2;
+        ctx.fillRect(x, y, barW, h);
+      }
+
+      /* Layer B: flowing waves */
+      const waves = [
+        { baseY: 0.48, freq: 0.006, amp: 28, speed: 0.02, color: 'rgba(196, 149, 106, 0.18)' },
+        { baseY: 0.53, freq: 0.005, amp: 22, speed: 0.015, color: 'rgba(196, 149, 106, 0.10)' },
+        { baseY: 0.58, freq: 0.007, amp: 18, speed: 0.025, color: 'rgba(232, 93, 58, 0.08)' },
+        { baseY: 0.63, freq: 0.004, amp: 24, speed: 0.01, color: 'rgba(196, 149, 106, 0.05)' },
+      ];
+      for (const w of waves) {
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+        for (let x = 0; x <= W; x += 2) {
+          const y = H * w.baseY
+            + Math.sin(x * w.freq + t * w.speed) * w.amp
+            + Math.sin(x * w.freq * 2.3 + t * w.speed * 1.7) * w.amp * 0.4;
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(W, H);
+        ctx.closePath();
+        ctx.fillStyle = w.color;
+        ctx.fill();
+      }
+
+      raf = requestAnimationFrame(draw);
+    };
+    raf = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -503,11 +578,13 @@ export default function HomePage() {
 
       {/* ── Hero (DARK + photo) ── */}
       <section style={{
+        position: 'relative', overflow: 'hidden',
         backgroundImage: `linear-gradient(rgba(26,26,26,0.72), rgba(26,26,26,0.96)), url('/images/hero-sxsw-crowd.jpg')`,
         backgroundSize: 'cover', backgroundPosition: 'center 30%', backgroundRepeat: 'no-repeat',
         paddingTop: 160, paddingBottom: 100,
       }}>
-        <div style={{ ...wrap, textAlign: 'center' }}>
+        <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 0, opacity: 0.5, pointerEvents: 'none' }} />
+        <div style={{ ...wrap, textAlign: 'center', position: 'relative', zIndex: 1 }}>
           <div className="hero-tag-anim" style={{ fontSize: 11, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 28 }}>
             {t.hero.tag}
           </div>
@@ -528,7 +605,7 @@ export default function HomePage() {
             {t.stats.map((s, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 36, fontWeight: 600, color: '#c4956a', fontFamily: D.fHead, lineHeight: 1 }}>
-                  <AnimatedNumber target={s.target} suffix={s.suffix} />
+                  <AnimatedNumber target={s.target} suffix={s.suffix} delay={i * 200} />
                 </div>
                 <div style={{ fontSize: 11, color: D.textMuted, marginTop: 6, letterSpacing: '0.5px' }}>{s.l}</div>
               </div>
@@ -704,22 +781,26 @@ export default function HomePage() {
             </div>
           </AnimatedSection>
 
-          <AnimatedSection delay={100}>
-            <div className="bento-grid">
+          <div className="bento-grid">
 
-              {/* Cell 1: AI Pitch EN */}
+            {/* Cell 1: AI Pitch EN */}
+            <AnimatedSection delay={0}>
               <div className="bento-cell-img bento-c1" style={{ background: '#1e1e1e' }}>
                 <img src="/images/bento/pitch-en.jpg" alt="AI-Generated English Pitch" style={{ objectFit: 'contain', objectPosition: 'top' }} />
                 <div className="bento-overlay">🇬🇧 AI-Generated English Pitch</div>
               </div>
+            </AnimatedSection>
 
-              {/* Cell 2: AI Pitch JP */}
+            {/* Cell 2: AI Pitch JP */}
+            <AnimatedSection delay={100}>
               <div className="bento-cell-img bento-c2" style={{ background: '#1e1e1e' }}>
                 <img src="/images/bento/pitch-jp.jpg" alt="Japanese Pitch View" style={{ objectFit: 'contain', objectPosition: 'top' }} />
                 <div className="bento-overlay">🇯🇵 日本語で確認・編集可能</div>
               </div>
+            </AnimatedSection>
 
-              {/* Cell 3: Text card — Curator Dashboard */}
+            {/* Cell 3: Text card — Curator Dashboard */}
+            <AnimatedSection delay={200}>
               <div className="bento-c3" style={{
                 background: '#232323', border: '1px solid #3a3a3a',
                 borderRadius: 16, padding: 32,
@@ -736,18 +817,24 @@ export default function HomePage() {
                   {t.bentoCards.dashboard.sub}
                 </p>
               </div>
+            </AnimatedSection>
 
-              {/* Cell 4: Dashboard screenshot */}
+            {/* Cell 4: Dashboard screenshot */}
+            <AnimatedSection delay={300}>
               <div className="bento-cell-img bento-c4">
                 <img src="/images/bento/dashboard.png" alt="Curator Dashboard" style={{ objectFit: 'cover', objectPosition: 'center top' }} />
               </div>
+            </AnimatedSection>
 
-              {/* Cell 5: Registration form screenshot */}
+            {/* Cell 5: Registration form screenshot */}
+            <AnimatedSection delay={400}>
               <div className="bento-cell-img bento-c5">
                 <img src="/images/bento/register.png" alt="Curator Registration Form" style={{ objectFit: 'cover', objectPosition: 'center 30%' }} />
               </div>
+            </AnimatedSection>
 
-              {/* Cell 6: Text card — 3-Step Signup */}
+            {/* Cell 6: Text card — 3-Step Signup */}
+            <AnimatedSection delay={500}>
               <div className="bento-c6" style={{
                 background: 'linear-gradient(135deg, #2a1f1a, #232323)',
                 border: '1px solid #3a3a3a', borderRadius: 16, padding: 32,
@@ -764,9 +851,9 @@ export default function HomePage() {
                   {t.bentoCards.signup.sub}
                 </p>
               </div>
+            </AnimatedSection>
 
-            </div>
-          </AnimatedSection>
+          </div>
         </div>
       </section>
 

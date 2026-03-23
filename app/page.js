@@ -588,6 +588,128 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Bento Grid Screenshot Showcase (DARK) ── */}
+      <section id="see-it-in-action" style={{ background: D.bg, padding: '80px 0' }}>
+        <style>{`
+          .bento-cell-img {
+            overflow: hidden; border-radius: 16px;
+            border: 1px solid #3a3a3a; position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+          }
+          .bento-cell-img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+          }
+          .bento-cell-img img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+          }
+          .bento-overlay {
+            position: absolute; bottom: 12px; left: 12px;
+            background: rgba(26,26,26,0.85);
+            backdrop-filter: blur(8px);
+            padding: 8px 16px; border-radius: 8px;
+            color: #f0ede6; font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 500; pointer-events: none;
+          }
+          .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 16px;
+          }
+          .bento-c1 { grid-column: 1 / 7; grid-row: 1; height: 280px; }
+          .bento-c2 { grid-column: 7 / 13; grid-row: 1; height: 280px; }
+          .bento-c3 { grid-column: 1 / 5; grid-row: 2; }
+          .bento-c4 { grid-column: 5 / 13; grid-row: 2; height: 260px; }
+          .bento-c5 { grid-column: 1 / 9; grid-row: 3; height: 260px; }
+          .bento-c6 { grid-column: 9 / 13; grid-row: 3; }
+          @media (max-width: 768px) {
+            .bento-grid { grid-template-columns: 1fr; }
+            .bento-c1, .bento-c2, .bento-c3, .bento-c4, .bento-c5, .bento-c6 {
+              grid-column: 1 / -1; grid-row: auto;
+            }
+            .bento-c1, .bento-c2, .bento-c4, .bento-c5 { height: 240px; }
+            .bento-c3, .bento-c6 { height: auto; }
+          }
+        `}</style>
+
+        <div style={wrap}>
+          <AnimatedSection>
+            <div style={{ textAlign: 'center', marginBottom: 48 }}>
+              <div style={sectionLabel()}>SEE IT IN ACTION</div>
+              <h2 style={{ fontFamily: D.fHead, fontSize: 36, fontWeight: 700, color: '#f0ede6', margin: '16px 0 12px' }}>
+                Every screen, built for you
+              </h2>
+              <p style={{ color: '#b8b0a3', fontSize: 16, fontFamily: D.fBody }}>実際の画面をご覧ください</p>
+            </div>
+          </AnimatedSection>
+
+          <AnimatedSection delay={100}>
+            <div className="bento-grid">
+
+              {/* Cell 1: AI Pitch EN */}
+              <div className="bento-cell-img bento-c1">
+                <img src="/images/bento/pitch-en.jpg" alt="AI-Generated English Pitch" style={{ objectPosition: 'top' }} />
+                <div className="bento-overlay">🇬🇧 AI-Generated English Pitch</div>
+              </div>
+
+              {/* Cell 2: AI Pitch JP */}
+              <div className="bento-cell-img bento-c2">
+                <img src="/images/bento/pitch-jp.jpg" alt="Japanese Pitch View" style={{ objectPosition: 'top' }} />
+                <div className="bento-overlay">🇯🇵 日本語で確認・編集可能</div>
+              </div>
+
+              {/* Cell 3: Text card — Curator Dashboard */}
+              <div className="bento-c3" style={{
+                background: '#232323', border: '1px solid #3a3a3a',
+                borderRadius: 16, padding: 32,
+                display: 'flex', flexDirection: 'column', justifyContent: 'center',
+              }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
+                <h3 style={{ fontFamily: D.fHead, fontSize: 20, fontWeight: 700, color: '#f0ede6', marginBottom: 12 }}>
+                  Curator Dashboard
+                </h3>
+                <p style={{ color: '#b8b0a3', fontSize: 14, lineHeight: 1.7, marginBottom: 8, fontFamily: D.fBody }}>
+                  Manage pitches, provide feedback, and track your activity — all in one place.
+                </p>
+                <p style={{ color: '#b8b0a3', fontSize: 13, opacity: 0.7, fontFamily: D.fBody }}>
+                  ピッチ管理・フィードバック・活動状況を一画面で
+                </p>
+              </div>
+
+              {/* Cell 4: Dashboard screenshot */}
+              <div className="bento-cell-img bento-c4">
+                <img src="/images/bento/dashboard.png" alt="Curator Dashboard" style={{ objectPosition: 'top' }} />
+              </div>
+
+              {/* Cell 5: Registration form screenshot */}
+              <div className="bento-cell-img bento-c5">
+                <img src="/images/bento/register.png" alt="Curator Registration Form" style={{ objectPosition: 'top' }} />
+              </div>
+
+              {/* Cell 6: Text card — 3-Step Signup */}
+              <div className="bento-c6" style={{
+                background: 'linear-gradient(135deg, #2a1f1a, #232323)',
+                border: '1px solid #3a3a3a', borderRadius: 16, padding: 32,
+                display: 'flex', flexDirection: 'column', justifyContent: 'center',
+              }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>✨</div>
+                <h3 style={{ fontFamily: D.fHead, fontSize: 20, fontWeight: 700, color: '#f0ede6', marginBottom: 12 }}>
+                  3-Step Signup
+                </h3>
+                <p style={{ color: '#b8b0a3', fontSize: 14, lineHeight: 1.7, marginBottom: 8, fontFamily: D.fBody }}>
+                  Set up your curator profile in minutes. Tell us your genres, moods, and preferences.
+                </p>
+                <p style={{ color: '#b8b0a3', fontSize: 13, opacity: 0.7, fontFamily: D.fBody }}>
+                  3ステップで簡単登録。ジャンル・ムード・好みを設定
+                </p>
+              </div>
+
+            </div>
+          </AnimatedSection>
+        </div>
+      </section>
+
       <Divider />
 
       {/* ── Trust / Social Proof (DARK) ── */}

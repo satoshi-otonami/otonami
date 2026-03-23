@@ -617,18 +617,19 @@ export default function HomePage() {
             grid-template-columns: repeat(12, 1fr);
             gap: 16px;
           }
-          .bento-c1 { grid-column: 1 / 7; grid-row: 1; height: 280px; }
-          .bento-c2 { grid-column: 7 / 13; grid-row: 1; height: 280px; }
+          .bento-c1 { grid-column: 1 / 7; grid-row: 1; aspect-ratio: 16/11; }
+          .bento-c2 { grid-column: 7 / 13; grid-row: 1; aspect-ratio: 16/11; }
           .bento-c3 { grid-column: 1 / 5; grid-row: 2; }
-          .bento-c4 { grid-column: 5 / 13; grid-row: 2; height: 260px; }
-          .bento-c5 { grid-column: 1 / 9; grid-row: 3; height: 260px; }
+          .bento-c4 { grid-column: 5 / 13; grid-row: 2; height: 340px; }
+          .bento-c5 { grid-column: 1 / 9; grid-row: 3; height: 340px; }
           .bento-c6 { grid-column: 9 / 13; grid-row: 3; }
           @media (max-width: 768px) {
             .bento-grid { grid-template-columns: 1fr; }
             .bento-c1, .bento-c2, .bento-c3, .bento-c4, .bento-c5, .bento-c6 {
               grid-column: 1 / -1; grid-row: auto;
             }
-            .bento-c1, .bento-c2, .bento-c4, .bento-c5 { height: 240px; }
+            .bento-c1, .bento-c2 { aspect-ratio: 16/11; height: auto; }
+            .bento-c4, .bento-c5 { height: 280px; }
             .bento-c3, .bento-c6 { height: auto; }
           }
         `}</style>
@@ -648,14 +649,14 @@ export default function HomePage() {
             <div className="bento-grid">
 
               {/* Cell 1: AI Pitch EN */}
-              <div className="bento-cell-img bento-c1">
-                <img src="/images/bento/pitch-en.jpg" alt="AI-Generated English Pitch" style={{ objectPosition: 'top' }} />
+              <div className="bento-cell-img bento-c1" style={{ background: '#1e1e1e' }}>
+                <img src="/images/bento/pitch-en.jpg" alt="AI-Generated English Pitch" style={{ objectFit: 'contain', objectPosition: 'top' }} />
                 <div className="bento-overlay">🇬🇧 AI-Generated English Pitch</div>
               </div>
 
               {/* Cell 2: AI Pitch JP */}
-              <div className="bento-cell-img bento-c2">
-                <img src="/images/bento/pitch-jp.jpg" alt="Japanese Pitch View" style={{ objectPosition: 'top' }} />
+              <div className="bento-cell-img bento-c2" style={{ background: '#1e1e1e' }}>
+                <img src="/images/bento/pitch-jp.jpg" alt="Japanese Pitch View" style={{ objectFit: 'contain', objectPosition: 'top' }} />
                 <div className="bento-overlay">🇯🇵 日本語で確認・編集可能</div>
               </div>
 
@@ -679,12 +680,12 @@ export default function HomePage() {
 
               {/* Cell 4: Dashboard screenshot */}
               <div className="bento-cell-img bento-c4">
-                <img src="/images/bento/dashboard.png" alt="Curator Dashboard" style={{ objectPosition: 'top' }} />
+                <img src="/images/bento/dashboard.png" alt="Curator Dashboard" style={{ objectFit: 'cover', objectPosition: 'center top' }} />
               </div>
 
               {/* Cell 5: Registration form screenshot */}
               <div className="bento-cell-img bento-c5">
-                <img src="/images/bento/register.png" alt="Curator Registration Form" style={{ objectPosition: 'top' }} />
+                <img src="/images/bento/register.png" alt="Curator Registration Form" style={{ objectFit: 'cover', objectPosition: 'center 30%' }} />
               </div>
 
               {/* Cell 6: Text card — 3-Step Signup */}

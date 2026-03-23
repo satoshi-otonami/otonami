@@ -1218,6 +1218,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const [showLinks, setShowLinks] = useState(true);
   const [pitchStyle, setPitchStyle] = useState("professional");
   const [quickUrl, setQuickUrl] = useState("");
+  const [validationError, setValidationError] = useState(false);
+  const [pitchSent, setPitchSent] = useState(false);
   const targets = curators.filter(c => selected.includes(c.id));
   const cost = targets.reduce((sum, c) => sum + (c.creditCost || 2), 0);
   // Build effective track for match scoring (same logic as CuratorBrowser)
@@ -1589,6 +1591,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     await saveCredits(credits - cost);
     saveToStorage(artist, links, followers);
     setStep(3);
+    setPitchSent(true);
     // Send real emails with the actual DB UUID so /curator/pitch/[id] links work
     for (const p of newPitches) {
       try {
@@ -1600,7 +1603,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     notify("✅ " + newPitches.length + "件送信完了！");
   };
 
-  const resetForm = () => { setSelected([]); setStep(0); setPitchText(""); setPitchJa(""); setEpk(""); };
+  const resetForm = () => { setSelected([]); setStep(0); setPitchText(""); setPitchJa(""); setEpk(""); setPitchSent(false); };
   const useSample = (s) => { setArtist({name:s.name,nameEn:s.nameEn,genre:s.genre,mood:s.mood,description:s.description,songTitle:s.songTitle,songLink:s.songLink,influences:s.influences,achievements:s.achievements,sns:""}); setLinks({spotify:s.songLink||"",apple:"",youtube:"",soundcloud:"",instagram:"",twitter:"",facebook:"",website:""}); setFollowers({spotify:0,youtube:0,soundcloud:0,instagram:0,twitter:0,facebook:0}); };
 
   if (targets.length === 0 && step === 0) {
@@ -1668,15 +1671,15 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       {/* ── Basic Info ── */}
       <div style={{fontSize:"0.82rem",fontWeight:700,color:"#f0ede6",marginBottom:"0.3rem"}}>🎤 基本情報</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-        <div><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>アーティスト名 *</label><input style={css.input} value={artist.name} onChange={e=>setF("name",e.target.value)} placeholder="ROUTE14band"/></div>
-        <div><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>English Name *</label><input style={css.input} value={artist.nameEn} onChange={e=>setF("nameEn",e.target.value)} placeholder="ROUTE14band"/></div>
+        <div><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>アーティスト名 <span style={{color:"#e85d3a"}}>*</span></label><input style={{...css.input,...(validationError && !artist.name ? {border:"1px solid #e85d3a"} : {})}} value={artist.name} onChange={e=>setF("name",e.target.value)} placeholder="ROUTE14band"/></div>
+        <div><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>English Name <span style={{color:"#e85d3a"}}>*</span></label><input style={{...css.input,...(validationError && !artist.nameEn ? {border:"1px solid #e85d3a"} : {})}} value={artist.nameEn} onChange={e=>setF("nameEn",e.target.value)} placeholder="ROUTE14band"/></div>
         <div><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>ムード</label><input style={css.input} value={artist.mood} onChange={e=>setF("mood",e.target.value)} placeholder="Energetic, Groovy"/></div>
         <div><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>代表曲</label><input style={css.input} value={artist.songTitle} onChange={e=>setF("songTitle",e.target.value)} placeholder="Crossroad"/></div>
         <div style={{gridColumn:"1/-1"}}><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>類似アーティスト</label><input style={css.input} value={artist.influences} onChange={e=>setF("influences",e.target.value)} placeholder="Snarky Puppy, WONK"/></div>
       </div>
       {/* ── Genre Tag Selector ── */}
       <div style={{marginTop:4}}>
-        <label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>ジャンル *（複数選択可）</label>
+        <label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>ジャンル <span style={{color:"#e85d3a"}}>*</span>（複数選択可）</label>
         <div style={{display:"flex",flexWrap:"wrap",gap:4,margin:"5px 0 6px"}}>
           {ARTIST_GENRES.map(g => {
             const sel = parseGenreTags(artist.genre).includes(g);
@@ -1689,7 +1692,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
 
       {/* ── Pitch Track URL ── */}
       <div style={{marginTop:8,background:"rgba(196,149,106,0.08)",borderRadius:10,padding:"0.7rem",border:"1px solid rgba(196,149,106,0.3)"}}>
-        <label style={{fontSize:"0.72rem",color:"#c4956a",fontWeight:700}}>🎵 ピッチ楽曲URL（キュレーターに聴いてもらう曲）</label>
+        <label style={{fontSize:"0.72rem",color:"#c4956a",fontWeight:700}}>🎵 ピッチ楽曲URL <span style={{color:"#e85d3a"}}>*</span>（キュレーターに聴いてもらう曲）</label>
         <div style={{fontSize:"0.6rem",color:"#c4956a",marginBottom:4}}>Spotify, YouTube, SoundCloud等のURLを入力 — ピッチメールに自動挿入されます</div>
         <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.08)"}} value={artist.songLink||""} onChange={e=>setF("songLink",e.target.value)} placeholder="https://open.spotify.com/track/... or https://youtube.com/watch?v=..."/>
         {/* Pitch song title — auto-populated from oEmbed, editable */}
@@ -1774,7 +1777,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         })()}
       </div>
       <div style={{marginTop:5}}><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>主な実績・数値</label><input style={css.input} value={artist.achievements} onChange={e=>setF("achievements",e.target.value)} placeholder="SXSW 10年連続出演, Spotify月間50万再生"/></div>
-      <div style={{marginTop:4}}><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>紹介文 *（日本語OK）</label><textarea style={{...css.input,minHeight:60,resize:"vertical"}} value={artist.description} onChange={e=>setF("description",e.target.value)} placeholder="音楽性、特徴、ユニークなポイント"/></div>
+      <div style={{marginTop:4}}><label style={{fontSize:"0.66rem",color:"#c0bdb5",fontWeight:600}}>紹介文 <span style={{color:"#e85d3a"}}>*</span>（日本語OK）</label><textarea style={{...css.input,minHeight:60,resize:"vertical"}} value={artist.description} onChange={e=>setF("description",e.target.value)} placeholder="音楽性、特徴、ユニークなポイント"/></div>
 
       {/* ── SNS & Links + Followers ── */}
       <div style={{marginTop:"0.8rem",background:"rgba(196,149,106,0.08)",borderRadius:12,padding:"0.8rem",border:"1px solid rgba(196,149,106,0.3)"}}>
@@ -1849,8 +1852,9 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       </div>
 
       {/* Actions */}
+      {validationError && <div style={{color:"#e85d3a",fontSize:12,textAlign:"center",marginTop:8,fontFamily:"'DM Sans',sans-serif",animation:"fadeIn 0.3s ease"}}>※ 必須項目を入力してください</div>}
       <div style={{display:"flex",gap:8,marginTop:"0.8rem",alignItems:"center"}}>
-        <button style={{...css.btnPrimary,flex:1}} disabled={!artist.name||!artist.genre||!artist.description} onClick={()=>{saveToStorage(artist,links,followers);setStep(1);}}>次へ →</button>
+        <button style={{...css.btnPrimary,flex:1}} onClick={()=>{if(!artist.name||!artist.genre||!artist.description){setValidationError(true);setTimeout(()=>setValidationError(false),3000);return;}saveToStorage(artist,links,followers);setStep(1);}}>次へ →</button>
         {artist.name && <button style={{...css.btnGhost,fontSize:"0.7rem"}} onClick={()=>{saveToStorage(artist,links,followers);notify("💾 保存完了");}}>💾</button>}
       </div>
       {artist.name && !artist.achievements && <div style={{marginTop:5,padding:"0.35rem 0.6rem",background:"#fffbeb",borderRadius:6,fontSize:"0.66rem",color:"#92400e",border:"1px solid #fde68a"}}>💡 「主な実績」に数値を入れると説得力UP</div>}
@@ -1919,13 +1923,30 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
 
     {/* ═══ STEP 3 ═══ */}
     {step === 3 && <div>
-      <div style={{background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:16,padding:"1.5rem",textAlign:"center",marginBottom:"1rem"}}>
-        <div style={{fontSize:"2rem",marginBottom:8}}>✅</div>
-        <h2 style={{fontSize:"1.15rem",fontWeight:800,margin:"0 0 0.3rem",color:"#c4956a"}}>Pitch Sent!</h2>
-        <p style={{fontSize:"0.82rem",color:"#c0bdb5"}}>{targets.length}人に個別最適化ピッチを送信</p>
-        <p style={{fontSize:"0.78rem",color:"#c4956a",marginTop:4}}>7日以内にFB保証 · 未回答はcr返還</p>
-      </div>
-      <div style={{display:"flex",gap:8,justifyContent:"center"}}><button style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem"}} onClick={sendAll}>✅ 送信 ({cost}cr)</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
+      {pitchSent ? (
+        <div>
+          <div style={{background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:16,padding:"2rem 1.5rem",textAlign:"center",marginBottom:"1.5rem"}}>
+            <div style={{fontSize:"2.5rem",marginBottom:12}}>✅</div>
+            <h2 style={{fontSize:18,fontWeight:700,margin:"0 0 8px",color:"#c4956a",fontFamily:"'DM Sans',sans-serif"}}>{targets.length}人のキュレーターにピッチを送信しました</h2>
+            <p style={{fontSize:14,color:"#b8b0a3",margin:"0 0 4px",fontFamily:"'DM Sans',sans-serif"}}>フィードバックは通常3〜7日以内に届きます</p>
+            <p style={{fontSize:13,color:"#c4956a",marginTop:8}}>7日以内にFB保証 · 未回答はクレジット返還</p>
+          </div>
+          <div style={{display:"flex",gap:8,justifyContent:"center"}}>
+            <button style={{...css.btnPrimary,background:"#c4956a",padding:"0.8rem 2rem",fontSize:"0.95rem"}} onClick={()=>{resetForm();setPage("tracking");}}>トラッキングを見る →</button>
+            <button style={{...css.btnGhost}} onClick={()=>{resetForm();setPage("curators");}}>もう1曲送る</button>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <div style={{background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:16,padding:"1.5rem",textAlign:"center",marginBottom:"1rem"}}>
+            <div style={{fontSize:"2rem",marginBottom:8}}>📨</div>
+            <h2 style={{fontSize:"1.15rem",fontWeight:800,margin:"0 0 0.3rem",color:"#f0ede6"}}>送信確認</h2>
+            <p style={{fontSize:"0.82rem",color:"#c0bdb5"}}>{targets.length}人に個別最適化ピッチを送信</p>
+            <p style={{fontSize:14,color:"#c4956a",marginTop:8,fontWeight:600}}>💰 {cost}cr (残: {credits}→{credits-cost})</p>
+          </div>
+          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem"}} onClick={sendAll}>✅ 送信 ({cost}cr)</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
+        </div>
+      )}
     </div>}
   </div>;
 }
@@ -2443,13 +2464,16 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
         return <div key={p.id} style={{background:"#2a2a2a",border:`1px solid ${p.status==="accepted"?"rgba(196,149,106,0.25)":"rgba(255,255,255,0.06)"}`,borderRadius:14,padding:"1rem",cursor:"pointer",transition:"all 0.12s"}} onClick={()=>setExpanded(isOpen?null:p.id)}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <span style={{fontSize:"1.1rem"}}>{s.icon}</span>
-            <div style={{flex:1}}>
+            <div style={{flex:1,minWidth:0}}>
               <div style={{fontWeight:700,fontSize:"0.88rem",color:"#f0ede6"}}>{p.curatorName}</div>
-              <div style={{fontSize:"0.72rem",color:"#7a7870"}}>{p.curatorPlatform} · {p.artistName} "{p.songTitle}"</div>
+              <div style={{fontSize:"0.72rem",color:"#7a7870"}}>{(p.curatorPlatform || curators.find(c=>c.id===p.curatorId)?.platform || '')}{p.songTitle ? ` · "${p.songTitle}"` : ''}</div>
             </div>
-            <div style={{display:"flex",gap:5,alignItems:"center"}}>
-              <div style={{padding:"0.2rem 0.6rem",borderRadius:8,background:s.bg,color:s.color,fontSize:"0.72rem",fontWeight:600}}>{s.label}</div>
-              <button onClick={e=>{e.stopPropagation();setDetailPitchId(p.id);}} style={{...css.btnSm,fontSize:"0.62rem",padding:"0.12rem 0.4rem",color:"#c4956a",border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.08)"}}>詳細</button>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:3,flexShrink:0}}>
+              <div style={{display:"flex",gap:5,alignItems:"center"}}>
+                <div style={{padding:"0.2rem 0.6rem",borderRadius:8,background:s.bg,color:s.color,fontSize:"0.72rem",fontWeight:600}}>{s.label}</div>
+                <button onClick={e=>{e.stopPropagation();setDetailPitchId(p.id);}} style={{...css.btnSm,fontSize:"0.62rem",padding:"0.12rem 0.4rem",color:"#c4956a",border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.08)"}}>詳細</button>
+              </div>
+              {p.sentAt && <div style={{fontSize:12,color:"#b8b0a3",fontFamily:"'DM Sans',sans-serif"}}>{(() => { const d = new Date(p.sentAt); const now = new Date(); const isToday = d.toDateString() === now.toDateString(); const time = d.toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"}); return isToday ? `今日 ${time}` : `${d.getMonth()+1}/${d.getDate()} ${time}`; })()}</div>}
             </div>
           </div>
           {/* Progress bar */}
@@ -2586,13 +2610,31 @@ function Analytics({pitches}) {
     </div>}
 
     {/* Top Curators */}
-    {curatorList.length > 0 && <div style={{background:"#2a2a2a",borderRadius:16,padding:"1.5rem",border:"1px solid rgba(255,255,255,0.06)"}}>
+    {curatorList.length > 0 && <div style={{background:"#2a2a2a",borderRadius:16,padding:"1.5rem",border:"1px solid rgba(255,255,255,0.06)",marginBottom:"1rem"}}>
       <div style={{fontSize:"0.85rem",fontWeight:700,marginBottom:"1rem",color:"#f0ede6"}}>🏆 キュレーター別成果</div>
       {curatorList.map(([name, v], i) => <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"0.5rem 0",borderBottom:i<curatorList.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
         <div style={{width:24,height:24,borderRadius:6,background:v.accepted>0?"rgba(196,149,106,0.15)":"#333333",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.65rem",fontWeight:700,color:v.accepted>0?"#c4956a":"#7a7870"}}>{i+1}</div>
         <div style={{flex:1}}><div style={{fontSize:"0.82rem",fontWeight:600,color:"#f0ede6"}}>{name}</div><div style={{fontSize:"0.68rem",color:"#7a7870"}}>{v.platform}</div></div>
         <div style={{fontSize:"0.75rem"}}>{v.accepted>0?<span style={{color:"#10b981",fontWeight:600}}>✓{v.accepted}</span>:""} <span style={{color:"#7a7870"}}>/{v.total}件</span></div>
       </div>)}
+    </div>}
+
+    {/* All Pitches List */}
+    {pitches.length > 0 && <div style={{background:"#2a2a2a",borderRadius:16,padding:"1.5rem",border:"1px solid rgba(255,255,255,0.06)"}}>
+      <div style={{fontSize:"0.85rem",fontWeight:700,marginBottom:"1rem",color:"#f0ede6"}}>📋 全ピッチ一覧 ({pitches.length}件)</div>
+      {[...pitches].sort((a,b) => new Date(b.sentAt||b.createdAt||0) - new Date(a.sentAt||a.createdAt||0)).map((p,i) => {
+        const statusLabels = {sent:"📨 Sent",opened:"👀 Opened",listened:"🎧 Listened",feedback:"💬 Feedback",accepted:"✅ Accepted",interested:"✅ Interested",declined:"❌ Declined",expired:"⏰ Expired"};
+        const statusColors = {sent:"#7a7870",opened:"#3b82f6",listened:"#8b5cf6",feedback:"#06b6d4",accepted:"#10b981",interested:"#10b981",declined:"#ef4444",expired:"#f59e0b"};
+        const sentDate = p.sentAt ? new Date(p.sentAt) : (p.createdAt ? new Date(p.createdAt) : null);
+        return <div key={p.id||i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:i<pitches.length-1?"1px solid rgba(255,255,255,0.04)":"none"}}>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:14,fontWeight:500,color:"#f0ede6"}}>{p.curatorName || "—"}</div>
+            <div style={{fontSize:12,color:"#7a7870"}}>{p.songTitle || p.subject || "—"}</div>
+          </div>
+          <div style={{fontSize:12,color:"#b8b0a3",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>{sentDate ? `${sentDate.getMonth()+1}/${sentDate.getDate()}` : "—"}</div>
+          <div style={{padding:"2px 8px",borderRadius:6,fontSize:11,fontWeight:600,color:statusColors[p.status]||"#7a7870",background:`${statusColors[p.status]||"#7a7870"}15`}}>{statusLabels[p.status]||p.status}</div>
+        </div>;
+      })}
     </div>}
   </div>;
 }

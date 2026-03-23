@@ -372,7 +372,8 @@ if (dbCurators && dbCurators.length > 0) {
 await initSession();
 const savedCredits = await loadCredits();
 setCredits(savedCredits ?? 20);
-const savedPitches = await loadPitches();
+const userEmail = user?.email || null;
+const savedPitches = await loadPitches(userEmail);
 if (savedPitches?.length) setPitches(savedPitches);
     })();
     const s = document.createElement("style");
@@ -388,7 +389,7 @@ const savePitches = async (p) => {
 };
 // DBから最新のピッチを再取得してstateを更新（キュレーター操作後の反映に使用）
 const refreshPitches = async () => {
-  const fresh = await loadPitches();
+  const fresh = await loadPitches(user?.email || null);
   if (fresh?.length) setPitches(fresh);
   return fresh;
 };
@@ -637,7 +638,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     try { sessionStorage.removeItem("otonami_artist_draft"); } catch {}
   };
 
-  const myPitches = pitches.filter(p => p.artistId === user.id || p.artistEmail === user.email);
+  const myPitches = pitches;
 
   const navItems = [
     {id:"dashboard",icon:"◉",label:"ホーム",badge:null},
@@ -1626,9 +1627,19 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         {["情報入力","キュレーター","確認&編集","送信"].map((l,i) => <div key={i} style={{flex:1,textAlign:"center",fontSize:11,fontFamily:"'DM Sans',sans-serif",color:i===step?"#f0ede6":"#b8b0a3",fontWeight:i===step?500:400}}>{l}</div>)}
       </div>
     </div>
-    <div style={{background:"#232323",borderRadius:12,padding:"14px 20px",marginBottom:"1rem",border:"1px solid #3a3a3a"}}>
-      <div style={{fontSize:13,color:"#b8b0a3",marginBottom:6,fontFamily:"'DM Sans',sans-serif"}}>📨 送信先</div>
-      <div style={{display:"flex",flexWrap:"wrap",gap:6}}>{targets.map(c => <span key={c.id} style={{display:"inline-flex",alignItems:"center",gap:4,background:"#2a2a2a",borderRadius:8,padding:"6px 12px",fontSize:15,color:"#f0ede6",fontWeight:500,border:"1px solid rgba(196,149,106,0.3)",fontFamily:"'DM Sans',sans-serif"}}>{c.avatar} {c.name}</span>)}</div>
+    <div style={{background:"#232323",border:"1px solid #3a3a3a",borderRadius:14,padding:"20px 24px",marginBottom:20}}>
+      <div style={{color:"#b8b0a3",fontSize:13,marginBottom:12,fontFamily:"'DM Sans',sans-serif"}}>📨 送信先 ({targets.length}人)</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
+        {targets.map(c => (
+          <div key={c.id} style={{background:"#2a2a2a",border:"1px solid #3a3a3a",borderRadius:10,padding:"10px 16px",display:"flex",alignItems:"center",gap:10}}>
+            <div style={{width:32,height:32,borderRadius:"50%",background:"rgba(196,149,106,0.25)",color:"#c4956a",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:600,flexShrink:0}}>{c.name?.charAt(0)}</div>
+            <div>
+              <div style={{color:"#f0ede6",fontSize:14,fontWeight:500,fontFamily:"'DM Sans',sans-serif"}}>{c.name}</div>
+              <div style={{color:"#b8b0a3",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>{c.type}{c.platform ? ` · ${c.platform}` : ''}</div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
 
     {/* ═══ STEP 0 ═══ */}

@@ -45,9 +45,25 @@ export async function GET(request) {
     const filter = searchParams.get('status');
 
     // curator_id OR curator_name でマッチ（シードキュレーターIDずれ対策）
+    // さらにメールアドレスからcuratorsテーブルのIDを逆引きしてフォールバック
     const cId = String(curator.id || '').trim();
     const cName = String(curator.name || '').trim();
-    const orFilter = `curator_id.eq.${cId},curator_name.eq.${cName}`;
+    const cEmail = String(curator.email || '').trim();
+
+    // メールアドレスからキュレーターの全ID候補を取得
+    const orParts = [`curator_id.eq.${cId}`, `curator_name.eq.${cName}`];
+    if (cEmail) {
+      const { data: curatorRow } = await db
+        .from('curators')
+        .select('id')
+        .eq('email', cEmail)
+        .single();
+      if (curatorRow && curatorRow.id !== cId) {
+        orParts.push(`curator_id.eq.${curatorRow.id}`);
+        console.log(`[dashboard] Email fallback: also matching curator_id=${curatorRow.id}`);
+      }
+    }
+    const orFilter = orParts.join(',');
     console.log(`[dashboard] orFilter="${orFilter}"`);
 
     let query = db
@@ -124,6 +140,29 @@ export async function PATCH(request) {
         .single();
       data  = res2.data;
       error = res2.error;
+    }
+
+    // メールアドレスからcuratorsテーブルのIDを逆引きして再試行
+    if (!data && curator.email) {
+      const { data: curatorRow } = await db
+        .from('curators')
+        .select('id, name')
+        .eq('email', curator.email)
+        .single();
+      if (curatorRow) {
+        const res3 = await db
+          .from('pitches')
+          .update(updates)
+          .eq('id', pitchId)
+          .eq('curator_id', curatorRow.id)
+          .select('*')
+          .single();
+        if (res3.data) {
+          data = res3.data;
+          error = res3.error;
+          console.log(`[dashboard] PATCH succeeded via email fallback: curator ${curatorRow.id} for pitch ${pitchId}`);
+        }
+      }
     }
 
     if (error) {

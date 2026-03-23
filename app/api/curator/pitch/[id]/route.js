@@ -134,22 +134,49 @@ export async function GET(request, { params }) {
   const db = getServiceSupabase();
   const pitchId = params.id;
 
-  // curator_id OR curator_name でマッチ
   const cId = String(curator.id || '').trim();
   const cName = String(curator.name || '').trim();
-  const orFilter = `curator_id.eq.${cId},curator_name.eq.${cName}`;
-  console.log(`[pitch-detail] GET pitchId=${pitchId} orFilter="${orFilter}"`);
+  const cEmail = String(curator.email || '').trim();
 
+  // まずピッチをIDのみで取得（curator_idの不一致問題を回避）
   const { data, error } = await db
     .from('pitches')
     .select('*')
     .eq('id', pitchId)
-    .or(orFilter)
     .single();
 
-  console.log(`[pitch-detail] result: found=${!!data} error=${error?.message ?? 'none'}`);
+  console.log(`[pitch-detail] GET pitchId=${pitchId} curator={id:${cId}, name:${cName}, email:${cEmail}} found=${!!data} error=${error?.message ?? 'none'}`);
 
   if (error || !data) {
+    return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
+  }
+
+  // 認可チェック: curator_id, curator_name, またはキュレーターのメールアドレスで照合
+  const pitchCuratorId = String(data.curator_id || '').trim();
+  const pitchCuratorName = String(data.curator_name || '').trim();
+
+  const idMatch = cId && pitchCuratorId && cId === pitchCuratorId;
+  const nameMatch = cName && pitchCuratorName && cName.toLowerCase() === pitchCuratorName.toLowerCase();
+
+  // curator_idが不一致の場合、キュレーターのメールアドレスでcuratorsテーブルを検索して
+  // そのIDがpitchのcurator_idと一致するか確認
+  let emailMatch = false;
+  if (!idMatch && !nameMatch && cEmail) {
+    const { data: curatorRow } = await db
+      .from('curators')
+      .select('id, name')
+      .eq('email', cEmail)
+      .single();
+    if (curatorRow) {
+      emailMatch = curatorRow.id === pitchCuratorId || (curatorRow.name && curatorRow.name.toLowerCase() === pitchCuratorName.toLowerCase());
+      if (emailMatch) {
+        console.log(`[pitch-detail] Email fallback matched: curator ${curatorRow.id} (${curatorRow.name}) for pitch curator_id=${pitchCuratorId}`);
+      }
+    }
+  }
+
+  if (!idMatch && !nameMatch && !emailMatch) {
+    console.log(`[pitch-detail] Authorization failed: curator {id:${cId}, name:${cName}, email:${cEmail}} vs pitch {curator_id:${pitchCuratorId}, curator_name:${pitchCuratorName}}`);
     return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
   }
 
@@ -203,12 +230,37 @@ export async function PATCH(request, { params }) {
     error = res2.error;
   }
 
+  // curator_name でもヒットしない場合、メールアドレスでcuratorsテーブルから
+  // 該当キュレーターのIDを逆引きして再試行
+  if (!data && curator.email) {
+    const { data: curatorRow } = await db
+      .from('curators')
+      .select('id, name')
+      .eq('email', curator.email)
+      .single();
+    if (curatorRow) {
+      // curatorRow.id（例: "c_yama"）がpitchのcurator_idと一致するはず
+      const res3 = await db
+        .from('pitches')
+        .update(updates)
+        .eq('id', pitchId)
+        .eq('curator_id', curatorRow.id)
+        .select('*')
+        .single();
+      if (res3.data) {
+        data = res3.data;
+        error = res3.error;
+        console.log(`[pitch-detail] PATCH succeeded via email fallback: curator ${curatorRow.id} for pitch ${pitchId}`);
+      }
+    }
+  }
+
   if (error) {
-    console.error(`[pitch-detail] PATCH update error for pitch ${pitchId}:`, error.message, 'curator_id:', curator.id, 'curator_name:', curator.name);
+    console.error(`[pitch-detail] PATCH update error for pitch ${pitchId}:`, error.message, 'curator_id:', curator.id, 'curator_name:', curator.name, 'curator_email:', curator.email);
     return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
   }
   if (!data) {
-    console.error(`[pitch-detail] PATCH no data returned for pitch ${pitchId} — curator_id: ${curator.id} curator_name: ${curator.name}`);
+    console.error(`[pitch-detail] PATCH no data returned for pitch ${pitchId} — curator_id: ${curator.id} curator_name: ${curator.name} curator_email: ${curator.email}`);
     return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
   }
 

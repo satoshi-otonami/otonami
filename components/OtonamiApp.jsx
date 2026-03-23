@@ -388,9 +388,20 @@ const savePitches = async (p) => {
   await savePitchesToDB(p);
 };
 // DBから最新のピッチを再取得してstateを更新（キュレーター操作後の反映に使用）
+// DB結果とローカルstateをマージ — DB側にないピッチ（送信直後など）も保持する
 const refreshPitches = async () => {
   const fresh = await loadPitches(user?.email || null);
-  if (fresh?.length) setPitches(fresh);
+  if (!fresh) return pitches;
+  setPitches(prev => {
+    if (!fresh.length) return prev; // DB空なら既存を保持
+    const freshMap = new Map(fresh.map(p => [p.id, p]));
+    // DB側の最新ステータスで更新しつつ、ローカルのみのピッチも残す
+    const merged = prev.map(p => freshMap.has(p.id) ? { ...p, ...freshMap.get(p.id) } : p);
+    // DBにあってローカルにないピッチも追加
+    const localIds = new Set(prev.map(p => p.id));
+    const newFromDB = fresh.filter(p => !localIds.has(p.id));
+    return [...merged, ...newFromDB];
+  });
   return fresh;
 };
 const saveCurators = async (c) => {
@@ -663,7 +674,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     <main style={css.main}>
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify}/>}
       {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist}/>}
-      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft}/>}
+      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches} refreshPitches={refreshPitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches}/>}
       {page==="shop" && <CreditShop user={user} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage}/>}
@@ -1213,7 +1224,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 }
 
 // ─── Pitch Creator (Template Engine + Social Links + Followers) ───
-function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft}) {
+function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft, refreshPitches}) {
   const [pitchText, setPitchText] = useState("");
   const [pitchJa, setPitchJa] = useState("");
   const [pitchTab, setPitchTab] = useState("ja"); // "en" | "ja"
@@ -1609,6 +1620,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       } catch (e) { console.log("Email send skipped:", e.message); }
     }
     notify("✅ " + newPitches.length + "件送信完了！");
+    // 送信後にDBから最新データを取得してローカルとマージ
+    if (refreshPitches) setTimeout(() => refreshPitches(), 1000);
   };
 
   const resetForm = () => { setSelected([]); setStep(0); setPitchText(""); setPitchJa(""); setEpk(""); setPitchSent(false); };

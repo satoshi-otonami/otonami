@@ -409,7 +409,8 @@ const saveCredits = async (c) => {
     const now = Date.now();
     let refundTotal = 0;
     const updated = pitches.map(p => {
-      if (p.status === "sent" && p.deadline && new Date(p.deadline).getTime() < now && !p.refunded) {
+      const dl = p.deadline ? new Date(p.deadline) : (p.sentAt ? new Date(new Date(p.sentAt).getTime() + 7*24*60*60*1000) : null);
+      if (p.status === "sent" && dl && dl.getFullYear() > 2000 && dl.getTime() < now && !p.refunded) {
         refundTotal += (p.creditCost || 2);
         return {...p, status: "expired", refunded: true};
       }
@@ -2531,7 +2532,7 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
               <a href={p.placementUrl} target="_blank" rel="noopener noreferrer" style={{color:"#c4956a",wordBreak:"break-all"}}>{p.placementUrl}</a>
             </div>}
 
-            <div style={{fontSize:"0.72rem",color:"#7a7870",marginTop:8}}>⏰ 回答期限: {new Date(p.deadline).toLocaleDateString("ja-JP")}</div>
+            <div style={{fontSize:"0.72rem",color:"#7a7870",marginTop:8}}>⏰ 回答期限: {(() => { const d = p.deadline ? new Date(p.deadline) : (p.sentAt ? new Date(new Date(p.sentAt).getTime() + 7*24*60*60*1000) : null); return d && d.getFullYear() > 2000 ? d.toLocaleDateString("ja-JP") : "—"; })()}</div>
           </div>}
         </div>;
       })}

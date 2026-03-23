@@ -449,7 +449,7 @@ export default function HomePage() {
             <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', color: D.textSec, fontSize: 28, cursor: 'pointer', lineHeight: 1, padding: 4 }}>✕</button>
           </div>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 24 }}>
-            {[{ href: '#for-artists', label: t.nav.how }, { href: '#for-curators', label: t.nav.curators }, { href: '/studio', label: t.nav.artists }].map(item => (
+            {[{ href: '#for-artists', label: t.nav.how }, { href: '#for-curators', label: t.nav.curators }, { href: '#for-artists', label: t.nav.artists }].map(item => (
               <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
                 style={{ color: D.textSec, textDecoration: 'none', fontSize: 20, fontWeight: 400, padding: '14px 0', borderBottom: `1px solid ${D.border}`, transition: 'color 0.2s' }}
                 onMouseEnter={e => e.target.style.color = D.text}
@@ -476,7 +476,7 @@ export default function HomePage() {
           <nav className="nav-desktop-links" style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
             <a href="#for-artists"   className="nav-link">{t.nav.how}</a>
             <a href="#for-curators" className="nav-link">{t.nav.curators}</a>
-            <a href="/studio"       className="nav-link">{t.nav.artists}</a>
+            <a href="#for-artists"  className="nav-link">{t.nav.artists}</a>
           </nav>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button className="lang-toggle" onClick={() => switchLang(lang === 'ja' ? 'en' : 'ja')} style={{
@@ -516,7 +516,7 @@ export default function HomePage() {
             {t.hero.sub}
           </p>
           <div className="cta-group hero-cta-anim" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginBottom: 80, flexWrap: 'wrap' }}>
-            <a href="/studio"  className="cta-coral" style={{ fontSize: 16, padding: '15px 32px' }}>{t.hero.ctaPrimary}</a>
+            <a href="/studio?role=artist"  className="cta-coral" style={{ fontSize: 16, padding: '15px 32px' }}>{t.hero.ctaPrimary}</a>
             <a href="/curator" className="cta-ghost" style={{ fontSize: 16, padding: '15px 32px' }}>{t.hero.ctaGhost}</a>
           </div>
           {/* Stats — count-up animation */}
@@ -558,7 +558,7 @@ export default function HomePage() {
 
           <AnimatedSection delay={300}>
             <div style={{ textAlign: 'center', marginTop: 48 }}>
-              <a href="/studio" className="cta-coral" style={{ fontSize: 16, padding: '15px 36px' }}>{t.how.cta}</a>
+              <a href="/studio?role=artist" className="cta-coral" style={{ fontSize: 16, padding: '15px 36px' }}>{t.how.cta}</a>
             </div>
           </AnimatedSection>
         </div>
@@ -895,7 +895,7 @@ export default function HomePage() {
                 <div style={sectionLabel()}>{t.artists.label}</div>
                 <h2 style={{ fontFamily: D.fHead, fontSize: 36, fontWeight: 500, color: D.text, lineHeight: 1.25, marginBottom: 16 }}>{t.artists.title}</h2>
                 <p style={{ fontSize: 15, color: D.textSec, lineHeight: 1.7, marginBottom: 36 }}>{t.artists.sub}</p>
-                <a href="/studio" className="cta-coral">{t.artists.cta}</a>
+                <a href="/studio?role=artist" className="cta-coral">{t.artists.cta}</a>
               </div>
             </AnimatedSection>
           </div>
@@ -912,7 +912,7 @@ export default function HomePage() {
             <h2 style={{ fontFamily: D.fHead, fontSize: 40, fontWeight: 500, color: '#fff', marginBottom: 12 }}>{t.cta.title}</h2>
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', marginBottom: 36 }}>{t.cta.sub}</p>
             <div className="cta-group" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              <a href="/studio" style={{
+              <a href="/studio?role=artist" style={{
                 background: '#fff', color: '#2c1810', border: 'none',
                 padding: '16px 36px', borderRadius: 8, fontSize: 16, fontWeight: 700,
                 cursor: 'pointer', textDecoration: 'none', display: 'inline-block',

@@ -298,7 +298,11 @@ const timeAgo = (dateStr) => {
 // ─── App ───
 export default function App() {
   const [mode, setMode] = useState(() => {
-    try { return localStorage.getItem('otonami-mode') || null; } catch { return null; }
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('role') === 'artist') { localStorage.setItem('otonami-mode', 'artist'); return 'artist'; }
+      return localStorage.getItem('otonami-mode') || null;
+    } catch { return null; }
   });
   const [user, setUser] = useState(() => {
     try { const s = localStorage.getItem('otonami-user'); return s ? JSON.parse(s) : null; } catch { return null; }
@@ -309,12 +313,15 @@ export default function App() {
   const [notif, setNotif] = useState(null);
   const [page, setPage] = useState(() => {
     try {
+      const params = new URLSearchParams(window.location.search);
       const hasUser = !!localStorage.getItem('otonami-user');
       if (hasUser) {
-        const tab = new URLSearchParams(window.location.search).get('tab');
+        const tab = params.get('tab');
         if (tab && ["dashboard","curators","pitch","tracking","analytics","shop"].includes(tab)) return tab;
         return "dashboard";
       }
+      // ?role=artist → skip landing, go to auth
+      if (params.get('role') === 'artist') return "auth";
     } catch {}
     return "landing";
   });
@@ -678,70 +685,88 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
   const statusIcon = {sent:"📤",opened:"👁",listened:"🎧",feedback:"💬",accepted:"🎉",declined:"📋",expired:"⏰"};
   const statusLabel = {sent:"送信済",opened:"開封済",listened:"試聴中",feedback:"FB受信",accepted:"採用！",declined:"不採用",expired:"期限切れ"};
 
-  return <div>
-    <div style={{marginBottom:"2rem"}}><h1 style={{fontSize:"1.5rem",fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6"}}>おかえりなさい、{user.name}</h1><p style={{color:"#c0bdb5",margin:"0.3rem 0 0",fontSize:"0.88rem"}}>日本の音楽を世界へ届けましょう</p></div>
+  return <div style={{maxWidth:1100,margin:"0 auto"}}>
+    <style>{`
+      .dash-stat{transition:all 0.2s ease;cursor:default}
+      .dash-stat:hover{border-color:#4a4a4a !important;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+      .dash-step{transition:all 0.2s ease}
+      .dash-step:hover{border-color:#c4956a !important;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+      .dash-activity:hover{background:rgba(255,255,255,0.02)}
+      @media(max-width:768px){.dash-steps-grid{grid-template-columns:repeat(2,1fr) !important}.dash-stats-grid{grid-template-columns:repeat(2,1fr) !important}}
+      @media(max-width:480px){.dash-steps-grid{grid-template-columns:1fr !important}}
+    `}</style>
+
+    {/* Header */}
+    <div style={{marginBottom:24}}>
+      <h1 style={{fontSize:28,fontWeight:600,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6"}}>おかえりなさい、{user.name}</h1>
+      <p style={{color:"#b8b0a3",margin:"6px 0 0",fontSize:15,fontFamily:"'DM Sans',sans-serif"}}>日本の音楽を世界へ届けましょう</p>
+    </div>
 
     {/* Welcome Guide — only when 0 pitches */}
     {pitches.length === 0 && (
-      <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.2)",borderRadius:16,padding:"28px",marginBottom:"1.5rem"}}>
-        <div style={{fontSize:20,marginBottom:4}}>👋</div>
-        <h3 style={{fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6",fontSize:20,fontWeight:700,margin:"0 0 8px"}}>はじめましょう！</h3>
-        <p style={{color:"#b8b0a3",fontSize:14,margin:"0 0 16px",lineHeight:1.6}}>まずは「キュレーター検索」から、あなたの音楽に合う海外メディアを探してみましょう。</p>
-        <button onClick={()=>setPage("curators")} style={{background:"linear-gradient(135deg,#c4956a,#b8845e)",color:"#1a1a1a",padding:"10px 24px",borderRadius:8,fontWeight:600,border:"none",cursor:"pointer",fontSize:14,fontFamily:"'DM Sans',sans-serif",transition:"opacity 0.15s"}}
-          onMouseEnter={e=>e.currentTarget.style.opacity="0.88"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}
+      <div style={{background:"linear-gradient(135deg,rgba(196,149,106,0.08),rgba(196,149,106,0.03))",border:"1px solid rgba(196,149,106,0.2)",borderRadius:16,padding:"28px 32px",marginBottom:24}}>
+        <div style={{fontSize:28,marginBottom:4}}>👋</div>
+        <h3 style={{fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6",fontSize:22,fontWeight:600,margin:"0 0 8px"}}>はじめましょう！</h3>
+        <p style={{color:"#b8b0a3",fontSize:14,margin:"0 0 16px",lineHeight:1.6,fontFamily:"'DM Sans',sans-serif"}}>まずは「キュレーター検索」から、あなたの音楽に合う海外メディアを探してみましょう。</p>
+        <button onClick={()=>setPage("curators")} style={{background:"linear-gradient(135deg,#c4956a,#b8845e)",color:"#1a1a1a",padding:"10px 28px",borderRadius:10,fontWeight:600,border:"none",cursor:"pointer",fontSize:14,fontFamily:"'DM Sans',sans-serif",transition:"all 0.2s"}}
+          onMouseEnter={e=>{e.currentTarget.style.background="linear-gradient(135deg,#d4a57a,#c4956a)";e.currentTarget.style.boxShadow="0 4px 12px rgba(196,149,106,0.3)";}}
+          onMouseLeave={e=>{e.currentTarget.style.background="linear-gradient(135deg,#c4956a,#b8845e)";e.currentTarget.style.boxShadow="none";}}
         >キュレーターを探す →</button>
       </div>
     )}
 
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:"0.8rem",marginBottom:"1.5rem"}}>
-      {[{v:credits,l:"クレジット残",c:"#f59e0b",sub:""},{v:pitches.length,l:"送信済み",c:"#3b82f6",sub:"キュレーターに送った数"},{v:listened,l:"試聴済み",c:"#8b5cf6",sub:"曲を聴いてもらえた数"},{v:fb,l:"FB受信",c:"#06b6d4",sub:"フィードバックをもらった数"},{v:acc,l:"採用",c:"#10b981",sub:"プレイリストやブログに採用された数"}].map((s,i) =>
-        <div key={i} style={{background:"#2a2a2a",borderRadius:16,padding:"1.2rem",border:"1px solid rgba(255,255,255,0.06)",textAlign:"center"}}>
-          <div style={{fontSize:"1.6rem",fontWeight:800,color:s.c}}>{s.v}</div>
-          <div style={{fontSize:"0.72rem",color:"#7a7870"}}>{s.l}</div>
-          {s.sub && <div style={{fontSize:"0.65rem",color:"#7a7870",marginTop:4,opacity:0.7}}>{s.sub}</div>}
+    {/* Stats Cards */}
+    <div className="dash-stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:24}}>
+      {[{v:credits,l:"クレジット残",c:"#c4956a",sub:""},{v:pitches.length,l:"送信済み",c:"#f0ede6",sub:"キュレーターに送った数"},{v:listened,l:"試聴済み",c:"#60a5fa",sub:"曲を聴いてもらえた数"},{v:fb,l:"FB受信",c:"#c084fc",sub:"フィードバックをもらった数"},{v:acc,l:"採用",c:"#34d399",sub:"プレイリストやブログに採用された数"}].map((s,i) =>
+        <div key={i} className="dash-stat" style={{background:"#232323",borderRadius:14,padding:20,border:"1px solid #3a3a3a",textAlign:"center"}}>
+          <div style={{fontSize:32,fontWeight:700,color:s.c,fontFamily:"'Playfair Display',Georgia,serif",lineHeight:1}}>{s.v}</div>
+          <div style={{fontSize:12,color:"#b8b0a3",marginTop:8,fontFamily:"'DM Sans',sans-serif"}}>{s.l}</div>
+          {s.sub && <div style={{fontSize:11,color:"rgba(184,176,163,0.6)",marginTop:4,fontFamily:"'DM Sans',sans-serif"}}>{s.sub}</div>}
         </div>
       )}
     </div>
 
-    {/* Credit Balance → Shop Link */}
-    <div onClick={()=>setPage("shop")} style={{background:"linear-gradient(135deg,#fffbeb,#fef3c7)",border:"1px solid #fde68a",borderRadius:14,padding:"1rem 1.2rem",marginBottom:"1.5rem",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer"}}>
-      <div><div style={{fontWeight:700,fontSize:"0.88rem",color:"#92400e"}}>💰 クレジット残高: {credits}</div><div style={{fontSize:"0.72rem",color:"#a16207"}}>1クレジット = ¥160 · キュレーターにより1〜4cr</div></div>
-      <div style={{...css.btnPrimary,background:"linear-gradient(135deg,#f59e0b,#ea580c)",fontSize:"0.78rem",padding:"0.5rem 1rem"}}>+ 購入する →</div>
+    {/* Credit Balance */}
+    <div onClick={()=>setPage("shop")} style={{background:"linear-gradient(135deg,rgba(196,149,106,0.12),rgba(196,149,106,0.05))",border:"1px solid rgba(196,149,106,0.25)",borderRadius:14,padding:"16px 24px",marginBottom:24,display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"border-color 0.2s"}}
+      onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(196,149,106,0.45)"} onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(196,149,106,0.25)"}>
+      <div>
+        <div style={{fontWeight:500,fontSize:15,color:"#f0ede6",fontFamily:"'DM Sans',sans-serif"}}>💰 クレジット残高: {credits}</div>
+        <div style={{fontSize:12,color:"#b8b0a3",marginTop:2,fontFamily:"'DM Sans',sans-serif"}}>1クレジット = ¥160 · キュレーターにより1〜4cr</div>
+      </div>
+      <div style={{background:"#c4956a",color:"#1a1a1a",fontSize:13,fontWeight:600,padding:"8px 20px",borderRadius:8,fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>+ 購入する →</div>
     </div>
 
     {/* Flow indicator */}
-    <div style={{textAlign:"center",marginBottom:16,fontSize:14,color:"#b8b0a3"}}>
+    <div style={{textAlign:"center",margin:"28px 0 16px",fontSize:13,color:"#b8b0a3",letterSpacing:"0.5px",fontFamily:"'DM Sans',sans-serif"}}>
       <span style={{fontWeight:600,color:"#f0ede6"}}>使い方はかんたん</span>
-      <span style={{margin:"0 6px"}}>──</span>
+      <span style={{margin:"0 8px",opacity:0.4}}>──</span>
       <span>4つのステップ</span>
     </div>
 
-    {/* Quick Actions with step numbers */}
-    <style>{`.step-arrow{display:none}@media(min-width:769px){.step-arrow{display:flex;align-items:center;color:#b8b0a3;opacity:0.5;font-size:20px}}`}</style>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.8rem",marginBottom:"1.5rem"}}>
+    {/* Step Cards */}
+    <div className="dash-steps-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:24}}>
       {[{icon:"◎",title:"キュレーター検索",desc:"あなたの曲に合う海外メディアを探す",p:"curators",step:1},{icon:"△",title:"AIピッチ生成",desc:"AIが英語の紹介文を自動作成",p:"pitch",step:2},{icon:"◐",title:"トラッキング",desc:"開封・試聴・フィードバックを確認",p:"tracking",step:3},{icon:"◫",title:"分析",desc:"あなたの成果を可視化",p:"analytics",step:4}].map((a,i) =>
-        <div key={i} onClick={()=>setPage(a.p)} style={{background:"#2a2a2a",borderRadius:16,padding:"1.2rem",border:"1px solid rgba(255,255,255,0.06)",cursor:"pointer",transition:"all 0.15s"}}
-          onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(196,149,106,0.4)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.06)";}}>
-          <div style={{fontSize:"0.65rem",fontWeight:600,color:"#c4956a",letterSpacing:"1px",marginBottom:6}}>STEP {a.step}</div>
-          <div style={{fontSize:"1.2rem",marginBottom:4}}>{a.icon}</div>
-          <div style={{fontWeight:700,fontSize:"0.88rem",color:"#f0ede6"}}>{a.title}</div>
-          <div style={{fontSize:"0.75rem",color:"#7a7870",marginTop:4,lineHeight:1.4}}>{a.desc}</div>
+        <div key={i} className="dash-step" onClick={()=>setPage(a.p)} style={{background:"#232323",borderRadius:14,padding:"24px 20px",border:"1px solid #3a3a3a",cursor:"pointer"}}>
+          <div style={{fontSize:10,fontWeight:600,color:"#c4956a",letterSpacing:"1.5px",marginBottom:12,fontFamily:"'DM Sans',sans-serif"}}>STEP {a.step}</div>
+          <div style={{fontSize:24,marginBottom:8}}>{a.icon}</div>
+          <div style={{fontWeight:500,fontSize:15,color:"#f0ede6",marginBottom:4,fontFamily:"'DM Sans',sans-serif"}}>{a.title}</div>
+          <div style={{fontSize:13,color:"#b8b0a3",lineHeight:1.5,fontFamily:"'DM Sans',sans-serif"}}>{a.desc}</div>
         </div>
       )}
     </div>
 
     {/* Recent Activity Feed */}
-    {recent.length > 0 && <div>
-      <div style={{fontSize:"0.88rem",fontWeight:700,marginBottom:"0.8rem",color:"#f0ede6"}}>📋 最近のアクティビティ</div>
-      <div style={{background:"#2a2a2a",borderRadius:16,border:"1px solid rgba(255,255,255,0.06)",overflow:"hidden"}}>
+    {recent.length > 0 && <div style={{borderTop:"1px solid #3a3a3a",paddingTop:20}}>
+      <div style={{fontSize:13,fontWeight:600,marginBottom:12,color:"#b8b0a3",letterSpacing:"0.5px",textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif"}}>📋 最近のアクティビティ</div>
+      <div>
         {recent.map((p,i) => (
-          <div key={p.id} style={{padding:"0.8rem 1rem",borderBottom:i<recent.length-1?"1px solid rgba(255,255,255,0.04)":"none",display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:"1rem"}}>{statusIcon[p.status]||"📤"}</span>
+          <div key={p.id} className="dash-activity" style={{padding:"12px 0",borderBottom:i<recent.length-1?"1px solid rgba(58,58,58,0.5)":"none",display:"flex",alignItems:"center",gap:10,transition:"background 0.15s",borderRadius:4}}>
+            <span style={{fontSize:16}}>{statusIcon[p.status]||"📤"}</span>
             <div style={{flex:1}}>
-              <div style={{fontSize:"0.82rem",fontWeight:600,color:"#f0ede6"}}>{p.curatorName} <span style={{fontWeight:400,color:"#c0bdb5"}}>— {statusLabel[p.status]||p.status}</span></div>
-              <div style={{fontSize:"0.68rem",color:"#7a7870"}}>{p.artistName} "{p.songTitle}"</div>
+              <div style={{fontSize:14,fontWeight:500,color:"#f0ede6",fontFamily:"'DM Sans',sans-serif"}}>{p.curatorName} <span style={{fontWeight:400,color:"#b8b0a3"}}>— {statusLabel[p.status]||p.status}</span></div>
+              <div style={{fontSize:13,color:"#b8b0a3",fontFamily:"'DM Sans',sans-serif"}}>{p.artistName} "{p.songTitle}"</div>
             </div>
-            <div style={{fontSize:"0.65rem",color:"#7a7870"}}>{timeAgo(p.feedbackAt||p.listenedAt||p.openedAt||p.sentAt)}</div>
+            <div style={{fontSize:12,color:"#b8b0a3",opacity:0.6,fontFamily:"'DM Sans',sans-serif"}}>{timeAgo(p.feedbackAt||p.listenedAt||p.openedAt||p.sentAt)}</div>
           </div>
         ))}
       </div>

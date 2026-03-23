@@ -48,21 +48,23 @@ const COPY = {
       cta: 'Try it free →',
     },
     mockup: { label: 'SEE IT IN ACTION' },
+    bento: {
+      heading: 'Every screen, built for you',
+      sub: 'See our platform in action',
+    },
     bentoCards: {
-      dashboard: {
-        title: 'Curator Dashboard',
-        desc: 'Listen, review, and provide feedback — all in one place.',
-        sub: 'Manage pitches and track your activity',
+      pitch: {
+        title: 'AI-Powered English Pitch',
+        desc: 'AI analyzes your track and crafts a personalized English pitch for each curator.',
       },
       signup: {
-        title: '3-Step Signup',
-        desc: 'Set your genres, moods, and preferences. Start receiving music in minutes.',
-        sub: 'Quick setup, instant access',
+        title: 'Easy 3-Step Signup',
+        desc: 'Set your favorite genres, moods, and preferences. Start receiving pitches in minutes.',
       },
     },
     trust: {
       label: 'TRUSTED BY',
-      orgs: ['Japan Independent Music Scene', 'SXSW — 11 Consecutive Years', 'Blue Note Tokyo'],
+      orgs: ['Japan Independent Music Scene', 'SXSW — 11 Consecutive Years'],
       quote: '"Built by musicians, for musicians — bridging the gap between Japanese indie artists and the global music community."',
       quoteBy: '— Music Industry Professional',
     },
@@ -147,21 +149,23 @@ const COPY = {
       cta: '無料で試してみる →',
     },
     mockup: { label: 'SEE IT IN ACTION' },
+    bento: {
+      heading: 'すべての画面があなたのために',
+      sub: '実際の画面をご覧ください',
+    },
     bentoCards: {
-      dashboard: {
-        title: 'キュレーター管理画面',
-        desc: '受信した楽曲の試聴・レビュー・フィードバックを一画面で完結。',
-        sub: 'ピッチ管理・活動状況を一目で確認',
+      pitch: {
+        title: 'AI自動英語ピッチ',
+        desc: 'AIが楽曲を分析し、キュレーターに合わせた英語の紹介文を自動作成します。',
       },
       signup: {
         title: 'かんたん3ステップ登録',
         desc: '好きなジャンル・ムード・条件を設定するだけ。すぐに使い始められます。',
-        sub: '簡単セットアップ、すぐ開始',
       },
     },
     trust: {
       label: 'TRUSTED BY',
-      orgs: ['日本のインディーミュージックシーン', 'SXSW — 11年連続', 'ブルーノート東京'],
+      orgs: ['日本のインディーミュージックシーン', 'SXSW — 11年連続'],
       quote: '"ミュージシャンが作り、ミュージシャンのために — 日本のインディーアーティストと世界の音楽コミュニティをつなぐプラットフォーム。"',
       quoteBy: '— 音楽業界プロフェッショナル',
     },
@@ -725,134 +729,110 @@ export default function HomePage() {
       </section>
 
       {/* ── Bento Grid Screenshot Showcase (DARK) ── */}
-      <section id="see-it-in-action" style={{ background: D.bg, padding: '80px 0' }}>
+      <section id="see-it-in-action" style={{ background: D.bg, padding: '80px 24px' }}>
         <style>{`
-          .bento-cell-img {
-            overflow: hidden; border-radius: 16px;
-            border: 1px solid #3a3a3a; position: relative;
+          .bento-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 16px;
+            max-width: 1100px;
+            margin: 0 auto;
+          }
+          .bento-cell {
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
           }
-          .bento-cell-img:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+          .bento-cell:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
           }
-          .bento-cell-img img {
+          .bento-cell img {
             width: 100%; height: 100%;
-            object-fit: cover; display: block;
+            object-fit: cover; object-position: top left;
+            display: block;
           }
           .bento-overlay {
             position: absolute; bottom: 12px; left: 12px;
-            background: rgba(26,26,26,0.85);
+            background: rgba(26,26,26,0.8);
             backdrop-filter: blur(8px);
-            padding: 8px 16px; border-radius: 8px;
+            padding: 6px 14px; border-radius: 8px;
             color: #f0ede6; font-family: 'DM Sans', sans-serif;
-            font-size: 13px; font-weight: 500; pointer-events: none;
+            font-size: 12px; font-weight: 500; pointer-events: none;
           }
-          .bento-grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            gap: 16px;
+          .bento-img-cell { min-height: 280px; border: 1px solid #3a3a3a; }
+          .bento-text-cell {
+            background: #232323; border: 1px solid #3a3a3a;
+            padding: 32px 28px; min-height: 220px;
+            display: flex; flex-direction: column; justify-content: center;
           }
-          .bento-c1 { grid-column: 1 / 7; grid-row: 1; aspect-ratio: 16/11; }
-          .bento-c2 { grid-column: 7 / 13; grid-row: 1; aspect-ratio: 16/11; }
-          .bento-c3 { grid-column: 1 / 5; grid-row: 2; }
-          .bento-c4 { grid-column: 5 / 13; grid-row: 2; height: 340px; }
-          .bento-c5 { grid-column: 1 / 9; grid-row: 3; height: 340px; }
-          .bento-c6 { grid-column: 9 / 13; grid-row: 3; }
           @media (max-width: 768px) {
             .bento-grid { grid-template-columns: 1fr; }
-            .bento-c1, .bento-c2, .bento-c3, .bento-c4, .bento-c5, .bento-c6 {
-              grid-column: 1 / -1; grid-row: auto;
-            }
-            .bento-c1, .bento-c2 { aspect-ratio: 16/11; height: auto; }
-            .bento-c4, .bento-c5 { height: 280px; }
-            .bento-c3, .bento-c6 { height: auto; }
           }
         `}</style>
 
-        <div style={wrap}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <AnimatedSection>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <div style={sectionLabel()}>SEE IT IN ACTION</div>
-              <h2 style={{ fontFamily: D.fHead, fontSize: 36, fontWeight: 700, color: '#f0ede6', margin: '16px 0 12px' }}>
-                Every screen, built for you
+              <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '2px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 16, fontFamily: D.fBody }}>SEE IT IN ACTION</div>
+              <h2 style={{ fontFamily: D.fHead, fontSize: 36, fontWeight: 700, color: '#f0ede6', margin: '0 0 12px' }}>
+                {t.bento.heading}
               </h2>
-              <p style={{ color: '#b8b0a3', fontSize: 16, fontFamily: D.fBody }}>実際の画面をご覧ください</p>
+              <p style={{ color: '#b8b0a3', fontSize: 16, fontFamily: D.fBody }}>{t.bento.sub}</p>
             </div>
           </AnimatedSection>
 
           <div className="bento-grid">
-
-            {/* Cell 1: AI Pitch EN */}
+            {/* Row 1 */}
             <AnimatedSection delay={0}>
-              <div className="bento-cell-img bento-c1" style={{ background: '#1e1e1e' }}>
-                <img src="/images/bento/pitch-en.jpg" alt="AI-Generated English Pitch" style={{ objectFit: 'contain', objectPosition: 'top' }} />
-                <div className="bento-overlay">🇬🇧 AI-Generated English Pitch</div>
+              <div className="bento-cell bento-img-cell">
+                <img src="/images/bento/pitch-en.jpg" alt="AI-Generated English Pitch" />
+                <div className="bento-overlay">English Pitch</div>
               </div>
             </AnimatedSection>
-
-            {/* Cell 2: AI Pitch JP */}
             <AnimatedSection delay={100}>
-              <div className="bento-cell-img bento-c2" style={{ background: '#1e1e1e' }}>
-                <img src="/images/bento/pitch-jp.jpg" alt="Japanese Pitch View" style={{ objectFit: 'contain', objectPosition: 'top' }} />
-                <div className="bento-overlay">🇯🇵 日本語で確認・編集可能</div>
+              <div className="bento-cell bento-img-cell">
+                <img src="/images/bento/dashboard.png" alt="Curator Dashboard" />
+                <div className="bento-overlay">Curator Dashboard</div>
               </div>
             </AnimatedSection>
-
-            {/* Cell 3: Text card — Curator Dashboard */}
             <AnimatedSection delay={200}>
-              <div className="bento-c3" style={{
-                background: '#232323', border: '1px solid #3a3a3a',
-                borderRadius: 16, padding: 32,
-                display: 'flex', flexDirection: 'column', justifyContent: 'center',
-              }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
-                <h3 style={{ fontFamily: D.fHead, fontSize: 20, fontWeight: 700, color: '#f0ede6', marginBottom: 12 }}>
-                  {t.bentoCards.dashboard.title}
+              <div className="bento-cell bento-img-cell">
+                <img src="/images/bento/pitch-jp.jpg" alt="Japanese Pitch View" />
+                <div className="bento-overlay">{lang === 'ja' ? '日本語ピッチ' : 'Japanese Pitch'}</div>
+              </div>
+            </AnimatedSection>
+
+            {/* Row 2 */}
+            <AnimatedSection delay={200}>
+              <div className="bento-cell bento-text-cell">
+                <div style={{ fontSize: 32, marginBottom: 14 }}>🎯</div>
+                <h3 style={{ fontFamily: D.fHead, fontSize: 20, fontWeight: 600, color: '#f0ede6', marginBottom: 10 }}>
+                  {t.bentoCards.pitch.title}
                 </h3>
-                <p style={{ color: '#b8b0a3', fontSize: 14, lineHeight: 1.7, marginBottom: 8, fontFamily: D.fBody }}>
-                  {t.bentoCards.dashboard.desc}
-                </p>
-                <p style={{ color: '#b8b0a3', fontSize: 13, opacity: 0.7, fontFamily: D.fBody }}>
-                  {t.bentoCards.dashboard.sub}
+                <p style={{ color: '#b8b0a3', fontSize: 14, lineHeight: 1.6, fontFamily: D.fBody }}>
+                  {t.bentoCards.pitch.desc}
                 </p>
               </div>
             </AnimatedSection>
-
-            {/* Cell 4: Dashboard screenshot */}
             <AnimatedSection delay={300}>
-              <div className="bento-cell-img bento-c4">
-                <img src="/images/bento/dashboard.png" alt="Curator Dashboard" style={{ objectFit: 'cover', objectPosition: 'center top' }} />
+              <div className="bento-cell bento-img-cell">
+                <img src="/images/bento/register.png" alt="Curator Registration Form" />
+                <div className="bento-overlay">3-Step Registration</div>
               </div>
             </AnimatedSection>
-
-            {/* Cell 5: Registration form screenshot */}
             <AnimatedSection delay={400}>
-              <div className="bento-cell-img bento-c5">
-                <img src="/images/bento/register.png" alt="Curator Registration Form" style={{ objectFit: 'cover', objectPosition: 'center 30%' }} />
-              </div>
-            </AnimatedSection>
-
-            {/* Cell 6: Text card — 3-Step Signup */}
-            <AnimatedSection delay={500}>
-              <div className="bento-c6" style={{
-                background: 'linear-gradient(135deg, #2a1f1a, #232323)',
-                border: '1px solid #3a3a3a', borderRadius: 16, padding: 32,
-                display: 'flex', flexDirection: 'column', justifyContent: 'center',
-              }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>✨</div>
-                <h3 style={{ fontFamily: D.fHead, fontSize: 20, fontWeight: 700, color: '#f0ede6', marginBottom: 12 }}>
+              <div className="bento-cell bento-text-cell">
+                <div style={{ fontSize: 32, marginBottom: 14 }}>✨</div>
+                <h3 style={{ fontFamily: D.fHead, fontSize: 20, fontWeight: 600, color: '#f0ede6', marginBottom: 10 }}>
                   {t.bentoCards.signup.title}
                 </h3>
-                <p style={{ color: '#b8b0a3', fontSize: 14, lineHeight: 1.7, marginBottom: 8, fontFamily: D.fBody }}>
+                <p style={{ color: '#b8b0a3', fontSize: 14, lineHeight: 1.6, fontFamily: D.fBody }}>
                   {t.bentoCards.signup.desc}
-                </p>
-                <p style={{ color: '#b8b0a3', fontSize: 13, opacity: 0.7, fontFamily: D.fBody }}>
-                  {t.bentoCards.signup.sub}
                 </p>
               </div>
             </AnimatedSection>
-
           </div>
         </div>
       </section>

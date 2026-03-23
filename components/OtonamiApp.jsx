@@ -915,26 +915,27 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   const matchColor = (score) => score >= 85 ? "#16a34a" : score >= 70 ? "#2563eb" : score >= 50 ? "#0ea5e9" : score >= 30 ? "#d97706" : "#dc2626";
 
   return <div>
-    <style>{`.curator-list-card { flex-direction: row !important; } @media (max-width: 480px) { .curator-list-card { flex-direction: column !important; } } @keyframes curatorModalIn { from { opacity: 0; transform: scale(0.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }`}</style>
+    <style>{`.curator-list-card { flex-direction: row !important; } @media (max-width: 480px) { .curator-list-card { flex-direction: column !important; } } @media (max-width: 768px) { .pitch-step-labels { display: none !important; } } @keyframes curatorModalIn { from { opacity: 0; transform: scale(0.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }`}</style>
     <div style={{marginBottom:"1.2rem"}}>
-      <div style={{fontSize:"0.68rem",letterSpacing:"0.12em",color:"#c4956a",fontWeight:600,marginBottom:6,textTransform:"uppercase"}}>Curators</div>
-      <h1 style={{fontSize:"1.7rem",fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6",lineHeight:1.1}}>キュレーター</h1>
-      <p style={{color:"#7a7870",fontSize:"0.82rem",margin:"0.4rem 0 0"}}>{curators.length}人のキュレーター・プロ {selected.length > 0 && <span style={{color:"#c4956a",fontWeight:600}}>· {selected.length}人選択中</span>}</p>
+      <div style={{fontSize:11,letterSpacing:"2px",color:"#b8b0a3",marginBottom:6,textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif"}}>CURATORS</div>
+      <h1 style={{fontSize:28,fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6",lineHeight:1.1}}>あなたの曲に合うメディアを探そう</h1>
+      <p style={{color:"#b8b0a3",fontSize:14,margin:"8px 0 0",fontFamily:"'DM Sans',sans-serif",lineHeight:1.5}}>曲名とアーティスト名を入力すると、AIがマッチ度を自動計算します {selected.length > 0 && <span style={{color:"#c4956a",fontWeight:600}}>· {selected.length}人選択中</span>}</p>
     </div>
 
     {/* ── Track Analysis Section ── */}
-    <div style={{background:"rgba(196,149,106,0.08)",borderRadius:14,padding:"0.9rem",marginBottom:"1rem",border:"1px solid rgba(196,149,106,0.3)"}}>
-      <div style={{fontSize:"0.82rem",fontWeight:700,color:"#c4956a",marginBottom:4}}>🎵 ピッチしたい楽曲を入力 → キュレーターマッチスコア</div>
-      <div style={{fontSize:"0.62rem",color:"#c4956a",marginBottom:6}}>ピッチしたい楽曲の曲名とアーティスト名を入力してください。ジャンルに基づいて各キュレーターとのマッチ度を自動計算します</div>
+    <div style={{background:"linear-gradient(135deg, rgba(196,149,106,0.08), rgba(196,149,106,0.03))",borderRadius:16,padding:24,marginBottom:"1rem",border:"1px solid rgba(196,149,106,0.25)"}}>
+      <div style={{fontSize:16,fontWeight:500,color:"#f0ede6",marginBottom:4,fontFamily:"'DM Sans',sans-serif"}}>🎵 まず、あなたの楽曲を教えてください</div>
+      <div style={{fontSize:13,color:"#b8b0a3",marginBottom:12,fontFamily:"'DM Sans',sans-serif"}}>曲名とアーティスト名を入力して「分析する」を押すと、各キュレーターとのマッチ度がわかります</div>
       {/* Input row — always visible so user can re-enter */}
-      <div style={{display:"flex",gap:6,marginBottom:6,alignItems:"center"}}>
-        <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"#2a2a2a",flex:1,fontSize:"0.78rem"}} placeholder="曲名" value={detectedSong} onChange={e=>setDetectedSong(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAnalyze()}/>
-        <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"#2a2a2a",flex:1,fontSize:"0.78rem"}} placeholder="アーティスト名" value={detectedArtist} onChange={e=>setDetectedArtist(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAnalyze()}/>
-        <button onClick={doAnalyze} disabled={analyzeLoading||!detectedSong} style={{...css.btnSm,background:analyzeLoading?"#333333":"#c4956a",color:analyzeLoading?"#7a7870":"#fff",border:"none",fontWeight:700,whiteSpace:"nowrap",flexShrink:0,opacity:!detectedSong?0.5:1}}>
-          {analyzeLoading ? "分析中…" : "🎵 分析する"}
+      <div style={{display:"flex",gap:8,marginBottom:8,alignItems:"center"}}>
+        <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"#2a2a2a",flex:1,fontSize:15,height:44,padding:"0 12px",marginBottom:0}} placeholder="例: Sepia" value={detectedSong} onChange={e=>setDetectedSong(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAnalyze()}/>
+        <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"#2a2a2a",flex:1,fontSize:15,height:44,padding:"0 12px",marginBottom:0}} placeholder="例: ROUTE14band" value={detectedArtist} onChange={e=>setDetectedArtist(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAnalyze()}/>
+        <button onClick={doAnalyze} disabled={analyzeLoading||!detectedSong} style={{background:analyzeLoading?"#333333":"#c4956a",color:analyzeLoading?"#7a7870":"#1a1a1a",border:"none",fontWeight:600,whiteSpace:"nowrap",flexShrink:0,opacity:!detectedSong?0.5:1,padding:"10px 20px",borderRadius:10,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>
+          {analyzeLoading ? "分析中…" : "🔍 分析する"}
         </button>
       </div>
-      <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"#2a2a2a",fontSize:"0.78rem",marginBottom:6}} placeholder="楽曲URL（YouTube / Spotify）— キュレーターへの試聴リンクとして保存" value={analyzeUrl} onChange={e=>setAnalyzeUrl(e.target.value)}/>
+      <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"#2a2a2a",fontSize:15,height:44,padding:"0 12px",marginBottom:2}} placeholder="楽曲のURL（YouTube / Spotify）" value={analyzeUrl} onChange={e=>setAnalyzeUrl(e.target.value)}/>
+      <div style={{fontSize:12,color:"#b8b0a3",opacity:0.6,fontFamily:"'DM Sans',sans-serif"}}>※ キュレーターがあなたの曲を聴くためのリンクです</div>
       {trackData && !trackData.audioFeatures && !trackData.genre && !artist?.genre && (
         <div style={{display:"flex",gap:6,marginBottom:6,alignItems:"center"}}>
           <input style={{...css.input,border:"1px solid #f59e0b",background:"#fffbeb",flex:1,fontSize:"0.78rem"}} placeholder="ジャンル（例: Jazz, Funk, Latin）" onKeyDown={e=>{
@@ -978,13 +979,13 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       )}
     </div>
 
-    <div style={{display:"flex",gap:8,marginBottom:"1rem",flexWrap:"wrap"}}>
+    <div style={{display:"flex",gap:12,marginBottom:"1rem",flexWrap:"wrap"}}>
       <div style={{position:"relative",flex:"1 1 150px",minWidth:120}}>
         <span style={{position:"absolute",left:"0.7rem",top:"50%",transform:"translateY(-50%)",fontSize:"0.85rem",pointerEvents:"none",color:"#7a7870"}}>🔍</span>
-        <input style={{...css.filterInput,flex:"unset",width:"100%",paddingLeft:"2rem",boxSizing:"border-box"}} placeholder="名前・プラットフォームで検索..." value={q} onChange={e=>setQ(e.target.value)}/>
+        <input style={{...css.filterInput,flex:"unset",width:"100%",paddingLeft:"2rem",boxSizing:"border-box",fontSize:14,height:40}} placeholder="名前・プラットフォームで検索..." value={q} onChange={e=>setQ(e.target.value)}/>
       </div>
-      <select style={{...css.filterSelect,flex:"1 1 120px"}} value={genre} onChange={e=>setGenre(e.target.value)}><option value="">全ジャンル</option>{GENRES.map(g=><option key={g}>{g}</option>)}</select>
-      <select style={{...css.filterSelect,flex:"1 1 120px"}} value={type} onChange={e=>setType(e.target.value)}><option value="">全タイプ</option>{CURATOR_TYPES.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>
+      <select style={{...css.filterSelect,flex:"1 1 120px",fontSize:14,height:40}} value={genre} onChange={e=>setGenre(e.target.value)}><option value="">全ジャンル</option>{GENRES.map(g=><option key={g}>{g}</option>)}</select>
+      <select style={{...css.filterSelect,flex:"1 1 120px",fontSize:14,height:40}} value={type} onChange={e=>setType(e.target.value)}><option value="">全タイプ</option>{CURATOR_TYPES.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>
     </div>
     {selected.length > 0 && <div style={{background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.4)",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600}}>{selected.length}人選択中 · 合計{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}cr (¥{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)*160})</span><div style={{display:"flex",gap:6}}><button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem"}}>🚀 ピッチ作成へ</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -1026,16 +1027,16 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
             {/* Info */}
             <div style={{flex:1,minWidth:0}}>
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>
-                <span style={{fontSize:16,fontWeight:500,color:'#f0ede6'}}>{c.name}</span>
+                <span style={{fontSize:16,fontWeight:600,color:'#f0ede6'}}>{c.name}</span>
                 {flag && <span style={{fontSize:14}}>{flag}</span>}
                 {typeBadge && <span style={{padding:'3px 10px',borderRadius:20,fontSize:11,background:typeBadge.bg,color:typeBadge.text,fontWeight:500}}>{typeBadge.label}</span>}
                 {c.badges?.map(b => <span key={b} style={{fontSize:'0.6rem',padding:'0.1rem 0.4rem',borderRadius:6,background:b==='verified'?'#dcfce7':'#eff6ff',color:b==='verified'?'#16a34a':'#2563eb'}}>{BADGES[b]}</span>)}
               </div>
               <div style={{fontSize:'0.75rem',color:'#7a7870',marginBottom:6}}>{c.platform}{c.audience ? ' · '+(c.audience>=1000?(c.audience/1000).toFixed(1)+'K':c.audience) : ''}</div>
-              {c.bio && <p style={{fontSize:13,color:'#7a7870',margin:'0 0 10px',lineHeight:1.4}}>{c.bio.length>80?c.bio.substring(0,80)+'…':c.bio}</p>}
+              {c.bio && <p style={{fontSize:14,color:'#7a7870',margin:'0 0 10px',lineHeight:1.5}}>{c.bio.length>80?c.bio.substring(0,80)+'…':c.bio}</p>}
               {ml && c.matchReasons?.length > 0 && <div style={{fontSize:'0.62rem',color:'#c4956a',marginBottom:8}}>{c.matchReasons.slice(0,2).join(' · ')}</div>}
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-                {c.genres.slice(0,4).map(g => <span key={g} style={{fontSize:11,padding:'3px 10px',borderRadius:20,background:'rgba(196,149,106,0.08)',border:'1px solid rgba(196,149,106,0.15)',color:'#c4956a'}}>{g}</span>)}
+                {c.genres.slice(0,4).map(g => <span key={g} style={{fontSize:12,padding:'4px 10px',borderRadius:20,background:'rgba(196,149,106,0.08)',border:'1px solid rgba(196,149,106,0.15)',color:'#c4956a'}}>{g}</span>)}
                 {c.genres.length > 4 && <span style={{fontSize:'0.62rem',color:'#7a7870',alignSelf:'center'}}>+{c.genres.length-4}</span>}
               </div>
             </div>
@@ -1047,12 +1048,12 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
                     <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3"/>
                     <circle cx="22" cy="22" r="18" fill="none" stroke={msColor(ms)} strokeWidth="3" strokeDasharray={`${(ms/100)*circumference} ${circumference}`} strokeLinecap="round"/>
                   </svg>
-                  <span style={{fontSize:12,fontWeight:600,color:msColor(ms)}}>{ms}%</span>
+                  <span style={{fontSize:14,fontWeight:600,color:msColor(ms)}}>{ms}%</span>
                 </div>
               ) : (
                 <div style={{width:44,height:44}}/>
               )}
-              <span style={{fontSize:12,color:'#c4956a',fontWeight:600}}>{c.creditCost||2} cr</span>
+              <span style={{fontSize:14,color:'#c4956a',fontWeight:600}}>{c.creditCost||2} cr</span>
               <div style={{width:22,height:22,borderRadius:'50%',background:on?'#c4956a':'rgba(255,255,255,0.08)',border:on?'none':'1px solid rgba(255,255,255,0.2)',color:on?'#fff':'#7a7870',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700,transition:'all 0.15s'}}>{on?'✓':'+'}</div>
             </div>
           </div>;
@@ -1607,12 +1608,18 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   }
 
   return <div>
-    <div style={{marginBottom:"1.5rem"}}><h1 style={{fontSize:"1.4rem",fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6"}}>ピッチ作成</h1><p style={{color:"#c0bdb5",fontSize:"0.85rem",margin:"0.3rem 0 0"}}>アーティスト情報＋SNS → キュレーター別に英語ピッチを自動生成</p></div>
-    <div style={{display:"flex",gap:4,marginBottom:"1.5rem"}}>
-      {["情報入力","スタイル確認","レビュー","送信"].map((l,i) => <div key={i} style={{flex:1,height:4,borderRadius:4,background:i<=step?"linear-gradient(90deg,#c4956a,#e85d3a)":"rgba(255,255,255,0.1)"}}/>)}
+    <div style={{marginBottom:"1.5rem"}}><h1 style={{fontSize:28,fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#f0ede6"}}>AIピッチを作成</h1><p style={{color:"#b8b0a3",fontSize:15,margin:"8px 0 0",fontFamily:"'DM Sans',sans-serif"}}>AIがあなたの楽曲に合わせた英語の紹介文を自動作成します</p></div>
+    <div style={{marginBottom:"1.5rem"}}>
+      <div style={{display:"flex",gap:4}}>
+        {["情報入力","キュレーター","確認&編集","送信"].map((l,i) => <div key={i} style={{flex:1,height:4,borderRadius:4,background:i<=step?"linear-gradient(90deg,#c4956a,#e85d3a)":"rgba(255,255,255,0.1)"}}/>)}
+      </div>
+      <div className="pitch-step-labels" style={{display:"flex",gap:4,marginTop:6}}>
+        {["情報入力","キュレーター","確認&編集","送信"].map((l,i) => <div key={i} style={{flex:1,textAlign:"center",fontSize:11,fontFamily:"'DM Sans',sans-serif",color:i===step?"#f0ede6":"#b8b0a3",fontWeight:i===step?500:400}}>{l}</div>)}
+      </div>
     </div>
-    <div style={{background:"rgba(196,149,106,0.08)",borderRadius:10,padding:"0.5rem 1rem",marginBottom:"1rem",fontSize:"0.82rem",color:"#c4956a"}}>
-      📨 送信先: {targets.map(c => <span key={c.id} style={{display:"inline-flex",alignItems:"center",gap:3,background:"#2a2a2a",borderRadius:6,padding:"0.15rem 0.5rem",margin:"0 3px",fontSize:"0.75rem",border:"1px solid rgba(196,149,106,0.3)"}}>{c.avatar} {c.name}</span>)}
+    <div style={{background:"#232323",borderRadius:12,padding:"14px 20px",marginBottom:"1rem",border:"1px solid #3a3a3a"}}>
+      <div style={{fontSize:13,color:"#b8b0a3",marginBottom:6,fontFamily:"'DM Sans',sans-serif"}}>📨 送信先</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:6}}>{targets.map(c => <span key={c.id} style={{display:"inline-flex",alignItems:"center",gap:4,background:"#2a2a2a",borderRadius:8,padding:"6px 12px",fontSize:15,color:"#f0ede6",fontWeight:500,border:"1px solid rgba(196,149,106,0.3)",fontFamily:"'DM Sans',sans-serif"}}>{c.avatar} {c.name}</span>)}</div>
     </div>
 
     {/* ═══ STEP 0 ═══ */}
@@ -1851,44 +1858,45 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
 
     {/* ═══ STEP 1 ═══ */}
     {step === 1 && <div>
-      <h2 style={{fontSize:"1.1rem",fontWeight:800,marginBottom:"0.8rem"}}>スタイル＆確認</h2>
+      <h2 style={{fontSize:18,fontWeight:500,marginBottom:"0.8rem",color:"#f0ede6",fontFamily:"'DM Sans',sans-serif"}}>ピッチの設定</h2>
       <div style={{background:"#333333",borderRadius:10,padding:"0.7rem",marginBottom:"0.8rem"}}>
         <div style={{fontWeight:700,color:"#f0ede6"}}>🎵 {artist.nameEn||artist.name}</div>
         <div style={{fontSize:"0.78rem",color:"#c0bdb5"}}>{artist.genre}{artist.songTitle?" · \""+artist.songTitle+"\"":""}</div>
         {artist.achievements && <div style={{fontSize:"0.7rem",color:"#059669",marginTop:2}}>📊 {artist.achievements}</div>}
         {(linkCount > 0 || folCount > 0) && <div style={{fontSize:"0.68rem",color:"#c4956a",marginTop:2}}>🔗{linkCount}件 {folCount > 0 ? "· 👥フォロワー"+folCount+"件" : ""}</div>}
       </div>
-      <div style={{fontSize:"0.82rem",fontWeight:700,marginBottom:5}}>📨 送信先 ({targets.length}人)</div>
-      {targets.map(c => <div key={c.id} style={{display:"flex",alignItems:"center",gap:6,padding:"0.3rem 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}><span>{c.avatar}</span><span style={{fontWeight:600,fontSize:"0.78rem"}}>{c.name}</span><span style={{fontSize:"0.66rem",color:"#c0bdb5"}}>{c.platform}</span><span style={{fontSize:"0.6rem",color:"#7a7870",marginLeft:"auto"}}>{c.type}</span></div>)}
-      <div style={{background:"#fef3c7",borderRadius:8,padding:"0.5rem",marginTop:"0.6rem",fontSize:"0.78rem",color:"#92400e"}}>💰 {cost}cr (残: {credits}→{credits-cost})</div>
+      <div style={{fontSize:14,fontWeight:700,marginBottom:5}}>📨 送信先 ({targets.length}人)</div>
+      {targets.map(c => <div key={c.id} style={{display:"flex",alignItems:"center",gap:6,padding:"0.4rem 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}><span>{c.avatar}</span><span style={{fontWeight:500,fontSize:14,color:"#f0ede6"}}>{c.name}</span><span style={{fontSize:13,color:"#c0bdb5"}}>{c.platform}</span><span style={{fontSize:13,color:"#7a7870",marginLeft:"auto",fontStyle:"italic"}}>{c.type}</span></div>)}
+      <div style={{background:"linear-gradient(135deg, rgba(196,149,106,0.12), rgba(196,149,106,0.06))",borderRadius:12,padding:"12px 16px",marginTop:"0.6rem",fontSize:14,color:"#c4956a",border:"1px solid rgba(196,149,106,0.3)",fontWeight:500}}>💰 {cost}cr (残: {credits}→{credits-cost})</div>
       <div style={{margin:"0.8rem 0",padding:"0.7rem",background:"rgba(196,149,106,0.08)",borderRadius:10,border:"1px solid rgba(196,149,106,0.3)"}}>
-        <div style={{fontSize:"0.78rem",fontWeight:700,color:"#c4956a",marginBottom:4}}>🎨 ピッチスタイル</div>
-        <div style={{display:"flex",gap:5}}>
-          {[{id:"professional",l:"📋 プロ",d:"業界標準"},{id:"casual",l:"💬 カジュアル",d:"親しみ"},{id:"storytelling",l:"📖 ストーリー",d:"描写重視"}].map(s => <button key={s.id} onClick={()=>setPitchStyle(s.id)} style={{flex:1,padding:"0.35rem",borderRadius:8,border:pitchStyle===s.id?"2px solid #c4956a":"1px solid rgba(255,255,255,0.08)",background:pitchStyle===s.id?"rgba(196,149,106,0.15)":"#2a2a2a",cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}><div style={{fontSize:"0.72rem",fontWeight:600,color:pitchStyle===s.id?"#c4956a":"#f0ede6"}}>{s.l}</div><div style={{fontSize:"0.58rem",color:"#c0bdb5"}}>{s.d}</div></button>)}
+        <div style={{fontSize:14,fontWeight:700,color:"#c4956a",marginBottom:6}}>🏷 ピッチスタイル</div>
+        <div style={{display:"flex",gap:6}}>
+          {[{id:"professional",l:"📋 プロ",d:"業界標準"},{id:"casual",l:"💬 カジュアル",d:"親しみ"},{id:"storytelling",l:"📖 ストーリー",d:"描写重視"}].map(s => <button key={s.id} onClick={()=>setPitchStyle(s.id)} style={{flex:1,padding:"0.5rem",borderRadius:10,border:pitchStyle===s.id?"2px solid #c4956a":"1px solid #3a3a3a",background:pitchStyle===s.id?"rgba(196,149,106,0.15)":"#2a2a2a",cursor:"pointer",fontFamily:"inherit",textAlign:"center",boxShadow:pitchStyle===s.id?"0 0 12px rgba(196,149,106,0.15)":"none"}}><div style={{fontSize:14,fontWeight:600,color:pitchStyle===s.id?"#c4956a":"#f0ede6"}}>{s.l}</div><div style={{fontSize:12,color:"#b8b0a3"}}>{s.d}</div></button>)}
         </div>
       </div>
+      <div style={{fontSize:12,color:"#b8b0a3",textAlign:"center",marginBottom:8,fontFamily:"'DM Sans',sans-serif"}}>AIが英語のプロフェッショナルな紹介文を生成します（約30秒）</div>
       <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(0)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} disabled={aiLoading} onClick={generateAIPitch}>{aiLoading ? "🤖 AI生成中..." : "🤖 AIピッチ生成"}</button><button style={css.btnGhost} onClick={generatePitch}>📝 テンプレ</button></div>
     </div>}
 
     {/* ═══ STEP 2 ═══ */}
     {step === 2 && <div>
-      <h2 style={{fontSize:"1.1rem",fontWeight:800,marginBottom:"0.4rem"}}>ピッチレビュー</h2>
-      <div style={{fontSize:"0.68rem",color:"#c0bdb5",marginBottom:"0.7rem"}}>✏️ 編集可。送信時は英語版が使われます。</div>
+      <h2 style={{fontSize:18,fontWeight:500,marginBottom:"0.4rem",color:"#f0ede6",fontFamily:"'DM Sans',sans-serif"}}>ピッチレビュー</h2>
+      <div style={{fontSize:13,color:"#c0bdb5",marginBottom:"0.7rem",fontFamily:"'DM Sans',sans-serif"}}>✏️ 編集可。送信時は英語版が使われます。</div>
 
       {/* Tab bar */}
       <div style={{display:"flex",gap:0,marginBottom:0,borderRadius:"10px 10px 0 0",overflow:"hidden",border:"1px solid rgba(255,255,255,0.08)",borderBottom:"none"}}>
         {[{id:"ja",label:"🇯🇵 日本語",sub:"確認用"},{id:"en",label:"🇬🇧 English",sub:"送信版"}].map(t => (
-          <button key={t.id} onClick={()=>setPitchTab(t.id)} style={{flex:1,padding:"0.5rem 0.4rem",background:pitchTab===t.id?"#2a2a2a":"#222222",border:"none",borderRight:t.id==="ja"?"1px solid rgba(255,255,255,0.08)":"none",cursor:"pointer",fontFamily:"inherit",textAlign:"center",borderBottom:pitchTab===t.id?"2px solid #c4956a":"none"}}>
-            <div style={{fontSize:"0.78rem",fontWeight:700,color:pitchTab===t.id?"#c4956a":"#c0bdb5"}}>{t.label}</div>
-            <div style={{fontSize:"0.6rem",color:pitchTab===t.id?"#c4956a":"#7a7870"}}>{t.sub}</div>
+          <button key={t.id} onClick={()=>setPitchTab(t.id)} style={{flex:1,padding:"0.6rem 0.4rem",background:pitchTab===t.id?"#2a2a2a":"#222222",border:"none",borderRight:t.id==="ja"?"1px solid rgba(255,255,255,0.08)":"none",cursor:"pointer",fontFamily:"inherit",textAlign:"center",borderBottom:pitchTab===t.id?"2px solid #c4956a":"none"}}>
+            <div style={{fontSize:15,fontWeight:700,color:pitchTab===t.id?"#c4956a":"#c0bdb5"}}>{t.label}</div>
+            <div style={{fontSize:14,color:pitchTab===t.id?"#c4956a":"#7a7870"}}>{t.sub}</div>
           </button>
         ))}
       </div>
 
       {/* English tab */}
       {pitchTab === "en" && <div style={{background:"#2a2a2a",border:"1px solid rgba(255,255,255,0.08)",borderTop:"none",borderRadius:"0 0 12px 12px",padding:"0.8rem",marginBottom:"0.8rem"}}>
-        <div style={{fontSize:"0.68rem",color:"#059669",fontWeight:600,marginBottom:6}}>📨 この英語版が送信されます</div>
-        <textarea value={pitchText} onChange={e=>setPitchText(e.target.value)} style={{width:"100%",minHeight:220,border:"none",fontFamily:"inherit",fontSize:"0.82rem",lineHeight:1.6,color:"#f0ede6",outline:"none",resize:"vertical",boxSizing:"border-box",background:"transparent"}}/>
+        <div style={{fontSize:14,color:"#c4956a",fontWeight:600,marginBottom:6}}>📨 この英語版が送信されます</div>
+        <textarea value={pitchText} onChange={e=>setPitchText(e.target.value)} style={{width:"100%",minHeight:220,border:"none",fontFamily:"inherit",fontSize:15,lineHeight:1.8,color:"#f0ede6",outline:"none",resize:"vertical",boxSizing:"border-box",background:"transparent"}}/>
         <button onClick={()=>{ translateToJa(pitchText); setPitchTab("ja"); }} disabled={translating} style={{marginTop:6,padding:"0.3rem 0.8rem",background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:8,cursor:"pointer",fontFamily:"inherit",fontSize:"0.72rem",color:"#c4956a",fontWeight:600}}>{translating ? "反映中..." : "🔄 日本語に反映"}</button>
         <div style={{fontSize:"0.58rem",color:"#7a7870",marginTop:3}}>Claude AIで翻訳されます</div>
       </div>}
@@ -1899,7 +1907,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         {translating && !pitchJa ? (
           <div style={{minHeight:120,display:"flex",alignItems:"center",justifyContent:"center",color:"#7a7870",fontSize:"0.8rem"}}>🤖 日本語訳を生成中...</div>
         ) : (
-          <textarea value={pitchJa} onChange={e=>setPitchJa(e.target.value)} style={{width:"100%",minHeight:220,border:"none",fontFamily:"inherit",fontSize:"0.82rem",lineHeight:1.6,color:"#f0ede6",outline:"none",resize:"vertical",boxSizing:"border-box",background:"transparent"}}/>
+          <textarea value={pitchJa} onChange={e=>setPitchJa(e.target.value)} style={{width:"100%",minHeight:220,border:"none",fontFamily:"inherit",fontSize:15,lineHeight:1.8,color:"#f0ede6",outline:"none",resize:"vertical",boxSizing:"border-box",background:"transparent"}}/>
         )}
         <button onClick={()=>{ translateToEn(); setPitchTab("en"); }} disabled={translating || !pitchJa} style={{marginTop:6,padding:"0.3rem 0.8rem",background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:8,cursor:"pointer",fontFamily:"inherit",fontSize:"0.72rem",color:"#c4956a",fontWeight:600}}>{translating ? "反映中..." : "🔄 英語に反映"}</button>
         <div style={{fontSize:"0.58rem",color:"#7a7870",marginTop:3}}>Claude AIで翻訳されます</div>

@@ -66,8 +66,7 @@ export async function GET(request) {
           }
         }
       }
-      // Also match pitches sent to this email directly
-      orParts.push(`curator_email.eq.${cEmail}`);
+      // Note: curator_email column does not exist in pitches table
     }
     const orFilter = orParts.join(',');
     console.log(`[dashboard] orFilter="${orFilter}"`);
@@ -129,7 +128,7 @@ export async function PATCH(request) {
     // まずピッチを取得して認可チェック
     const { data: existingPitch } = await db
       .from('pitches')
-      .select('id, curator_id, curator_name, curator_email')
+      .select('id, curator_id, curator_name')
       .eq('id', pitchId)
       .single();
 
@@ -143,12 +142,10 @@ export async function PATCH(request) {
     const cEmail = String(curator.email || '').trim();
     const pCuratorId = String(existingPitch.curator_id || '').trim();
     const pCuratorName = String(existingPitch.curator_name || '').trim();
-    const pCuratorEmail = String(existingPitch.curator_email || '').trim();
 
     let patchAuthorized = false;
     if (cId && pCuratorId && cId === pCuratorId) patchAuthorized = true;
     if (!patchAuthorized && cName && pCuratorName && cName.toLowerCase() === pCuratorName.toLowerCase()) patchAuthorized = true;
-    if (!patchAuthorized && cEmail && pCuratorEmail && cEmail.toLowerCase() === pCuratorEmail.toLowerCase()) patchAuthorized = true;
     if (!patchAuthorized && cEmail) {
       const { data: curatorRows } = await db
         .from('curators')

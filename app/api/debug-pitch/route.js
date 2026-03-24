@@ -8,7 +8,7 @@ export async function GET() {
 
   const { data: pitches, error: pitchError } = await db
     .from('pitches')
-    .select('id, curator_id, curator_name, curator_email, artist_name, status, created_at')
+    .select('id, curator_id, curator_name, artist_name, status, created_at')
     .order('created_at', { ascending: false })
     .limit(10);
 
@@ -19,7 +19,6 @@ export async function GET() {
 
   const matchCheck = (pitches || []).map(p => {
     const matchById = curators?.find(c => c.id === p.curator_id);
-    const matchByEmail = curators?.find(c => c.email === p.curator_email);
     const matchByName = curators?.find(c => c.name === p.curator_name);
     return {
       pitch_id: p.id,
@@ -27,10 +26,10 @@ export async function GET() {
       pitch_curator_id_type: typeof p.curator_id,
       pitch_curator_id_length: p.curator_id?.length,
       pitch_curator_name: p.curator_name,
-      pitch_curator_email: p.curator_email,
-      curator_found_by_id: matchById ? { id: matchById.id, name: matchById.name } : null,
-      curator_found_by_email: matchByEmail ? { id: matchByEmail.id, name: matchByEmail.name } : null,
-      curator_found_by_name: matchByName ? { id: matchByName.id, name: matchByName.name } : null,
+      artist_name: p.artist_name,
+      status: p.status,
+      curator_found_by_id: matchById ? { id: matchById.id, name: matchById.name, email: matchById.email } : null,
+      curator_found_by_name: matchByName ? { id: matchByName.id, name: matchByName.name, email: matchByName.email } : null,
     };
   });
 

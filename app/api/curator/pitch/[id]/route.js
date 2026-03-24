@@ -218,7 +218,7 @@ export async function PATCH(request, { params }) {
   // まずピッチを取得して認可チェック（GETと同じロジック）
   const { data: existingPitch } = await db
     .from('pitches')
-    .select('id, curator_id, curator_name, curator_email')
+    .select('id, curator_id, curator_name')
     .eq('id', pitchId)
     .single();
 
@@ -232,15 +232,12 @@ export async function PATCH(request, { params }) {
   const cEmail = String(curator.email || '').trim();
   const pCuratorId = String(existingPitch.curator_id || '').trim();
   const pCuratorName = String(existingPitch.curator_name || '').trim();
-  const pCuratorEmail = String(existingPitch.curator_email || '').trim();
 
   let authorized = false;
   // Direct ID match
   if (cId && pCuratorId && cId === pCuratorId) authorized = true;
   // Name match
   if (!authorized && cName && pCuratorName && cName.toLowerCase() === pCuratorName.toLowerCase()) authorized = true;
-  // Direct email match on pitch
-  if (!authorized && cEmail && pCuratorEmail && cEmail.toLowerCase() === pCuratorEmail.toLowerCase()) authorized = true;
   // Email lookup fallback
   if (!authorized && cEmail) {
     const { data: curatorRows } = await db

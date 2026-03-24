@@ -1,19 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
-import { NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+import { NextResponse } from 'next/server';
+import { getServiceSupabase } from '@/lib/supabase';
 
 export async function GET() {
-  const { data: pitches } = await supabase
+  const db = getServiceSupabase();
+
+  const { data: pitches } = await db
     .from('pitches')
     .select('id, curator_id, curator_name, curator_email, artist_name, status, created_at')
     .order('created_at', { ascending: false })
     .limit(10);
 
-  const { data: curators } = await supabase
+  const { data: curators } = await db
     .from('curators')
     .select('id, name, email')
     .limit(30);

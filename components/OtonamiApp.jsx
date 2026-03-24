@@ -1598,11 +1598,13 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     const newPitches = [];
     for (const p of tempPitches) {
       const result = await insertPitchGetUUID(p);
-      if (result) {
+      if (result?.id) {
         // Use translated pitchText (if translation occurred) for the email body
-        newPitches.push({ ...p, id: result.id, pitchText: result.pitchText ?? p.pitchText });
+        newPitches.push({ ...p, id: result.id, pitchText: result.pitchText ?? p.pitchText, _hasUUID: true });
       } else {
-        newPitches.push(p);
+        // Insert failed — keep custom ID for local state but mark as no UUID
+        console.warn("insertPitchGetUUID failed for curator:", p.curatorName);
+        newPitches.push({ ...p, _hasUUID: false });
       }
     }
 
@@ -1611,15 +1613,20 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     saveToStorage(artist, links, followers);
     setStep(3);
     setPitchSent(true);
-    // Send real emails with the actual DB UUID so /curator/pitch/[id] links work
+    // Send real emails ONLY for pitches with valid DB UUIDs (skip custom p_ IDs)
+    let emailsSent = 0;
     for (const p of newPitches) {
       try {
-        if (p.curatorEmail) {
+        if (p.curatorEmail && p._hasUUID) {
           await API.sendPitchEmail(p.id, p.curatorEmail, p.curatorName, p.pitchText, p.epk, p.artistNameEn || p.artistName, p.songLink);
+          emailsSent++;
+        } else if (p.curatorEmail && !p._hasUUID) {
+          console.warn("Skipping email for", p.curatorName, "— no valid UUID (pitch ID:", p.id, ")");
         }
       } catch (e) { console.log("Email send skipped:", e.message); }
     }
-    notify("✅ " + newPitches.length + "件送信完了！");
+    const failedCount = newPitches.length - emailsSent;
+    notify("✅ " + emailsSent + "件送信完了！" + (failedCount > 0 ? ` (${failedCount}件は保存のみ)` : ""));
     // 送信後にDBから最新データを取得してローカルとマージ
     if (refreshPitches) setTimeout(() => refreshPitches(), 1000);
   };

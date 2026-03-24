@@ -670,12 +670,13 @@ export default function HomePage() {
       </section>
 
       {/* ── For Artists / How It Works (LIGHT) ── */}
-      <section id="for-artists" style={{ background: L.bg, padding: '100px 0' }} className="section-pad">
+      <section id="for-artists" style={{ background: '#faf8f5', padding: '100px 0' }} className="section-pad">
         <div style={wrap}>
           <AnimatedSection>
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
-              <div style={sectionLabel()}>{t.how.label}</div>
-              <h2 style={{ fontFamily: D.fHead, fontSize: 36, fontWeight: 500, color: L.text, lineHeight: 1.25 }}>{t.how.title}</h2>
+              <div style={{ width: 40, height: 3, borderRadius: 2, background: 'linear-gradient(90deg, #c4956a, #e85d3a)', margin: '0 auto 16px' }} />
+              <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 20 }}>{t.how.label}</div>
+              <h2 style={{ fontFamily: D.fHead, fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 700, color: L.text, lineHeight: 1.25 }}>{t.how.title}</h2>
             </div>
           </AnimatedSection>
 
@@ -924,13 +925,19 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Section Divider */}
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
+        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(196,149,106,0.3), transparent)' }} />
+      </div>
+
       {/* ── For Curators (DARK, #232323 bg) ── */}
-      <section id="for-curators" style={{ background: '#232323', borderTop: '1px solid #3a3a3a', borderBottom: '1px solid #3a3a3a', padding: '100px 0' }} className="section-pad">
+      <section id="for-curators" style={{ background: '#1a1a1a', borderTop: '1px solid #3a3a3a', borderBottom: '1px solid #3a3a3a', padding: '100px 0' }} className="section-pad">
         <div style={wrap}>
           <AnimatedSection>
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
-              <div style={sectionLabel()}>{t.forCurators.label}</div>
-              <h2 style={{ fontFamily: D.fHead, fontSize: 36, fontWeight: 500, color: '#f0ede6', lineHeight: 1.3, maxWidth: 640, margin: '0 auto' }}>
+              <div style={{ width: 40, height: 3, borderRadius: 2, background: 'linear-gradient(90deg, #c4956a, #e85d3a)', margin: '0 auto 16px' }} />
+              <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 20 }}>{t.forCurators.label}</div>
+              <h2 style={{ fontFamily: D.fHead, fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 700, color: '#f0ede6', lineHeight: 1.3, maxWidth: 640, margin: '0 auto' }}>
                 {t.forCurators.title}
               </h2>
             </div>

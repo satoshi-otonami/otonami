@@ -685,22 +685,27 @@ function Scene7({ gt }) {
         color: "rgba(255,255,255,0.35)", marginBottom: 24,
         opacity: easeOutCubic(useA(S + 900, 500, gt)),
       }}>あなたの音楽を、世界の耳へ届ける。</div>
-      <div style={{
-        background: "linear-gradient(135deg, #FF6B4A, #FF3D6E)",
-        borderRadius: 12, padding: "14px 40px",
-        fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 700,
-        color: "#fff", letterSpacing: 1, display: "flex", alignItems: "center", gap: 8,
-        transform: `scale(${pulse})`,
-        boxShadow: "0 6px 28px rgba(255,107,74,0.35)",
-        opacity: easeOutCubic(useA(S + 1200, 600, gt)),
-      }}>
-        Start Pitching <Icon type="arrowRight" size={14} color="#fff" />
-      </div>
-      <div style={{
-        fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600,
-        color: "rgba(255,255,255,0.3)", marginTop: 14, letterSpacing: 3,
-        opacity: easeOutCubic(useA(S + 1500, 500, gt)),
-      }}>otonami.io</div>
+      <a href="/studio" onClick={(e) => e.stopPropagation()} style={{ textDecoration: 'none', zIndex: 20, position: 'relative' }}>
+        <div style={{
+          background: "linear-gradient(135deg, #FF6B4A, #FF3D6E)",
+          borderRadius: 12, padding: "14px 40px",
+          fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 700,
+          color: "#fff", letterSpacing: 1, display: "flex", alignItems: "center", gap: 8,
+          transform: `scale(${pulse})`,
+          boxShadow: "0 6px 28px rgba(255,107,74,0.35)",
+          opacity: easeOutCubic(useA(S + 1200, 600, gt)),
+          cursor: "pointer",
+        }}>
+          Start Pitching <Icon type="arrowRight" size={14} color="#fff" />
+        </div>
+      </a>
+      <a href="/" onClick={(e) => e.stopPropagation()} style={{ textDecoration: 'none', zIndex: 20, position: 'relative' }}>
+        <div style={{
+          fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600,
+          color: "rgba(255,255,255,0.3)", marginTop: 14, letterSpacing: 3,
+          opacity: easeOutCubic(useA(S + 1500, 500, gt)),
+        }}>otonami.io</div>
+      </a>
       <div style={{
         fontFamily: "'DM Sans', sans-serif", fontSize: 9,
         color: "rgba(255,255,255,0.15)", marginTop: 16,

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 const TOTAL_DURATION = 38000;
 
@@ -777,7 +777,7 @@ export default function OTONAMIPromo() {
     }
   };
 
-  const play = () => {
+  const play = useCallback(() => {
     setGt(0);
     setPlaying(true);
     setEnded(false);
@@ -785,23 +785,28 @@ export default function OTONAMIPromo() {
     st.current = null;
     if (af.current) cancelAnimationFrame(af.current);
     af.current = requestAnimationFrame(anim);
-  };
+  }, []);
 
   // Auto-play when scrolled into view
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el || hasPlayed) return;
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !hasPlayed) {
+        if (entry.isIntersecting) {
           play();
+          obs.disconnect();
         }
       },
-      { threshold: 0.4 }
+      { threshold: 0.3 }
     );
-    obs.observe(el);
-    return () => { obs.disconnect(); if (af.current) cancelAnimationFrame(af.current); };
-  }, [hasPlayed]);
+    const timer = setTimeout(() => obs.observe(el), 200);
+    return () => {
+      clearTimeout(timer);
+      obs.disconnect();
+      if (af.current) cancelAnimationFrame(af.current);
+    };
+  }, [hasPlayed, play]);
 
   return (
     <div

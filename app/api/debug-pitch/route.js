@@ -6,18 +6,18 @@ import { getServiceSupabase } from '@/lib/supabase';
 export async function GET() {
   const db = getServiceSupabase();
 
-  const { data: pitches } = await db
+  const { data: pitches, error: pitchError } = await db
     .from('pitches')
     .select('id, curator_id, curator_name, curator_email, artist_name, status, created_at')
     .order('created_at', { ascending: false })
     .limit(10);
 
-  const { data: curators } = await db
+  const { data: curators, error: curatorError } = await db
     .from('curators')
     .select('id, name, email')
     .limit(30);
 
-  const matchCheck = pitches?.map(p => {
+  const matchCheck = (pitches || []).map(p => {
     const matchById = curators?.find(c => c.id === p.curator_id);
     const matchByEmail = curators?.find(c => c.email === p.curator_email);
     const matchByName = curators?.find(c => c.name === p.curator_name);
@@ -35,9 +35,11 @@ export async function GET() {
   });
 
   return NextResponse.json({
-    pitches_count: pitches?.length,
-    curators_count: curators?.length,
-    curators: curators?.map(c => ({ id: c.id, id_length: c.id?.length, name: c.name, email: c.email })),
+    pitches_count: pitches?.length ?? null,
+    pitchError: pitchError?.message ?? null,
+    curators_count: curators?.length ?? null,
+    curatorError: curatorError?.message ?? null,
     matchCheck,
+    curators: curators?.map(c => ({ id: c.id, id_length: c.id?.length, name: c.name, email: c.email })),
   });
 }

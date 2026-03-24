@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import AnimatedSection from '@/components/AnimatedSection';
+import OTONAMIPromo from '@/components/OTONAMIPromo';
 import { DT as D } from '@/lib/design-tokens';
 
 /* ── Light section tokens ── */
@@ -776,6 +777,42 @@ export default function HomePage() {
             </div>
           </AnimatedSection>
         </div>
+      </section>
+
+      {/* ── Promo Video Section ── */}
+      <section style={{
+        background: 'linear-gradient(180deg, #1a1a1a 0%, #0a0a10 15%, #0a0a10 85%, #1a1a1a 100%)',
+        padding: '80px 0',
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 40, padding: '0 24px' }}>
+          <div style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 11,
+            fontWeight: 600,
+            color: '#c4956a',
+            letterSpacing: 3,
+            textTransform: 'uppercase',
+            marginBottom: 12,
+          }}>
+            {lang === 'ja' ? 'プラットフォームの全体像' : 'SEE IT IN ACTION'}
+          </div>
+          <h2 style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 'clamp(28px, 4vw, 40px)',
+            fontWeight: 700,
+            color: '#f0ede6',
+            letterSpacing: -0.5,
+            lineHeight: 1.2,
+            margin: 0,
+          }}>
+            {lang === 'ja' ? (
+              <>OTONAMIが届ける、<span style={{ color: '#c4956a' }}>新しい音楽体験</span></>
+            ) : (
+              <>How OTONAMI <span style={{ color: '#c4956a' }}>works for you</span></>
+            )}
+          </h2>
+        </div>
+        <OTONAMIPromo />
       </section>
 
       {/* ── Bento Grid Screenshot Showcase (DARK) ── */}

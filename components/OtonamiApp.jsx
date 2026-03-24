@@ -309,7 +309,6 @@ export default function App() {
   });
   const [curators, setCurators] = useState([]);
   const [pitches, setPitches] = useState([]);
-  const [pitchesLoaded, setPitchesLoaded] = useState(false);
   const [credits, setCredits] = useState(20);
   const [notif, setNotif] = useState(null);
   const [page, setPage] = useState(() => {
@@ -376,7 +375,6 @@ setCredits(savedCredits ?? 20);
 const userEmail = user?.email || null;
 const savedPitches = await loadPitches(userEmail);
 if (savedPitches?.length) setPitches(savedPitches);
-setPitchesLoaded(true);
     })();
     const s = document.createElement("style");
     s.textContent = `@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}*{box-sizing:border-box}`;
@@ -674,7 +672,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       </div>
     </nav>
     <main style={css.main}>
-      {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify} pitchesLoaded={pitchesLoaded}/>}
+      {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify}/>}
       {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist}/>}
       {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches} refreshPitches={refreshPitches}/>}
@@ -688,7 +686,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
 }
 
 // ─── Artist Dashboard ───
-function ArtistDash({user, pitches, curators, credits, setPage, notify, pitchesLoaded}) {
+function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
   const acc = pitches.filter(p=>p.status==="accepted").length;
   const fb = pitches.filter(p=>["feedback","accepted","declined"].includes(p.status)).length;
   const listened = pitches.filter(p=>["listened","feedback","accepted","declined"].includes(p.status)).length;
@@ -717,8 +715,8 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify, pitchesL
       <p style={{color:"#6b6560",margin:"6px 0 0",fontSize:15,fontFamily:"'DM Sans',sans-serif"}}>日本の音楽を世界へ届けましょう</p>
     </div>
 
-    {/* Welcome Guide — only when 0 pitches and data loaded */}
-    {pitchesLoaded && pitches.length === 0 && (
+    {/* Welcome Guide — only when 0 pitches */}
+    {pitches.length === 0 && (
       <div style={{background:"linear-gradient(135deg,rgba(196,149,106,0.06),rgba(196,149,106,0.03))",border:"1px solid rgba(196,149,106,0.15)",borderRadius:16,padding:"28px 32px",marginBottom:24}}>
         <div style={{fontSize:28,marginBottom:4}}>👋</div>
         <h3 style={{fontFamily:"'Playfair Display',Georgia,serif",color:"#1a1a1a",fontSize:22,fontWeight:600,margin:"0 0 8px"}}>はじめましょう！</h3>
@@ -734,11 +732,7 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify, pitchesL
     <div className="dash-stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12,marginBottom:24}}>
       {[{v:credits,l:"クレジット残",c:"#c4956a",sub:""},{v:pitches.length,l:"送信済み",c:"#1a1a1a",sub:"キュレーターに送った数"},{v:listened,l:"試聴済み",c:"#60a5fa",sub:"曲を聴いてもらえた数"},{v:fb,l:"FB受信",c:"#c084fc",sub:"フィードバックをもらった数"},{v:acc,l:"採用",c:"#34d399",sub:"プレイリストやブログに採用された数"}].map((s,i) =>
         <div key={i} className="dash-stat" style={{background:"#ffffff",borderRadius:14,padding:20,border:"1px solid #e5e2dc",textAlign:"center"}}>
-          {pitchesLoaded ? (
-            <div style={{fontSize:32,fontWeight:700,color:s.c,fontFamily:"'Playfair Display',Georgia,serif",lineHeight:1}}>{s.v}</div>
-          ) : (
-            <div style={{width:40,height:32,borderRadius:6,background:"#f0ede8",margin:"0 auto",animation:"pulse 1.5s ease-in-out infinite"}}/>
-          )}
+          <div style={{fontSize:32,fontWeight:700,color:s.c,fontFamily:"'Playfair Display',Georgia,serif",lineHeight:1}}>{s.v}</div>
           <div style={{fontSize:12,color:"#6b6560",marginTop:8,fontFamily:"'DM Sans',sans-serif"}}>{s.l}</div>
           {s.sub && <div style={{fontSize:11,color:"rgba(184,176,163,0.6)",marginTop:4,fontFamily:"'DM Sans',sans-serif"}}>{s.sub}</div>}
         </div>

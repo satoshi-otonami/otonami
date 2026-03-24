@@ -418,11 +418,14 @@ const saveCredits = async (c) => {
   useEffect(() => {
     if (pitches.length === 0) return;
     const now = Date.now();
+    const alreadyRefunded = new Set(JSON.parse(localStorage.getItem('refundedPitchIds') || '[]'));
     let refundTotal = 0;
+    const newlyRefundedIds = [];
     const updated = pitches.map(p => {
       const dl = p.deadline ? new Date(p.deadline) : (p.sentAt ? new Date(new Date(p.sentAt).getTime() + 7*24*60*60*1000) : null);
-      if (p.status === "sent" && dl && dl.getFullYear() > 2000 && dl.getTime() < now && !p.refunded) {
+      if (p.status === "sent" && dl && dl.getFullYear() > 2000 && dl.getTime() < now && !p.refunded && !alreadyRefunded.has(p.id)) {
         refundTotal += (p.creditCost || 2);
+        newlyRefundedIds.push(p.id);
         return {...p, status: "expired", refunded: true};
       }
       return p;
@@ -430,6 +433,8 @@ const saveCredits = async (c) => {
     if (refundTotal > 0) {
       savePitches(updated);
       saveCredits(credits + refundTotal);
+      const stored = JSON.parse(localStorage.getItem('refundedPitchIds') || '[]');
+      localStorage.setItem('refundedPitchIds', JSON.stringify([...stored, ...newlyRefundedIds]));
       notify(`💰 期限切れピッチに対し${refundTotal}クレジットを返還しました`);
     }
   }, [pitches.length]); // eslint-disable-line
@@ -744,7 +749,7 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
       onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(196,149,106,0.45)"} onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(196,149,106,0.25)"}>
       <div>
         <div style={{fontWeight:500,fontSize:15,color:"#1a1a1a",fontFamily:"'DM Sans',sans-serif"}}>💰 クレジット残高: {credits}</div>
-        <div style={{fontSize:12,color:"#6b6560",marginTop:2,fontFamily:"'DM Sans',sans-serif"}}>1クレジット = ¥160 · キュレーターにより1〜4cr</div>
+        <div style={{fontSize:12,color:"#6b6560",marginTop:2,fontFamily:"'DM Sans',sans-serif"}}>1クレジット = ¥160 · キュレーターにより1〜4クレジット</div>
       </div>
       <div style={{background:"#c4956a",color:"#1a1a1a",fontSize:13,fontWeight:600,padding:"8px 20px",borderRadius:8,fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>+ 購入する →</div>
     </div>
@@ -1006,7 +1011,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       <select style={{...css.filterSelect,flex:"1 1 120px",fontSize:14,height:40}} value={genre} onChange={e=>setGenre(e.target.value)}><option value="">全ジャンル</option>{GENRES.map(g=><option key={g}>{g}</option>)}</select>
       <select style={{...css.filterSelect,flex:"1 1 120px",fontSize:14,height:40}} value={type} onChange={e=>setType(e.target.value)}><option value="">全タイプ</option>{CURATOR_TYPES.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>
     </div>
-    {selected.length > 0 && <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.4)",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600}}>{selected.length}人選択中 · 合計{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}cr (¥{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)*160})</span><div style={{display:"flex",gap:6}}><button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem"}}>🚀 ピッチ作成へ</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
+    {selected.length > 0 && <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.4)",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600}}>{selected.length}人選択中 · 合計{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}クレジット (¥{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)*160})</span><div style={{display:"flex",gap:6}}><button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem"}}>🚀 ピッチ作成へ</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {(() => {
         const avatarColors = [
@@ -1072,7 +1077,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
               ) : (
                 <div style={{width:44,height:44}}/>
               )}
-              <span style={{fontSize:14,color:'#c4956a',fontWeight:600}}>{c.creditCost||2} cr</span>
+              <span style={{fontSize:14,color:'#c4956a',fontWeight:600}}>{c.creditCost||2} クレジット</span>
               <div style={{width:22,height:22,borderRadius:'50%',background:on?'#c4956a':'rgba(0,0,0,0.06)',border:on?'none':'1px solid rgba(0,0,0,0.1)',color:on?'#fff':'#9a958e',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700,transition:'all 0.15s'}}>{on?'✓':'+'}</div>
             </div>
           </div>;
@@ -1081,7 +1086,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
     </div>
     {/* Floating action bar when curators selected */}
     {selected.length > 0 && <div style={{position:"sticky",bottom:0,left:0,right:0,background:"linear-gradient(0deg,#f8f7f4 70%,transparent)",padding:"1rem 0 0.5rem",marginTop:"0.5rem"}}>
-      <button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,width:"100%",padding:"0.9rem",fontSize:"0.95rem"}}>🚀 {selected.length}人のキュレーターにピッチ作成 ({curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}cr)</button>
+      <button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,width:"100%",padding:"0.9rem",fontSize:"0.95rem"}}>🚀 {selected.length}人のキュレーターにピッチ作成 ({curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}クレジット)</button>
     </div>}
 
     {/* Curator Detail Modal */}
@@ -1213,7 +1218,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
           <div style={{padding:'16px 24px',borderTop:'1px solid rgba(0,0,0,0.05)',display:'flex',justifyContent:'flex-end',gap:12}}>
             <button onClick={()=>setDetailCurator(null)} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.12)',color:'#6b6560',borderRadius:8,padding:'10px 20px',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>閉じる</button>
             <button onClick={()=>{toggle(dc.id);setDetailCurator(null);}} style={{background:dcOn?'transparent':'#c4956a',border:dcOn?'1px solid #ef4444':'none',color:dcOn?'#ef4444':'#fff',borderRadius:8,padding:'10px 20px',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>
-              {dcOn ? '選択解除' : `選択 · ${dc.creditCost||2}cr`}
+              {dcOn ? '選択解除' : `選択 · ${dc.creditCost||2}クレジット`}
             </button>
           </div>
 
@@ -1981,7 +1986,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
             <p style={{fontSize:"0.82rem",color:"#6b6560"}}>{targets.length}人に個別最適化ピッチを送信</p>
             <p style={{fontSize:14,color:"#c4956a",marginTop:8,fontWeight:600}}>💰 {cost}cr (残: {credits}→{credits-cost})</p>
           </div>
-          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem"}} onClick={sendAll}>✅ 送信 ({cost}cr)</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
+          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem"}} onClick={sendAll}>✅ 送信 ({cost}クレジット)</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
         </div>
       )}
     </div>}
@@ -2210,7 +2215,7 @@ function CreditShop({user, credits, saveCredits, notify, setPage}) {
   return <div>
     <div style={{marginBottom:"1.5rem"}}>
       <h1 style={{fontSize:"1.4rem",fontWeight:800,margin:0}}>クレジット購入</h1>
-      <p style={{color:"#6b6560",fontSize:"0.85rem",margin:"0.3rem 0 0"}}>残高: <span style={{color:"#f59e0b",fontWeight:700}}>{credits}クレジット</span> · 1クレジット = ¥160基本単価 · キュレーターにより1〜4cr</p>
+      <p style={{color:"#6b6560",fontSize:"0.85rem",margin:"0.3rem 0 0"}}>残高: <span style={{color:"#f59e0b",fontWeight:700}}>{credits}クレジット</span> · 1クレジット = ¥160基本単価 · キュレーターにより1〜4クレジット</p>
     </div>
 
     {/* Package Cards */}

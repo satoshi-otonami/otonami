@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const TOTAL_DURATION = 38000;
 
@@ -760,53 +760,65 @@ export default function OTONAMIPromo() {
   const [gt, setGt] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [ended, setEnded] = useState(false);
-  const [hasPlayed, setHasPlayed] = useState(false);
   const af = useRef(null);
   const st = useRef(null);
   const containerRef = useRef(null);
+  const playingRef = useRef(false);
 
-  const anim = (ts) => {
-    if (!st.current) st.current = ts;
-    const e = ts - st.current;
-    setGt(e);
-    if (e < TOTAL_DURATION) {
-      af.current = requestAnimationFrame(anim);
-    } else {
-      setPlaying(false);
-      setEnded(true);
-    }
+  // Animation loop using ref to avoid stale closure
+  useEffect(() => {
+    if (!playing) return;
+    playingRef.current = true;
+    st.current = null;
+
+    const tick = (ts) => {
+      if (!playingRef.current) return;
+      if (!st.current) st.current = ts;
+      const elapsed = ts - st.current;
+      setGt(elapsed);
+      if (elapsed < TOTAL_DURATION) {
+        af.current = requestAnimationFrame(tick);
+      } else {
+        setPlaying(false);
+        setEnded(true);
+        playingRef.current = false;
+      }
+    };
+
+    af.current = requestAnimationFrame(tick);
+    return () => {
+      playingRef.current = false;
+      if (af.current) cancelAnimationFrame(af.current);
+    };
+  }, [playing]);
+
+  const play = () => {
+    setGt(0);
+    setEnded(false);
+    setPlaying(true);
   };
 
-  const play = useCallback(() => {
-    setGt(0);
-    setPlaying(true);
-    setEnded(false);
-    setHasPlayed(true);
-    st.current = null;
-    if (af.current) cancelAnimationFrame(af.current);
-    af.current = requestAnimationFrame(anim);
-  }, []);
-
-  // Auto-play when scrolled into view
+  // Auto-play on scroll into view
   useEffect(() => {
     const el = containerRef.current;
-    if (!el || hasPlayed) return;
+    if (!el) return;
+    let fired = false;
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && !fired) {
+          fired = true;
           play();
           obs.disconnect();
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.2 }
     );
-    const timer = setTimeout(() => obs.observe(el), 200);
+    const timer = setTimeout(() => obs.observe(el), 300);
     return () => {
       clearTimeout(timer);
       obs.disconnect();
-      if (af.current) cancelAnimationFrame(af.current);
     };
-  }, [hasPlayed, play]);
+  }, []);
 
   return (
     <div
@@ -848,10 +860,10 @@ export default function OTONAMIPromo() {
           <Scene7 gt={gt} />
           <PBar gt={gt} />
 
-          {/* Pre-play overlay */}
-          {!hasPlayed && (
+          {/* Pre-play overlay — shown until first play */}
+          {!playing && !ended && gt === 0 && (
             <div
-              onClick={play}
+              onClick={(e) => { e.stopPropagation(); play(); }}
               style={{
                 position: "absolute",
                 inset: 0,
@@ -878,13 +890,7 @@ export default function OTONAMIPromo() {
                   marginBottom: 14,
                 }}
               >
-                <svg
-                  width="26"
-                  height="26"
-                  viewBox="0 0 24 24"
-                  fill="#fff"
-                  style={{ marginLeft: 3 }}
-                >
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff" style={{ marginLeft: 3 }}>
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
@@ -930,15 +936,7 @@ export default function OTONAMIPromo() {
                   marginBottom: 10,
                 }}
               >
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.7)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round">
                   <path d="M1 4v6h6M23 20v-6h-6" />
                   <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
                 </svg>

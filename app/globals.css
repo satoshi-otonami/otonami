@@ -61,3 +61,55 @@
     pointer-events: none;
   }
 }
+
+.promo-inner {
+  position: absolute;
+  inset: 0;
+}
+
+@media (max-width: 767px) {
+  .promo-inner {
+    transform: scale(0.58);
+    transform-origin: center center;
+  }
+
+  .artist-steps-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .artist-step-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 16px 20px !important;
+    gap: 16px !important;
+  }
+
+  .artist-step-card .step-icon-area {
+    margin-bottom: 0 !important;
+    flex-shrink: 0;
+  }
+
+  .artist-step-card .step-number {
+    display: none !important;
+  }
+
+  .artist-step-card .step-title {
+    font-size: 15px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .artist-step-card .step-desc {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .promo-inner {
+    transform: scale(0.8);
+    transform-origin: center center;
+  }
+}

@@ -852,20 +852,23 @@ export default function OTONAMIPromo() {
         onClick={ended ? play : undefined}
       >
         <div style={{ position: "absolute", inset: 0 }}>
-          <Particles gt={gt} count={40} />
-          <Orb x="-5%" y="-8%" size={320} color="rgba(255,107,74,0.045)" gt={gt} speed={0.0009} />
-          <Orb x="65%" y="55%" size={260} color="rgba(255,61,110,0.035)" gt={gt} speed={0.0011} />
+          {/* Scaled content */}
+          <div className="promo-inner">
+            <Particles gt={gt} count={40} />
+            <Orb x="-5%" y="-8%" size={320} color="rgba(255,107,74,0.045)" gt={gt} speed={0.0009} />
+            <Orb x="65%" y="55%" size={260} color="rgba(255,61,110,0.035)" gt={gt} speed={0.0011} />
 
-          <Scene1 gt={gt} />
-          <Scene2 gt={gt} />
-          <Scene3 gt={gt} />
-          <Scene4 gt={gt} />
-          <Scene5 gt={gt} />
-          <Scene6 gt={gt} />
-          <Scene7 gt={gt} />
-          <PBar gt={gt} />
+            <Scene1 gt={gt} />
+            <Scene2 gt={gt} />
+            <Scene3 gt={gt} />
+            <Scene4 gt={gt} />
+            <Scene5 gt={gt} />
+            <Scene6 gt={gt} />
+            <Scene7 gt={gt} />
+            <PBar gt={gt} />
+          </div>
 
-          {/* Pre-play overlay — shown until first play */}
+          {/* Pre-play overlay — shown until first play (NOT scaled) */}
           {!playing && !ended && gt === 0 && (
             <div
               onClick={(e) => { e.stopPropagation(); play(); }}

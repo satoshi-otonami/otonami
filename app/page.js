@@ -680,14 +680,16 @@ export default function HomePage() {
             </div>
           </AnimatedSection>
 
-          <div className="how-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
+          <div className="how-grid artist-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
             {t.how.steps.map((step, i) => (
               <AnimatedSection key={i} delay={i * 100}>
-                <div className="how-card-light">
-                  <div style={{ fontSize: 36, marginBottom: 16 }}>{step.icon}</div>
-                  <div style={{ fontFamily: D.fHead, fontSize: 42, color: '#c4956a', marginBottom: 16, lineHeight: 1, opacity: 0.9 }}>{step.num}</div>
-                  <h3 style={{ fontSize: 17, fontWeight: 600, color: L.text, marginBottom: 12 }}>{step.t}</h3>
-                  <p style={{ fontSize: 14, color: L.textSec, lineHeight: 1.7 }}>{step.d}</p>
+                <div className="how-card-light artist-step-card">
+                  <div className="step-icon-area" style={{ fontSize: 36, marginBottom: 16 }}>{step.icon}</div>
+                  <div>
+                    <div className="step-number" style={{ fontFamily: D.fHead, fontSize: 42, color: '#c4956a', marginBottom: 16, lineHeight: 1, opacity: 0.9 }}>{step.num}</div>
+                    <h3 className="step-title" style={{ fontSize: 17, fontWeight: 600, color: L.text, marginBottom: 12 }}>{step.t}</h3>
+                    <p className="step-desc" style={{ fontSize: 14, color: L.textSec, lineHeight: 1.7 }}>{step.d}</p>
+                  </div>
                 </div>
               </AnimatedSection>
             ))}

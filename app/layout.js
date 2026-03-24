@@ -1,3 +1,5 @@
+import './globals.css';
+
 export const metadata = {
   title: 'OTONAMI — Connect Japanese Music to the World',
   description: 'AI-powered pitch platform connecting Japanese indie artists with international curators, playlist makers, and music blogs.',

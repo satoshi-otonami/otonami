@@ -315,6 +315,59 @@ const PaperPlaneIcon = () => (
 
 const STEP_ICONS = [WaveformIcon, NetworkIcon, PaperPlaneIcon];
 
+/* BlurText — reveals text segment by segment with blur-in effect */
+function BlurText({ text, delay = 120, style: wrapStyle }) {
+  const [visibleParts, setVisibleParts] = useState(0);
+  const ref = useRef(null);
+  const isJapanese = /[\u3000-\u9FFF]/.test(text);
+  const parts = isJapanese
+    ? text.split(/(?<=[。、！？\n])/g).filter(Boolean)
+    : text.split(/\s+/);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!('IntersectionObserver' in window)) { setVisibleParts(parts.length); return; }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          let i = 0;
+          const interval = setInterval(() => {
+            i++;
+            setVisibleParts(i);
+            if (i >= parts.length) clearInterval(interval);
+          }, delay);
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [parts.length, delay]);
+
+  return (
+    <span ref={ref} style={wrapStyle}>
+      {parts.map((part, i) => {
+        const isVisible = i < visibleParts;
+        return (
+          <span
+            key={i}
+            style={{
+              display: 'inline',
+              opacity: isVisible ? 1 : 0,
+              filter: isVisible ? 'blur(0px)' : 'blur(8px)',
+              transition: `opacity 0.5s ease-out ${i * 0.05}s, filter 0.5s ease-out ${i * 0.05}s`,
+            }}
+          >
+            {part}{!isJapanese && i < parts.length - 1 ? ' ' : ''}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
 
 /* ─────────────────────────────────────────
    Page
@@ -443,10 +496,7 @@ export default function HomePage() {
           from { opacity: 0; transform: translateY(18px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .hero-line     { opacity: 0; animation: fadeInUp 0.7s ease forwards; }
-        .hero-line:nth-child(1) { animation-delay: 0.12s; }
-        .hero-line:nth-child(2) { animation-delay: 0.25s; }
-        .hero-line:nth-child(3) { animation-delay: 0.38s; }
+        .hero-line     { display: block; }
         .hero-tag-anim { opacity: 0; animation: fadeInUp 0.6s ease 0.02s forwards; }
         .hero-sub-anim { opacity: 0; animation: fadeInUp 0.6s ease 0.52s forwards; }
         .hero-cta-anim { opacity: 0; animation: fadeInUp 0.6s ease 0.64s forwards; }
@@ -454,7 +504,7 @@ export default function HomePage() {
 
         .cta-coral {
           background: #e85d3a; color: #fff; border: none;
-          padding: 14px 28px; border-radius: 8px;
+          padding: 14px 28px; border-radius: 9999px;
           font-size: 15px; font-weight: 600; cursor: pointer;
           transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
           text-decoration: none; display: inline-block; font-family: inherit; white-space: nowrap;
@@ -464,15 +514,15 @@ export default function HomePage() {
         .cta-ghost {
           background: transparent; color: ${D.textSec};
           border: 1px solid rgba(255,255,255,0.18);
-          padding: 14px 28px; border-radius: 8px;
+          padding: 14px 28px; border-radius: 9999px;
           font-size: 15px; font-weight: 500; cursor: pointer;
           transition: border-color 0.2s, color 0.2s, transform 0.15s;
           text-decoration: none; display: inline-block; font-family: inherit; white-space: nowrap;
         }
         .cta-ghost:hover { border-color: rgba(255,255,255,0.35); color: ${D.text}; transform: translateY(-2px); }
 
-        .nav-link { color: ${D.textSec}; text-decoration: none; font-size: 13px; font-weight: 400; transition: color 0.2s; white-space: nowrap; }
-        .nav-link:hover { color: ${D.text}; }
+        .nav-link { color: ${D.textSec}; text-decoration: none; font-size: 13px; font-weight: 400; transition: color 0.2s, background 0.2s; white-space: nowrap; border-radius: 9999px; padding: 8px 16px; }
+        .nav-link:hover { color: ${D.text}; background: rgba(255,255,255,0.1); }
 
         /* Dark section feature rows */
         .feature-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
@@ -548,16 +598,13 @@ export default function HomePage() {
       )}
 
       {/* ── Fixed Nav ── */}
-      <header style={{
+      <header className="liquid-glass" style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
-        background: scrolled ? 'rgba(26,26,26,0.92)' : 'rgba(26,26,26,0.75)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: `1px solid ${D.border}`,
         transition: 'background 0.3s',
       }}>
         <div style={{ ...wrap, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <a href="/" style={{ textDecoration: 'none', fontFamily: D.fHead, fontSize: 20, letterSpacing: '2px', color: D.text, fontWeight: 500 }}>OTONAMI</a>
-          <nav className="nav-desktop-links" style={{ display: 'flex', alignItems: 'center', gap: 36 }}>
+          <nav className="nav-desktop-links liquid-glass" style={{ display: 'flex', alignItems: 'center', gap: 4, borderRadius: 9999, padding: '4px 4px' }}>
             <a href="#for-artists"   className="nav-link">{t.nav.how}</a>
             <a href="#for-curators" className="nav-link">{t.nav.curators}</a>
             <a href="#for-artists"  className="nav-link">{t.nav.artists}</a>
@@ -566,7 +613,7 @@ export default function HomePage() {
             <button className="lang-toggle" onClick={() => switchLang(lang === 'ja' ? 'en' : 'ja')} style={{
               background: 'none', border: `1px solid ${D.border}`, color: D.textMuted,
               fontSize: 11, fontWeight: 600, letterSpacing: '1px', padding: '6px 10px',
-              borderRadius: 6, cursor: 'pointer', transition: 'border-color 0.2s, color 0.2s', fontFamily: D.fBody,
+              borderRadius: 9999, cursor: 'pointer', transition: 'border-color 0.2s, color 0.2s', fontFamily: D.fBody,
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = D.borderHover; e.currentTarget.style.color = D.textSec; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = D.border; e.currentTarget.style.color = D.textMuted; }}
@@ -574,7 +621,7 @@ export default function HomePage() {
             <a href="/curator" className="cta-coral" style={{ padding: '8px 20px', fontSize: 13 }}>{t.nav.cta}</a>
             <button className="hamburger-btn" onClick={() => setMenuOpen(true)} style={{
               display: 'none', background: 'none', border: `1px solid ${D.border}`,
-              borderRadius: 8, width: 44, height: 44, fontSize: 18, cursor: 'pointer',
+              borderRadius: 9999, width: 44, height: 44, fontSize: 18, cursor: 'pointer',
               color: D.textSec, alignItems: 'center', justifyContent: 'center',
             }}>☰</button>
           </div>
@@ -590,12 +637,14 @@ export default function HomePage() {
       }}>
         <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 0, opacity: 0.5, pointerEvents: 'none' }} />
         <div style={{ ...wrap, textAlign: 'center', position: 'relative', zIndex: 1 }}>
-          <div className="hero-tag-anim" style={{ fontSize: 11, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 28 }}>
+          <div className="hero-tag-anim liquid-glass" style={{ display: 'inline-block', fontSize: 11, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 28, borderRadius: 9999, padding: '8px 20px' }}>
             {t.hero.tag}
           </div>
           <h1 className="hero-h1" style={{ fontFamily: D.fHead, fontSize: 52, fontWeight: 500, lineHeight: 1.2, color: D.text, marginBottom: 28, letterSpacing: '-0.5px' }}>
             {t.hero.h1.map((line, i) => (
-              <span key={i} className="hero-line" style={{ display: 'block', color: i === t.hero.h1Gold ? '#c4956a' : D.text }}>{line}</span>
+              <span key={i} className="hero-line" style={{ display: 'block', color: i === t.hero.h1Gold ? '#c4956a' : D.text }}>
+                <BlurText text={line} delay={120} />
+              </span>
             ))}
           </h1>
           <p className="hero-sub hero-sub-anim" style={{ fontSize: 18, color: D.textSec, lineHeight: 1.75, maxWidth: 520, margin: '0 auto 44px', whiteSpace: 'pre-line' }}>
@@ -866,7 +915,7 @@ export default function HomePage() {
             <div style={{ textAlign: 'center' }}>
               <a href="/curator" style={{
                 display: 'inline-block', background: '#c4956a', color: '#1a1a1a',
-                padding: '15px 36px', borderRadius: 8, fontSize: 16, fontWeight: 600,
+                padding: '15px 36px', borderRadius: 9999, fontSize: 16, fontWeight: 600,
                 textDecoration: 'none', fontFamily: D.fBody,
                 transition: 'background 0.2s, transform 0.15s',
               }}
@@ -986,7 +1035,7 @@ export default function HomePage() {
             <div className="cta-group" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <a href="/studio?role=artist" style={{
                 background: '#fff', color: '#2c1810', border: 'none',
-                padding: '16px 36px', borderRadius: 8, fontSize: 16, fontWeight: 700,
+                padding: '16px 36px', borderRadius: 9999, fontSize: 16, fontWeight: 700,
                 cursor: 'pointer', textDecoration: 'none', display: 'inline-block',
                 transition: 'transform 0.15s, box-shadow 0.15s',
                 fontFamily: D.fBody, whiteSpace: 'nowrap',
@@ -997,7 +1046,7 @@ export default function HomePage() {
               <a href="/curator" style={{
                 background: 'transparent', color: '#fff',
                 border: '2px solid rgba(255,255,255,0.7)',
-                padding: '16px 36px', borderRadius: 8, fontSize: 16, fontWeight: 600,
+                padding: '16px 36px', borderRadius: 9999, fontSize: 16, fontWeight: 600,
                 cursor: 'pointer', textDecoration: 'none', display: 'inline-block',
                 transition: 'border-color 0.2s, transform 0.15s',
                 fontFamily: D.fBody, whiteSpace: 'nowrap',

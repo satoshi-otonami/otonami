@@ -345,10 +345,11 @@ export default function HomePage() {
     resize();
     window.addEventListener('resize', resize);
 
-    const draw = (time) => {
+    let t = 0;
+    const draw = () => {
       const W = canvas.width / (window.devicePixelRatio || 1);
       const H = canvas.height / (window.devicePixelRatio || 1);
-      const t = time * 0.001;
+      t++;
       ctx.clearRect(0, 0, W, H);
 
       /* Layer A: waveform bars */
@@ -359,31 +360,31 @@ export default function HomePage() {
       for (let i = 0; i < barCount; i++) {
         const x = i * barGap + (barGap - barW) / 2;
         const baseH = H * 0.12;
-        const h = baseH + Math.sin(i * 0.35 + t * 0.8) * baseH * 0.7
-                + Math.sin(i * 0.15 + t * 1.2) * baseH * 0.3;
+        const h = baseH + Math.sin(i * 0.35 + t * 0.015) * baseH * 0.7
+                + Math.sin(i * 0.15 + t * 0.022) * baseH * 0.3;
         const y = H * 0.32 - h / 2;
         ctx.fillRect(x, y, barW, h);
       }
 
       /* Layer B: flowing waves */
-      const waves = [
-        { baseY: 0.48, freq: 0.006, amp: 28, speed: 0.02, color: 'rgba(196, 149, 106, 0.18)' },
-        { baseY: 0.53, freq: 0.005, amp: 22, speed: 0.015, color: 'rgba(196, 149, 106, 0.10)' },
-        { baseY: 0.58, freq: 0.007, amp: 18, speed: 0.025, color: 'rgba(232, 93, 58, 0.08)' },
-        { baseY: 0.63, freq: 0.004, amp: 24, speed: 0.01, color: 'rgba(196, 149, 106, 0.05)' },
+      const layers = [
+        { color: 'rgba(196,149,106,0.18)', amp: 28, freq: 0.008, speed: 0.015, yOff: 0.48 },
+        { color: 'rgba(196,149,106,0.10)', amp: 18, freq: 0.012, speed: 0.02,  yOff: 0.53 },
+        { color: 'rgba(232,93,58,0.08)',   amp: 22, freq: 0.006, speed: 0.01,  yOff: 0.58 },
+        { color: 'rgba(196,149,106,0.05)', amp: 14, freq: 0.015, speed: 0.025, yOff: 0.63 },
       ];
-      for (const w of waves) {
+      for (const l of layers) {
         ctx.beginPath();
         ctx.moveTo(0, H);
         for (let x = 0; x <= W; x += 2) {
-          const y = H * w.baseY
-            + Math.sin(x * w.freq + t * w.speed) * w.amp
-            + Math.sin(x * w.freq * 2.3 + t * w.speed * 1.7) * w.amp * 0.4;
+          const y = H * l.yOff
+            + Math.sin(x * l.freq + t * l.speed) * l.amp
+            + Math.sin(x * l.freq * 2.3 + t * l.speed * 1.7) * l.amp * 0.4;
           ctx.lineTo(x, y);
         }
         ctx.lineTo(W, H);
         ctx.closePath();
-        ctx.fillStyle = w.color;
+        ctx.fillStyle = l.color;
         ctx.fill();
       }
 

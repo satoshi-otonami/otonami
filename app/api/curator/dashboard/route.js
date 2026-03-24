@@ -44,32 +44,21 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get('status');
 
-    // curator_id OR curator_name でマッチ（シードキュレーターIDずれ対策）
-    // さらにメールアドレスからcuratorsテーブルのIDを逆引きしてフォールバック
-    const cId = String(curator.id || '').trim();
-    const cName = String(curator.name || '').trim();
     const cEmail = String(curator.email || '').trim();
 
-    // メールアドレスからキュレーターの全ID候補を取得
-    const orParts = [`curator_id.eq.${cId}`, `curator_name.eq.${cName}`];
-    if (cEmail) {
-      const { data: curatorRows } = await db
-        .from('curators')
-        .select('id')
-        .eq('email', cEmail)
-        .limit(5);
-      if (curatorRows?.length) {
-        for (const row of curatorRows) {
-          if (row.id !== cId) {
-            orParts.push(`curator_id.eq.${row.id}`);
-            console.log(`[dashboard] Email fallback: also matching curator_id=${row.id}`);
-          }
-        }
-      }
-      // Note: curator_email column does not exist in pitches table
-    }
-    const orFilter = orParts.join(',');
-    console.log(`[dashboard] orFilter="${orFilter}"`);
+    // emailに紐づく全キュレーターIDを取得
+    const { data: curatorRows } = await db
+      .from('curators')
+      .select('id')
+      .eq('email', cEmail)
+      .limit(20);
+    const myIds = curatorRows?.map(r => r.id) || [];
+    // JWT自身のIDも含める（curatorsテーブルにない場合の安全策）
+    const cId = String(curator.id || '').trim();
+    if (cId && !myIds.includes(cId)) myIds.push(cId);
+
+    // curator_idが自分のいずれかのIDに一致するピッチを取得
+    const orFilter = myIds.map(id => `curator_id.eq.${id}`).join(',');
 
     let query = db
       .from('pitches')
@@ -87,7 +76,7 @@ export async function GET(request) {
     const { data, error } = await query;
     if (error) throw new Error(error.message);
 
-    console.log(`[dashboard] curatorId=${curator.id} name=${curator.name} pitchCount=${data?.length ?? 0}`);
+    console.log(`[dashboard] email=${cEmail} curatorIds=[${myIds.join(',')}] pitchCount=${data?.length ?? 0}`);
 
     return NextResponse.json({ pitches: data || [] });
   } catch (error) {
@@ -114,7 +103,41 @@ export async function PATCH(request) {
     }
 
     const db = getServiceSupabase();
+    const now = new Date().toISOString();
 
+    // 1. ピッチを取得
+    const { data: existingPitch } = await db
+      .from('pitches')
+      .select('id, curator_id')
+      .eq('id', pitchId)
+      .single();
+
+    if (!existingPitch) {
+      return NextResponse.json({ error: 'Pitch not found' }, { status: 404 });
+    }
+
+    // 2. 認可チェック: emailに紐づく全curator IDで照合
+    const cEmail = String(curator.email || '').trim();
+    const cId = String(curator.id || '').trim();
+    const pCuratorId = String(existingPitch.curator_id || '').trim();
+
+    let patchAuthorized = cId && cId === pCuratorId;
+    if (!patchAuthorized && cEmail) {
+      const { data: curatorRows } = await db
+        .from('curators')
+        .select('id')
+        .eq('email', cEmail)
+        .limit(20);
+      const myIds = curatorRows?.map(r => r.id) || [];
+      patchAuthorized = myIds.includes(pCuratorId);
+    }
+
+    if (!patchAuthorized) {
+      console.error(`[dashboard] PATCH auth failed: curator {id:${cId}, email:${cEmail}} vs pitch curator_id=${pCuratorId}`);
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
+
+    // 3. 認可済み — 更新
     const updates = { status };
     if (feedback_message) updates.feedback_message = feedback_message;
     if (status === 'accepted' && placement_url) {
@@ -122,50 +145,6 @@ export async function PATCH(request) {
       if (placement_platform) updates.placement_platform = placement_platform;
       if (placement_date) updates.placement_date = placement_date;
     }
-    // feedback_at は別途更新（column が存在しない場合でもメイン更新を妨げないように分離）
-    const now = new Date().toISOString();
-
-    // まずピッチを取得して認可チェック
-    const { data: existingPitch } = await db
-      .from('pitches')
-      .select('id, curator_id, curator_name')
-      .eq('id', pitchId)
-      .single();
-
-    if (!existingPitch) {
-      return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
-    }
-
-    // 認可チェック（pitch detail route と同じロジック）
-    const cId = String(curator.id || '').trim();
-    const cName = String(curator.name || '').trim();
-    const cEmail = String(curator.email || '').trim();
-    const pCuratorId = String(existingPitch.curator_id || '').trim();
-    const pCuratorName = String(existingPitch.curator_name || '').trim();
-
-    let patchAuthorized = false;
-    if (cId && pCuratorId && cId === pCuratorId) patchAuthorized = true;
-    if (!patchAuthorized && cName && pCuratorName && cName.toLowerCase() === pCuratorName.toLowerCase()) patchAuthorized = true;
-    if (!patchAuthorized && cEmail) {
-      const { data: curatorRows } = await db
-        .from('curators')
-        .select('id, name')
-        .eq('email', cEmail)
-        .limit(5);
-      if (curatorRows?.length) {
-        patchAuthorized = curatorRows.some(row =>
-          row.id === pCuratorId ||
-          (row.name && pCuratorName && row.name.toLowerCase() === pCuratorName.toLowerCase())
-        );
-      }
-    }
-
-    if (!patchAuthorized) {
-      console.error(`[dashboard] PATCH authorization failed for pitch ${pitchId}: curator {id:${cId}, name:${cName}} vs pitch {curator_id:${pCuratorId}, curator_name:${pCuratorName}}`);
-      return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
-    }
-
-    // 認可済み — IDのみで更新
     let { data, error } = await db
       .from('pitches')
       .update(updates)

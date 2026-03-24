@@ -79,7 +79,7 @@ export async function POST(request) {
             <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
               Sent via <a href="https://otonami.io" style="color: #7c3aed; text-decoration: none;">OTONAMI</a> — Connecting Japanese Artists with the World
               <br>
-              <a href="https://otonami.io/curator/pitch/${pitchId}" style="display:inline-block;margin-top:8px;padding:10px 22px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">📩 Respond to this pitch</a>
+              <a href="${appUrl}/curator/pitch/${pitchId}" style="display:inline-block;margin-top:8px;padding:10px 22px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">📩 Respond to this pitch</a>
             </div>
             ${trackingPixel}
           </div>
@@ -150,5 +150,8 @@ export async function POST(request) {
   } catch (error) {
     console.error('Email error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+);
   }
 }

@@ -151,32 +151,39 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
   }
 
-  // 認可チェック: curator_id, curator_name, またはキュレーターのメールアドレスで照合
+  // 認可チェック: curator_id, curator_name, curator_email の複数方法で照合
   const pitchCuratorId = String(data.curator_id || '').trim();
   const pitchCuratorName = String(data.curator_name || '').trim();
+  const pitchCuratorEmail = String(data.curator_email || '').trim();
 
   const idMatch = cId && pitchCuratorId && cId === pitchCuratorId;
   const nameMatch = cName && pitchCuratorName && cName.toLowerCase() === pitchCuratorName.toLowerCase();
+  // ピッチに curator_email が保存されている場合、ログイン中のメールと直接比較
+  const directEmailMatch = cEmail && pitchCuratorEmail && cEmail.toLowerCase() === pitchCuratorEmail.toLowerCase();
 
   // curator_idが不一致の場合、キュレーターのメールアドレスでcuratorsテーブルを検索して
   // そのIDがpitchのcurator_idと一致するか確認
-  let emailMatch = false;
-  if (!idMatch && !nameMatch && cEmail) {
-    const { data: curatorRow } = await db
+  // .maybeSingle() で重複メール時のエラーを回避
+  let emailLookupMatch = false;
+  if (!idMatch && !nameMatch && !directEmailMatch && cEmail) {
+    const { data: curatorRows } = await db
       .from('curators')
       .select('id, name')
       .eq('email', cEmail)
-      .single();
-    if (curatorRow) {
-      emailMatch = curatorRow.id === pitchCuratorId || (curatorRow.name && curatorRow.name.toLowerCase() === pitchCuratorName.toLowerCase());
-      if (emailMatch) {
-        console.log(`[pitch-detail] Email fallback matched: curator ${curatorRow.id} (${curatorRow.name}) for pitch curator_id=${pitchCuratorId}`);
+      .limit(5);
+    if (curatorRows?.length) {
+      emailLookupMatch = curatorRows.some(row =>
+        row.id === pitchCuratorId ||
+        (row.name && pitchCuratorName && row.name.toLowerCase() === pitchCuratorName.toLowerCase())
+      );
+      if (emailLookupMatch) {
+        console.log(`[pitch-detail] Email lookup matched: one of [${curatorRows.map(r => r.id).join(', ')}] for pitch curator_id=${pitchCuratorId}`);
       }
     }
   }
 
-  if (!idMatch && !nameMatch && !emailMatch) {
-    console.log(`[pitch-detail] Authorization failed: curator {id:${cId}, name:${cName}, email:${cEmail}} vs pitch {curator_id:${pitchCuratorId}, curator_name:${pitchCuratorName}}`);
+  if (!idMatch && !nameMatch && !directEmailMatch && !emailLookupMatch) {
+    console.log(`[pitch-detail] Authorization failed: curator {id:${cId}, name:${cName}, email:${cEmail}} vs pitch {curator_id:${pitchCuratorId}, curator_name:${pitchCuratorName}, curator_email:${pitchCuratorEmail}}`);
     return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
   }
 
@@ -208,52 +215,62 @@ export async function PATCH(request, { params }) {
   }
   // feedback_at は別途更新（column が存在しない場合でもメイン更新を妨げないように分離）
 
-  // まず curator_id で試みる
+  // まずピッチを取得して認可チェック（GETと同じロジック）
+  const { data: existingPitch } = await db
+    .from('pitches')
+    .select('id, curator_id, curator_name, curator_email')
+    .eq('id', pitchId)
+    .single();
+
+  if (!existingPitch) {
+    return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
+  }
+
+  // 認可チェック
+  const cId = String(curator.id || '').trim();
+  const cName = String(curator.name || '').trim();
+  const cEmail = String(curator.email || '').trim();
+  const pCuratorId = String(existingPitch.curator_id || '').trim();
+  const pCuratorName = String(existingPitch.curator_name || '').trim();
+  const pCuratorEmail = String(existingPitch.curator_email || '').trim();
+
+  let authorized = false;
+  // Direct ID match
+  if (cId && pCuratorId && cId === pCuratorId) authorized = true;
+  // Name match
+  if (!authorized && cName && pCuratorName && cName.toLowerCase() === pCuratorName.toLowerCase()) authorized = true;
+  // Direct email match on pitch
+  if (!authorized && cEmail && pCuratorEmail && cEmail.toLowerCase() === pCuratorEmail.toLowerCase()) authorized = true;
+  // Email lookup fallback
+  if (!authorized && cEmail) {
+    const { data: curatorRows } = await db
+      .from('curators')
+      .select('id, name')
+      .eq('email', cEmail)
+      .limit(5);
+    if (curatorRows?.length) {
+      authorized = curatorRows.some(row =>
+        row.id === pCuratorId ||
+        (row.name && pCuratorName && row.name.toLowerCase() === pCuratorName.toLowerCase())
+      );
+      if (authorized) {
+        console.log(`[pitch-detail] PATCH authorized via email lookup for pitch ${pitchId}`);
+      }
+    }
+  }
+
+  if (!authorized) {
+    console.error(`[pitch-detail] PATCH authorization failed for pitch ${pitchId}: curator {id:${cId}, name:${cName}, email:${cEmail}} vs pitch {curator_id:${pCuratorId}, curator_name:${pCuratorName}}`);
+    return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
+  }
+
+  // 認可済み — ピッチを更新（curator条件なしで直接IDで更新）
   let { data, error } = await db
     .from('pitches')
     .update(updates)
     .eq('id', pitchId)
-    .eq('curator_id', curator.id)
     .select('*')
     .single();
-
-  // curator_id でヒットしなかった場合は curator_name でフォールバック
-  if (!data && curator.name) {
-    const res2 = await db
-      .from('pitches')
-      .update(updates)
-      .eq('id', pitchId)
-      .eq('curator_name', curator.name)
-      .select('*')
-      .single();
-    data  = res2.data;
-    error = res2.error;
-  }
-
-  // curator_name でもヒットしない場合、メールアドレスでcuratorsテーブルから
-  // 該当キュレーターのIDを逆引きして再試行
-  if (!data && curator.email) {
-    const { data: curatorRow } = await db
-      .from('curators')
-      .select('id, name')
-      .eq('email', curator.email)
-      .single();
-    if (curatorRow) {
-      // curatorRow.id（例: "c_yama"）がpitchのcurator_idと一致するはず
-      const res3 = await db
-        .from('pitches')
-        .update(updates)
-        .eq('id', pitchId)
-        .eq('curator_id', curatorRow.id)
-        .select('*')
-        .single();
-      if (res3.data) {
-        data = res3.data;
-        error = res3.error;
-        console.log(`[pitch-detail] PATCH succeeded via email fallback: curator ${curatorRow.id} for pitch ${pitchId}`);
-      }
-    }
-  }
 
   if (error) {
     console.error(`[pitch-detail] PATCH update error for pitch ${pitchId}:`, error.message, 'curator_id:', curator.id, 'curator_name:', curator.name, 'curator_email:', curator.email);

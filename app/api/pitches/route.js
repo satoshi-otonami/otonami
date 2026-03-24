@@ -62,6 +62,22 @@ ${pitchContent}`,
   }
 }
 
+// Known columns in the pitches table — strip anything else to avoid insert errors
+const PITCHES_COLUMNS = new Set([
+  'session_id', 'curator_id', 'artist_name', 'artist_email', 'artist_genre',
+  'curator_name', 'subject', 'body', 'song_link', 'match_score',
+  'feedback_message', 'placement_platform', 'placement_url', 'placement_date',
+  'negotiation_status', 'messages', 'pitch_language',
+]);
+
+function pickKnownColumns(row) {
+  const clean = {};
+  for (const key of Object.keys(row)) {
+    if (PITCHES_COLUMNS.has(key)) clean[key] = row[key];
+  }
+  return clean;
+}
+
 // POST /api/pitches — ピッチをDBに保存（日本語があれば英語に翻訳してから保存）
 export async function POST(request) {
   try {
@@ -73,7 +89,6 @@ export async function POST(request) {
 
     const originalBody = row.body || '';
     const artistName = row.artist_name || '';
-    // subjectはピッチ本文の先頭行から取得済みのため使用
     const trackTitle = row.subject || '';
 
     console.log(`[pitches] Saving pitch for artist="${artistName}" subject="${trackTitle}"`);
@@ -90,14 +105,15 @@ export async function POST(request) {
       console.log(`[pitches] Original (first 200 chars): ${originalBody.slice(0, 200)}`);
     }
 
+    // Strip unknown columns to prevent Supabase insert errors
+    const cleanRow = pickKnownColumns(row);
+    cleanRow.body = englishBody;
+    cleanRow.pitch_language = translated ? 'ja_translated' : 'en';
+
     const db = getServiceSupabase();
     const { data, error } = await db
       .from('pitches')
-      .insert({
-        ...row,
-        body: englishBody,
-        pitch_language: translated ? 'ja_translated' : 'en',
-      })
+      .insert(cleanRow)
       .select('id')
       .single();
 
@@ -105,9 +121,10 @@ export async function POST(request) {
       // pitch_language カラムが未作成の場合はそのカラムを除いてリトライ
       if (error.message?.includes('pitch_language')) {
         console.warn('[pitches] pitch_language column missing, inserting without it');
+        delete cleanRow.pitch_language;
         const { data: data2, error: error2 } = await db
           .from('pitches')
-          .insert({ ...row, body: englishBody })
+          .insert(cleanRow)
           .select('id')
           .single();
         if (error2) {

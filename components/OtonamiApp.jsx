@@ -1613,20 +1613,19 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     saveToStorage(artist, links, followers);
     setStep(3);
     setPitchSent(true);
-    // Send real emails ONLY for pitches with valid DB UUIDs (skip custom p_ IDs)
+    // Send emails — use UUID for pitch link, fallback to dashboard link if UUID unavailable
     let emailsSent = 0;
     for (const p of newPitches) {
       try {
-        if (p.curatorEmail && p._hasUUID) {
-          await API.sendPitchEmail(p.id, p.curatorEmail, p.curatorName, p.pitchText, p.epk, p.artistNameEn || p.artistName, p.songLink);
+        if (p.curatorEmail) {
+          // Pass UUID if available, null otherwise (email route will use dashboard link as fallback)
+          const pitchId = p._hasUUID ? p.id : null;
+          await API.sendPitchEmail(pitchId, p.curatorEmail, p.curatorName, p.pitchText, p.epk, p.artistNameEn || p.artistName, p.songLink);
           emailsSent++;
-        } else if (p.curatorEmail && !p._hasUUID) {
-          console.warn("Skipping email for", p.curatorName, "— no valid UUID (pitch ID:", p.id, ")");
         }
       } catch (e) { console.log("Email send skipped:", e.message); }
     }
-    const failedCount = newPitches.length - emailsSent;
-    notify("✅ " + emailsSent + "件送信完了！" + (failedCount > 0 ? ` (${failedCount}件は保存のみ)` : ""));
+    notify("✅ " + emailsSent + "件送信完了！");
     // 送信後にDBから最新データを取得してローカルとマージ
     if (refreshPitches) setTimeout(() => refreshPitches(), 1000);
   };

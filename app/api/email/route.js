@@ -64,6 +64,10 @@ export async function POST(request) {
         const trackingPixel = pitchId
           ? `<img src="${appUrl}/api/track/open?pid=${pitchId}" width="1" height="1" alt="" style="display:none;border:0;"/>`
           : '';
+        // Use direct pitch link if UUID available, otherwise fallback to dashboard
+        const respondUrl = pitchId
+          ? `${appUrl}/curator/pitch/${pitchId}`
+          : `${appUrl}/curator/dashboard`;
 
         htmlBody = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
@@ -79,7 +83,7 @@ export async function POST(request) {
             <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
               Sent via <a href="https://otonami.io" style="color: #7c3aed; text-decoration: none;">OTONAMI</a> — Connecting Japanese Artists with the World
               <br>
-              <a href="${appUrl}/curator/pitch/${pitchId}" style="display:inline-block;margin-top:8px;padding:10px 22px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">📩 Respond to this pitch</a>
+              <a href="${respondUrl}" style="display:inline-block;margin-top:8px;padding:10px 22px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">📩 Respond to this pitch</a>
             </div>
             ${trackingPixel}
           </div>

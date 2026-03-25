@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const THEME = {
   bg: '#f8f7f4', card: '#ffffff', border: '#e5e2dc', borderLight: '#f0ede8',
@@ -26,14 +26,22 @@ const MOOD_OPTIONS = [
 
 const TYPE_LABELS = { solo: 'Solo Artist', band: 'Band', label: 'Label', producer: 'Producer' };
 
-const SNS_LINKS = [
-  { key: 'spotify_url', icon: '🎵', color: '#1DB954', label: 'Spotify' },
-  { key: 'youtube_url', icon: '▶️', color: '#FF0000', label: 'YouTube' },
-  { key: 'instagram_url', icon: '📷', color: '#E1306C', label: 'Instagram' },
-  { key: 'twitter_url', icon: '𝕏', color: '#000', label: 'X' },
-  { key: 'facebook_url', icon: '📘', color: '#1877F2', label: 'Facebook' },
-  { key: 'website_url', icon: '🔗', color: '#0ea5e9', label: 'Web' },
-];
+/* ── SVG Icons for SNS ── */
+const SpotifyIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+  </svg>
+);
+const YouTubeIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+  </svg>
+);
+const InstagramIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+  </svg>
+);
 
 export default function ArtistDashboard() {
   const [artist, setArtist] = useState(null);
@@ -129,7 +137,15 @@ export default function ArtistDashboard() {
 
   if (!artist) return null;
 
-  const hasSns = SNS_LINKS.some(s => artist[s.key]);
+  // Build pitch URL with query params
+  const buildPitchUrl = (track) => {
+    const params = new URLSearchParams();
+    params.set('track_id', track.id);
+    params.set('track_title', track.title);
+    if (track.youtube_url) params.set('youtube_url', track.youtube_url);
+    if (track.spotify_url) params.set('spotify_url', track.spotify_url);
+    return `/studio?${params.toString()}`;
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: THEME.bg, fontFamily: THEME.font }}>
@@ -186,9 +202,7 @@ export default function ArtistDashboard() {
       {/* ── Cover + Profile Hero ── */}
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 20px 0' }}>
         <div style={{ position: 'relative', borderRadius: '16px 16px 0 0', overflow: 'hidden' }}>
-          {/* Cover image */}
           <div className="cover-area" style={{ height: 200, background: artist.cover_url ? `url(${artist.cover_url}) center/cover` : 'linear-gradient(135deg, #c4956a 0%, #e85d3a 100%)' }} />
-          {/* Edit profile button */}
           <button onClick={() => setShowEditProfile(true)} style={{
             position: 'absolute', top: 16, right: 16, padding: '8px 16px', borderRadius: 100,
             background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)',
@@ -200,7 +214,6 @@ export default function ArtistDashboard() {
 
         {/* Profile info below cover */}
         <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderTop: 'none', borderRadius: '0 0 16px 16px', padding: '0 28px 28px', position: 'relative' }}>
-          {/* Avatar overlapping cover */}
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, marginTop: -48 }}>
             <div className="avatar-hero" style={{ width: 96, height: 96, borderRadius: '50%', border: '4px solid #fff', background: THEME.goldLight, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, boxShadow: '0 2px 12px rgba(0,0,0,0.1)' }}>
               {artist.avatar_url ? <img src={artist.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 40 }}>🎵</span>}
@@ -237,16 +250,45 @@ export default function ArtistDashboard() {
             </div>
           )}
 
-          {/* SNS icons */}
-          {hasSns && (
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              {SNS_LINKS.filter(s => artist[s.key]).map(s => (
-                <a key={s.key} href={artist[s.key]} target="_blank" rel="noopener noreferrer" title={s.label}
-                  style={{ width: 36, height: 36, borderRadius: '50%', background: s.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', fontSize: 16, transition: 'transform 0.15s' }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                >{s.icon}</a>
-              ))}
+          {/* ── SNS Links (branded pill buttons) ── */}
+          {(artist.spotify_url || artist.youtube_url || artist.instagram_url || artist.twitter_url || artist.facebook_url || artist.website_url) && (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
+              {artist.spotify_url && (
+                <a href={artist.spotify_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
+                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#1DB954', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                  <SpotifyIcon /> Spotify
+                </a>
+              )}
+              {artist.youtube_url && (
+                <a href={artist.youtube_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
+                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#FF0000', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                  <YouTubeIcon /> YouTube
+                </a>
+              )}
+              {artist.instagram_url && (
+                <a href={artist.instagram_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
+                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                  <InstagramIcon /> Instagram
+                </a>
+              )}
+              {artist.twitter_url && (
+                <a href={artist.twitter_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
+                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#000', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                  𝕏
+                </a>
+              )}
+              {artist.facebook_url && (
+                <a href={artist.facebook_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
+                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#1877F2', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                  Facebook
+                </a>
+              )}
+              {artist.website_url && (
+                <a href={artist.website_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
+                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#1a1a1a', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                  🔗 Website
+                </a>
+              )}
             </div>
           )}
         </div>
@@ -273,23 +315,18 @@ export default function ArtistDashboard() {
         {/* ── Profile Tab ── */}
         {tab === 'profile' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {/* Hot News */}
             {artist.hot_news && (
               <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, padding: '20px 24px' }}>
                 <h3 style={{ fontSize: 14, fontWeight: 700, color: THEME.text, margin: '0 0 8px', fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 6 }}>🔥 Hot news</h3>
                 <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.6, margin: 0 }}>{artist.hot_news}</p>
               </div>
             )}
-
-            {/* Bio */}
             {artist.bio && (
               <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, padding: '20px 24px' }}>
                 <h3 style={{ fontSize: 14, fontWeight: 700, color: THEME.text, margin: '0 0 8px', fontFamily: THEME.font }}>Bio</h3>
                 <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{artist.bio}</p>
               </div>
             )}
-
-            {/* Influences */}
             {artist.influences?.length > 0 && (
               <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, padding: '20px 24px' }}>
                 <h3 style={{ fontSize: 14, fontWeight: 700, color: THEME.text, margin: '0 0 12px', fontFamily: THEME.font }}>Influences</h3>
@@ -300,8 +337,6 @@ export default function ArtistDashboard() {
                 </div>
               </div>
             )}
-
-            {/* Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
               {[
                 { label: 'ピッチ送信', value: tracks.reduce((s, t) => s + (t.pitches_sent || 0), 0) },
@@ -314,8 +349,6 @@ export default function ArtistDashboard() {
                 </div>
               ))}
             </div>
-
-            {/* Empty profile hint */}
             {!artist.bio && !artist.hot_news && (artist.influences?.length || 0) === 0 && (
               <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>✏️</div>
@@ -338,7 +371,6 @@ export default function ArtistDashboard() {
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
-                {/* Add track card */}
                 <button onClick={() => setShowAddTrack(true)} className="add-track-card" style={{
                   background: THEME.card, border: `2px dashed ${THEME.border}`, borderRadius: 16,
                   padding: 24, minHeight: 280, cursor: 'pointer',
@@ -349,13 +381,10 @@ export default function ArtistDashboard() {
                   <span style={{ fontSize: 14, fontWeight: 600, color: THEME.gold, fontFamily: THEME.font }}>楽曲を追加</span>
                 </button>
 
-                {/* Track cards */}
                 {tracks.map(track => (
                   <div key={track.id} className="track-card" style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, overflow: 'hidden', transition: 'all 0.2s', position: 'relative' }}>
-                    {/* Thumbnail */}
                     <div style={{ aspectRatio: '1', background: track.cover_image_url ? `url(${track.cover_image_url}) center/cover` : 'linear-gradient(135deg, #c4956a 0%, #e85d3a 50%, #c4956a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                       {!track.cover_image_url && <span style={{ fontSize: 48, opacity: 0.5 }}>🎵</span>}
-                      {/* Menu button */}
                       <div style={{ position: 'absolute', top: 8, right: 8 }}>
                         <button onClick={(e) => { e.stopPropagation(); setTrackMenu(trackMenu === track.id ? null : track.id); }} style={{
                           width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
@@ -365,11 +394,11 @@ export default function ArtistDashboard() {
                         }}>•••</button>
                         {trackMenu === track.id && (
                           <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.08)', minWidth: 140, zIndex: 50, overflow: 'hidden' }}>
-                            <button onClick={() => { setTrackMenu(null); setEditTrack(track); }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.text, fontFamily: THEME.font }}
+                            <button onClick={(e) => { e.stopPropagation(); setTrackMenu(null); setEditTrack(track); }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.text, fontFamily: THEME.font }}
                               onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
                               onMouseLeave={e => e.currentTarget.style.background = 'none'}
                             >✏️ 編集</button>
-                            <button onClick={() => { setTrackMenu(null); setDeleteConfirm(track); }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.coral, fontFamily: THEME.font }}
+                            <button onClick={(e) => { e.stopPropagation(); setTrackMenu(null); setDeleteConfirm(track); }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.coral, fontFamily: THEME.font }}
                               onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
                               onMouseLeave={e => e.currentTarget.style.background = 'none'}
                             >🗑️ 削除</button>
@@ -377,7 +406,6 @@ export default function ArtistDashboard() {
                         )}
                       </div>
                     </div>
-                    {/* Info */}
                     <div style={{ padding: '16px 18px' }}>
                       <h3 style={{ fontSize: 16, fontWeight: 700, color: THEME.text, margin: '0 0 4px', fontFamily: THEME.font }}>{track.title}</h3>
                       {track.release_date && (
@@ -388,7 +416,8 @@ export default function ArtistDashboard() {
                       {track.genre && (
                         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 100, fontSize: 11, background: THEME.goldLight, color: THEME.gold, fontWeight: 500, marginBottom: 12 }}>{track.genre}</span>
                       )}
-                      <a href={`/studio?track_id=${track.id}`} className="btn-gold" style={{ display: 'block', textAlign: 'center', padding: '8px 16px', borderRadius: 100, background: THEME.gold, color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font }}>ピッチを送る →</a>
+                      <a href={buildPitchUrl(track)} className="btn-gold" style={{ display: 'block', textAlign: 'center', padding: '8px 16px', borderRadius: 100, background: THEME.gold, color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font }}>ピッチを送る →</a>
+                      <p style={{ fontSize: 11, color: THEME.textMuted, textAlign: 'center', marginTop: 6 }}>※ピッチツール画面で楽曲URLを再入力してください</p>
                     </div>
                   </div>
                 ))}
@@ -469,6 +498,10 @@ function TrackModal({ token, track, onClose, onSuccess }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(track?.cover_image_url || '');
+  const [coverUploading, setCoverUploading] = useState(false);
+  const coverInputRef = useRef(null);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -478,14 +511,43 @@ function TrackModal({ token, track, onClose, onSuccess }) {
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
 
+  const handleCoverFile = (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 5 * 1024 * 1024) { alert('ファイルサイズは5MB以下にしてください'); return; }
+    setCoverFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setCoverPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async () => {
     if (!form.title.trim()) { setError('タイトルは必須です'); return; }
     if (!form.youtube_url && !form.spotify_url && !form.soundcloud_url && !form.bandcamp_url) {
-      setError('少なくとも1つのURLを入力してください'); return;
+      setError('少なくとも1つの楽曲URLを入力してください（YouTube / Spotify / SoundCloud / Bandcamp）'); return;
     }
     setLoading(true); setError('');
     try {
-      const body = isEdit ? { id: track.id, ...form } : form;
+      // Upload cover image file if selected
+      let coverUrl = form.cover_image_url;
+      if (coverFile) {
+        setCoverUploading(true);
+        try {
+          const fd = new FormData();
+          fd.append('file', coverFile);
+          const uploadRes = await fetch('/api/artists/tracks/cover', {
+            method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd,
+          });
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json();
+            coverUrl = uploadData.cover_url;
+          }
+        } catch {} finally { setCoverUploading(false); }
+      }
+
+      const body = isEdit
+        ? { id: track.id, ...form, cover_image_url: coverUrl }
+        : { ...form, cover_image_url: coverUrl };
       const res = await fetch('/api/artists/tracks', {
         method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -524,17 +586,17 @@ function TrackModal({ token, track, onClose, onSuccess }) {
         <label style={lbl}>タイトル <span style={{ color: THEME.coral, fontSize: 10 }}>*必須</span></label>
         <input className="modal-input" style={inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="楽曲名" />
 
-        <label style={lbl}>YouTube / SoundCloud リンク</label>
-        <input className="modal-input" style={inp} value={form.youtube_url} onChange={e => set('youtube_url', e.target.value)} placeholder="https://www.youtube.com/watch?v=..." />
+        <label style={lbl}>▶️ YouTube リンク（任意）</label>
+        <input className="modal-input" style={inp} value={form.youtube_url} onChange={e => set('youtube_url', e.target.value)} placeholder="https://www.youtube.com/watch?v=... または https://youtu.be/..." />
 
-        <label style={lbl}>Spotify トラックリンク（任意）</label>
+        <label style={lbl}>🟢 Spotify リンク（任意）</label>
         <input className="modal-input" style={inp} value={form.spotify_url} onChange={e => set('spotify_url', e.target.value)} placeholder="https://open.spotify.com/track/..." />
 
-        <label style={lbl}>SoundCloud リンク（任意）</label>
-        <input className="modal-input" style={inp} value={form.soundcloud_url} onChange={e => set('soundcloud_url', e.target.value)} placeholder="https://soundcloud.com/..." />
+        <label style={lbl}>☁️ SoundCloud リンク（任意）</label>
+        <input className="modal-input" style={inp} value={form.soundcloud_url} onChange={e => set('soundcloud_url', e.target.value)} placeholder="https://soundcloud.com/artist/track" />
 
-        <label style={lbl}>Bandcamp リンク（任意）</label>
-        <input className="modal-input" style={inp} value={form.bandcamp_url} onChange={e => set('bandcamp_url', e.target.value)} placeholder="https://xxx.bandcamp.com/track/..." />
+        <label style={lbl}>📀 Bandcamp リンク（任意）</label>
+        <input className="modal-input" style={inp} value={form.bandcamp_url} onChange={e => set('bandcamp_url', e.target.value)} placeholder="https://artist.bandcamp.com/track/..." />
 
         <label style={lbl}>ジャンル（任意）</label>
         <input className="modal-input" style={inp} value={form.genre} onChange={e => set('genre', e.target.value)} placeholder="例: J-Rock" />
@@ -542,13 +604,33 @@ function TrackModal({ token, track, onClose, onSuccess }) {
         <label style={lbl}>リリース日（任意）</label>
         <input className="modal-input" style={{ ...inp, colorScheme: 'light' }} type="date" value={form.release_date} onChange={e => set('release_date', e.target.value)} />
 
-        <label style={lbl}>サムネイル画像URL（任意）</label>
-        <input className="modal-input" style={inp} value={form.cover_image_url} onChange={e => set('cover_image_url', e.target.value)} placeholder="https://..." />
-        {form.cover_image_url && /^https?:\/\/.+/.test(form.cover_image_url) && (
-          <div style={{ marginTop: 8, borderRadius: 10, overflow: 'hidden', border: `1px solid ${THEME.border}`, maxHeight: 120 }}>
-            <img src={form.cover_image_url} alt="preview" style={{ width: '100%', height: 120, objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
+        {/* Cover image: file upload + URL fallback */}
+        <label style={lbl}>サムネイル画像（任意）</label>
+        <div style={{ marginTop: 8, padding: 16, border: `1px solid ${THEME.borderLight}`, borderRadius: 12, background: THEME.bg }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {/* Preview */}
+            <div onClick={() => coverInputRef.current?.click()} style={{
+              width: 80, height: 80, borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
+              border: `2px dashed ${coverPreview ? THEME.gold : THEME.border}`,
+              background: THEME.card, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              {coverPreview && /^(https?:\/\/|data:)/.test(coverPreview)
+                ? <img src={coverPreview} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
+                : <span style={{ fontSize: 28, color: THEME.textMuted }}>🖼️</span>}
+            </div>
+            <div>
+              <button onClick={() => coverInputRef.current?.click()} style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${THEME.border}`, background: THEME.card, color: THEME.text, fontSize: 12, cursor: 'pointer', fontFamily: THEME.font, fontWeight: 500 }}>
+                {coverUploading ? '⏳ アップロード中...' : '画像をアップロード'}
+              </button>
+              <p style={{ fontSize: 11, color: THEME.textMuted, marginTop: 4 }}>JPEG, PNG, WebP（5MB以下）</p>
+            </div>
+            <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleCoverFile(e.target.files?.[0])} />
           </div>
-        )}
+          <div style={{ marginTop: 12 }}>
+            <label style={{ fontSize: 11, color: THEME.textMuted, fontWeight: 500 }}>または URLを入力:</label>
+            <input className="modal-input" style={{ ...inp, marginTop: 4, fontSize: 13 }} value={form.cover_image_url} onChange={e => { set('cover_image_url', e.target.value); if (!coverFile) setCoverPreview(e.target.value); }} placeholder="https://..." />
+          </div>
+        </div>
 
         <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 20, cursor: 'pointer' }}>
           <input type="checkbox" checked={form.is_public} onChange={e => set('is_public', e.target.checked)} style={{ width: 18, height: 18, accentColor: THEME.gold }} />
@@ -628,7 +710,6 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
   const handleSave = async () => {
     setLoading(true); setError('');
     try {
-      // Upload avatar if changed
       if (avatarFile) {
         try {
           const fd = new FormData();
@@ -638,7 +719,6 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
           });
         } catch {}
       }
-      // Update profile
       const res = await fetch('/api/artists', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -673,7 +753,6 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
 
         <h2 style={{ fontFamily: THEME.fontDisplay, fontSize: 22, fontWeight: 700, color: THEME.text, margin: '0 0 20px' }}>プロフィール編集</h2>
 
-        {/* Avatar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
           <div onClick={() => avatarInputRef.current?.click()} style={{ width: 72, height: 72, borderRadius: '50%', border: `2px dashed ${avatarPreview ? THEME.gold : THEME.border}`, overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: THEME.bg, flexShrink: 0 }}>
             {avatarPreview ? <img src={avatarPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 28 }}>🎵</span>}
@@ -705,7 +784,6 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
         <label style={lbl}>Hot News</label>
         <input className="modal-input" style={inp} value={form.hot_news} onChange={e => set('hot_news', e.target.value)} placeholder="最新情報..." />
 
-        {/* Genres */}
         <label style={lbl}>ジャンル（最大8つ）</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
           {GENRE_OPTIONS.map(g => {
@@ -721,7 +799,6 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
           })}
         </div>
 
-        {/* Moods */}
         <label style={lbl}>ムード（最大5つ）</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
           {MOOD_OPTIONS.map(m => {
@@ -737,7 +814,6 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
           })}
         </div>
 
-        {/* Influences */}
         <label style={lbl}>影響を受けたアーティスト（最大5つ）</label>
         <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
           <input className="modal-input" style={{ ...inp, flex: 1, marginTop: 0 }} value={influenceInput} onChange={e => setInfluenceInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addInfluence(); }}} placeholder="Enterで追加" disabled={form.influences.length >= 5} />
@@ -757,11 +833,10 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
         <label style={lbl}>所属レーベル</label>
         <input className="modal-input" style={inp} value={form.label_name} onChange={e => set('label_name', e.target.value)} />
 
-        {/* SNS Links */}
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${THEME.borderLight}` }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: THEME.text, marginBottom: 12 }}>SNSリンク</div>
           {[
-            { key: 'spotify_url', icon: '🎵', label: 'Spotify' },
+            { key: 'spotify_url', icon: '🟢', label: 'Spotify' },
             { key: 'youtube_url', icon: '▶️', label: 'YouTube' },
             { key: 'instagram_url', icon: '📷', label: 'Instagram' },
             { key: 'twitter_url', icon: '𝕏', label: 'Twitter / X' },
@@ -770,7 +845,7 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
           ].map(s => (
             <div key={s.key} style={{ marginBottom: 10 }}>
               <label style={{ fontSize: 11, color: THEME.textMuted, fontWeight: 500 }}>{s.icon} {s.label}</label>
-              <input className="modal-input" style={{ ...inp, marginTop: 3 }} value={form[s.key]} onChange={e => set(s.key, e.target.value)} placeholder={`https://...`} />
+              <input className="modal-input" style={{ ...inp, marginTop: 3 }} value={form[s.key]} onChange={e => set(s.key, e.target.value)} placeholder="https://..." />
             </div>
           ))}
         </div>
@@ -812,11 +887,13 @@ const globalStyles = `
   html { scroll-behavior: smooth; }
   body { background: #f8f7f4; overflow-x: hidden; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .modal-input:focus, .modal-input:focus { border-color: #c4956a !important; box-shadow: 0 0 0 3px rgba(196,149,106,0.12) !important; }
+  .modal-input:focus { border-color: #c4956a !important; box-shadow: 0 0 0 3px rgba(196,149,106,0.12) !important; }
   .modal-input:hover { border-color: #9b9590 !important; }
   .btn-gold:hover { background: #b8845e !important; }
   .track-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important; }
   .add-track-card:hover { border-color: #c4956a !important; background: #c4956a10 !important; }
+  .sns-pill:hover { opacity: 0.85; transform: translateY(-1px); }
+  .sns-pill { transition: all 0.15s; }
   @media (max-width: 768px) {
     .cover-area { height: 140px !important; }
     .avatar-hero { width: 72px !important; height: 72px !important; margin-top: -36px !important; }

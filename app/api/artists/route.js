@@ -78,7 +78,7 @@ export async function POST(request) {
       role: 'artist',
     });
 
-    // Welcomeメール送信（非同期、失敗してもエラーにしない）
+    // Welcomeメール送信（日英併記、失敗してもエラーにしない）
     const artistTo = testMode ? safeEmail : email;
     const welcomeSubject = (testMode ? `[TEST] (→${email}) ` : '') +
       'Welcome to OTONAMI! あなたの音楽を世界へ';
@@ -89,51 +89,38 @@ export async function POST(request) {
         reply_to: 'info@otonami.io',
         subject: welcomeSubject,
         html: `
-          <div style="max-width:600px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif;background:#faf9f7;color:#1a1a1a;padding:0;">
-            <div style="background:#fff;padding:24px 32px;border-bottom:1px solid #e8e5e0;text-align:center;">
-              <span style="font-size:28px;font-weight:700;color:#1a1a1a;letter-spacing:1px;">OTONAMI</span>
+          <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
+            <h1 style="font-size:28px;text-align:center;color:#1a1a1a;margin-bottom:8px;">OTONAMI</h1>
+            <h2 style="font-size:22px;color:#1a1a1a;margin-top:32px;">ようこそ、${name}さん！</h2>
+            <p style="color:#6b6560;font-size:15px;line-height:1.7;">OTONAMIへのご登録ありがとうございます。あなたの音楽を世界中のキュレーターに届けましょう。</p>
+            <div style="background:#f8f7f4;border-radius:12px;padding:24px;margin:24px 0;">
+              <p style="font-weight:600;color:#1a1a1a;margin:0 0 12px;">はじめの3ステップ:</p>
+              <ol style="color:#6b6560;font-size:14px;line-height:2;margin:0;padding-left:20px;">
+                <li>プロフィールを完成させる（Bio、リンク、ジャンル）</li>
+                <li>楽曲を登録する（YouTube、Spotify、SoundCloud、Bandcamp）</li>
+                <li>AIマッチングでキュレーターを見つけてピッチを送る</li>
+              </ol>
             </div>
-            <div style="padding:40px 32px;">
-              <h1 style="font-size:24px;font-weight:700;color:#1a1a1a;margin:0 0 8px;">Welcome, ${name}!</h1>
-              <p style="color:#666;font-size:15px;margin:0 0 28px;">OTONAMIへようこそ。あなたの音楽を世界中のキュレーターに届けましょう。</p>
-              <div style="background:#fff;border:1px solid #e8e5e0;border-radius:12px;padding:24px;margin:0 0 28px;">
-                <p style="color:#1a1a1a;font-size:15px;margin:0 0 16px;">Here's how to get started:</p>
-                <table style="width:100%;border-collapse:collapse;">
-                  <tr>
-                    <td style="padding:8px 12px 8px 0;color:#c4956a;font-weight:bold;vertical-align:top;width:28px;">1.</td>
-                    <td style="padding:8px 0;color:#1a1a1a;font-size:14px;">Complete your artist profile with bio, links, and genres</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:8px 12px 8px 0;color:#c4956a;font-weight:bold;vertical-align:top;">2.</td>
-                    <td style="padding:8px 0;color:#1a1a1a;font-size:14px;">Add your tracks — YouTube, Spotify, SoundCloud, or Bandcamp</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:8px 12px 8px 0;color:#c4956a;font-weight:bold;vertical-align:top;">3.</td>
-                    <td style="padding:8px 0;color:#1a1a1a;font-size:14px;">Pitch your music to curators matched by our AI system</td>
-                  </tr>
-                </table>
-              </div>
-              <p style="color:#666;font-size:14px;text-align:center;margin:0 0 8px;">
-                You have <strong style="color:#c4956a;">3 free credits</strong> to start pitching!
-              </p>
-              <div style="text-align:center;margin:32px 0;">
-                <a href="${APP_URL}/artist" style="display:inline-block;background-color:#c4956a;color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">
-                  Go to Your Dashboard →
-                </a>
-              </div>
-              <p style="color:#999;font-size:13px;text-align:center;margin:24px 0 0;">
-                Questions? Reply to this email — we'd love to hear from you.
-              </p>
+            <p style="text-align:center;color:#c4956a;font-weight:600;font-size:15px;">🎁 初回 <span style="color:#e85d3a;">3クレジット</span> をプレゼント中！</p>
+            <div style="text-align:center;margin:28px 0;">
+              <a href="${APP_URL}/artist/dashboard" style="background:#c4956a;color:#fff;padding:14px 40px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">ダッシュボードへ →</a>
             </div>
-            <div style="background:#f0ede6;padding:20px 32px;border-top:1px solid #e8e5e0;text-align:center;">
-              <p style="color:#999;font-size:12px;margin:0;">
-                OTONAMI — Connecting Japanese Music to the World<br>
-                <a href="https://otonami.io" style="color:#c4956a;text-decoration:none;">otonami.io</a>
-              </p>
+            <hr style="border:none;border-top:1px solid #e5e2dc;margin:32px 0;" />
+            <h2 style="font-size:18px;color:#9b9590;">Welcome, ${name}!</h2>
+            <p style="color:#9b9590;font-size:14px;line-height:1.7;">Thank you for joining OTONAMI. Let's connect your music with curators around the world.</p>
+            <div style="background:#f8f7f4;border-radius:12px;padding:24px;margin:24px 0;">
+              <p style="font-weight:600;color:#9b9590;margin:0 0 12px;">Here's how to get started:</p>
+              <ol style="color:#9b9590;font-size:13px;line-height:2;margin:0;padding-left:20px;">
+                <li>Complete your artist profile with bio, links, and genres</li>
+                <li>Add your tracks — YouTube, Spotify, SoundCloud, or Bandcamp</li>
+                <li>Pitch your music to curators matched by our AI system</li>
+              </ol>
             </div>
+            <p style="text-align:center;color:#9b9590;font-size:13px;">🎁 You have <strong>3 free credits</strong> to start pitching!</p>
+            <p style="text-align:center;color:#9b9590;font-size:12px;margin-top:32px;">Questions? Reply to this email — we'd love to hear from you.<br/>ご質問はこのメールに返信してください。</p>
           </div>
         `,
-        text: `Welcome to OTONAMI, ${name}!\n\nOTONAMIへようこそ。あなたの音楽を世界中のキュレーターに届けましょう。\n\nHow to get started:\n1. Complete your artist profile\n2. Add your tracks\n3. Pitch your music to curators\n\nYou have 3 free credits to start pitching!\n\nDashboard: ${APP_URL}/artist\n\nOTONAMI — Connecting Japanese Music to the World\nhttps://otonami.io`,
+        text: `ようこそ、${name}さん！\n\nOTONAMIへのご登録ありがとうございます。あなたの音楽を世界中のキュレーターに届けましょう。\n\nはじめの3ステップ:\n1. プロフィールを完成させる（Bio、リンク、ジャンル）\n2. 楽曲を登録する（YouTube、Spotify、SoundCloud、Bandcamp）\n3. AIマッチングでキュレーターを見つけてピッチを送る\n\n🎁 初回3クレジットをプレゼント中！\n\nダッシュボード: ${APP_URL}/artist/dashboard\n\n---\n\nWelcome, ${name}!\n\nThank you for joining OTONAMI. Let's connect your music with curators around the world.\n\nHow to get started:\n1. Complete your artist profile with bio, links, and genres\n2. Add your tracks\n3. Pitch your music to curators\n\nYou have 3 free credits to start pitching!\n\nDashboard: ${APP_URL}/artist/dashboard\n\nOTONAMI — Connecting Japanese Music to the World\nhttps://otonami.io`,
       });
     } catch (e) {
       console.error('Artist welcome email failed (non-fatal):', e);

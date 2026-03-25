@@ -826,7 +826,7 @@ export default function ArtistDashboard() {
         />
       )}
 
-      {/* ── Curator Profile Modal ── */}
+      {/* ── Curator Profile Modal (Groover-style) ── */}
       {curatorLoading && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400 }}>
           <svg width="32" height="32" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}>
@@ -834,125 +834,195 @@ export default function ArtistDashboard() {
           </svg>
         </div>
       )}
-      {selectedCurator && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400, padding: 20 }}
-          onClick={() => setSelectedCurator(null)}
-        >
-          <div style={{
-            background: THEME.card, borderRadius: 20, padding: 32, maxWidth: 480, width: '100%',
-            maxHeight: '80vh', overflowY: 'auto',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.15)', position: 'relative',
-          }}
-            onClick={e => e.stopPropagation()}
+      {selectedCurator && (() => {
+        const dc = selectedCurator;
+        const dcAv = [
+          { bg: 'rgba(196,149,106,0.15)', text: '#c4956a' },
+          { bg: 'rgba(232,93,58,0.15)', text: '#e85d3a' },
+          { bg: 'rgba(74,222,128,0.12)', text: '#4ade80' },
+          { bg: 'rgba(96,165,250,0.12)', text: '#60a5fa' },
+          { bg: 'rgba(251,191,36,0.12)', text: '#fbbf24' },
+          { bg: 'rgba(168,85,247,0.12)', text: '#a855f7' },
+        ][(dc.name || '').charCodeAt(0) % 6];
+        const dcInitials = (dc.name || '').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        const dcFollowers = dc.followers;
+        // Simple match score: overlap between artist genres and curator genres
+        const artistGenres = (artist?.genres || []).map(g => g.toLowerCase());
+        const curatorGenres = (dc.genres || []).map(g => g.toLowerCase());
+        const matchingGenres = artistGenres.length > 0 ? curatorGenres.filter(g => artistGenres.includes(g)) : [];
+        const matchScore = (artistGenres.length > 0 && curatorGenres.length > 0)
+          ? Math.round((matchingGenres.length / Math.max(artistGenres.length, 1)) * 100)
+          : null;
+        const msColor = matchScore >= 85 ? '#4ade80' : matchScore >= 70 ? '#60a5fa' : matchScore >= 50 ? '#fbbf24' : '#9b9590';
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400, padding: 20 }}
+            onClick={() => setSelectedCurator(null)}
           >
-            <button onClick={() => setSelectedCurator(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: THEME.textMuted, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}
-              onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
-              onMouseLeave={e => e.currentTarget.style.background = 'none'}
-            >✕</button>
+            <div style={{ background: '#ffffff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}
+              onClick={e => e.stopPropagation()}
+            >
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: '50%', background: THEME.goldLight,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                overflow: 'hidden', flexShrink: 0, border: `2px solid ${THEME.gold}30`,
-              }}>
-                {selectedCurator.avatar_url
-                  ? <img src={selectedCurator.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontFamily: THEME.fontDisplay, fontSize: 28, fontWeight: 700, color: THEME.gold }}>{(selectedCurator.name || '?')[0].toUpperCase()}</span>
-                }
+              {/* Header */}
+              <div style={{ padding: '24px 24px 20px', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+                  {dc.iconUrl && <img src={dc.iconUrl} alt={dc.name} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />}
+                  <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: dcAv.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 600, color: dcAv.text }}>{dcInitials}</div>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3 style={{ fontSize: 20, fontWeight: 500, color: THEME.text, fontFamily: THEME.fontDisplay, margin: '0 0 4px' }}>{dc.name}</h3>
+                  <div style={{ fontSize: 13, color: THEME.textMuted }}>
+                    {dc.platform}{dcFollowers ? ' · ' + (dcFollowers >= 1000 ? (dcFollowers / 1000).toFixed(1) + 'K followers' : dcFollowers + ' followers') : ''}
+                  </div>
+                </div>
+                <button onClick={() => setSelectedCurator(null)} style={{ background: 'transparent', border: 'none', color: THEME.textMuted, fontSize: 24, cursor: 'pointer', padding: 4, lineHeight: 1, flexShrink: 0 }}>×</button>
               </div>
-              <div>
-                <h2 style={{ fontFamily: THEME.fontDisplay, fontSize: 22, fontWeight: 700, color: THEME.text, margin: 0 }}>{selectedCurator.name}</h2>
-                {selectedCurator.platform && (
-                  <span style={{ fontSize: 13, color: THEME.textSub }}>{selectedCurator.platform}</span>
+
+              {/* Body */}
+              <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+                {/* Match Score section */}
+                {(matchScore != null || matchingGenres.length > 0) && (
+                  <div style={{
+                    background: matchScore >= 85 ? 'rgba(74,222,128,0.06)' : matchScore >= 70 ? 'rgba(96,165,250,0.06)' : 'rgba(251,191,36,0.06)',
+                    borderRadius: 12, padding: 16,
+                    border: `1px solid ${matchScore >= 85 ? 'rgba(74,222,128,0.15)' : matchScore >= 70 ? 'rgba(96,165,250,0.15)' : 'rgba(251,191,36,0.15)'}`,
+                  }}>
+                    {matchScore != null && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: matchingGenres.length > 0 ? 12 : 0 }}>
+                        <div style={{ fontSize: 32, fontWeight: 600, color: msColor, lineHeight: 1 }}>{matchScore}%</div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: THEME.text }}>Match Score</div>
+                          <div style={{ fontSize: 12, color: THEME.textMuted, marginTop: 2 }}>
+                            {matchingGenres.length > 0 ? `${matchingGenres.length} genre(s) in common` : 'Based on your profile'}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {matchingGenres.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: 12, color: THEME.textMuted, marginBottom: 8 }}>How well you match</div>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {matchingGenres.map((g, i) => (
+                            <span key={i} style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ade80', padding: '4px 12px', borderRadius: 20, fontSize: 12 }}>✓ {g}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
-                {selectedCurator.tier && (
-                  <span style={{ marginLeft: 8, padding: '2px 8px', borderRadius: 100, fontSize: 11, fontWeight: 600, background: THEME.goldLight, color: THEME.gold }}>
-                    Tier {selectedCurator.tier}
-                  </span>
+
+                {/* Stats: Answer rate / Share rate / Responds in */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                  <div style={{ background: THEME.bg, borderRadius: 10, padding: '14px 10px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 20, fontWeight: 600, color: THEME.text }}>
+                      {(dc.pitchesResponded && dc.pitchesReceived) ? Math.round((dc.pitchesResponded / dc.pitchesReceived) * 100) + '%' : '--'}
+                    </div>
+                    <div style={{ fontSize: 11, color: THEME.textMuted, marginTop: 3 }}>Answer rate</div>
+                  </div>
+                  <div style={{ background: THEME.bg, borderRadius: 10, padding: '14px 10px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 20, fontWeight: 600, color: THEME.text }}>
+                      {(dc.pitchesAccepted && dc.pitchesResponded) ? Math.round((dc.pitchesAccepted / dc.pitchesResponded) * 100) + '%' : '--'}
+                    </div>
+                    <div style={{ fontSize: 11, color: THEME.textMuted, marginTop: 3 }}>Share rate</div>
+                  </div>
+                  <div style={{ background: THEME.bg, borderRadius: 10, padding: '14px 10px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 17, fontWeight: 600, color: THEME.text, lineHeight: 1.2 }}>{dc.responseTime || '7 days'}</div>
+                    <div style={{ fontSize: 11, color: THEME.textMuted, marginTop: 3 }}>Responds in</div>
+                  </div>
+                </div>
+
+                {/* Bio */}
+                {dc.bio && <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.7, margin: 0 }}>{dc.bio}</p>}
+
+                {/* Platform URL */}
+                {dc.url && <a href={dc.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: THEME.gold, fontSize: 13, textDecoration: 'none', wordBreak: 'break-all' }}>🔗 {dc.url}</a>}
+
+                {/* Genres they love */}
+                {dc.genres?.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: THEME.textSub, marginBottom: 10 }}>Genres they love</div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {dc.genres.map((g, i) => (
+                        <span key={i} style={{ background: 'rgba(196,149,106,0.06)', border: '1px solid rgba(196,149,106,0.1)', color: THEME.gold, padding: '4px 12px', borderRadius: 20, fontSize: 12 }}>{g}</span>
+                      ))}
+                    </div>
+                  </div>
                 )}
+
+                {/* They don't want to receive */}
+                {dc.rejectedGenres?.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: THEME.textSub, marginBottom: 10 }}>They don't want to receive...</div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {dc.rejectedGenres.map((g, i) => (
+                        <span key={i} style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)', color: '#ef4444', padding: '4px 12px', borderRadius: 20, fontSize: 12 }}>{g}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Moods they love */}
+                {dc.preferredMoods?.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: THEME.textSub, marginBottom: 10 }}>Moods they love</div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {dc.preferredMoods.map((m, i) => (
+                        <span key={i} style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.15)', color: '#a855f7', padding: '4px 12px', borderRadius: 20, fontSize: 12 }}>{m}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* They want music similar to... */}
+                {dc.preferredArtists?.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: THEME.textSub, marginBottom: 10 }}>They want music similar to...</div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {dc.preferredArtists.map((a, i) => (
+                        <span key={i} style={{ background: '#ffffff', border: `1px solid ${THEME.border}`, color: THEME.text, padding: '6px 14px', borderRadius: 20, fontSize: 12 }}>🎤 {a}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Main opportunities */}
+                {(dc.opportunities?.length > 0 || dc.accepts?.length > 0) && (
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: THEME.textSub, marginBottom: 10 }}>Main opportunities</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {(dc.opportunities?.length > 0 ? dc.opportunities : dc.accepts).map((o, i) => (
+                        <div key={i} style={{ background: '#ffffff', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: THEME.textSub, border: `1px solid ${THEME.border}` }}>{o}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Their playlist */}
+                {dc.playlistUrl && (
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: THEME.textSub, marginBottom: 10 }}>Their playlist</div>
+                    <a href={dc.playlistUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#ffffff', borderRadius: 10, padding: 14, color: THEME.gold, textDecoration: 'none', fontSize: 13, border: `1px solid ${THEME.border}`, wordBreak: 'break-all' }}>🎵 {dc.playlistUrl}</a>
+                  </div>
+                )}
+
               </div>
+
+              {/* Footer */}
+              <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+                <button onClick={() => setSelectedCurator(null)} style={{ background: 'transparent', border: `1px solid ${THEME.border}`, color: THEME.textSub, borderRadius: 8, padding: '10px 20px', fontSize: 13, cursor: 'pointer', fontFamily: THEME.font }}>閉じる</button>
+                <button onClick={() => {
+                  setSelectedCurator(null);
+                  window.location.href = `/studio?role=artist&preferred_curator=${encodeURIComponent(dc.name)}&curator_id=${dc.id}`;
+                }} style={{ background: THEME.gold, border: 'none', color: '#fff', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: THEME.font }}>
+                  🎵 この方にピッチする →
+                </button>
+              </div>
+
             </div>
-
-            {/* Stats row */}
-            <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-              {selectedCurator.followers && (
-                <div style={{ flex: 1, background: THEME.bg, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: THEME.text }}>{typeof selectedCurator.followers === 'number' ? selectedCurator.followers.toLocaleString() : selectedCurator.followers}</div>
-                  <div style={{ fontSize: 11, color: THEME.textMuted }}>Followers</div>
-                </div>
-              )}
-              {selectedCurator.acceptance_rate != null && (
-                <div style={{ flex: 1, background: THEME.bg, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: THEME.green }}>{Math.round(selectedCurator.acceptance_rate * 100)}%</div>
-                  <div style={{ fontSize: 11, color: THEME.textMuted }}>採用率</div>
-                </div>
-              )}
-              {selectedCurator.avg_response_days && (
-                <div style={{ flex: 1, background: THEME.bg, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: THEME.text }}>{selectedCurator.avg_response_days}日</div>
-                  <div style={{ fontSize: 11, color: THEME.textMuted }}>平均返信</div>
-                </div>
-              )}
-            </div>
-
-            {selectedCurator.description && (
-              <div style={{ marginBottom: 16 }}>
-                <h4 style={{ fontSize: 13, fontWeight: 700, color: THEME.text, marginBottom: 6, fontFamily: THEME.font }}>About</h4>
-                <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{selectedCurator.description}</p>
-              </div>
-            )}
-
-            {selectedCurator.genres?.length > 0 && (
-              <div style={{ marginBottom: 16 }}>
-                <h4 style={{ fontSize: 13, fontWeight: 700, color: THEME.text, marginBottom: 8, fontFamily: THEME.font }}>Genres</h4>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {selectedCurator.genres.map(g => (
-                    <span key={g} style={{ padding: '4px 12px', borderRadius: 100, fontSize: 12, background: THEME.goldLight, color: THEME.gold, fontWeight: 500 }}>{g}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Links */}
-            {(selectedCurator.playlist_url || selectedCurator.spotify_url || selectedCurator.youtube_url || selectedCurator.instagram_url || selectedCurator.website_url) && (
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-                {selectedCurator.playlist_url && (
-                  <a href={selectedCurator.playlist_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: THEME.gold, color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-                    🔗 Playlist
-                  </a>
-                )}
-                {selectedCurator.spotify_url && (
-                  <a href={selectedCurator.spotify_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#1DB954', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-                    <SpotifyIcon /> Spotify
-                  </a>
-                )}
-                {selectedCurator.youtube_url && (
-                  <a href={selectedCurator.youtube_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#FF0000', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-                    <YouTubeIcon /> YouTube
-                  </a>
-                )}
-                {selectedCurator.instagram_url && (
-                  <a href={selectedCurator.instagram_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-                    <InstagramIcon /> Instagram
-                  </a>
-                )}
-                {selectedCurator.website_url && (
-                  <a href={selectedCurator.website_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#1a1a1a', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-                    🔗 Website
-                  </a>
-                )}
-              </div>
-            )}
-
-            <a href={`/studio?role=artist&curator_name=${encodeURIComponent(selectedCurator.name)}`} className="btn-gold" style={{
-              display: 'block', textAlign: 'center', padding: '12px 24px', borderRadius: 100,
-              background: THEME.gold, color: '#fff', textDecoration: 'none',
-              fontSize: 14, fontWeight: 700, fontFamily: THEME.font,
-            }}>このキュレーターにピッチ →</a>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── Delete Confirm ── */}
       {deleteConfirm && (

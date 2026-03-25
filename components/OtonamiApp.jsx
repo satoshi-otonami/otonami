@@ -673,6 +673,9 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
   }, [artist, links, followers]);
 
   // ── Auto-fill from URL params (dashboard → studio handoff) ──
+  const [pendingCuratorId, setPendingCuratorId] = useState(null);
+  const [pendingCuratorName, setPendingCuratorName] = useState(null);
+
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -691,8 +694,37 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
         }));
       }
       if (trackId) setLinkedTrackId(trackId);
+
+      // Preferred curator from dashboard modal
+      const preferredCurator = params.get('preferred_curator');
+      const curatorId = params.get('curator_id');
+      if (curatorId) {
+        setPendingCuratorId(curatorId);
+        setPage('curators');
+      } else if (preferredCurator) {
+        setPendingCuratorName(preferredCurator);
+        setPage('curators');
+      }
     } catch {}
   }, []); // eslint-disable-line
+
+  // ── Auto-select curator when curators are loaded and pending ──
+  useEffect(() => {
+    if (!curators || curators.length === 0) return;
+    if (pendingCuratorId) {
+      const found = curators.find(c => c.id === pendingCuratorId);
+      if (found && !selected.includes(found.id)) {
+        setSelected(prev => [...prev, found.id]);
+      }
+      setPendingCuratorId(null);
+    } else if (pendingCuratorName) {
+      const found = curators.find(c => c.name === pendingCuratorName);
+      if (found && !selected.includes(found.id)) {
+        setSelected(prev => [...prev, found.id]);
+      }
+      setPendingCuratorName(null);
+    }
+  }, [curators, pendingCuratorId, pendingCuratorName]); // eslint-disable-line
 
   // ── Auto-fill from loggedInArtist profile (async, fills when profile loads) ──
   useEffect(() => {

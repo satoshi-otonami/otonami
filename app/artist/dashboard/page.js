@@ -156,6 +156,10 @@ export default function ArtistDashboard() {
   // YouTube embed state per track
   const [playingYT, setPlayingYT] = useState(null);
 
+  // Track selection modal (before pitch)
+  const [showTrackSelectModal, setShowTrackSelectModal] = useState(false);
+  const [pendingCuratorForPitch, setPendingCuratorForPitch] = useState(null);
+
   // Header dropdown
   const [headerMenu, setHeaderMenu] = useState(false);
   const headerMenuRef = useRef(null);
@@ -212,6 +216,18 @@ export default function ArtistDashboard() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [trackMenu]);
+
+  // ESC key to close track select modal
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape' && showTrackSelectModal) {
+        setShowTrackSelectModal(false);
+        setPendingCuratorForPitch(null);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [showTrackSelectModal]);
 
   const handleLogout = () => {
     localStorage.removeItem('artist_token');
@@ -290,10 +306,11 @@ export default function ArtistDashboard() {
           </a>
           <nav className="nav-links" style={{ display: 'flex', gap: 4 }}>
             <span style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 700, color: THEME.text, fontFamily: THEME.font }}>ダッシュボード</span>
-            <a href="/studio?role=artist" style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 500, color: THEME.textSub, textDecoration: 'none', fontFamily: THEME.font, transition: 'all 0.15s' }}
+            <button onClick={() => { setPendingCuratorForPitch(null); setShowTrackSelectModal(true); }}
+              style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 500, color: THEME.textSub, background: 'none', border: 'none', cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.background = THEME.goldLight; e.currentTarget.style.color = THEME.gold; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = THEME.textSub; }}
-            >ピッチを送る</a>
+            >ピッチを送る</button>
           </nav>
         </div>
         <div style={{ position: 'relative' }} ref={headerMenuRef}>
@@ -1012,8 +1029,9 @@ export default function ArtistDashboard() {
               <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
                 <button onClick={() => setSelectedCurator(null)} style={{ background: 'transparent', border: `1px solid ${THEME.border}`, color: THEME.textSub, borderRadius: 8, padding: '10px 20px', fontSize: 13, cursor: 'pointer', fontFamily: THEME.font }}>閉じる</button>
                 <button onClick={() => {
+                  setPendingCuratorForPitch({ id: dc.id, name: dc.name });
                   setSelectedCurator(null);
-                  window.location.href = `/studio?role=artist&preferred_curator=${encodeURIComponent(dc.name)}&curator_id=${dc.id}`;
+                  setShowTrackSelectModal(true);
                 }} style={{ background: THEME.gold, border: 'none', color: '#fff', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: THEME.font }}>
                   🎵 この方にピッチする →
                 </button>
@@ -1023,6 +1041,136 @@ export default function ArtistDashboard() {
           </div>
         );
       })()}
+
+      {/* ── Track Selection Modal (before pitch) ── */}
+      {showTrackSelectModal && (
+        <div onClick={() => { setShowTrackSelectModal(false); setPendingCuratorForPitch(null); }} style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
+          backdropFilter: 'blur(6px)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 20,
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: '#fff', borderRadius: 24, maxWidth: 560, width: '100%',
+            maxHeight: '80vh', overflow: 'auto', padding: 0,
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '24px 28px 16px', borderBottom: `1px solid ${THEME.border}`,
+              position: 'sticky', top: 0, background: '#fff', zIndex: 1,
+              borderRadius: '24px 24px 0 0',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h2 style={{ fontSize: 20, fontWeight: 700, color: THEME.text, margin: 0, fontFamily: THEME.fontDisplay }}>
+                    🎵 ピッチする楽曲を選択
+                  </h2>
+                  {pendingCuratorForPitch && (
+                    <p style={{ fontSize: 13, color: THEME.gold, margin: '6px 0 0', fontWeight: 500 }}>
+                      → {pendingCuratorForPitch.name} にピッチ
+                    </p>
+                  )}
+                </div>
+                <button onClick={() => { setShowTrackSelectModal(false); setPendingCuratorForPitch(null); }}
+                  style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: THEME.textMuted, padding: 4 }}>
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Track list */}
+            <div style={{ padding: '16px 28px 28px' }}>
+              {tracks.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {tracks.map(track => {
+                    const thumb = track.cover_image_url || getYoutubeThumbnail(track.youtube_url);
+                    const pitchParams = new URLSearchParams({
+                      role: 'artist',
+                      track_id: track.id,
+                      track_title: track.title,
+                      song_link: track.spotify_url || track.youtube_url || track.soundcloud_url || track.bandcamp_url || '',
+                      artist_name: artist.name,
+                      artist_genre: (artist.genres || []).join(', '),
+                      auto_analyze: 'true',
+                    });
+                    if (pendingCuratorForPitch) {
+                      pitchParams.set('preferred_curator', pendingCuratorForPitch.name);
+                      pitchParams.set('curator_id', pendingCuratorForPitch.id);
+                    }
+                    const pitchUrl = `/studio?${pitchParams.toString()}`;
+
+                    return (
+                      <a key={track.id} href={pitchUrl}
+                        onClick={() => { setShowTrackSelectModal(false); setPendingCuratorForPitch(null); }}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 14,
+                          padding: '12px 16px', borderRadius: 14,
+                          border: `1px solid ${THEME.border}`, textDecoration: 'none',
+                          color: 'inherit', cursor: 'pointer', transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = THEME.gold; e.currentTarget.style.background = `${THEME.gold}08`; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = THEME.border; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.transform = 'none'; }}
+                      >
+                        {thumb ? (
+                          <img src={thumb} alt={track.title} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
+                            onError={e => { e.target.style.display = 'none'; }} />
+                        ) : (
+                          <div style={{
+                            width: 56, height: 56, borderRadius: 10, flexShrink: 0,
+                            background: 'linear-gradient(135deg, #c4956a, #e85d3a)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <span style={{ fontSize: 24, opacity: 0.7 }}>🎵</span>
+                          </div>
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: THEME.text, fontFamily: THEME.font }}>{track.title}</div>
+                          {track.genre && <div style={{ fontSize: 12, color: THEME.textMuted, marginTop: 2 }}>{track.genre}</div>}
+                          {track.release_date && (
+                            <div style={{ fontSize: 11, color: THEME.textMuted, marginTop: 2 }}>
+                              {new Date(track.release_date).toLocaleDateString('ja-JP')}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ color: THEME.gold, fontSize: 18, flexShrink: 0 }}>→</div>
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Add new track button */}
+              <button onClick={() => {
+                setShowTrackSelectModal(false);
+                setShowAddTrack(true);
+                setTab('tracks');
+              }} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                width: '100%', padding: '14px 20px', marginTop: tracks.length > 0 ? 12 : 0,
+                borderRadius: 14, border: `2px dashed ${THEME.border}`,
+                background: 'transparent', color: THEME.textSub,
+                fontSize: 14, fontWeight: 500, cursor: 'pointer',
+                fontFamily: THEME.font, transition: 'all 0.2s',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = THEME.gold; e.currentTarget.style.color = THEME.gold; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = THEME.border; e.currentTarget.style.color = THEME.textSub; }}
+              >
+                <span style={{ fontSize: 18 }}>+</span>
+                新しい楽曲を追加してピッチ
+              </button>
+
+              {tracks.length === 0 && (
+                <div style={{ textAlign: 'center', marginTop: 20, padding: 16 }}>
+                  <p style={{ fontSize: 14, color: THEME.textMuted, fontFamily: THEME.font }}>
+                    まだ楽曲が登録されていません。<br />
+                    楽曲を追加してピッチを始めましょう。
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Delete Confirm ── */}
       {deleteConfirm && (

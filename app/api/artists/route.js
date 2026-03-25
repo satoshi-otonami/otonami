@@ -188,15 +188,30 @@ export async function GET(request) {
 
     const tracks = await getArtistTracks(payload.artistId);
 
-    // Fetch pitch stats from pitches table
+    // Fetch pitch stats from pitches table (search by email, id, and name)
     const supabase = getServiceSupabase();
-    const { data: pitches } = await supabase
+    const orFilter = [
+      `artist_email.eq.${artist.email}`,
+      `artist_id.eq.${artist.id}`,
+      `artist_name.eq.${artist.name}`,
+    ].join(',');
+    const { data: pitches, error: pitchError } = await supabase
       .from('pitches')
       .select('id, status, curator_name, feedback_message, placement_url, sent_at, song_link, song_title, subject, body')
-      .or(`artist_email.eq.${artist.email}`)
+      .or(orFilter)
       .order('sent_at', { ascending: false });
 
-    const pitchList = pitches || [];
+    if (pitchError) {
+      console.error('Pitch query error:', pitchError);
+    }
+
+    // Deduplicate by id (same pitch may match multiple OR conditions)
+    const seen = new Set();
+    const pitchList = (pitches || []).filter(p => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
     const pitchStats = {
       total_sent: pitchList.length,
       responded: pitchList.filter(p => p.feedback_message || p.status === 'feedback' || p.status === 'interested' || p.status === 'accepted' || p.status === 'declined').length,

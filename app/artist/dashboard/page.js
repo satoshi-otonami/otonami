@@ -46,10 +46,11 @@ const InstagramIcon = () => (
 // YouTube URLからサムネイルURLを直接生成（API不要）
 function getYoutubeThumbnail(url) {
   if (!url) return null;
-  const match1 = url.match(/[?&]v=([^&]+)/);
-  const match2 = url.match(/youtu\.be\/([^?&]+)/);
-  const match3 = url.match(/shorts\/([^?&]+)/);
-  const videoId = match1?.[1] || match2?.[1] || match3?.[1];
+  const m1 = url.match(/[?&]v=([^&#]+)/);
+  const m2 = url.match(/youtu\.be\/([^?&#]+)/);
+  const m3 = url.match(/shorts\/([^?&#]+)/);
+  const m4 = url.match(/embed\/([^?&#]+)/);
+  const videoId = m1?.[1] || m2?.[1] || m3?.[1] || m4?.[1];
   if (videoId) return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
   return null;
 }
@@ -490,7 +491,11 @@ export default function ArtistDashboard() {
                   const trackThumbnail = track.cover_image_url || getYoutubeThumbnail(track.youtube_url) || null;
                   return (
                   <div key={track.id} className="track-card" style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, overflow: 'hidden', transition: 'all 0.2s', position: 'relative' }}>
-                    <div style={{ aspectRatio: '1', background: trackThumbnail ? `url(${trackThumbnail}) center/cover` : 'linear-gradient(135deg, #c4956a 0%, #e85d3a 50%, #c4956a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    <div style={{
+                      aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
+                      backgroundImage: trackThumbnail ? `url(${trackThumbnail})` : 'linear-gradient(135deg, #c4956a 0%, #e85d3a 50%, #c4956a 100%)',
+                      backgroundSize: 'cover', backgroundPosition: 'center',
+                    }}>
                       {!trackThumbnail && <span style={{ fontSize: 48, opacity: 0.5 }}>🎵</span>}
                       <div style={{ position: 'absolute', top: 8, right: 8 }}>
                         <button onClick={(e) => { e.stopPropagation(); setTrackMenu(trackMenu === track.id ? null : track.id); }} style={{

@@ -346,11 +346,9 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPop);
   }, []); // eslint-disable-line
 
-  // ── Auto-login from artist_token when role=artist ──
+  // ── Auto-login from artist_token (works with or without ?role=artist) ──
   useEffect(() => {
     try {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('role') !== 'artist') return;
       const token = localStorage.getItem('artist_token');
       if (!token) return;
       fetch('/api/artists', { headers: { Authorization: `Bearer ${token}` } })

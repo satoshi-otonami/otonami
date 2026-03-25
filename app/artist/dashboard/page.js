@@ -43,6 +43,30 @@ const InstagramIcon = () => (
   </svg>
 );
 
+// YouTube URLからサムネイルURLを直接生成（API不要）
+function getYoutubeThumbnail(url) {
+  if (!url) return null;
+  const match1 = url.match(/[?&]v=([^&]+)/);
+  const match2 = url.match(/youtu\.be\/([^?&]+)/);
+  const match3 = url.match(/shorts\/([^?&]+)/);
+  const videoId = match1?.[1] || match2?.[1] || match3?.[1];
+  if (videoId) return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  return null;
+}
+
+// Spotify URLからサムネイルURLを取得（oEmbed API）
+async function getSpotifyThumbnail(url) {
+  if (!url || !url.includes('spotify.com')) return null;
+  try {
+    const res = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`);
+    if (res.ok) {
+      const data = await res.json();
+      return data.thumbnail_url || null;
+    }
+  } catch (e) { /* ignore */ }
+  return null;
+}
+
 export default function ArtistDashboard() {
   const [artist, setArtist] = useState(null);
   const [tracks, setTracks] = useState([]);
@@ -389,10 +413,12 @@ export default function ArtistDashboard() {
                   <span style={{ fontSize: 14, fontWeight: 600, color: THEME.gold, fontFamily: THEME.font }}>楽曲を追加</span>
                 </button>
 
-                {tracks.map(track => (
+                {tracks.map(track => {
+                  const trackThumbnail = track.cover_image_url || getYoutubeThumbnail(track.youtube_url) || null;
+                  return (
                   <div key={track.id} className="track-card" style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, overflow: 'hidden', transition: 'all 0.2s', position: 'relative' }}>
-                    <div style={{ aspectRatio: '1', background: track.cover_image_url ? `url(${track.cover_image_url}) center/cover` : 'linear-gradient(135deg, #c4956a 0%, #e85d3a 50%, #c4956a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                      {!track.cover_image_url && <span style={{ fontSize: 48, opacity: 0.5 }}>🎵</span>}
+                    <div style={{ aspectRatio: '1', background: trackThumbnail ? `url(${trackThumbnail}) center/cover` : 'linear-gradient(135deg, #c4956a 0%, #e85d3a 50%, #c4956a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                      {!trackThumbnail && <span style={{ fontSize: 48, opacity: 0.5 }}>🎵</span>}
                       <div style={{ position: 'absolute', top: 8, right: 8 }}>
                         <button onClick={(e) => { e.stopPropagation(); setTrackMenu(trackMenu === track.id ? null : track.id); }} style={{
                           width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
@@ -427,7 +453,8 @@ export default function ArtistDashboard() {
                       <a href={buildPitchUrl(track)} className="btn-gold" style={{ display: 'block', textAlign: 'center', padding: '8px 16px', borderRadius: 100, background: THEME.gold, color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font }}>ピッチを送る →</a>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
@@ -512,33 +539,25 @@ function TrackModal({ token, track, onClose, onSuccess }) {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  // Auto-fetch thumbnail from YouTube/Spotify URLs
-  const fetchThumbnail = async (youtube_url, spotify_url) => {
-    try {
-      const res = await fetch('/api/artists/tracks/thumbnail', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ youtube_url, spotify_url })
-      });
-      const data = await res.json();
-      if (data.thumbnail_url && !coverFile) {
-        setForm(f => ({ ...f, cover_image_url: data.thumbnail_url }));
-        setCoverPreview(data.thumbnail_url);
-      }
-    } catch (e) { /* ignore */ }
-  };
-
   const handleYoutubeUrlChange = (url) => {
     set('youtube_url', url);
-    if (url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
-      fetchThumbnail(url, null);
+    if (!coverFile) {
+      const thumb = getYoutubeThumbnail(url);
+      if (thumb) {
+        setForm(f => ({ ...f, cover_image_url: thumb }));
+        setCoverPreview(thumb);
+      }
     }
   };
 
-  const handleSpotifyUrlChange = (url) => {
+  const handleSpotifyUrlChange = async (url) => {
     set('spotify_url', url);
-    if (url && url.includes('spotify.com')) {
-      fetchThumbnail(null, url);
+    if (!coverFile) {
+      const thumb = await getSpotifyThumbnail(url);
+      if (thumb) {
+        setForm(f => ({ ...f, cover_image_url: thumb }));
+        setCoverPreview(thumb);
+      }
     }
   };
 

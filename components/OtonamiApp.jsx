@@ -688,6 +688,16 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       ...(prev.name ? {} : { name: loggedInArtist.name }),
       ...(prev.genre ? {} : { genre: (loggedInArtist.genres || []).join(', ') }),
     }));
+    // Auto-fill SNS links from artist profile
+    setLinks(prev => ({
+      ...prev,
+      ...(prev.spotify ? {} : loggedInArtist.spotify_url ? { spotify: loggedInArtist.spotify_url } : {}),
+      ...(prev.youtube ? {} : loggedInArtist.youtube_url ? { youtube: loggedInArtist.youtube_url } : {}),
+      ...(prev.instagram ? {} : loggedInArtist.instagram_url ? { instagram: loggedInArtist.instagram_url } : {}),
+      ...(prev.twitter ? {} : loggedInArtist.twitter_url ? { twitter: loggedInArtist.twitter_url } : {}),
+      ...(prev.facebook ? {} : loggedInArtist.facebook_url ? { facebook: loggedInArtist.facebook_url } : {}),
+      ...(prev.website ? {} : loggedInArtist.website_url ? { website: loggedInArtist.website_url } : {}),
+    }));
   }, [loggedInArtist]); // eslint-disable-line
 
   const clearArtistDraft = () => {

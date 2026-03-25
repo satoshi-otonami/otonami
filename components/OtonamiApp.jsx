@@ -16,16 +16,8 @@ const CURATOR_TYPES = [{id:"playlist",label:"プレイリスト",icon:"🎧"},{i
 const ARTIST_GENRES = ["Jazz","Funk","Latin","Soul","R&B","Pop","Indie Rock","Alt Rock","Electronic","Ambient","Hip-Hop","Classical","Folk","Country","Metal","Punk","J-Pop","J-Rock","K-Pop","Anime","Experimental","World Music","Reggae","Blues"];
 const BADGES = {high_answer:"🟢 高回答率",high_accept:"⭐ 高採用率",selective:"💎 厳選",quality_fb:"📖 良質FB",verified:"✅ 認証済"};
 
-// ─── Seed Curators (pre-registered, real-data based) ───
-const SEED_CURATORS = [
-  {id:"c_pstm",name:"Patrick St. Michel",email:"patrickstmichel@gmail.com",type:"blog",platform:"Make Believe Melodies",platformUrl:"https://mbmelodies.substack.com/",genres:["Electronic","Jazz","Funk","Ambient","Experimental"],bio:"東京在住のアメリカ人音楽ライター。2009年よりMake Believe Melodiesを運営。Japan Times, Pitchfork, Bandcamp Daily寄稿。",audience:28000,region:"Global",avatar:"📝",offers:["Review","Feature","Newsletter"],badges:["verified","quality_fb"],stats:{received:0,responded:0,accepted:0},joined:"2026-01-15",creditCost:3,audioProfile:{energy:0.65,danceability:0.65,acousticness:0.35,instrumentalness:0.20,valence:0.55},preferredMoods:["Energetic","Groovy","Sophisticated","Experimental"]},
-  {id:"c_leap",name:"Leap250",email:"leap250@blog.com",type:"blog",platform:"Leap250's Blog",platformUrl:"https://leap250.blog/",genres:["J-Rock","Indie Rock","Pop","Dream Pop","J-Pop"],bio:"J-Music Monthly Roundup運営。毎月の日本音楽レコメンデーション。Spotify J-Music Playlist Draft主催。",audience:5000,region:"Global",avatar:"✍️",offers:["Review","Playlist Add","Feature"],badges:["high_answer","quality_fb"],stats:{received:0,responded:0,accepted:0},joined:"2026-01-20",creditCost:2,audioProfile:{energy:0.60,danceability:0.55,acousticness:0.45,instrumentalness:0.30,valence:0.55},preferredMoods:["Dreamy","Nostalgic","Energetic","Indie"]},
-  {id:"c_ian",name:"Ian Martin",email:"callandresponse@gmail.com",type:"blog",platform:"Clear And Refreshing",platformUrl:"https://clearandrefreshing.wordpress.com/",genres:["Noise","Post-Punk","Indie Rock","Experimental","Punk"],bio:"東京在住の英国人ライター。Call And Response Records主宰。著書『Quit Your Band』。日本地下音楽シーンに特化。",audience:2500,region:"JP/EN",avatar:"🔊",offers:["Review","Label Interest","Live Booking"],badges:["verified","selective"],stats:{received:0,responded:0,accepted:0},joined:"2026-01-18",creditCost:2,audioProfile:{energy:0.80,danceability:0.40,acousticness:0.20,instrumentalness:0.40,valence:0.40},preferredMoods:["Aggressive","Experimental","Heavy","Raw"]},
-  {id:"c_aind",name:"A-indie (yabori)",email:"belong.media@gmail.com",type:"blog",platform:"A-indie Media",platformUrl:"https://a-indie.com/",genres:["Indie Rock","J-Pop","Alternative","Experimental"],bio:"BELONG Media運営。2012年開始の日英バイリンガル・インディー音楽メディア。",audience:6000,region:"JP/Global",avatar:"🎸",offers:["Review","Feature","Interview"],badges:["verified","high_answer"],stats:{received:0,responded:0,accepted:0},joined:"2026-02-01",creditCost:2,audioProfile:{energy:0.65,danceability:0.50,acousticness:0.40,instrumentalness:0.35,valence:0.50},preferredMoods:["Dreamy","Energetic","Nostalgic","Indie"]},
-  {id:"c_mrk",name:"mMarukudeibu",email:"marukudeibu@spotify.com",type:"playlist",platform:"Japanese Jazz Fusion (Spotify)",platformUrl:"https://open.spotify.com/playlist/3MzC0teQrDwCkyUJhd3YBd",genres:["Jazz","Fusion","Funk","City Pop"],bio:"Spotify最大級の日本ジャズフュージョンプレイリスト。34,800+ saves。",audience:34800,region:"Global",avatar:"🎷",offers:["Playlist Add"],badges:["high_accept"],stats:{received:0,responded:0,accepted:0},joined:"2026-02-05",creditCost:3,audioProfile:{energy:0.65,danceability:0.75,acousticness:0.45,instrumentalness:0.60,valence:0.70},preferredMoods:["Groovy","Sophisticated","Smooth","Energetic"]},
-  {id:"c_jame",name:"JaME World",email:"info@jame-world.com",type:"blog",platform:"JaME - Japanese Music Entertainment",platformUrl:"https://jame-world.com/en",genres:["J-Pop","J-Rock","Visual Kei","Anime"],bio:"多言語対応の日本音楽エンターテイメントメディア。インタビュー、レビュー、ニュース。",audience:16400,region:"Global",avatar:"🌐",offers:["Review","Interview","News Feature"],badges:["high_answer"],stats:{received:0,responded:0,accepted:0},joined:"2026-02-10",creditCost:3,audioProfile:{energy:0.72,danceability:0.55,acousticness:0.30,instrumentalness:0.25,valence:0.55},preferredMoods:["Energetic","Dramatic","Heavy","Indie"]},
-  {id:"c_yama",name:"Yamashita Satoshi",email:"satoshiy339@gmail.com",type:"label",platform:"Jazz & Funk Japan (Spotify)",platformUrl:"https://open.spotify.com/",genres:["Jazz","Funk","Latin","Soul","Fusion"],bio:"東京のジャズ・ファンク・ラテン専門プレイリストキュレーター。SXSW常連アーティストを中心に厳選。",audience:8500,region:"JP/Global",avatar:"🎺",offers:["Playlist Add","Feature"],badges:["high_accept","verified"],stats:{received:0,responded:0,accepted:0},joined:"2026-03-01",creditCost:2,audioProfile:{energy:0.70,danceability:0.78,acousticness:0.40,instrumentalness:0.55,valence:0.72},preferredMoods:["Groovy","Energetic","Latin","Soulful"]},
-];
+// ─── Seed Curators (removed — all curators now come from Supabase) ───
+const SEED_CURATORS = [];
 
 // ─── Demo Artists ───
 const DEMO_ARTISTS = [
@@ -355,20 +347,7 @@ export default function App() {
   useEffect(() => {
     (async () => {
 const dbCurators = await loadCurators();
-if (dbCurators && dbCurators.length > 0) {
-  // Merge audioProfile / preferredMoods from SEED_CURATORS for known curators
-  const merged = dbCurators.map(c => {
-    const seed = SEED_CURATORS.find(s => s.id === c.id);
-    if (seed) return { ...c, audioProfile: c.audioProfile || seed.audioProfile, preferredMoods: c.preferredMoods?.length ? c.preferredMoods : seed.preferredMoods };
-    return c;
-  });
-  // Add any SEED_CURATORS not yet in DB
-  const dbIds = new Set(merged.map(c => c.id));
-  const seedOnly = SEED_CURATORS.filter(s => !dbIds.has(s.id));
-  setCurators([...merged, ...seedOnly]);
-} else {
-  setCurators([...SEED_CURATORS]);
-}
+setCurators(dbCurators && dbCurators.length > 0 ? dbCurators : []);
 await initSession();
 const savedCredits = await loadCredits();
 setCredits(savedCredits ?? 20);
@@ -674,6 +653,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       <div style={{fontSize:"0.75rem",color:"#6b6560"}}>
         <span style={{color:"#f59e0b",fontWeight:700}}>{credits}</span> クレジット
         <button onClick={()=>setPage("shop")} style={{marginLeft:8,...css.btnSm,background:"linear-gradient(135deg,rgba(245,158,11,0.15),rgba(234,88,12,0.1))",color:"#f59e0b",border:"1px solid rgba(245,158,11,0.3)",fontWeight:600}}>+ 購入</button>
+        <button onClick={()=>{localStorage.removeItem('otonami_token');localStorage.removeItem('otonami_artist');localStorage.removeItem('otonami_credits');window.location.href='/';}} style={{marginLeft:8,fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"rgba(26,26,26,0.5)",background:"none",border:"1px solid rgba(26,26,26,0.15)",borderRadius:9999,padding:"6px 16px",cursor:"pointer"}}>ログアウト</button>
       </div>
     </nav>
     <main style={css.main}>

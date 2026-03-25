@@ -370,6 +370,94 @@ function BlurText({ text, delay = 120, style: wrapStyle }) {
 }
 
 
+/* ── FAQ Accordion ── */
+function FAQItem({ question, answer, isOpen, onClick, theme = 'dark' }) {
+  const dark = theme === 'dark';
+  return (
+    <div style={{
+      borderBottom: `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(26,26,26,0.08)'}`,
+      cursor: 'pointer',
+    }} onClick={onClick}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '20px 0',
+      }}>
+        <span style={{
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: 16,
+          fontWeight: 600,
+          color: dark ? '#f0ede6' : '#1a1a1a',
+          flex: 1,
+          paddingRight: 16,
+        }}>
+          {question}
+        </span>
+        <span style={{
+          fontSize: 20,
+          color: '#c4956a',
+          transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)',
+          transition: 'transform 0.3s ease',
+          flexShrink: 0,
+        }}>
+          +
+        </span>
+      </div>
+      <div style={{
+        maxHeight: isOpen ? 200 : 0,
+        overflow: 'hidden',
+        transition: 'max-height 0.3s ease',
+      }}>
+        <p style={{
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: 14,
+          color: dark ? 'rgba(240,237,230,0.6)' : 'rgba(26,26,26,0.6)',
+          lineHeight: 1.7,
+          paddingBottom: 20,
+          margin: 0,
+        }}>
+          {answer}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+const artistFAQs = {
+  ja: [
+    { q: '本当に無料で始められますか？', a: 'はい、登録は無料です。ピッチの送信にはクレジットが必要ですが、初回は無料クレジットが付与されます。' },
+    { q: '英語が苦手でも大丈夫ですか？', a: 'はい。AIが日本語の情報をもとにプロ品質の英語ピッチを自動生成します。英語力は一切不要です。' },
+    { q: 'どんなジャンルに対応していますか？', a: 'ロック、ポップ、ジャズ、エレクトロニック、ヒップホップ、アンビエントなど幅広いジャンルに対応しています。キュレーターはそれぞれ好みのジャンルを登録しているため、AIが最適なマッチングを行います。' },
+    { q: 'ピッチを送ったら必ず返事がもらえますか？', a: 'キュレーターにはレビュー報酬があるため、高い返信率を実現しています。ただし、掲載やプレイリスト追加を保証するものではありません。' },
+    { q: '1クレジットはいくらですか？', a: '1クレジット¥160〜（約$1）です。1クレジットで1名のキュレーターにピッチを送れます。' },
+  ],
+  en: [
+    { q: 'Is it really free to get started?', a: 'Yes, signing up is free. You need credits to send pitches, but you get free credits when you sign up.' },
+    { q: "I don't speak English well. Is that okay?", a: 'Absolutely. Our AI generates professional English pitches from your Japanese input. No English skills required.' },
+    { q: 'What genres are supported?', a: 'Rock, pop, jazz, electronic, hip-hop, ambient, and more. Each curator registers their preferred genres, and our AI handles the matching.' },
+    { q: 'Will I definitely get a response?', a: 'Curators are incentivized to respond with review rewards, so response rates are high. However, playlist placement or coverage is not guaranteed.' },
+    { q: 'How much does one credit cost?', a: 'Starting at ¥160 (~$1) per credit. One credit = one pitch to one curator.' },
+  ],
+};
+
+const curatorFAQs = {
+  ja: [
+    { q: '登録は本当に無料ですか？', a: 'はい、完全に無料です。キュレーターに費用は一切かかりません。' },
+    { q: '報酬はどのように受け取れますか？', a: 'PayPalで直接お支払いします。レビュー1件あたり$1〜の報酬です。最低支払い額は$50/¥5,000です。' },
+    { q: 'どのくらいの頻度でピッチが届きますか？', a: 'あなたのジャンル設定やプラットフォームの利用状況によりますが、好みに合わない楽曲は届きません。AIが事前にフィルタリングします。' },
+    { q: 'レビューにはどのくらい時間がかかりますか？', a: '1件あたり2〜5分程度です。楽曲を試聴し、短いフィードバック（興味あり/なし + コメント）を返すだけです。' },
+    { q: '日本の音楽に詳しくなくても参加できますか？', a: 'もちろんです。AIがあなたの好みに合う楽曲だけを厳選して送るので、日本の音楽に詳しくなくても新しい発見があります。' },
+  ],
+  en: [
+    { q: 'Is registration really free?', a: 'Yes, 100% free. There are no costs for curators, ever.' },
+    { q: 'How do I get paid?', a: 'We pay directly via PayPal. You earn $1+ per review. Minimum payout threshold is $50.' },
+    { q: 'How often will I receive pitches?', a: "It depends on your genre settings and platform activity, but you'll never receive music that doesn't match your taste. AI filters everything in advance." },
+    { q: 'How long does a review take?', a: 'About 2-5 minutes per pitch. Listen to the track and provide short feedback (interested/not interested + optional comment).' },
+    { q: "Do I need to know Japanese music?", a: "Not at all. Our AI curates pitches specifically for your taste profile, so you'll discover great music regardless of your familiarity with the Japanese scene." },
+  ],
+};
+
 /* ─────────────────────────────────────────
    Page
 ───────────────────────────────────────── */
@@ -377,6 +465,8 @@ export default function HomePage() {
   const [lang, setLang] = useState('ja');
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [openArtistFAQ, setOpenArtistFAQ] = useState(null);
+  const [openCuratorFAQ, setOpenCuratorFAQ] = useState(null);
   const menuRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -700,6 +790,25 @@ export default function HomePage() {
               <a href="/studio?role=artist" className="cta-coral" style={{ fontSize: 16, padding: '15px 36px' }}>{t.how.cta}</a>
             </div>
           </AnimatedSection>
+
+          {/* Artist FAQ */}
+          <AnimatedSection delay={400}>
+            <div style={{ maxWidth: 680, margin: '48px auto 0', padding: '0 24px' }}>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: L.text, textAlign: 'center', marginBottom: 24 }}>
+                {lang === 'ja' ? 'よくある質問' : 'Frequently Asked Questions'}
+              </h3>
+              {(lang === 'ja' ? artistFAQs.ja : artistFAQs.en).map((faq, i) => (
+                <FAQItem
+                  key={i}
+                  question={faq.q}
+                  answer={faq.a}
+                  isOpen={openArtistFAQ === i}
+                  onClick={() => setOpenArtistFAQ(openArtistFAQ === i ? null : i)}
+                  theme="light"
+                />
+              ))}
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
@@ -968,6 +1077,25 @@ export default function HomePage() {
                 onMouseEnter={e => { e.currentTarget.style.background = '#b8845e'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = '#c4956a'; e.currentTarget.style.transform = 'none'; }}
               >{t.forCurators.cta}</a>
+            </div>
+          </AnimatedSection>
+
+          {/* Curator FAQ */}
+          <AnimatedSection delay={400}>
+            <div style={{ maxWidth: 680, margin: '48px auto 0', padding: '0 24px' }}>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: '#f0ede6', textAlign: 'center', marginBottom: 24 }}>
+                {lang === 'ja' ? 'よくある質問' : 'Frequently Asked Questions'}
+              </h3>
+              {(lang === 'ja' ? curatorFAQs.ja : curatorFAQs.en).map((faq, i) => (
+                <FAQItem
+                  key={i}
+                  question={faq.q}
+                  answer={faq.a}
+                  isOpen={openCuratorFAQ === i}
+                  onClick={() => setOpenCuratorFAQ(openCuratorFAQ === i ? null : i)}
+                  theme="dark"
+                />
+              ))}
             </div>
           </AnimatedSection>
         </div>

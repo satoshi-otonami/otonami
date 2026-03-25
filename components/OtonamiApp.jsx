@@ -303,6 +303,7 @@ export default function App() {
   const [pitches, setPitches] = useState([]);
   const [credits, setCredits] = useState(20);
   const [notif, setNotif] = useState(null);
+  const [loggedInArtist, setLoggedInArtist] = useState(null);
   const [page, setPage] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -341,6 +342,30 @@ export default function App() {
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
+  }, []); // eslint-disable-line
+
+  // ── Auto-login from artist_token when role=artist ──
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('role') !== 'artist') return;
+      const token = localStorage.getItem('artist_token');
+      if (!token) return;
+      fetch('/api/artists', { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.artist) {
+            setLoggedInArtist(data.artist);
+            // Auto-set user if not already logged in
+            if (!user) {
+              const u = { id: data.artist.id, name: data.artist.name, email: data.artist.email, type: 'artist' };
+              setUser(u);
+              try { localStorage.setItem('otonami-user', JSON.stringify(u)); } catch {}
+            }
+          }
+        })
+        .catch(err => console.error('Failed to load artist profile:', err));
+    } catch {}
   }, []); // eslint-disable-line
 
   // Load data from storage
@@ -436,7 +461,7 @@ const saveCredits = async (c) => {
     <div style={css.shell}>
       {notif && <div style={{...css.toast, background: notif.type==="success" ? "linear-gradient(135deg,#c4956a,#e85d3a)" : "linear-gradient(135deg,#dc2626,#ea580c)"}}>{notif.type==="success"?"✓":"!"} {notif.msg}</div>}
       {mode === "artist" ? (
-        <ArtistApp user={user} curators={curators} pitches={pitches} credits={credits} page={page} setPage={setPage} savePitches={savePitches} saveCredits={saveCredits} notify={notify} updatePitch={updatePitch} refreshPitches={refreshPitches} />
+        <ArtistApp user={user} curators={curators} pitches={pitches} credits={credits} page={page} setPage={setPage} savePitches={savePitches} saveCredits={saveCredits} notify={notify} updatePitch={updatePitch} refreshPitches={refreshPitches} loggedInArtist={loggedInArtist} />
       ) : (
         <CuratorApp user={user} pitches={pitches} page={page} setPage={setPage} savePitches={savePitches} notify={notify} updatePitch={updatePitch} curators={curators} saveCurators={saveCurators} />
       )}
@@ -615,7 +640,7 @@ function loadArtistDraft() {
   try { const r = sessionStorage.getItem("otonami_artist_draft"); return r ? JSON.parse(r) : null; } catch { return null; }
 }
 
-function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, saveCredits, notify, updatePitch, refreshPitches}) {
+function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, saveCredits, notify, updatePitch, refreshPitches, loggedInArtist}) {
   const [selected, setSelected] = useState([]);
   const [trackData, setTrackData] = useState(null);
 
@@ -653,6 +678,16 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     } catch {}
   }, []); // eslint-disable-line
 
+  // ── Auto-fill from loggedInArtist profile (async, fills when profile loads) ──
+  useEffect(() => {
+    if (!loggedInArtist) return;
+    setArtist(prev => ({
+      ...prev,
+      ...(prev.name ? {} : { name: loggedInArtist.name }),
+      ...(prev.genre ? {} : { genre: (loggedInArtist.genres || []).join(', ') }),
+    }));
+  }, [loggedInArtist]); // eslint-disable-line
+
   const clearArtistDraft = () => {
     setArtist(EMPTY_ARTIST); setLinks(EMPTY_LINKS); setFollowers(EMPTY_FOLLOWERS);
     try { sessionStorage.removeItem("otonami_artist_draft"); } catch {}
@@ -668,20 +703,40 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     {id:"analytics",icon:"◫",label:"分析",badge:null},
   ];
 
+  const displayName = loggedInArtist ? loggedInArtist.name : user.name;
+
+  const handleLogout = () => {
+    if (loggedInArtist) {
+      localStorage.removeItem('artist_token');
+      window.location.href = '/artist/login';
+    } else {
+      localStorage.removeItem('otonami_token');
+      localStorage.removeItem('otonami_artist');
+      localStorage.removeItem('otonami_credits');
+      window.location.href = '/';
+    }
+  };
+
   return <>
     <nav style={css.nav}>
-      <div style={css.navBrand}>OTONAMI</div>
+      <div style={{display:"flex",alignItems:"center",gap:12}}>
+        <div style={css.navBrand}>OTONAMI</div>
+        {loggedInArtist && (
+          <a href="/artist/dashboard" style={{display:'flex',alignItems:'center',gap:6,padding:'6px 16px',borderRadius:9999,border:'1px solid #e5e2dc',color:'#6b6560',fontSize:13,fontWeight:500,textDecoration:'none',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>← ダッシュボード</a>
+        )}
+      </div>
       <div style={{display:"flex",gap:4,flex:1,justifyContent:"center"}}>
         {navItems.map(n => <button key={n.id} onClick={()=>setPage(n.id)} style={{...css.navBtn,...(page===n.id?css.navBtnActive:{})}}>{n.icon} {n.label}{n.badge && <span style={css.navBadge}>{n.badge}</span>}</button>)}
       </div>
-      <div style={{fontSize:"0.75rem",color:"#6b6560"}}>
+      <div style={{fontSize:"0.75rem",color:"#6b6560",display:"flex",alignItems:"center",gap:8}}>
+        {loggedInArtist && <span style={{fontWeight:600,color:"#1a1a1a",fontSize:13}}>{displayName}</span>}
         <span style={{color:"#f59e0b",fontWeight:700}}>{credits}</span> クレジット
-        <button onClick={()=>setPage("shop")} style={{marginLeft:8,...css.btnSm,background:"linear-gradient(135deg,rgba(245,158,11,0.15),rgba(234,88,12,0.1))",color:"#f59e0b",border:"1px solid rgba(245,158,11,0.3)",fontWeight:600}}>+ 購入</button>
-        <button onClick={()=>{localStorage.removeItem('otonami_token');localStorage.removeItem('otonami_artist');localStorage.removeItem('otonami_credits');window.location.href='/';}} style={{marginLeft:8,fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"rgba(26,26,26,0.5)",background:"none",border:"1px solid rgba(26,26,26,0.15)",borderRadius:9999,padding:"6px 16px",cursor:"pointer"}}>ログアウト</button>
+        <button onClick={()=>setPage("shop")} style={{marginLeft:4,...css.btnSm,background:"linear-gradient(135deg,rgba(245,158,11,0.15),rgba(234,88,12,0.1))",color:"#f59e0b",border:"1px solid rgba(245,158,11,0.3)",fontWeight:600}}>+ 購入</button>
+        <button onClick={handleLogout} style={{marginLeft:4,fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"rgba(26,26,26,0.5)",background:"none",border:"1px solid rgba(26,26,26,0.15)",borderRadius:9999,padding:"6px 16px",cursor:"pointer"}}>ログアウト</button>
       </div>
     </nav>
     <main style={css.main}>
-      {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify}/>}
+      {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify} loggedInArtist={loggedInArtist}/>}
       {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist}/>}
       {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches} linkedTrackId={linkedTrackId}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches} refreshPitches={refreshPitches}/>}
@@ -695,7 +750,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
 }
 
 // ─── Artist Dashboard ───
-function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
+function ArtistDash({user, pitches, curators, credits, setPage, notify, loggedInArtist}) {
   const acc = pitches.filter(p=>p.status==="accepted").length;
   const fb = pitches.filter(p=>["feedback","accepted","declined"].includes(p.status)).length;
   const listened = pitches.filter(p=>["listened","feedback","accepted","declined"].includes(p.status)).length;
@@ -720,7 +775,7 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify}) {
 
     {/* Header */}
     <div style={{marginBottom:24}}>
-      <h1 style={{fontSize:28,fontWeight:600,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#1a1a1a"}}>おかえりなさい、{user.name}</h1>
+      <h1 style={{fontSize:28,fontWeight:600,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#1a1a1a"}}>おかえりなさい、{loggedInArtist ? loggedInArtist.name : user.name}</h1>
       <p style={{color:"#6b6560",margin:"6px 0 0",fontSize:15,fontFamily:"'DM Sans',sans-serif"}}>日本の音楽を世界へ届けましょう</p>
     </div>
 

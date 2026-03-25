@@ -174,7 +174,7 @@ export default function ArtistDashboard() {
           </a>
           <nav className="nav-links" style={{ display: 'flex', gap: 4 }}>
             <span style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 700, color: THEME.text, fontFamily: THEME.font }}>ダッシュボード</span>
-            <a href="/studio" style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 500, color: THEME.textSub, textDecoration: 'none', fontFamily: THEME.font, transition: 'all 0.15s' }}
+            <a href="/studio?role=artist" style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 500, color: THEME.textSub, textDecoration: 'none', fontFamily: THEME.font, transition: 'all 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.background = THEME.goldLight; e.currentTarget.style.color = THEME.gold; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = THEME.textSub; }}
             >ピッチを送る</a>

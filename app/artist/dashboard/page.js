@@ -56,6 +56,7 @@ export default function ArtistDashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [trackMenu, setTrackMenu] = useState(null);
   const [editTrack, setEditTrack] = useState(null);
+  const trackMenuRef = useRef(null);
 
   // Header dropdown
   const [headerMenu, setHeaderMenu] = useState(false);
@@ -104,7 +105,10 @@ export default function ArtistDashboard() {
   // Close track menu on outside click
   useEffect(() => {
     if (!trackMenu) return;
-    const handler = () => setTrackMenu(null);
+    const handler = (e) => {
+      if (trackMenuRef.current && trackMenuRef.current.contains(e.target)) return;
+      setTrackMenu(null);
+    };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [trackMenu]);
@@ -137,13 +141,17 @@ export default function ArtistDashboard() {
 
   if (!artist) return null;
 
-  // Build pitch URL with query params
+  // Build pitch URL with query params for seamless studio handoff
   const buildPitchUrl = (track) => {
     const params = new URLSearchParams();
+    params.set('role', 'artist');
+    params.set('tab', 'pitch');
     params.set('track_id', track.id);
     params.set('track_title', track.title);
-    if (track.youtube_url) params.set('youtube_url', track.youtube_url);
-    if (track.spotify_url) params.set('spotify_url', track.spotify_url);
+    const songLink = track.spotify_url || track.youtube_url || track.soundcloud_url || track.bandcamp_url || '';
+    if (songLink) params.set('song_link', songLink);
+    if (artist?.name) params.set('artist_name', artist.name);
+    if (artist?.genres?.length) params.set('artist_genre', artist.genres.join(', '));
     return `/studio?${params.toString()}`;
   };
 
@@ -393,7 +401,7 @@ export default function ArtistDashboard() {
                           color: THEME.text,
                         }}>•••</button>
                         {trackMenu === track.id && (
-                          <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.08)', minWidth: 140, zIndex: 50, overflow: 'hidden' }}>
+                          <div ref={trackMenuRef} style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.08)', minWidth: 140, zIndex: 50, overflow: 'hidden' }}>
                             <button onClick={(e) => { e.stopPropagation(); setTrackMenu(null); setEditTrack(track); }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.text, fontFamily: THEME.font }}
                               onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
                               onMouseLeave={e => e.currentTarget.style.background = 'none'}
@@ -417,7 +425,6 @@ export default function ArtistDashboard() {
                         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 100, fontSize: 11, background: THEME.goldLight, color: THEME.gold, fontWeight: 500, marginBottom: 12 }}>{track.genre}</span>
                       )}
                       <a href={buildPitchUrl(track)} className="btn-gold" style={{ display: 'block', textAlign: 'center', padding: '8px 16px', borderRadius: 100, background: THEME.gold, color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font }}>ピッチを送る →</a>
-                      <p style={{ fontSize: 11, color: THEME.textMuted, textAlign: 'center', marginTop: 6 }}>※ピッチツール画面で楽曲URLを再入力してください</p>
                     </div>
                   </div>
                 ))}

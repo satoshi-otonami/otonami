@@ -625,9 +625,33 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
   const [links,     setLinks]     = useState(_draft?.links     || EMPTY_LINKS);
   const [followers, setFollowers] = useState(_draft?.followers || EMPTY_FOLLOWERS);
 
+  const [linkedTrackId, setLinkedTrackId] = useState(null);
+
   useEffect(() => {
     try { sessionStorage.setItem("otonami_artist_draft", JSON.stringify({artist, links, followers})); } catch {}
   }, [artist, links, followers]);
+
+  // ── Auto-fill from URL params (dashboard → studio handoff) ──
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const trackTitle = params.get('track_title');
+      const songLink   = params.get('song_link');
+      const artistName = params.get('artist_name');
+      const artistGenre = params.get('artist_genre');
+      const trackId    = params.get('track_id');
+      if (trackTitle || songLink || artistName || artistGenre) {
+        setArtist(prev => ({
+          ...prev,
+          ...(songLink   ? { songLink }   : {}),
+          ...(artistName ? { name: artistName } : {}),
+          ...(artistGenre ? { genre: artistGenre } : {}),
+          ...(trackTitle ? { songTitle: trackTitle } : {}),
+        }));
+      }
+      if (trackId) setLinkedTrackId(trackId);
+    } catch {}
+  }, []); // eslint-disable-line
 
   const clearArtistDraft = () => {
     setArtist(EMPTY_ARTIST); setLinks(EMPTY_LINKS); setFollowers(EMPTY_FOLLOWERS);
@@ -659,7 +683,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     <main style={css.main}>
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify}/>}
       {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist}/>}
-      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches}/>}
+      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches} linkedTrackId={linkedTrackId}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches} refreshPitches={refreshPitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches}/>}
       {page==="shop" && <CreditShop user={user} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage}/>}
@@ -1209,7 +1233,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 }
 
 // ─── Pitch Creator (Template Engine + Social Links + Followers) ───
-function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft, refreshPitches}) {
+function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft, refreshPitches, linkedTrackId}) {
   const [pitchText, setPitchText] = useState("");
   const [pitchJa, setPitchJa] = useState("");
   const [pitchTab, setPitchTab] = useState("ja"); // "en" | "ja"
@@ -1567,7 +1591,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     const tempPitches = targets.map(c => ({
       id: "p_" + Date.now() + "_" + c.id,
       artistId: user.id, artistEmail: user.email, artistName: artist.name, artistNameEn: artist.nameEn||artist.name,
-      songTitle: artist.songTitle, songLink: getSongLink(), genre: artist.genre, mood: artist.mood, description: artist.description, influences: artist.influences, achievements: artist.achievements,
+      songTitle: artist.songTitle, songLink: getSongLink(), genre: artist.genre, mood: artist.mood, description: artist.description, influences: artist.influences, achievements: artist.achievements, trackId: linkedTrackId || null,
       pitchText: pitchText.replace(/\[Curator Name\]/gi, c.name), epk,
       matchScore: effectiveTrack ? calculateMatchScore(c, effectiveTrack) : null,
       curatorId: c.id, curatorName: c.name, curatorPlatform: c.platform, curatorEmail: c.email, creditCost: c.creditCost||2,

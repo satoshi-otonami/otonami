@@ -67,7 +67,7 @@ const PITCHES_COLUMNS = new Set([
   'session_id', 'curator_id', 'artist_name', 'artist_email', 'artist_genre',
   'curator_name', 'subject', 'body', 'song_link', 'match_score',
   'feedback_message', 'placement_platform', 'placement_url', 'placement_date',
-  'negotiation_status', 'messages', 'pitch_language',
+  'negotiation_status', 'messages', 'pitch_language', 'track_id',
 ]);
 
 function pickKnownColumns(row) {

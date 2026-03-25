@@ -309,6 +309,8 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const hasUser = !!localStorage.getItem('otonami-user');
       if (hasUser) {
+        // auto_analyze=true → go straight to curators tab
+        if (params.get('auto_analyze') === 'true') return "curators";
         const tab = params.get('tab');
         if (tab && ["dashboard","curators","pitch","tracking","analytics","shop"].includes(tab)) return tab;
         return "dashboard";
@@ -908,9 +910,9 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   // Auto-enable match sorting when artist genre is already filled
   useEffect(() => { if (artist?.genre) setSortByMatch(true); }, [artist?.genre]);
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
-  const [detectedSong, setDetectedSong] = useState(trackData?.songName || "");
-  const [detectedArtist, setDetectedArtist] = useState(trackData?.artistName || "");
-  const [analyzeUrl, setAnalyzeUrl] = useState("");
+  const [detectedSong, setDetectedSong] = useState(trackData?.songName || artist?.songTitle || "");
+  const [detectedArtist, setDetectedArtist] = useState(trackData?.artistName || artist?.name || "");
+  const [analyzeUrl, setAnalyzeUrl] = useState(artist?.songLink || "");
   const analyzeUrlRef = useRef(analyzeUrl);
   useEffect(() => { analyzeUrlRef.current = analyzeUrl; }, [analyzeUrl]);
 

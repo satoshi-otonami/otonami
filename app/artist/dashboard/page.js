@@ -145,13 +145,13 @@ export default function ArtistDashboard() {
   const buildPitchUrl = (track) => {
     const params = new URLSearchParams();
     params.set('role', 'artist');
-    params.set('tab', 'pitch');
     params.set('track_id', track.id);
     params.set('track_title', track.title);
     const songLink = track.spotify_url || track.youtube_url || track.soundcloud_url || track.bandcamp_url || '';
     if (songLink) params.set('song_link', songLink);
     if (artist?.name) params.set('artist_name', artist.name);
     if (artist?.genres?.length) params.set('artist_genre', artist.genres.join(', '));
+    params.set('auto_analyze', 'true');
     return `/studio?${params.toString()}`;
   };
 
@@ -512,6 +512,36 @@ function TrackModal({ token, track, onClose, onSuccess }) {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
+  // Auto-fetch thumbnail from YouTube/Spotify URLs
+  const fetchThumbnail = async (youtube_url, spotify_url) => {
+    try {
+      const res = await fetch('/api/artists/tracks/thumbnail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ youtube_url, spotify_url })
+      });
+      const data = await res.json();
+      if (data.thumbnail_url && !coverFile) {
+        setForm(f => ({ ...f, cover_image_url: data.thumbnail_url }));
+        setCoverPreview(data.thumbnail_url);
+      }
+    } catch (e) { /* ignore */ }
+  };
+
+  const handleYoutubeUrlChange = (url) => {
+    set('youtube_url', url);
+    if (url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
+      fetchThumbnail(url, null);
+    }
+  };
+
+  const handleSpotifyUrlChange = (url) => {
+    set('spotify_url', url);
+    if (url && url.includes('spotify.com')) {
+      fetchThumbnail(null, url);
+    }
+  };
+
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', handler);
@@ -594,10 +624,10 @@ function TrackModal({ token, track, onClose, onSuccess }) {
         <input className="modal-input" style={inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="楽曲名" />
 
         <label style={lbl}>▶️ YouTube リンク（任意）</label>
-        <input className="modal-input" style={inp} value={form.youtube_url} onChange={e => set('youtube_url', e.target.value)} placeholder="https://www.youtube.com/watch?v=... または https://youtu.be/..." />
+        <input className="modal-input" style={inp} value={form.youtube_url} onChange={e => handleYoutubeUrlChange(e.target.value)} placeholder="https://www.youtube.com/watch?v=... または https://youtu.be/..." />
 
         <label style={lbl}>🟢 Spotify リンク（任意）</label>
-        <input className="modal-input" style={inp} value={form.spotify_url} onChange={e => set('spotify_url', e.target.value)} placeholder="https://open.spotify.com/track/..." />
+        <input className="modal-input" style={inp} value={form.spotify_url} onChange={e => handleSpotifyUrlChange(e.target.value)} placeholder="https://open.spotify.com/track/..." />
 
         <label style={lbl}>☁️ SoundCloud リンク（任意）</label>
         <input className="modal-input" style={inp} value={form.soundcloud_url} onChange={e => set('soundcloud_url', e.target.value)} placeholder="https://soundcloud.com/artist/track" />
@@ -611,11 +641,24 @@ function TrackModal({ token, track, onClose, onSuccess }) {
         <label style={lbl}>リリース日（任意）</label>
         <input className="modal-input" style={{ ...inp, colorScheme: 'light' }} type="date" value={form.release_date} onChange={e => set('release_date', e.target.value)} />
 
-        {/* Cover image: file upload + URL fallback */}
+        {/* Cover image: auto-fetched preview + file upload + URL fallback */}
         <label style={lbl}>サムネイル画像（任意）</label>
+        {coverPreview && /^(https?:\/\/|data:)/.test(coverPreview) && (
+          <div style={{ marginTop: 12 }}>
+            <p style={{ fontSize: 13, color: THEME.textSub, marginBottom: 8 }}>カバー画像プレビュー</p>
+            <img src={coverPreview} alt="Track cover"
+              style={{ width: 160, height: 160, objectFit: 'cover', borderRadius: 12, border: `1px solid ${THEME.border}` }}
+              onError={(e) => { e.target.style.display = 'none'; }} />
+            <button onClick={() => { set('cover_image_url', ''); setCoverPreview(''); setCoverFile(null); }}
+              style={{ display: 'block', marginTop: 8, fontSize: 12, color: THEME.textMuted, background: 'none', border: 'none', cursor: 'pointer', fontFamily: THEME.font }}>
+              画像をクリア
+            </button>
+          </div>
+        )}
         <div style={{ marginTop: 8, padding: 16, border: `1px solid ${THEME.borderLight}`, borderRadius: 12, background: THEME.bg }}>
+          <p style={{ fontSize: 12, color: THEME.textSub, marginBottom: 8, fontFamily: THEME.font }}>YouTube / Spotify リンク入力で自動取得されます</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            {/* Preview */}
+            {/* Upload preview */}
             <div onClick={() => coverInputRef.current?.click()} style={{
               width: 80, height: 80, borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
               border: `2px dashed ${coverPreview ? THEME.gold : THEME.border}`,
@@ -633,10 +676,10 @@ function TrackModal({ token, track, onClose, onSuccess }) {
             </div>
             <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleCoverFile(e.target.files?.[0])} />
           </div>
-          <div style={{ marginTop: 12 }}>
-            <label style={{ fontSize: 11, color: THEME.textMuted, fontWeight: 500 }}>または URLを入力:</label>
-            <input className="modal-input" style={{ ...inp, marginTop: 4, fontSize: 13 }} value={form.cover_image_url} onChange={e => { set('cover_image_url', e.target.value); if (!coverFile) setCoverPreview(e.target.value); }} placeholder="https://..." />
-          </div>
+          <details style={{ marginTop: 12 }}>
+            <summary style={{ fontSize: 13, color: THEME.textMuted, cursor: 'pointer' }}>カバー画像URLを手動入力</summary>
+            <input className="modal-input" style={{ ...inp, marginTop: 8, fontSize: 13 }} value={form.cover_image_url} onChange={e => { set('cover_image_url', e.target.value); if (!coverFile) setCoverPreview(e.target.value); }} placeholder="https://..." />
+          </details>
         </div>
 
         <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 20, cursor: 'pointer' }}>

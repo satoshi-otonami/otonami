@@ -491,12 +491,21 @@ export default function ArtistDashboard() {
                   const trackThumbnail = track.cover_image_url || getYoutubeThumbnail(track.youtube_url) || null;
                   return (
                   <div key={track.id} className="track-card" style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, overflow: 'hidden', transition: 'all 0.2s', position: 'relative' }}>
-                    <div style={{
-                      aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
-                      backgroundImage: trackThumbnail ? `url(${trackThumbnail})` : 'linear-gradient(135deg, #c4956a 0%, #e85d3a 50%, #c4956a 100%)',
-                      backgroundSize: 'cover', backgroundPosition: 'center',
-                    }}>
-                      {!trackThumbnail && <span style={{ fontSize: 48, opacity: 0.5 }}>🎵</span>}
+                    <div style={{ aspectRatio: '1', position: 'relative', overflow: 'hidden' }}>
+                      {trackThumbnail ? (
+                        <img src={trackThumbnail} alt={track.title}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                          onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
+                        />
+                      ) : null}
+                      <div style={{
+                        display: trackThumbnail ? 'none' : 'flex',
+                        width: '100%', height: '100%', position: trackThumbnail ? 'absolute' : 'relative', top: 0, left: 0,
+                        background: 'linear-gradient(135deg, #c4956a 0%, #e85d3a 50%, #c4956a 100%)',
+                        alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <span style={{ fontSize: 48, opacity: 0.5 }}>🎵</span>
+                      </div>
                       <div style={{ position: 'absolute', top: 8, right: 8 }}>
                         <button onClick={(e) => { e.stopPropagation(); setTrackMenu(trackMenu === track.id ? null : track.id); }} style={{
                           width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.9)',

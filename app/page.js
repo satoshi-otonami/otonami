@@ -670,10 +670,22 @@ export default function HomePage() {
             <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', color: D.textSec, fontSize: 28, cursor: 'pointer', lineHeight: 1, padding: 4 }}>✕</button>
           </div>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 24 }}>
-            <button onClick={() => { switchLang(lang === 'ja' ? 'en' : 'ja'); setMenuOpen(false); }}
-              style={{ color: D.textSec, textDecoration: 'none', fontSize: 20, fontWeight: 400, padding: '14px 0', borderBottom: `1px solid ${D.border}`, background: 'none', border: 'none', borderBottom: `1px solid ${D.border}`, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
-              🌐 {lang === 'ja' ? 'English' : '日本語'}
-            </button>
+            <div style={{ display: 'flex', gap: 8, padding: '14px 0', borderBottom: `1px solid ${D.border}` }}>
+              <button onClick={() => { switchLang('en'); setMenuOpen(false); }} style={{
+                fontFamily: D.fBody, fontSize: 16, fontWeight: 600, padding: '10px 24px',
+                borderRadius: 9999, border: 'none', cursor: 'pointer',
+                background: lang === 'en' ? '#fff' : 'rgba(255,255,255,0.08)',
+                color: lang === 'en' ? '#1a1a1a' : 'rgba(255,255,255,0.6)',
+                transition: 'all 0.2s ease',
+              }}>EN</button>
+              <button onClick={() => { switchLang('ja'); setMenuOpen(false); }} style={{
+                fontFamily: D.fBody, fontSize: 16, fontWeight: 600, padding: '10px 24px',
+                borderRadius: 9999, border: 'none', cursor: 'pointer',
+                background: lang === 'ja' ? '#fff' : 'rgba(255,255,255,0.08)',
+                color: lang === 'ja' ? '#1a1a1a' : 'rgba(255,255,255,0.6)',
+                transition: 'all 0.2s ease',
+              }}>JP</button>
+            </div>
             {[{ href: '#for-artists', label: t.nav.how }, { href: '#for-curators', label: t.nav.curators }, { href: '#for-artists', label: t.nav.artists }].map(item => (
               <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
                 style={{ color: D.textSec, textDecoration: 'none', fontSize: 20, fontWeight: 400, padding: '14px 0', borderBottom: `1px solid ${D.border}`, transition: 'color 0.2s' }}
@@ -701,14 +713,22 @@ export default function HomePage() {
             <a href="#for-artists"  className="nav-link">{t.nav.artists}</a>
           </nav>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button className="lang-toggle" onClick={() => switchLang(lang === 'ja' ? 'en' : 'ja')} style={{
-              background: 'none', border: `1px solid ${D.border}`, color: D.textMuted,
-              fontSize: 11, fontWeight: 600, letterSpacing: '1px', padding: '6px 10px',
-              borderRadius: 9999, cursor: 'pointer', transition: 'border-color 0.2s, color 0.2s', fontFamily: D.fBody,
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = D.borderHover; e.currentTarget.style.color = D.textSec; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = D.border; e.currentTarget.style.color = D.textMuted; }}
-            >{t.nav.lang}</button>
+            <div className="lang-toggle" style={{ display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: 9999, padding: 3, gap: 2 }}>
+              <button onClick={() => switchLang('en')} style={{
+                fontFamily: D.fBody, fontSize: 14, fontWeight: 600, padding: '8px 16px',
+                borderRadius: 9999, border: 'none', cursor: 'pointer',
+                background: lang === 'en' ? '#fff' : 'transparent',
+                color: lang === 'en' ? '#1a1a1a' : 'rgba(255,255,255,0.6)',
+                transition: 'all 0.2s ease',
+              }}>EN</button>
+              <button onClick={() => switchLang('ja')} style={{
+                fontFamily: D.fBody, fontSize: 14, fontWeight: 600, padding: '8px 16px',
+                borderRadius: 9999, border: 'none', cursor: 'pointer',
+                background: lang === 'ja' ? '#fff' : 'transparent',
+                color: lang === 'ja' ? '#1a1a1a' : 'rgba(255,255,255,0.6)',
+                transition: 'all 0.2s ease',
+              }}>JP</button>
+            </div>
             <a href="/curator" className="cta-coral" style={{ padding: '8px 20px', fontSize: 13 }}>{t.nav.cta}</a>
             <button className="hamburger-btn" onClick={() => setMenuOpen(true)} style={{
               display: 'none', background: 'none', border: `1px solid ${D.border}`,
@@ -770,16 +790,16 @@ export default function HomePage() {
             </div>
           </AnimatedSection>
 
-          <div className="how-grid artist-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24 }}>
+          <div className="how-grid artist-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
             {t.how.steps.map((step, i) => (
               <AnimatedSection key={i} delay={i * 100}>
-                <div className="how-card-light artist-step-card">
-                  <div className="step-icon-area" style={{ fontSize: 36, marginBottom: 16 }}>{step.icon}</div>
-                  <div>
-                    <div className="step-number" style={{ fontFamily: D.fHead, fontSize: 42, color: '#c4956a', marginBottom: 16, lineHeight: 1, opacity: 0.9 }}>{step.num}</div>
-                    <h3 className="step-title" style={{ fontSize: 17, fontWeight: 600, color: L.text, marginBottom: 12 }}>{step.t}</h3>
-                    <p className="step-desc" style={{ fontSize: 14, color: L.textSec, lineHeight: 1.7 }}>{step.d}</p>
+                <div className="how-card-light artist-step-card" style={{ padding: 24 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                    <span style={{ fontSize: 28 }}>{step.icon}</span>
+                    <span style={{ fontFamily: D.fHead, fontSize: 28, fontWeight: 700, color: '#c4956a', lineHeight: 1 }}>{step.num}</span>
                   </div>
+                  <h3 className="step-title" style={{ fontSize: 16, fontWeight: 600, color: L.text, marginBottom: 8 }}>{step.t}</h3>
+                  <p className="step-desc" style={{ fontSize: 14, color: L.textSec, lineHeight: 1.5, margin: 0 }}>{step.d}</p>
                 </div>
               </AnimatedSection>
             ))}
@@ -807,6 +827,26 @@ export default function HomePage() {
                   theme="light"
                 />
               ))}
+            </div>
+          </AnimatedSection>
+
+          {/* Artist section closing CTA */}
+          <AnimatedSection delay={500}>
+            <div style={{ textAlign: 'center', marginTop: 48, paddingBottom: 20 }}>
+              <a href="/studio" style={{ textDecoration: 'none' }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  background: '#e85d3a', color: '#fff', fontFamily: D.fBody,
+                  fontSize: 16, fontWeight: 700, padding: '16px 40px',
+                  borderRadius: 9999, cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(232,93,58,0.3)',
+                }}>
+                  {lang === 'ja' ? 'アーティスト登録（無料）→' : 'Sign up as Artist (free) →'}
+                </div>
+              </a>
+              <p style={{ fontFamily: D.fBody, fontSize: 13, color: 'rgba(26,26,26,0.4)', marginTop: 12 }}>
+                {lang === 'ja' ? '初回無料クレジット付き・クレジットカード不要' : 'Free credits included — no credit card required'}
+              </p>
             </div>
           </AnimatedSection>
         </div>
@@ -1036,19 +1076,34 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Section Divider */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-        <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(196,149,106,0.3), transparent)' }} />
-      </div>
+      {/* ===== SECTION DIVIDER: Artist → Curator ===== */}
+      <section style={{
+        background: 'linear-gradient(180deg, #f8f7f4 0%, #1a1a1a 100%)',
+        padding: '80px 24px',
+        textAlign: 'center',
+      }}>
+        <div style={{
+          width: 60, height: 3, borderRadius: 2,
+          background: 'linear-gradient(90deg, #c4956a, #e85d3a)',
+          margin: '0 auto 24px',
+        }} />
+        <p style={{
+          fontFamily: D.fBody, fontSize: 14,
+          color: 'rgba(255,255,255,0.4)', letterSpacing: 2,
+          textTransform: 'uppercase', margin: 0,
+        }}>
+          {lang === 'ja' ? '音楽を届ける側の方はこちら' : 'For those who share music with the world'}
+        </p>
+      </section>
 
       {/* ── For Curators (DARK, #232323 bg) ── */}
-      <section id="for-curators" style={{ background: '#1a1a1a', borderTop: '1px solid #3a3a3a', borderBottom: '1px solid #3a3a3a', padding: '100px 0' }} className="section-pad">
+      <section id="for-curators" style={{ background: '#1a1a1a', borderTop: 'none', borderBottom: '1px solid #3a3a3a', padding: '100px 0' }} className="section-pad">
         <div style={wrap}>
           <AnimatedSection>
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
               <div style={{ width: 40, height: 3, borderRadius: 2, background: 'linear-gradient(90deg, #c4956a, #e85d3a)', margin: '0 auto 16px' }} />
-              <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 20 }}>{t.forCurators.label}</div>
-              <h2 style={{ fontFamily: D.fHead, fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 700, color: '#f0ede6', lineHeight: 1.3, maxWidth: 640, margin: '0 auto' }}>
+              <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 20 }}>{t.forCurators.label}</div>
+              <h2 style={{ fontFamily: D.fHead, fontSize: 'clamp(32px, 5vw, 48px)', fontWeight: 700, color: '#f0ede6', lineHeight: 1.3, maxWidth: 640, margin: '0 auto' }}>
                 {t.forCurators.title}
               </h2>
             </div>

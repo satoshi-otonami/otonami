@@ -430,14 +430,14 @@ const artistFAQs = {
     { q: '英語が苦手でも大丈夫ですか？', a: 'はい。AIが日本語の情報をもとにプロ品質の英語ピッチを自動生成します。英語力は一切不要です。' },
     { q: 'どんなジャンルに対応していますか？', a: 'ロック、ポップ、ジャズ、エレクトロニック、ヒップホップ、アンビエントなど幅広いジャンルに対応しています。キュレーターはそれぞれ好みのジャンルを登録しているため、AIが最適なマッチングを行います。' },
     { q: 'ピッチを送ったら必ず返事がもらえますか？', a: 'キュレーターにはレビュー報酬があるため、高い返信率を実現しています。ただし、掲載やプレイリスト追加を保証するものではありません。' },
-    { q: '1クレジットはいくらですか？', a: '1クレジット¥160〜（約$1）です。1クレジットで1名のキュレーターにピッチを送れます。' },
+    { q: '1クレジットはいくらですか？', a: '1クレジット¥160〜（約$1）です。キュレーターによって必要なクレジット数が異なります（1〜5クレジット）。フォロワー数や影響力の大きいキュレーターほど多くのクレジットが必要です。' },
   ],
   en: [
     { q: 'Is it really free to get started?', a: 'Yes, signing up is free. You need credits to send pitches, but you get free credits when you sign up.' },
     { q: "I don't speak English well. Is that okay?", a: 'Absolutely. Our AI generates professional English pitches from your Japanese input. No English skills required.' },
     { q: 'What genres are supported?', a: 'Rock, pop, jazz, electronic, hip-hop, ambient, and more. Each curator registers their preferred genres, and our AI handles the matching.' },
     { q: 'Will I definitely get a response?', a: 'Curators are incentivized to respond with review rewards, so response rates are high. However, playlist placement or coverage is not guaranteed.' },
-    { q: 'How much does one credit cost?', a: 'Starting at ¥160 (~$1) per credit. One credit = one pitch to one curator.' },
+    { q: 'How much does one credit cost?', a: 'Starting at ¥160 (~$1) per credit. Each curator requires 1–5 credits depending on their reach and influence. Higher-impact curators require more credits.' },
   ],
 };
 

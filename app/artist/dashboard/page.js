@@ -333,15 +333,15 @@ export default function ArtistDashboard() {
 
       {/* ── Tabs ── */}
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 20px' }}>
-        <div style={{ display: 'flex', borderBottom: `2px solid ${THEME.borderLight}`, marginTop: 24 }}>
-          {[{ key: 'profile', label: 'Profile' }, { key: 'tracks', label: 'Tracks' }].map(t => (
+        <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
+          {[{ key: 'profile', label: '👤 Profile' }, { key: 'tracks', label: `🎵 Tracks${tracks.length > 0 ? ` (${tracks.length})` : ''}` }].map(t => (
             <button key={t.key} onClick={() => setTab(t.key)} style={{
-              padding: '12px 24px', border: 'none', background: 'transparent', cursor: 'pointer',
-              fontWeight: tab === t.key ? 700 : 500, fontSize: 14,
-              color: tab === t.key ? THEME.gold : THEME.textSub,
-              borderBottom: tab === t.key ? `2px solid ${THEME.gold}` : '2px solid transparent',
-              marginBottom: -2, fontFamily: THEME.font, transition: 'all 0.15s',
-            }}>{t.label}{t.key === 'tracks' && tracks.length > 0 ? ` (${tracks.length})` : ''}</button>
+              padding: '12px 32px', border: tab === t.key ? 'none' : `1px solid ${THEME.border}`,
+              background: tab === t.key ? THEME.gold : 'transparent', cursor: 'pointer',
+              fontWeight: tab === t.key ? 700 : 500, fontSize: 15, borderRadius: 9999,
+              color: tab === t.key ? '#fff' : THEME.textSub,
+              fontFamily: THEME.font, transition: 'all 0.2s',
+            }}>{t.label}</button>
           ))}
         </div>
       </div>
@@ -523,6 +523,22 @@ export default function ArtistDashboard() {
                               onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
                               onMouseLeave={e => e.currentTarget.style.background = 'none'}
                             >🗑️ 削除</button>
+                            {track.cover_image_url && (
+                              <button onClick={async (e) => {
+                                e.stopPropagation(); setTrackMenu(null);
+                                try {
+                                  const res = await fetch('/api/artists/tracks', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                    body: JSON.stringify({ id: track.id, cover_image_url: '' }),
+                                  });
+                                  if (res.ok) fetchTracks();
+                                } catch {}
+                              }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.textSub, fontFamily: THEME.font }}
+                                onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
+                                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                              >🖼 画像をリセット</button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -535,8 +551,43 @@ export default function ArtistDashboard() {
                         </div>
                       )}
                       {track.genre && (
-                        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 100, fontSize: 11, background: THEME.goldLight, color: THEME.gold, fontWeight: 500, marginBottom: 12 }}>{track.genre}</span>
+                        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 100, fontSize: 11, background: THEME.goldLight, color: THEME.gold, fontWeight: 500, marginBottom: 8 }}>{track.genre}</span>
                       )}
+                      {/* Track pitch results */}
+                      {(() => {
+                        const trackPitches = recentPitches.filter(p =>
+                          p.track_id === track.id ||
+                          (track.youtube_url && p.song_link?.includes(track.youtube_url)) ||
+                          (track.spotify_url && p.song_link?.includes(track.spotify_url))
+                        );
+                        if (trackPitches.length === 0) return null;
+                        return (
+                          <div style={{ marginBottom: 10, padding: '10px 0', borderTop: `1px solid ${THEME.borderLight}` }}>
+                            <p style={{ fontSize: 12, fontWeight: 600, color: THEME.textSub, marginBottom: 6, fontFamily: THEME.font }}>📊 ピッチ結果 ({trackPitches.length}件)</p>
+                            {trackPitches.map(p => (
+                              <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0' }}>
+                                <span style={{ fontSize: 12, fontWeight: 500, color: THEME.text, fontFamily: THEME.font }}>{p.curator_name}</span>
+                                <span style={{
+                                  padding: '2px 8px', borderRadius: 9999, fontSize: 10, fontWeight: 600, fontFamily: THEME.font,
+                                  background: p.status === 'interested' || p.status === 'accepted' ? THEME.greenLight : p.status === 'feedback' ? '#3b82f620' : p.status === 'declined' ? '#ef444420' : THEME.borderLight,
+                                  color: p.status === 'interested' || p.status === 'accepted' ? THEME.green : p.status === 'feedback' ? '#3b82f6' : p.status === 'declined' ? '#ef4444' : THEME.textSub,
+                                }}>
+                                  {p.status === 'interested' || p.status === 'accepted' ? '✅ 採用' : p.status === 'feedback' ? '💬 FB' : p.status === 'declined' ? '❌' : p.status === 'sent' ? '📤 送信済' : p.status}
+                                </span>
+                              </div>
+                            ))}
+                            {trackPitches.filter(p => p.feedback_message).map(p => (
+                              <div key={`fb-${p.id}`} style={{ marginTop: 6, padding: 8, background: THEME.bg, borderRadius: 6, borderLeft: `3px solid ${THEME.gold}` }}>
+                                <p style={{ fontSize: 11, color: THEME.textMuted, margin: '0 0 2px', fontFamily: THEME.font }}>{p.curator_name}:</p>
+                                <p style={{ fontSize: 12, color: THEME.text, lineHeight: 1.4, margin: 0, fontFamily: THEME.font }}>{p.feedback_message}</p>
+                                {p.placement_url && (
+                                  <a href={p.placement_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: THEME.gold, display: 'block', marginTop: 4 }}>🎉 {p.placement_url}</a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
                       <a href={buildPitchUrl(track)} className="btn-gold" style={{ display: 'block', textAlign: 'center', padding: '8px 16px', borderRadius: 100, background: THEME.gold, color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font }}>ピッチを送る →</a>
                     </div>
                   </div>
@@ -933,8 +984,8 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
 
         <label style={lbl}>Bio</label>
         <div style={{ position: 'relative' }}>
-          <textarea className="modal-input" style={{ ...inp, minHeight: 100, resize: 'vertical' }} value={form.bio} onChange={e => { if (e.target.value.length <= 500) set('bio', e.target.value); }} placeholder="自己紹介..." />
-          <div style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 10, color: form.bio.length > 450 ? THEME.coral : THEME.textMuted }}>{form.bio.length}/500</div>
+          <textarea className="modal-input" style={{ ...inp, minHeight: 100, resize: 'vertical' }} value={form.bio} onChange={e => { if (e.target.value.length <= 1000) set('bio', e.target.value); }} placeholder="自己紹介..." />
+          <div style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 10, color: form.bio.length > 900 ? THEME.coral : THEME.textMuted }}>{form.bio.length}/1000</div>
         </div>
 
         <label style={lbl}>Hot News</label>

@@ -392,8 +392,8 @@ export default function ArtistRegistrationPage() {
 
               <label style={lbl}>Bio（自己紹介）</label>
               <div style={{ position: 'relative' }}>
-                <textarea className="artist-input" style={{ ...inp, minHeight: 120, resize: 'vertical' }} value={form.bio} onChange={e => { if (e.target.value.length <= 500) set('bio', e.target.value); }} placeholder="あなたの音楽やバンドについて教えてください。活動拠点、音楽の特徴、これまでの実績など..." />
-                <div style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 11, color: form.bio.length > 450 ? THEME.coral : THEME.textMuted, fontFamily: THEME.font }}>{form.bio.length}/500</div>
+                <textarea className="artist-input" style={{ ...inp, minHeight: 120, resize: 'vertical' }} value={form.bio} onChange={e => { if (e.target.value.length <= 1000) set('bio', e.target.value); }} placeholder="あなたの音楽やバンドについて教えてください。活動拠点、音楽の特徴、これまでの実績など..." />
+                <div style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 11, color: form.bio.length > 900 ? THEME.coral : THEME.textMuted, fontFamily: THEME.font }}>{form.bio.length}/1000</div>
               </div>
 
               <label style={lbl}>Hot News（最新情報・任意）</label>

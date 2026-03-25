@@ -188,35 +188,33 @@ export async function GET(request) {
 
     const tracks = await getArtistTracks(payload.artistId);
 
-    // Fetch pitches by artist_email and artist_name separately (avoid .or() issues with special chars)
+    // Fetch pitches by artist_email and artist_name separately
+    // Use select('*') to avoid column-not-found errors on varying schemas
     const supabase = getServiceSupabase();
-    const pitchSelect = 'id, status, curator_name, feedback_message, placement_url, sent_at, song_link, song_title, subject, body';
 
-    const { data: pitches1, error: pitchErr1 } = await supabase
-      .from('pitches')
-      .select(pitchSelect)
-      .eq('artist_email', artist.email)
-      .order('sent_at', { ascending: false });
+    let pitches1 = [], pitches2 = [];
+    try {
+      const r1 = await supabase.from('pitches').select('*').eq('artist_email', artist.email);
+      if (r1.error) console.error('Pitch query (email) error:', r1.error);
+      else pitches1 = r1.data || [];
+    } catch (e) { console.error('Pitch query (email) exception:', e); }
 
-    const { data: pitches2, error: pitchErr2 } = await supabase
-      .from('pitches')
-      .select(pitchSelect)
-      .eq('artist_name', artist.name)
-      .order('sent_at', { ascending: false });
-
-    if (pitchErr1) console.error('Pitch query (email) error:', pitchErr1);
-    if (pitchErr2) console.error('Pitch query (name) error:', pitchErr2);
+    try {
+      const r2 = await supabase.from('pitches').select('*').eq('artist_name', artist.name);
+      if (r2.error) console.error('Pitch query (name) error:', r2.error);
+      else pitches2 = r2.data || [];
+    } catch (e) { console.error('Pitch query (name) exception:', e); }
 
     // Deduplicate and merge
     const seenIds = new Set();
     const pitchList = [];
-    for (const p of [...(pitches1 || []), ...(pitches2 || [])]) {
+    for (const p of [...pitches1, ...pitches2]) {
       if (!seenIds.has(p.id)) {
         seenIds.add(p.id);
         pitchList.push(p);
       }
     }
-    pitchList.sort((a, b) => new Date(b.sent_at || 0) - new Date(a.sent_at || 0));
+    pitchList.sort((a, b) => new Date(b.sent_at || b.created_at || 0) - new Date(a.sent_at || a.created_at || 0));
     const pitchStats = {
       total_sent: pitchList.length,
       responded: pitchList.filter(p => p.feedback_message || p.status === 'feedback' || p.status === 'interested' || p.status === 'accepted' || p.status === 'declined').length,

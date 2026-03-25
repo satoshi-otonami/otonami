@@ -113,7 +113,7 @@ const COPY = {
       tagline: 'Connecting Japanese Music to the World',
       links: [
         { label: 'For Curators', href: '/curator' },
-        { label: 'For Artists',  href: '/studio' },
+        { label: 'For Artists',  href: '/artist' },
         { label: 'Contact',      href: 'mailto:info@otonami.io' },
       ],
       copy: '© 2025 TYCompany LLC. All rights reserved.',
@@ -214,7 +214,7 @@ const COPY = {
       tagline: '日本の音楽を世界へ',
       links: [
         { label: 'キュレーター向け', href: '/curator' },
-        { label: 'アーティスト向け', href: '/studio' },
+        { label: 'アーティスト向け', href: '/artist' },
         { label: 'お問い合わせ',     href: 'mailto:info@otonami.io' },
       ],
       copy: '© 2025 TYCompany LLC. All rights reserved.',
@@ -843,7 +843,7 @@ export default function HomePage() {
             {t.hero.sub}
           </p>
           <div className="cta-group hero-cta-anim" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginBottom: 80, flexWrap: 'wrap' }}>
-            <a href="/studio?role=artist"  className="cta-coral" style={{ fontSize: 16, padding: '15px 32px' }}>{t.hero.ctaPrimary}</a>
+            <a href="/artist"  className="cta-coral" style={{ fontSize: 16, padding: '15px 32px' }}>{t.hero.ctaPrimary}</a>
             <a href="/curator" className="cta-ghost" style={{ fontSize: 16, padding: '15px 32px' }}>{t.hero.ctaGhost}</a>
           </div>
           {/* Stats — count-up animation */}
@@ -924,7 +924,7 @@ export default function HomePage() {
 
           <AnimatedSection delay={300}>
             <div style={{ textAlign: 'center', marginTop: 48 }}>
-              <a href="/studio?role=artist" className="cta-coral" style={{ fontSize: 16, padding: '15px 36px' }}>{t.how.cta}</a>
+              <a href="/artist" className="cta-coral" style={{ fontSize: 16, padding: '15px 36px' }}>{t.how.cta}</a>
             </div>
           </AnimatedSection>
 
@@ -1007,7 +1007,7 @@ export default function HomePage() {
           {/* Artist section closing CTA */}
           <AnimatedSection>
             <div style={{ textAlign: 'center', marginTop: 48, paddingBottom: 20 }}>
-              <a href="/studio" style={{ textDecoration: 'none' }}>
+              <a href="/artist" style={{ textDecoration: 'none' }}>
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
                   background: '#e85d3a', color: '#fff', fontFamily: D.fBody,
@@ -1438,7 +1438,7 @@ export default function HomePage() {
                 <div style={sectionLabel()}>{t.artists.label}</div>
                 <h2 style={{ fontFamily: D.fHead, fontSize: 36, fontWeight: 500, color: D.text, lineHeight: 1.25, marginBottom: 16 }}>{t.artists.title}</h2>
                 <p style={{ fontSize: 15, color: D.textSec, lineHeight: 1.7, marginBottom: 36 }}>{t.artists.sub}</p>
-                <a href="/studio?role=artist" className="cta-coral">{t.artists.cta}</a>
+                <a href="/artist" className="cta-coral">{t.artists.cta}</a>
               </div>
             </AnimatedSection>
           </div>
@@ -1455,7 +1455,7 @@ export default function HomePage() {
             <h2 style={{ fontFamily: D.fHead, fontSize: 40, fontWeight: 500, color: '#fff', marginBottom: 12 }}>{t.cta.title}</h2>
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.85)', marginBottom: 36 }}>{t.cta.sub}</p>
             <div className="cta-group" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              <a href="/studio?role=artist" style={{
+              <a href="/artist" style={{
                 background: '#fff', color: '#2c1810', border: 'none',
                 padding: '16px 36px', borderRadius: 9999, fontSize: 16, fontWeight: 700,
                 cursor: 'pointer', textDecoration: 'none', display: 'inline-block',

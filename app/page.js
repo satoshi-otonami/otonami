@@ -458,6 +458,87 @@ const curatorFAQs = {
   ],
 };
 
+const threeWalls = {
+  ja: {
+    subtitle: 'なぜ今、OTONAMIが必要なのか',
+    title: '日本の音楽が海外に届かない3つの壁',
+    walls: [
+      { icon: '🌐', title: '言語の壁', desc: '日本語でしかPRできない。英語での売り込み文を書ける人材がいない。翻訳ツールでは音楽の魅力が正確に伝わらない。' },
+      { icon: '💰', title: 'コストの壁', desc: '海外PR会社に依頼すると月30万〜100万円。個人アーティストやインディーレーベルには手が出ない金額。' },
+      { icon: '🔍', title: 'アクセスの壁', desc: '海外のプレイリスト編集者やメディアの連絡先がわからない。見つけてメールしても返事が来ない。' },
+    ],
+    solution: 'OTONAMIは、この3つの壁をすべて解決します。',
+  },
+  en: {
+    subtitle: 'Why OTONAMI exists',
+    title: '3 barriers keeping Japanese music from the world',
+    walls: [
+      { icon: '🌐', title: 'Language barrier', desc: "You can only pitch in Japanese. No one on your team writes English press copy. Translation tools can't capture your music's soul." },
+      { icon: '💰', title: 'Cost barrier', desc: 'International PR agencies charge ¥300K–1M/month. Impossible for indie artists and small labels.' },
+      { icon: '🔍', title: 'Access barrier', desc: "You don't know how to reach overseas playlist editors or bloggers. Cold emails get ignored — under 3% response rate." },
+    ],
+    solution: 'OTONAMI removes all three barriers.',
+  },
+};
+
+const successStories = {
+  ja: {
+    subtitle: '実証済みのモデル',
+    title: 'キュレーターピッチで実現した成果',
+    desc: '海外では同様のプラットフォームで30万人以上のアーティストが活動中。OTONAMIはこの実証済みモデルに「日本語UI」「AIピッチ生成」「AIマッチング」を加えた日本初のサービスです。',
+    stats: [
+      { number: '2x', label: 'Spotify月間リスナー増加', detail: 'キュレーターピッチ活用で月間リスナーが倍増した事例' },
+      { number: '43K', label: '1ヶ月での再生回数', detail: '1つのプレイリスト掲載から短期間で獲得' },
+      { number: '40%', label: 'ピッチ採用率', detail: '従来のメール営業では考えられない採用率を記録' },
+      { number: '1/100', label: 'コスト削減', detail: '海外PR会社と比較して1/100以下のコスト' },
+    ],
+  },
+  en: {
+    subtitle: 'Proven model',
+    title: 'Real results from curator pitching',
+    desc: 'Over 300,000 artists use similar platforms worldwide. OTONAMI brings this proven model to Japan with AI-powered English pitch generation and smart matching.',
+    stats: [
+      { number: '2x', label: 'Spotify listeners gained', detail: 'Monthly listeners doubled through curator pitching' },
+      { number: '43K', label: 'Plays in one month', detail: 'From a single playlist placement' },
+      { number: '40%', label: 'Pitch acceptance rate', detail: 'vs. under 3% for traditional cold emails' },
+      { number: '1/100', label: 'Cost reduction', detail: 'Compared to traditional international PR agencies' },
+    ],
+  },
+};
+
+const comparison = {
+  ja: {
+    subtitle: 'OTONAMIの優位性',
+    title: '従来の方法との比較',
+    headers: ['', 'OTONAMI', '海外の類似サービス', '自力でのメール営業'],
+    rows: [
+      { label: '操作言語', otonami: '日本語', others: '英語のみ', diy: '英語必須' },
+      { label: 'ピッチ文作成', otonami: 'AI自動生成（英語）', others: '手動で英語入力', diy: '自分で英語作成' },
+      { label: 'キュレーター選定', otonami: 'AIマッチスコア（自動）', others: '手動フィルター', diy: '自分でリサーチ' },
+      { label: '楽曲分析', otonami: 'AI自動（BPM・ジャンル・ムード）', others: 'なし', diy: 'なし' },
+      { label: 'フィードバック', otonami: '7日以内に保証', others: '7日〜48時間', diy: '返信率3%以下' },
+      { label: '価格', otonami: '約¥160/件〜', others: '約¥150〜450/件', diy: '無料（時間コスト大）' },
+      { label: '日本音楽への理解', otonami: '日本音楽に特化したキュレーター', others: '汎用（全世界対象）', diy: '相手次第' },
+    ],
+    tagline: 'OTONAMIだけの強み：日本語UI + AI英語ピッチ自動生成 + AIマッチスコア',
+  },
+  en: {
+    subtitle: 'Why OTONAMI',
+    title: 'How we compare',
+    headers: ['', 'OTONAMI', 'Other platforms', 'DIY outreach'],
+    rows: [
+      { label: 'Language', otonami: 'Japanese UI', others: 'English only', diy: 'English required' },
+      { label: 'Pitch writing', otonami: 'AI auto-generated (English)', others: 'Manual English input', diy: 'Write it yourself' },
+      { label: 'Curator matching', otonami: 'AI Match Score (auto)', others: 'Manual filters', diy: 'Self-research' },
+      { label: 'Track analysis', otonami: 'AI (BPM, genre, mood)', others: 'None', diy: 'None' },
+      { label: 'Feedback', otonami: 'Guaranteed within 7 days', others: '48h – 7 days', diy: 'Under 3% reply rate' },
+      { label: 'Price', otonami: '~¥160/pitch (~$1)', others: '~¥150–450/pitch', diy: 'Free (huge time cost)' },
+      { label: 'Japan focus', otonami: 'Curators who love Japanese music', others: 'Generic (global)', diy: 'Hit or miss' },
+    ],
+    tagline: 'Only OTONAMI offers: Japanese UI + AI English pitch generation + AI Match Score',
+  },
+};
+
 /* ─────────────────────────────────────────
    Page
 ───────────────────────────────────────── */
@@ -790,6 +871,42 @@ export default function HomePage() {
             </div>
           </AnimatedSection>
 
+          {/* 3つの壁 */}
+          <AnimatedSection>
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 12 }}>
+                {(lang === 'ja' ? threeWalls.ja : threeWalls.en).subtitle}
+              </div>
+              <h3 style={{ fontFamily: D.fHead, fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: 700, color: L.text, lineHeight: 1.3, margin: 0 }}>
+                {(lang === 'ja' ? threeWalls.ja : threeWalls.en).title}
+              </h3>
+            </div>
+          </AnimatedSection>
+          <div className="walls-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 16 }}>
+            {(lang === 'ja' ? threeWalls.ja : threeWalls.en).walls.map((w, i) => (
+              <AnimatedSection key={i} delay={i * 100}>
+                <div style={{
+                  background: '#ffffff', border: '1px solid #e5e2dc', borderRadius: 16,
+                  padding: 24, borderLeft: '3px solid transparent',
+                  borderImage: 'linear-gradient(180deg, #c4956a, #e85d3a) 1',
+                  height: '100%',
+                }}>
+                  <div style={{ fontSize: 28, marginBottom: 12 }}>{w.icon}</div>
+                  <div style={{ fontFamily: D.fBody, fontSize: 16, fontWeight: 700, color: '#1a1a1a', marginBottom: 8 }}>{w.title}</div>
+                  <div style={{ fontFamily: D.fBody, fontSize: 14, color: 'rgba(26,26,26,0.6)', lineHeight: 1.6 }}>{w.desc}</div>
+                </div>
+              </AnimatedSection>
+            ))}
+          </div>
+          <AnimatedSection delay={300}>
+            <div style={{ textAlign: 'center', marginBottom: 56 }}>
+              <div style={{ width: 40, height: 2, background: 'linear-gradient(90deg, #c4956a, #e85d3a)', margin: '0 auto 16px', borderRadius: 1 }} />
+              <p style={{ fontFamily: D.fBody, fontSize: 15, fontWeight: 600, color: L.text, margin: 0 }}>
+                {(lang === 'ja' ? threeWalls.ja : threeWalls.en).solution}
+              </p>
+            </div>
+          </AnimatedSection>
+
           <div className="how-grid artist-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
             {t.how.steps.map((step, i) => (
               <AnimatedSection key={i} delay={i * 100}>
@@ -811,27 +928,84 @@ export default function HomePage() {
             </div>
           </AnimatedSection>
 
-          {/* Artist FAQ */}
-          <AnimatedSection delay={400}>
-            <div style={{ maxWidth: 680, margin: '48px auto 0', padding: '0 24px' }}>
-              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: L.text, textAlign: 'center', marginBottom: 24 }}>
-                {lang === 'ja' ? 'よくある質問' : 'Frequently Asked Questions'}
+          {/* Success Stories */}
+          {(() => { const ss = lang === 'ja' ? successStories.ja : successStories.en; return (<>
+          <AnimatedSection>
+            <div style={{ textAlign: 'center', marginTop: 72, marginBottom: 24 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 12 }}>
+                {ss.subtitle}
+              </div>
+              <h3 style={{ fontFamily: D.fHead, fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: 700, color: L.text, lineHeight: 1.3, margin: '0 0 16px' }}>
+                {ss.title}
               </h3>
-              {(lang === 'ja' ? artistFAQs.ja : artistFAQs.en).map((faq, i) => (
-                <FAQItem
-                  key={i}
-                  question={faq.q}
-                  answer={faq.a}
-                  isOpen={openArtistFAQ === i}
-                  onClick={() => setOpenArtistFAQ(openArtistFAQ === i ? null : i)}
-                  theme="light"
-                />
-              ))}
+              <p style={{ fontFamily: D.fBody, fontSize: 15, color: L.textSec, lineHeight: 1.7, maxWidth: 700, margin: '0 auto' }}>
+                {ss.desc}
+              </p>
             </div>
           </AnimatedSection>
+          <div className="stats-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 48 }}>
+            {ss.stats.map((s, i) => (
+              <AnimatedSection key={i} delay={i * 80}>
+                <div style={{
+                  background: '#ffffff', border: '1px solid #e5e2dc', borderRadius: 16,
+                  padding: 24, textAlign: 'center', height: '100%',
+                }}>
+                  <div style={{ fontFamily: D.fHead, fontSize: 'clamp(32px, 4vw, 44px)', fontWeight: 700, color: '#c4956a', marginBottom: 8 }}>{s.number}</div>
+                  <div style={{ fontFamily: D.fBody, fontSize: 14, fontWeight: 700, color: '#1a1a1a', marginBottom: 4 }}>{s.label}</div>
+                  <div style={{ fontFamily: D.fBody, fontSize: 13, color: 'rgba(26,26,26,0.5)', lineHeight: 1.5 }}>{s.detail}</div>
+                </div>
+              </AnimatedSection>
+            ))}
+          </div>
+          </>); })()}
+
+          {/* Comparison Table */}
+          {(() => { const cmp = lang === 'ja' ? comparison.ja : comparison.en; return (<>
+          <AnimatedSection>
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 12 }}>
+                {cmp.subtitle}
+              </div>
+              <h3 style={{ fontFamily: D.fHead, fontSize: 'clamp(24px, 4vw, 36px)', fontWeight: 700, color: L.text, lineHeight: 1.3, margin: 0 }}>
+                {cmp.title}
+              </h3>
+            </div>
+          </AnimatedSection>
+          <AnimatedSection delay={100}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: 8 }}>
+              <table style={{ width: '100%', maxWidth: 900, margin: '0 auto', borderCollapse: 'collapse', borderRadius: 16, overflow: 'hidden', minWidth: 600 }}>
+                <thead>
+                  <tr>
+                    {cmp.headers.map((h, i) => (
+                      <th key={i} style={{
+                        padding: '12px 16px', fontFamily: D.fBody, fontSize: 14, fontWeight: 700,
+                        textAlign: 'left', whiteSpace: 'nowrap',
+                        background: i === 1 ? '#c4956a' : '#1a1a1a',
+                        color: '#fff',
+                      }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {cmp.rows.map((row, i) => (
+                    <tr key={i} style={{ background: i % 2 === 0 ? '#ffffff' : '#faf8f5' }}>
+                      <td style={{ padding: '12px 16px', fontFamily: D.fBody, fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>{row.label}</td>
+                      <td style={{ padding: '12px 16px', fontFamily: D.fBody, fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>{row.otonami}</td>
+                      <td style={{ padding: '12px 16px', fontFamily: D.fBody, fontSize: 14, fontWeight: 400, color: 'rgba(26,26,26,0.5)' }}>{row.others}</td>
+                      <td style={{ padding: '12px 16px', fontFamily: D.fBody, fontSize: 14, fontWeight: 400, color: 'rgba(26,26,26,0.5)' }}>{row.diy}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p style={{ textAlign: 'center', fontSize: 14, fontWeight: 600, color: '#c4956a', marginTop: 20 }}>
+              {cmp.tagline}
+            </p>
+          </AnimatedSection>
+          </>); })()}
 
           {/* Artist section closing CTA */}
-          <AnimatedSection delay={500}>
+          <AnimatedSection>
             <div style={{ textAlign: 'center', marginTop: 48, paddingBottom: 20 }}>
               <a href="/studio" style={{ textDecoration: 'none' }}>
                 <div style={{
@@ -847,6 +1021,25 @@ export default function HomePage() {
               <p style={{ fontFamily: D.fBody, fontSize: 13, color: 'rgba(26,26,26,0.4)', marginTop: 12 }}>
                 {lang === 'ja' ? '初回無料クレジット付き・クレジットカード不要' : 'Free credits included — no credit card required'}
               </p>
+            </div>
+          </AnimatedSection>
+
+          {/* Artist FAQ */}
+          <AnimatedSection>
+            <div style={{ maxWidth: 680, margin: '48px auto 0', padding: '0 24px' }}>
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, fontWeight: 700, color: L.text, textAlign: 'center', marginBottom: 24 }}>
+                {lang === 'ja' ? 'よくある質問' : 'Frequently Asked Questions'}
+              </h3>
+              {(lang === 'ja' ? artistFAQs.ja : artistFAQs.en).map((faq, i) => (
+                <FAQItem
+                  key={i}
+                  question={faq.q}
+                  answer={faq.a}
+                  isOpen={openArtistFAQ === i}
+                  onClick={() => setOpenArtistFAQ(openArtistFAQ === i ? null : i)}
+                  theme="light"
+                />
+              ))}
             </div>
           </AnimatedSection>
         </div>

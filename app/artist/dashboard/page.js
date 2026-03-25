@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 const THEME = {
   bg: '#f8f7f4', card: '#ffffff', border: '#e5e2dc', borderLight: '#f0ede8',
@@ -68,6 +68,70 @@ async function getSpotifyThumbnail(url) {
   return null;
 }
 
+// Count-up animation hook
+function useCountUp(target, duration = 1200) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (target <= 0 || hasAnimated.current) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !hasAnimated.current) {
+        hasAnimated.current = true;
+        const start = performance.now();
+        const animate = (now) => {
+          const progress = Math.min((now - start) / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          setCount(Math.round(eased * target));
+          if (progress < 1) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+      }
+    }, { threshold: 0.3 });
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [target, duration]);
+
+  return { count, ref };
+}
+
+// Stats card with count-up animation and gradient accent
+function StatCard({ label, value, color }) {
+  const { count, ref } = useCountUp(value);
+  return (
+    <div ref={ref} style={{
+      background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16,
+      padding: '20px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden',
+    }}>
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 3,
+        background: `linear-gradient(90deg, ${color}, ${color}80)`,
+      }} />
+      <div style={{ fontFamily: THEME.fontDisplay, fontSize: 32, fontWeight: 700, color }}>{count}</div>
+      <div style={{ fontSize: 13, color: THEME.textSub, marginTop: 4, fontFamily: THEME.font }}>{label}</div>
+    </div>
+  );
+}
+
+// YouTube video ID extraction
+function getYoutubeVideoId(url) {
+  if (!url) return null;
+  const m1 = url.match(/[?&]v=([^&#]+)/);
+  const m2 = url.match(/youtu\.be\/([^?&#]+)/);
+  const m3 = url.match(/shorts\/([^?&#]+)/);
+  const m4 = url.match(/embed\/([^?&#]+)/);
+  return m1?.[1] || m2?.[1] || m3?.[1] || m4?.[1] || null;
+}
+
+// Spotify track/album ID extraction for embed
+function getSpotifyEmbedUrl(url) {
+  if (!url) return null;
+  const m = url.match(/open\.spotify\.com\/(track|album|playlist)\/([a-zA-Z0-9]+)/);
+  if (m) return `https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator&theme=0`;
+  return null;
+}
+
 export default function ArtistDashboard() {
   const [artist, setArtist] = useState(null);
   const [tracks, setTracks] = useState([]);
@@ -84,6 +148,13 @@ export default function ArtistDashboard() {
   const [trackMenu, setTrackMenu] = useState(null);
   const [editTrack, setEditTrack] = useState(null);
   const trackMenuRef = useRef(null);
+
+  // Curator profile modal
+  const [selectedCurator, setSelectedCurator] = useState(null);
+  const [curatorLoading, setCuratorLoading] = useState(false);
+
+  // YouTube embed state per track
+  const [playingYT, setPlayingYT] = useState(null);
 
   // Header dropdown
   const [headerMenu, setHeaderMenu] = useState(false);
@@ -146,6 +217,22 @@ export default function ArtistDashboard() {
     localStorage.removeItem('artist_token');
     window.location.href = '/artist/login';
   };
+
+  const openCuratorProfile = useCallback(async (curatorName) => {
+    if (!curatorName) return;
+    setCuratorLoading(true);
+    try {
+      const res = await fetch(`/api/curators/public?name=${encodeURIComponent(curatorName)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedCurator(data.curator);
+      }
+    } catch (e) {
+      console.error('Curator fetch error:', e);
+    } finally {
+      setCuratorLoading(false);
+    }
+  }, []);
 
   const handleDeleteTrack = async (track) => {
     try {
@@ -239,7 +326,20 @@ export default function ArtistDashboard() {
       {/* ── Cover + Profile Hero ── */}
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 20px 0' }}>
         <div style={{ position: 'relative', borderRadius: '16px 16px 0 0', overflow: 'hidden' }}>
-          <div className="cover-area" style={{ height: 200, background: artist.cover_url ? `url(${artist.cover_url}) center/cover` : 'linear-gradient(135deg, #c4956a 0%, #e85d3a 100%)' }} />
+          <div className="cover-area" style={{ height: 220, position: 'relative' }}>
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: artist.cover_url ? `url(${artist.cover_url}) center/cover` : 'linear-gradient(135deg, #c4956a 0%, #e85d3a 100%)',
+            }} />
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.45) 100%)',
+            }} />
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'radial-gradient(ellipse at 20% 80%, rgba(196,149,106,0.25) 0%, transparent 60%)',
+            }} />
+          </div>
           <button onClick={() => setShowEditProfile(true)} style={{
             position: 'absolute', top: 16, right: 16, padding: '8px 16px', borderRadius: 100,
             background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)',
@@ -251,9 +351,17 @@ export default function ArtistDashboard() {
 
         {/* Profile info below cover */}
         <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderTop: 'none', borderRadius: '0 0 16px 16px', padding: '0 28px 28px', position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, marginTop: -48 }}>
-            <div className="avatar-hero" style={{ width: 96, height: 96, borderRadius: '50%', border: '4px solid #fff', background: THEME.goldLight, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, boxShadow: '0 2px 12px rgba(0,0,0,0.1)' }}>
-              {artist.avatar_url ? <img src={artist.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 40 }}>🎵</span>}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, marginTop: -60 }}>
+            <div className="avatar-hero" style={{
+              width: 120, height: 120, borderRadius: '50%', border: '4px solid #fff',
+              background: THEME.goldLight, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden', flexShrink: 0,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}>
+              {artist.avatar_url
+                ? <img src={artist.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <span style={{ fontFamily: THEME.fontDisplay, fontSize: 44, fontWeight: 700, color: THEME.gold }}>{(artist.name || '?')[0].toUpperCase()}</span>
+              }
             </div>
             <div style={{ paddingBottom: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -375,16 +483,9 @@ export default function ArtistDashboard() {
               </div>
             )}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-              {[
-                { label: 'ピッチ送信', value: pitchStats?.total_sent || 0, color: THEME.gold },
-                { label: 'レスポンス', value: pitchStats?.responded || 0, color: THEME.gold },
-                { label: '採用', value: pitchStats?.interested || 0, color: THEME.green },
-              ].map(stat => (
-                <div key={stat.label} style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, padding: '20px 24px', textAlign: 'center' }}>
-                  <div style={{ fontFamily: THEME.fontDisplay, fontSize: 28, fontWeight: 700, color: stat.color }}>{stat.value}</div>
-                  <div style={{ fontSize: 13, color: THEME.textSub, marginTop: 4, fontFamily: THEME.font }}>{stat.label}</div>
-                </div>
-              ))}
+              <StatCard label="ピッチ送信" value={pitchStats?.total_sent || 0} color={THEME.gold} />
+              <StatCard label="レスポンス" value={pitchStats?.responded || 0} color={THEME.gold} />
+              <StatCard label="採用" value={pitchStats?.interested || 0} color={THEME.green} />
             </div>
 
             {/* 最近のピッチ */}
@@ -396,7 +497,10 @@ export default function ArtistDashboard() {
                     <div key={pitch.id} style={{ background: THEME.card, borderRadius: 12, padding: 16, border: `1px solid ${THEME.border}` }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <span style={{ fontWeight: 600, color: THEME.text, fontSize: 14, fontFamily: THEME.font }}>{pitch.curator_name}</span>
+                          <span onClick={() => openCuratorProfile(pitch.curator_name)} style={{ fontWeight: 600, color: THEME.gold, fontSize: 14, fontFamily: THEME.font, cursor: 'pointer', textDecoration: 'underline', textDecorationColor: `${THEME.gold}40`, textUnderlineOffset: 2 }}
+                            onMouseEnter={e => e.currentTarget.style.textDecorationColor = THEME.gold}
+                            onMouseLeave={e => e.currentTarget.style.textDecorationColor = `${THEME.gold}40`}
+                          >{pitch.curator_name}</span>
                           <span style={{ marginLeft: 8, fontSize: 12, color: THEME.textMuted }}>
                             {pitch.sent_at ? new Date(pitch.sent_at).toLocaleDateString('ja-JP') : ''}
                           </span>
@@ -444,6 +548,57 @@ export default function ArtistDashboard() {
               </div>
             )}
 
+            {/* ── お気に入りキュレーター（フィードバックをくれた人） ── */}
+            {(() => {
+              const favCurators = [];
+              const seen = new Set();
+              for (const p of recentPitches) {
+                if ((p.feedback_message || p.status === 'interested' || p.status === 'accepted') && p.curator_name && !seen.has(p.curator_name)) {
+                  seen.add(p.curator_name);
+                  favCurators.push({
+                    name: p.curator_name,
+                    status: p.status,
+                    feedback: p.feedback_message,
+                  });
+                }
+              }
+              if (favCurators.length === 0) return null;
+              return (
+                <div style={{ marginTop: 8 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: THEME.text, marginBottom: 12, fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    ⭐ お気に入りキュレーター
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+                    {favCurators.map(c => (
+                      <div key={c.name} onClick={() => openCuratorProfile(c.name)} style={{
+                        background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 14,
+                        padding: 16, cursor: 'pointer', transition: 'all 0.2s',
+                      }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = THEME.gold; e.currentTarget.style.boxShadow = '0 4px 16px rgba(196,149,106,0.15)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = THEME.border; e.currentTarget.style.boxShadow = 'none'; }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{
+                            width: 40, height: 40, borderRadius: '50%', background: THEME.goldLight,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontFamily: THEME.fontDisplay, fontSize: 18, fontWeight: 700, color: THEME.gold,
+                          }}>
+                            {c.name[0]?.toUpperCase()}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: THEME.text, fontFamily: THEME.font }}>{c.name}</div>
+                            <div style={{ fontSize: 11, color: c.status === 'interested' || c.status === 'accepted' ? THEME.green : '#3b82f6', fontWeight: 500 }}>
+                              {c.status === 'interested' || c.status === 'accepted' ? '✅ 採用' : '💬 FB済'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
             {recentPitches.length === 0 && (
               <div style={{ textAlign: 'center', padding: 32, background: THEME.bg, borderRadius: 12 }}>
                 <p style={{ fontSize: 15, color: THEME.textSub, fontFamily: THEME.font }}>まだピッチを送信していません</p>
@@ -489,23 +644,52 @@ export default function ArtistDashboard() {
 
                 {tracks.map(track => {
                   const trackThumbnail = track.cover_image_url || getYoutubeThumbnail(track.youtube_url) || null;
+                  const ytVideoId = getYoutubeVideoId(track.youtube_url);
+                  const spotifyEmbed = getSpotifyEmbedUrl(track.spotify_url);
+                  const isPlayingYT = playingYT === track.id;
                   return (
                   <div key={track.id} className="track-card" style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, overflow: 'hidden', transition: 'all 0.2s', position: 'relative' }}>
                     <div style={{ aspectRatio: '1', position: 'relative', overflow: 'hidden' }}>
-                      {trackThumbnail ? (
-                        <img src={trackThumbnail} alt={track.title}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                          onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
+                      {isPlayingYT && ytVideoId ? (
+                        <iframe
+                          src={`https://www.youtube.com/embed/${ytVideoId}?autoplay=1&rel=0`}
+                          style={{ width: '100%', height: '100%', border: 'none' }}
+                          allow="autoplay; encrypted-media"
+                          allowFullScreen
                         />
-                      ) : null}
-                      <div style={{
-                        display: trackThumbnail ? 'none' : 'flex',
-                        width: '100%', height: '100%', position: trackThumbnail ? 'absolute' : 'relative', top: 0, left: 0,
-                        background: 'linear-gradient(135deg, #c4956a 0%, #e85d3a 50%, #c4956a 100%)',
-                        alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <span style={{ fontSize: 48, opacity: 0.5 }}>🎵</span>
-                      </div>
+                      ) : (
+                        <>
+                          {trackThumbnail ? (
+                            <img src={trackThumbnail} alt={track.title}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
+                            />
+                          ) : null}
+                          <div style={{
+                            display: trackThumbnail ? 'none' : 'flex',
+                            width: '100%', height: '100%', position: trackThumbnail ? 'absolute' : 'relative', top: 0, left: 0,
+                            background: 'linear-gradient(135deg, #c4956a 0%, #e85d3a 50%, #c4956a 100%)',
+                            alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <span style={{ fontSize: 48, opacity: 0.5 }}>🎵</span>
+                          </div>
+                          {/* YouTube play button overlay */}
+                          {ytVideoId && (
+                            <button onClick={(e) => { e.stopPropagation(); setPlayingYT(track.id); }} style={{
+                              position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                              width: 56, height: 56, borderRadius: '50%',
+                              background: 'rgba(0,0,0,0.7)', border: '2px solid rgba(255,255,255,0.8)',
+                              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              transition: 'all 0.2s',
+                            }}
+                              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,0,0,0.85)'; e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.1)'; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.7)'; e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)'; }}
+                            >
+                              <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+                            </button>
+                          )}
+                        </>
+                      )}
                       <div style={{ position: 'absolute', top: 8, right: 8 }}>
                         <button onClick={(e) => { e.stopPropagation(); setTrackMenu(trackMenu === track.id ? null : track.id); }} style={{
                           width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
@@ -566,7 +750,7 @@ export default function ArtistDashboard() {
                             <p style={{ fontSize: 12, fontWeight: 600, color: THEME.textSub, marginBottom: 6, fontFamily: THEME.font }}>📊 ピッチ結果 ({trackPitches.length}件)</p>
                             {trackPitches.map(p => (
                               <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0' }}>
-                                <span style={{ fontSize: 12, fontWeight: 500, color: THEME.text, fontFamily: THEME.font }}>{p.curator_name}</span>
+                                <span onClick={() => openCuratorProfile(p.curator_name)} style={{ fontSize: 12, fontWeight: 500, color: THEME.gold, fontFamily: THEME.font, cursor: 'pointer', textDecoration: 'underline', textDecorationColor: `${THEME.gold}40`, textUnderlineOffset: 2 }}>{p.curator_name}</span>
                                 <span style={{
                                   padding: '2px 8px', borderRadius: 9999, fontSize: 10, fontWeight: 600, fontFamily: THEME.font,
                                   background: p.status === 'interested' || p.status === 'accepted' ? THEME.greenLight : p.status === 'feedback' ? '#3b82f620' : p.status === 'declined' ? '#ef444420' : THEME.borderLight,
@@ -588,6 +772,20 @@ export default function ArtistDashboard() {
                           </div>
                         );
                       })()}
+                      {/* Spotify embedded player */}
+                      {spotifyEmbed && (
+                        <div style={{ margin: '8px 0', borderRadius: 10, overflow: 'hidden' }}>
+                          <iframe
+                            src={spotifyEmbed}
+                            width="100%"
+                            height="80"
+                            frameBorder="0"
+                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                            loading="lazy"
+                            style={{ borderRadius: 10 }}
+                          />
+                        </div>
+                      )}
                       <a href={buildPitchUrl(track)} className="btn-gold" style={{ display: 'block', textAlign: 'center', padding: '8px 16px', borderRadius: 100, background: THEME.gold, color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font }}>ピッチを送る →</a>
                     </div>
                   </div>
@@ -626,6 +824,134 @@ export default function ArtistDashboard() {
           onClose={() => setShowEditProfile(false)}
           onSuccess={() => { setShowEditProfile(false); fetchProfile(token); }}
         />
+      )}
+
+      {/* ── Curator Profile Modal ── */}
+      {curatorLoading && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.2)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400 }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}>
+            <circle cx="12" cy="12" r="10" stroke={THEME.gold} strokeWidth="3" fill="none" strokeDasharray="31.4 31.4" strokeLinecap="round" />
+          </svg>
+        </div>
+      )}
+      {selectedCurator && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400, padding: 20 }}
+          onClick={() => setSelectedCurator(null)}
+        >
+          <div style={{
+            background: THEME.card, borderRadius: 20, padding: 32, maxWidth: 480, width: '100%',
+            maxHeight: '80vh', overflowY: 'auto',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.15)', position: 'relative',
+          }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button onClick={() => setSelectedCurator(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: THEME.textMuted, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}
+              onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
+              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+            >✕</button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: '50%', background: THEME.goldLight,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                overflow: 'hidden', flexShrink: 0, border: `2px solid ${THEME.gold}30`,
+              }}>
+                {selectedCurator.avatar_url
+                  ? <img src={selectedCurator.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontFamily: THEME.fontDisplay, fontSize: 28, fontWeight: 700, color: THEME.gold }}>{(selectedCurator.name || '?')[0].toUpperCase()}</span>
+                }
+              </div>
+              <div>
+                <h2 style={{ fontFamily: THEME.fontDisplay, fontSize: 22, fontWeight: 700, color: THEME.text, margin: 0 }}>{selectedCurator.name}</h2>
+                {selectedCurator.platform && (
+                  <span style={{ fontSize: 13, color: THEME.textSub }}>{selectedCurator.platform}</span>
+                )}
+                {selectedCurator.tier && (
+                  <span style={{ marginLeft: 8, padding: '2px 8px', borderRadius: 100, fontSize: 11, fontWeight: 600, background: THEME.goldLight, color: THEME.gold }}>
+                    Tier {selectedCurator.tier}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Stats row */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+              {selectedCurator.followers && (
+                <div style={{ flex: 1, background: THEME.bg, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: THEME.text }}>{typeof selectedCurator.followers === 'number' ? selectedCurator.followers.toLocaleString() : selectedCurator.followers}</div>
+                  <div style={{ fontSize: 11, color: THEME.textMuted }}>Followers</div>
+                </div>
+              )}
+              {selectedCurator.acceptance_rate != null && (
+                <div style={{ flex: 1, background: THEME.bg, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: THEME.green }}>{Math.round(selectedCurator.acceptance_rate * 100)}%</div>
+                  <div style={{ fontSize: 11, color: THEME.textMuted }}>採用率</div>
+                </div>
+              )}
+              {selectedCurator.avg_response_days && (
+                <div style={{ flex: 1, background: THEME.bg, borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: THEME.text }}>{selectedCurator.avg_response_days}日</div>
+                  <div style={{ fontSize: 11, color: THEME.textMuted }}>平均返信</div>
+                </div>
+              )}
+            </div>
+
+            {selectedCurator.description && (
+              <div style={{ marginBottom: 16 }}>
+                <h4 style={{ fontSize: 13, fontWeight: 700, color: THEME.text, marginBottom: 6, fontFamily: THEME.font }}>About</h4>
+                <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap' }}>{selectedCurator.description}</p>
+              </div>
+            )}
+
+            {selectedCurator.genres?.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <h4 style={{ fontSize: 13, fontWeight: 700, color: THEME.text, marginBottom: 8, fontFamily: THEME.font }}>Genres</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {selectedCurator.genres.map(g => (
+                    <span key={g} style={{ padding: '4px 12px', borderRadius: 100, fontSize: 12, background: THEME.goldLight, color: THEME.gold, fontWeight: 500 }}>{g}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Links */}
+            {(selectedCurator.playlist_url || selectedCurator.spotify_url || selectedCurator.youtube_url || selectedCurator.instagram_url || selectedCurator.website_url) && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                {selectedCurator.playlist_url && (
+                  <a href={selectedCurator.playlist_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: THEME.gold, color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                    🔗 Playlist
+                  </a>
+                )}
+                {selectedCurator.spotify_url && (
+                  <a href={selectedCurator.spotify_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#1DB954', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                    <SpotifyIcon /> Spotify
+                  </a>
+                )}
+                {selectedCurator.youtube_url && (
+                  <a href={selectedCurator.youtube_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#FF0000', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                    <YouTubeIcon /> YouTube
+                  </a>
+                )}
+                {selectedCurator.instagram_url && (
+                  <a href={selectedCurator.instagram_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                    <InstagramIcon /> Instagram
+                  </a>
+                )}
+                {selectedCurator.website_url && (
+                  <a href={selectedCurator.website_url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#1a1a1a', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                    🔗 Website
+                  </a>
+                )}
+              </div>
+            )}
+
+            <a href={`/studio?role=artist&curator_name=${encodeURIComponent(selectedCurator.name)}`} className="btn-gold" style={{
+              display: 'block', textAlign: 'center', padding: '12px 24px', borderRadius: 100,
+              background: THEME.gold, color: '#fff', textDecoration: 'none',
+              fontSize: 14, fontWeight: 700, fontFamily: THEME.font,
+            }}>このキュレーターにピッチ →</a>
+          </div>
+        </div>
       )}
 
       {/* ── Delete Confirm ── */}
@@ -1102,8 +1428,8 @@ const globalStyles = `
   .sns-pill:hover { opacity: 0.85; transform: translateY(-1px); }
   .sns-pill { transition: all 0.15s; }
   @media (max-width: 768px) {
-    .cover-area { height: 140px !important; }
-    .avatar-hero { width: 72px !important; height: 72px !important; margin-top: -36px !important; }
+    .cover-area { height: 160px !important; }
+    .avatar-hero { width: 80px !important; height: 80px !important; margin-top: -40px !important; }
     .nav-links { display: none !important; }
     .header-name { display: none; }
     .logo-text { font-size: 18px !important; }

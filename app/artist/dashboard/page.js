@@ -307,10 +307,11 @@ export default function ArtistDashboard() {
           <nav className="nav-links" style={{ display: 'flex', gap: 4 }}>
             <span style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 700, color: THEME.text, fontFamily: THEME.font }}>ダッシュボード</span>
             <button onClick={() => { setPendingCuratorForPitch(null); setShowTrackSelectModal(true); }}
-              style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 500, color: THEME.textSub, background: 'none', border: 'none', cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = THEME.goldLight; e.currentTarget.style.color = THEME.gold; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = THEME.textSub; }}
-            >ピッチを送る</button>
+              className="nav-pitch-btn"
+              style={{ padding: '8px 20px', borderRadius: 9999, fontSize: 14, fontWeight: 600, color: '#fff', background: THEME.coral, border: 'none', cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.background = THEME.coralDark}
+              onMouseLeave={e => e.currentTarget.style.background = THEME.coral}
+            >🎵 ピッチを送る</button>
           </nav>
         </div>
         <div style={{ position: 'relative' }} ref={headerMenuRef}>
@@ -453,6 +454,37 @@ export default function ArtistDashboard() {
               )}
             </div>
           )}
+
+          {/* ── Pitch CTA (profile area) ── */}
+          {tracks.length > 0 ? (
+            <button onClick={() => { setPendingCuratorForPitch(null); setShowTrackSelectModal(true); }}
+              className="pitch-cta-hero"
+              style={{
+                display: 'block', width: '100%', margin: '20px 0 0', padding: '16px 32px',
+                borderRadius: 9999, border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg, #e85d3a, #c4956a)',
+                color: '#fff', fontSize: 16, fontWeight: 600, fontFamily: THEME.font,
+                boxShadow: '0 4px 14px rgba(232, 93, 58, 0.3)',
+                transition: 'all 0.2s', textAlign: 'center',
+              }}
+            >🎵 キュレーターにピッチを送る →</button>
+          ) : (
+            <div style={{
+              background: '#fffbf5', border: '2px dashed #c4956a', borderRadius: 16,
+              padding: 32, textAlign: 'center', margin: '20px 0 0',
+            }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>🎵</div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: THEME.text, margin: '0 0 8px', fontFamily: THEME.font }}>まず楽曲を登録しましょう</h3>
+              <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.6, margin: '0 0 20px' }}>
+                楽曲を登録すると、あなたの音楽に合うキュレーターを見つけてピッチを送ることができます
+              </p>
+              <button onClick={() => { setShowAddTrack(true); setTab('tracks'); }}
+                style={{
+                  padding: '12px 28px', borderRadius: 9999, border: 'none', cursor: 'pointer',
+                  background: THEME.gold, color: '#fff', fontSize: 14, fontWeight: 700, fontFamily: THEME.font,
+                }}>+ 楽曲を追加</button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -472,7 +504,7 @@ export default function ArtistDashboard() {
       </div>
 
       {/* ── Tab Content ── */}
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 20px 80px' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: `24px 20px ${tracks.length > 0 ? '100px' : '80px'}` }}>
 
         {/* ── Profile Tab ── */}
         {tab === 'profile' && (
@@ -803,7 +835,7 @@ export default function ArtistDashboard() {
                           />
                         </div>
                       )}
-                      <a href={buildPitchUrl(track)} className="btn-gold" style={{ display: 'block', textAlign: 'center', padding: '8px 16px', borderRadius: 100, background: THEME.gold, color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font }}>ピッチを送る →</a>
+                      <a href={buildPitchUrl(track)} className="btn-pitch-track" style={{ display: 'block', textAlign: 'center', padding: '10px 20px', borderRadius: 9999, background: THEME.coral, color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font, width: '100%', boxSizing: 'border-box', transition: 'all 0.15s' }}>🎵 ピッチを送る →</a>
                     </div>
                   </div>
                   );
@@ -813,6 +845,28 @@ export default function ArtistDashboard() {
           </>
         )}
       </div>
+
+      {/* ── Floating Pitch CTA Bar ── */}
+      {tracks.length > 0 && (
+        <div className="floating-pitch-bar" style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
+          background: '#fff', boxShadow: '0 -4px 20px rgba(0,0,0,0.08)',
+          padding: '12px 24px',
+        }}>
+          <div style={{ maxWidth: 600, margin: '0 auto' }}>
+            <button onClick={() => { setPendingCuratorForPitch(null); setShowTrackSelectModal(true); }}
+              style={{
+                display: 'block', width: '100%', padding: '14px 40px',
+                borderRadius: 9999, border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg, #e85d3a, #c4956a)',
+                color: '#fff', fontSize: 15, fontWeight: 600, fontFamily: THEME.font,
+                boxShadow: '0 4px 14px rgba(232, 93, 58, 0.3)',
+                transition: 'all 0.2s', textAlign: 'center',
+              }}
+            >🎵 ピッチを送る</button>
+          </div>
+        </div>
+      )}
 
       {/* ── Add Track Modal ── */}
       {showAddTrack && (
@@ -1641,6 +1695,8 @@ const globalStyles = `
   .modal-input:focus { border-color: #c4956a !important; box-shadow: 0 0 0 3px rgba(196,149,106,0.12) !important; }
   .modal-input:hover { border-color: #9b9590 !important; }
   .btn-gold:hover { background: #b8845e !important; }
+  .btn-pitch-track:hover { background: #d04e2e !important; }
+  .pitch-cta-hero:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232, 93, 58, 0.4) !important; }
   .track-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important; }
   .add-track-card:hover { border-color: #c4956a !important; background: #c4956a10 !important; }
   .sns-pill:hover { opacity: 0.85; transform: translateY(-1px); }
@@ -1651,5 +1707,6 @@ const globalStyles = `
     .nav-links { display: none !important; }
     .header-name { display: none; }
     .logo-text { font-size: 18px !important; }
+    .floating-pitch-bar > div { max-width: 100% !important; }
   }
 `;

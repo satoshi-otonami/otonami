@@ -73,6 +73,8 @@ export default function ArtistDashboard() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('profile');
   const [token, setToken] = useState('');
+  const [pitchStats, setPitchStats] = useState(null);
+  const [recentPitches, setRecentPitches] = useState([]);
 
   // Modals
   const [showAddTrack, setShowAddTrack] = useState(false);
@@ -107,6 +109,8 @@ export default function ArtistDashboard() {
       const data = await res.json();
       setArtist(data.artist);
       setTracks(data.artist.tracks || []);
+      if (data.pitchStats) setPitchStats(data.pitchStats);
+      if (data.recentPitches) setRecentPitches(data.recentPitches);
     } catch { window.location.href = '/artist/login'; }
     finally { setLoading(false); }
   };
@@ -371,16 +375,85 @@ export default function ArtistDashboard() {
             )}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
               {[
-                { label: 'ピッチ送信', value: tracks.reduce((s, t) => s + (t.pitches_sent || 0), 0) },
-                { label: 'レスポンス', value: tracks.reduce((s, t) => s + (t.pitches_responded || 0), 0) },
-                { label: 'シェア', value: tracks.reduce((s, t) => s + (t.pitches_shared || 0), 0) },
+                { label: 'ピッチ送信', value: pitchStats?.total_sent || 0, color: THEME.gold },
+                { label: 'レスポンス', value: pitchStats?.responded || 0, color: THEME.gold },
+                { label: '採用', value: pitchStats?.interested || 0, color: THEME.green },
               ].map(stat => (
                 <div key={stat.label} style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, padding: '20px 24px', textAlign: 'center' }}>
-                  <div style={{ fontFamily: THEME.fontDisplay, fontSize: 28, fontWeight: 700, color: THEME.gold }}>{stat.value}</div>
+                  <div style={{ fontFamily: THEME.fontDisplay, fontSize: 28, fontWeight: 700, color: stat.color }}>{stat.value}</div>
                   <div style={{ fontSize: 13, color: THEME.textSub, marginTop: 4, fontFamily: THEME.font }}>{stat.label}</div>
                 </div>
               ))}
             </div>
+
+            {/* 最近のピッチ */}
+            {recentPitches.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: THEME.text, marginBottom: 12, fontFamily: THEME.font }}>最近のピッチ</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {recentPitches.slice(0, 10).map(pitch => (
+                    <div key={pitch.id} style={{ background: THEME.card, borderRadius: 12, padding: 16, border: `1px solid ${THEME.border}` }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <span style={{ fontWeight: 600, color: THEME.text, fontSize: 14, fontFamily: THEME.font }}>{pitch.curator_name}</span>
+                          <span style={{ marginLeft: 8, fontSize: 12, color: THEME.textMuted }}>
+                            {pitch.sent_at ? new Date(pitch.sent_at).toLocaleDateString('ja-JP') : ''}
+                          </span>
+                          {pitch.song_title && (
+                            <span style={{ marginLeft: 8, fontSize: 12, color: THEME.textSub }}>"{pitch.song_title}"</span>
+                          )}
+                        </div>
+                        <span style={{
+                          padding: '4px 12px', borderRadius: 9999, fontSize: 11, fontWeight: 600, fontFamily: THEME.font,
+                          background: pitch.status === 'interested' || pitch.status === 'accepted' ? THEME.greenLight :
+                                     pitch.status === 'feedback' ? '#3b82f620' :
+                                     pitch.status === 'declined' ? '#ef444420' :
+                                     pitch.status === 'opened' ? '#f59e0b20' :
+                                     THEME.borderLight,
+                          color: pitch.status === 'interested' || pitch.status === 'accepted' ? THEME.green :
+                                 pitch.status === 'feedback' ? '#3b82f6' :
+                                 pitch.status === 'declined' ? '#ef4444' :
+                                 pitch.status === 'opened' ? '#f59e0b' :
+                                 THEME.textSub,
+                        }}>
+                          {pitch.status === 'interested' || pitch.status === 'accepted' ? '✅ 採用' :
+                           pitch.status === 'feedback' ? '💬 FB受信' :
+                           pitch.status === 'declined' ? '❌ 不採用' :
+                           pitch.status === 'opened' ? '👀 開封済' :
+                           pitch.status === 'listened' ? '🎧 試聴済' :
+                           pitch.status === 'sent' ? '📤 送信済' :
+                           pitch.status}
+                        </span>
+                      </div>
+                      {pitch.feedback_message && (
+                        <div style={{ marginTop: 10, padding: 12, background: THEME.bg, borderRadius: 8, borderLeft: `3px solid ${THEME.gold}` }}>
+                          <p style={{ fontSize: 12, color: THEME.textMuted, marginBottom: 4, fontFamily: THEME.font }}>{pitch.curator_name} からのフィードバック</p>
+                          <p style={{ fontSize: 14, color: THEME.text, lineHeight: 1.5, margin: 0, fontFamily: THEME.font }}>{pitch.feedback_message}</p>
+                        </div>
+                      )}
+                      {pitch.placement_url && (
+                        <div style={{ marginTop: 8 }}>
+                          <span style={{ fontSize: 12, color: THEME.green }}>🎉 掲載済み: </span>
+                          <a href={pitch.placement_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: THEME.gold }}>{pitch.placement_url}</a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {recentPitches.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 32, background: THEME.bg, borderRadius: 12 }}>
+                <p style={{ fontSize: 15, color: THEME.textSub, fontFamily: THEME.font }}>まだピッチを送信していません</p>
+                <a href="/studio?role=artist" style={{
+                  display: 'inline-block', marginTop: 12, padding: '10px 24px',
+                  background: THEME.gold, color: '#fff', borderRadius: 9999,
+                  textDecoration: 'none', fontWeight: 600, fontSize: 14, fontFamily: THEME.font,
+                }}>キュレーターを探す →</a>
+              </div>
+            )}
+
             {!artist.bio && !artist.hot_news && (artist.influences?.length || 0) === 0 && (
               <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                 <div style={{ fontSize: 48, marginBottom: 16 }}>✏️</div>

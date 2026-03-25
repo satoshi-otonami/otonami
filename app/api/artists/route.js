@@ -188,8 +188,29 @@ export async function GET(request) {
 
     const tracks = await getArtistTracks(payload.artistId);
 
+    // Fetch pitch stats from pitches table
+    const supabase = getServiceSupabase();
+    const { data: pitches } = await supabase
+      .from('pitches')
+      .select('id, status, curator_name, feedback_message, placement_url, sent_at, song_link, song_title, subject, body')
+      .or(`artist_email.eq.${artist.email}`)
+      .order('sent_at', { ascending: false });
+
+    const pitchList = pitches || [];
+    const pitchStats = {
+      total_sent: pitchList.length,
+      responded: pitchList.filter(p => p.feedback_message || p.status === 'feedback' || p.status === 'interested' || p.status === 'accepted' || p.status === 'declined').length,
+      interested: pitchList.filter(p => p.status === 'interested' || p.status === 'accepted').length,
+      opened: pitchList.filter(p => ['opened', 'listened', 'feedback', 'interested', 'accepted'].includes(p.status)).length,
+      listened: pitchList.filter(p => ['listened', 'feedback', 'interested', 'accepted'].includes(p.status)).length,
+    };
+
     const { password_hash, ...safeArtist } = artist;
-    return NextResponse.json({ artist: { ...safeArtist, tracks } });
+    return NextResponse.json({
+      artist: { ...safeArtist, tracks },
+      pitchStats,
+      recentPitches: pitchList.slice(0, 20),
+    });
   } catch (e) {
     console.error('Artist GET error:', e);
     return NextResponse.json({ error: e.message }, { status: 500 });

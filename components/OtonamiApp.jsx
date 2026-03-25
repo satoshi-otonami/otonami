@@ -364,6 +364,22 @@ export default function App() {
               setUser(u);
               try { localStorage.setItem('otonami-user', JSON.stringify(u)); } catch {}
             }
+            // Load real pitch data from API for studio stats
+            if (data.recentPitches?.length) {
+              setPitches(prev => {
+                if (prev.length > 0) return prev; // don't overwrite if already loaded
+                return data.recentPitches.map(p => ({
+                  id: p.id,
+                  status: p.status || 'sent',
+                  curatorName: p.curator_name,
+                  songTitle: p.song_title,
+                  songLink: p.song_link,
+                  feedbackMessage: p.feedback_message,
+                  placementUrl: p.placement_url,
+                  sentAt: p.sent_at,
+                }));
+              });
+            }
           }
         })
         .catch(err => console.error('Failed to load artist profile:', err));

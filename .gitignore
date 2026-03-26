@@ -1,2 +1,7 @@
 .DS_Store
 public/screenshots/
+node_modules/
+.next/
+.env
+.env.local
+.env*.local

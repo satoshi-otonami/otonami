@@ -1092,7 +1092,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
         </div>
       )}
       {/* Result line */}
-      {analyzeLoading && <div style={{fontSize:"0.72rem",color:"#c4956a"}}>🔍 SoundNet検索中…</div>}
+      {analyzeLoading && <div style={{fontSize:"0.72rem",color:"#c4956a"}}>🔍 楽曲分析中…</div>}
       {!analyzeLoading && trackData && (() => {
         const af = trackData.audioFeatures;
         const level = v => v >= 0.67 ? '高' : v >= 0.33 ? '中' : '低';
@@ -1100,7 +1100,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
         return <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
           {af ? (
             <span style={{fontSize:"0.72rem",color:"#15803d",fontWeight:600}}>
-              ✅ SoundNet分析完了: {af.tempo!=null && `Tempo ${Math.round(af.tempo)}BPM`}{af.energy!=null && ` / Energy ${level(af.energy)}`}{af.danceability!=null && ` / Danceability ${level(af.danceability)}`}
+              {trackData.analysisSource?.startsWith('dj_track') ? '🎯' : '✅'} 分析完了{trackData.analysisSource?.startsWith('dj_track') ? '（高精度）' : trackData.analysisSource === 'soundnet_fallback' ? '（SoundNet）' : ''}: {af.tempo!=null && `Tempo ${Math.round(af.tempo)}BPM`}{af.energy!=null && ` / Energy ${level(af.energy)}`}{af.danceability!=null && ` / Danceability ${level(af.danceability)}`}{af.genres?.length > 0 && ` / ${af.genres.slice(0,3).join(', ')}`}
             </span>
           ) : (
             <span style={{fontSize:"0.72rem",color:genres?"#15803d":"#b45309",fontWeight:600}}>
@@ -1887,9 +1887,13 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           return (
             <div style={{marginTop:6,padding:"0.5rem 0.6rem",background:"rgba(196,149,106,0.06)",borderRadius:8,border:"1px solid rgba(196,149,106,0.25)"}}>
               <div style={{fontSize:"0.62rem",fontWeight:700,color:"#c4956a",marginBottom:5}}>
-                ✅ 楽曲分析完了
+                {trackData.analysisSource?.startsWith('dj_track') ? '🎯 高精度分析完了' : '✅ 楽曲分析完了'}
+                {trackData.analysisSource?.includes('cached') && ' (キャッシュ)'}
                 {(pitchSongTitle || trackData.songName) && <span style={{fontWeight:400,color:"#6b6560",marginLeft:6}}>{pitchSongTitle || trackData.songName}{trackData.artistName ? ` — ${trackData.artistName}` : ''}</span>}
               </div>
+              {trackData.audioFeatures?.genres?.length > 0 && (
+                <div style={{fontSize:"0.58rem",color:"#6b6560",marginBottom:4}}>🎵 検出ジャンル: {trackData.audioFeatures.genres.join(', ')}</div>
+              )}
               <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
                 {pillTags.map(({icon,label}) => (
                   <span key={label} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"0.18rem 0.55rem",background:"#ffffff",border:"1px solid rgba(196,149,106,0.25)",borderRadius:20,fontSize:"0.65rem",color:"#c4956a",fontWeight:500}}>

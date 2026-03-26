@@ -1,71 +1,35 @@
 export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-// ── Spotify client credentials token ──
-async function getSpotifyToken() {
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  if (!clientId || !clientSecret) throw new Error('Spotify credentials not set');
-
-  const res = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
-    },
-    body: 'grant_type=client_credentials',
-  });
-  if (!res.ok) throw new Error('Spotify token fetch failed: ' + res.status);
-  const data = await res.json();
-  return data.access_token;
+let _supabase;
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+  }
+  return _supabase;
 }
 
-// ── Spotify track metadata ──
-// Accepts track URL: https://open.spotify.com/track/{id}
-async function fetchSpotifyTrack(url) {
-  const match = url.match(/spotify\.com\/track\/([a-zA-Z0-9]+)/);
-  if (!match) throw new Error('Could not parse Spotify track ID from URL');
-  const trackId = match[1];
-
-  const token = await getSpotifyToken();
-
-  const [trackRes, featuresRes] = await Promise.all([
-    fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }),
-    fetch(`https://api.spotify.com/v1/audio-features/${trackId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }),
-  ]);
-
-  if (!trackRes.ok) throw new Error('Spotify track not found: ' + trackRes.status);
-  const track = await trackRes.json();
-  const features = featuresRes.ok ? await featuresRes.json() : null;
-
-  return {
-    songName: track.name,
-    artistName: track.artists?.[0]?.name || '',
-    albumName: track.album?.name || '',
-    // Spotify audio features are already 0-1 (except tempo)
-    audioFeatures: features ? {
-      energy:           features.energy          ?? null,
-      danceability:     features.danceability     ?? null,
-      acousticness:     features.acousticness     ?? null,
-      instrumentalness: features.instrumentalness ?? null,
-      valence:          features.valence          ?? null,
-      tempo:            features.tempo            ?? null,
-      loudness:         features.loudness         ?? null,
-    } : null,
-    source: 'spotify',
-  };
+function getRapidApiKey() {
+  return process.env.RAPIDAPI_KEY;
 }
 
-// ── YouTube: extract video title and parse artist/song ──
-// Handles patterns like:
-//   "ROUTE14band "Mahal""
-//   "Mahal - ROUTE14band (Official Video)"
-//   "ChihiroYamazaki +ROUTE14band "Mahal""
+// ============================================================
+// Spotify URLからトラックIDを抽出（intl-xx対応）
+// ============================================================
+function extractSpotifyId(url) {
+  if (!url) return null;
+  const match = url.match(/spotify\.com\/(?:intl-[a-z]+\/)?track\/([a-zA-Z0-9]+)/);
+  return match ? match[1] : null;
+}
+
+// ============================================================
+// YouTube: extract video title and parse artist/song
+// ============================================================
 async function fetchYouTubeTrack(url) {
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) throw new Error('YOUTUBE_API_KEY not set');
@@ -86,29 +50,18 @@ async function fetchYouTubeTrack(url) {
 
   const rawTitle = snippet.title;
   const channelTitle = snippet.channelTitle || '';
-
   const { songName, artistName } = parseYouTubeTitle(rawTitle, channelTitle);
 
-  return {
-    songName,
-    artistName,
-    rawTitle,
-    channelTitle,
-    audioFeatures: null, // YouTube has no audio features — will be fetched via SoundNet
-    source: 'youtube',
-  };
+  return { songName, artistName, rawTitle, channelTitle };
 }
 
-// ── YouTube title parser ──
-// Covers common patterns used by Japanese indie artists
+// ============================================================
+// YouTube title parser (existing logic preserved)
+// ============================================================
 function parseYouTubeTitle(title, channelTitle) {
-  // Pattern 1: quoted song title — pick last quoted string as song
-  //   "ChihiroYamazaki +ROUTE14band "Mahal""
-  //   'ROUTE14band "Crossroad" (Official)'
   const quotedMatches = [...title.matchAll(/"([^"]+)"/g)];
   if (quotedMatches.length) {
     const songName = quotedMatches[quotedMatches.length - 1][1].trim();
-    // Artist = everything before the last quoted block
     const beforeQuote = title.slice(0, title.lastIndexOf(`"${songName}"`)).trim();
     const artistName = beforeQuote
       .replace(/[+&,]/g, ' ')
@@ -117,10 +70,8 @@ function parseYouTubeTitle(title, channelTitle) {
     return { songName, artistName };
   }
 
-  // Pattern 2: "Song - Artist" or "Artist - Song"
   const dashMatch = title.match(/^(.+?)\s+[-–—]\s+(.+?)(?:\s*[\[(|].*)?$/);
   if (dashMatch) {
-    // Heuristic: if first part looks like an artist (shorter, no "Official" etc.) → Artist - Song
     const [, a, b] = dashMatch;
     const looksLikeArtistFirst = a.length < b.length && !/official|video|mv|live|lyric/i.test(a);
     return looksLikeArtistFirst
@@ -128,26 +79,126 @@ function parseYouTubeTitle(title, channelTitle) {
       : { songName: a.trim(), artistName: b.trim() };
   }
 
-  // Fallback: use channel title as artist, full title as song
   return { songName: title.replace(/\s*[\[(|].*$/, '').trim(), artistName: channelTitle };
 }
 
-// ── SoundNet Track Analysis API (RapidAPI) ──
-// Returns audio features normalized to 0-1 (except tempo in BPM)
+// ============================================================
+// Strategy 1: DJ Track Audio Analysis API（メイン — 最高精度）
+// Spotify IDから audio features + genres + mood scores を1回で取得
+// ============================================================
+async function fetchDJTrackAnalysis(spotifyId) {
+  try {
+    const url = `https://dj-track-audio-analysis-api.p.rapidapi.com/v2/tracks/${spotifyId}/audio-analysis`;
+    console.log(`[DJ Track] Calling: ${url}`);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-key': getRapidApiKey(),
+        'x-rapidapi-host': 'dj-track-audio-analysis-api.p.rapidapi.com'
+      }
+    });
+
+    if (!response.ok) {
+      console.error(`[DJ Track] Error: ${response.status} ${response.statusText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log('[DJ Track] raw response:', JSON.stringify(data).slice(0, 500));
+
+    return {
+      energy: data.score?.energy,
+      danceability: data.score?.danceability,
+      acousticness: data.score?.acousticness,
+      instrumentalness: data.score?.instrumentalness,
+      valence: data.score?.valence,
+      speechiness: data.score?.speechiness,
+      liveness: data.score?.liveness,
+      tempo: data.rhythm?.bpm ? Math.round(data.rhythm.bpm) : null,
+      time_signature: data.rhythm?.beats_per_bar,
+      key: data.harmony?.key,
+      mode: data.harmony?.mode,
+      camelot: data.harmony?.camelot,
+      note: data.harmony?.note,
+      dance_floor: data.score?.dance_floor,
+      chill: data.score?.chill,
+      aggressive: data.score?.aggressive,
+      hype: data.score?.hype,
+      groove: data.score?.groove,
+      warmup: data.score?.warmup,
+      peak_time: data.score?.peak_time,
+      genres: data.genres || [],
+      trackName: data.track?.name,
+      popularity: data.track?.popularity,
+      duration_ms: data.track?.duration_ms,
+      loudness: data.track?.loudness_db,
+      isVocalHeavy: data.track?.is_vocal_heavy,
+      isAcoustic: data.track?.is_acoustic,
+      spotify_id: spotifyId,
+      source: 'dj_track_analysis',
+      _raw: data,
+    };
+  } catch (error) {
+    console.error('[DJ Track] Fetch error:', error.message);
+    return null;
+  }
+}
+
+// ============================================================
+// Strategy 2: Spotify Extended API — /search でSpotify IDを取得
+// YouTube URL等、Spotify IDがない場合に使用
+// ============================================================
+async function searchSpotifyExtended(songName, artistName) {
+  try {
+    const query = encodeURIComponent(
+      artistName ? `track:${songName} artist:${artistName}` : songName
+    );
+    const url = `https://spotify-extended-audio-features-api.p.rapidapi.com/v1/search?q=${query}&type=track&limit=1`;
+    console.log(`[Spotify Extended] Searching: ${url}`);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-rapidapi-key': getRapidApiKey(),
+        'x-rapidapi-host': 'spotify-extended-audio-features-api.p.rapidapi.com'
+      }
+    });
+
+    if (!response.ok) {
+      console.error(`[Spotify Extended Search] Error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log('[Spotify Extended] search result:', JSON.stringify(data).slice(0, 300));
+    const tracks = data?.tracks?.items;
+    if (tracks && tracks.length > 0) {
+      return {
+        spotifyId: tracks[0].id,
+        name: tracks[0].name,
+        artist: tracks[0].artists?.[0]?.name,
+        albumImageUrl: tracks[0].album?.images?.[0]?.url || null,
+        popularity: tracks[0].popularity,
+        spotifyUrl: tracks[0].external_urls?.spotify,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('[Spotify Extended Search] Error:', error.message);
+    return null;
+  }
+}
+
+// ============================================================
+// Strategy 3: SoundNet API（フォールバック、既存ロジック）
+// ============================================================
 async function fetchSoundNetFeatures(songName, artistName) {
-  const rapidApiKey = process.env.RAPIDAPI_KEY;
-  if (!rapidApiKey) throw new Error('RAPIDAPI_KEY not set');
-
-  const params = new URLSearchParams({ song: songName, artist: artistName });
-
-  // Try endpoints in order: key-bpm (confirmed) → query (Track Analysis by Query)
+  const params = new URLSearchParams({ song: songName, artist: artistName || '' });
   const endpoints = ['/pktx/query', '/pktx/key-bpm'];
   let raw = null;
   let lastError = '';
 
   for (const endpoint of endpoints) {
     let res;
-    // Retry on 429 rate limit (up to 2 retries: wait 2s then 4s)
     for (let attempt = 0; attempt <= 2; attempt++) {
       if (attempt > 0) {
         const waitMs = attempt * 2000;
@@ -160,7 +211,7 @@ async function fetchSoundNetFeatures(songName, artistName) {
           method: 'GET',
           headers: {
             'x-rapidapi-host': 'track-analysis.p.rapidapi.com',
-            'x-rapidapi-key': rapidApiKey,
+            'x-rapidapi-key': getRapidApiKey(),
           },
         }
       );
@@ -178,33 +229,39 @@ async function fetchSoundNetFeatures(songName, artistName) {
     break;
   }
 
-  if (!raw) throw new Error(lastError || 'All SoundNet endpoints failed');
+  if (!raw) return null;
 
-  // Handle array response — some endpoints return [{...}] instead of {...}
   if (Array.isArray(raw)) {
     raw = raw[0] ?? null;
-    if (!raw) throw new Error('SoundNet returned empty array');
+    if (!raw) return null;
   }
 
-  // Normalize 0-100 → 0-1 (SoundNet returns 0-100 scale for most features)
   const normalize = (v) => (v != null ? Math.min(1, Math.max(0, v / 100)) : null);
 
-  const features = {
-    energy:           normalize(raw.energy),
-    danceability:     normalize(raw.danceability),
-    acousticness:     normalize(raw.acousticness),
+  return {
+    energy: normalize(raw.energy),
+    danceability: normalize(raw.danceability),
+    acousticness: normalize(raw.acousticness),
     instrumentalness: normalize(raw.instrumentalness),
-    valence:          normalize(raw.valence ?? raw.happiness),
-    tempo:            raw.tempo ?? raw.bpm ?? null,   // BPM — keep as-is
-    key:              raw.key ?? null,
-    loudness:         raw.loudness ?? null,
+    valence: normalize(raw.valence ?? raw.happiness),
+    speechiness: normalize(raw.speechiness),
+    liveness: normalize(raw.liveness),
+    tempo: raw.tempo ?? raw.bpm ?? null,
+    key: raw.key ?? null,
+    loudness: raw.loudness ?? null,
+    genres: [],
+    source: 'soundnet_fallback',
   };
-  console.log('[SoundNet] parsed features:', JSON.stringify(features));
-  return features;
 }
 
-// ── POST /api/track/analyze ──
+// ============================================================
+// POST /api/track/analyze
 // Body: { trackUrl?, songName?, artistName? }
+//
+// Response (unified):
+//   { songName, artistName, audioFeatures, source, analysisSource,
+//     trackInfo, matchData, metadata }
+// ============================================================
 export async function POST(request) {
   try {
     const { trackUrl, songName: inputSong, artistName: inputArtist } = await request.json();
@@ -213,66 +270,245 @@ export async function POST(request) {
     let artistName = inputArtist?.trim() || '';
     let metadata = {};
 
-    // 1. URL解析でメタデータ取得（ユーザー入力がない場合）
-    if (trackUrl) {
+    // --- YouTube URL → メタデータ取得 ---
+    if (trackUrl && /youtube\.com\/|youtu\.be\//.test(trackUrl)) {
       try {
-        if (/spotify\.com\/track\//.test(trackUrl)) {
-          const spotify = await fetchSpotifyTrack(trackUrl);
-          metadata = spotify;
-          // Spotify audio featuresが取れた場合はSoundNetをスキップ
-          if (!songName) songName = spotify.songName;
-          if (!artistName) artistName = spotify.artistName;
-
-          // Spotifyで既にaudio featuresが取れていればそのまま返す
-          if (spotify.audioFeatures) {
-            return NextResponse.json({
-              songName,
-              artistName,
-              audioFeatures: spotify.audioFeatures,
-              source: 'spotify',
-              metadata,
-            });
-          }
-        } else if (/youtube\.com\/|youtu\.be\//.test(trackUrl)) {
-          const youtube = await fetchYouTubeTrack(trackUrl);
-          metadata = youtube;
-          if (!songName) songName = youtube.songName;
-          if (!artistName) artistName = youtube.artistName;
-        }
+        const yt = await fetchYouTubeTrack(trackUrl);
+        metadata = { rawTitle: yt.rawTitle, channelTitle: yt.channelTitle, source: 'youtube' };
+        if (!songName) songName = yt.songName;
+        if (!artistName) artistName = yt.artistName;
       } catch (e) {
-        console.warn('URL parse warning:', e.message);
-        // URL解析失敗でもsongName/artistNameがあれば続行
+        console.warn('[YouTube] Parse warning:', e.message);
       }
     }
 
-    if (!songName) {
-      // If a URL was provided but song name couldn't be determined, return gracefully
-      // (don't 400 — let the UI show "no analysis data" without blocking pitch creation)
-      const hint = trackUrl ? 'Could not extract song name from URL. Enter song title manually.' : 'Please provide songName.';
-      console.warn('[analyze] no songName:', hint);
-      return NextResponse.json({ songName: '', artistName, audioFeatures: null, source: 'url', metadata, soundnetError: hint });
+    // --- キャッシュチェック: track_features テーブル ---
+    if (trackUrl) {
+      try {
+        const { data: cached } = await getSupabase()
+          .from('track_features')
+          .select('*')
+          .eq('track_url', trackUrl)
+          .maybeSingle();
+
+        if (cached && cached.source && cached.source !== 'manual' && cached.energy !== null) {
+          console.log(`[Cache Hit] ${trackUrl} — source: ${cached.source}`);
+          const af = {
+            energy: cached.energy,
+            danceability: cached.danceability,
+            acousticness: cached.acousticness,
+            instrumentalness: cached.instrumentalness,
+            valence: cached.valence,
+            speechiness: cached.speechiness,
+            liveness: cached.liveness,
+            tempo: cached.tempo,
+            genres: cached.genres || [],
+            moods: cached.moods || [],
+          };
+          return NextResponse.json({
+            songName: cached.song_name || songName,
+            artistName: cached.artist_name || artistName,
+            audioFeatures: af,
+            source: cached.source,
+            analysisSource: cached.source + '_cached',
+            metadata,
+            matchData: {
+              energy: cached.energy,
+              danceability: cached.danceability,
+              acousticness: cached.acousticness,
+              instrumentalness: cached.instrumentalness,
+              valence: cached.valence,
+              tempo: cached.tempo,
+            },
+          });
+        }
+      } catch (e) {
+        // track_features テーブルが存在しない場合はスキップ
+        console.warn('[Cache] Skipped:', e.message);
+      }
     }
 
-    // 2. SoundNet APIでaudio features取得
+    // === Strategy 1: Spotify URL → DJ Track Audio Analysis（1コール） ===
     let audioFeatures = null;
-    let soundnetError = null;
-    try {
-      audioFeatures = await fetchSoundNetFeatures(songName, artistName);
-    } catch (e) {
-      soundnetError = e.message;
-      console.warn('SoundNet warning:', e.message);
+    let analysisSource = 'none';
+    let trackInfo = {};
+
+    const spotifyId = extractSpotifyId(trackUrl);
+
+    if (spotifyId) {
+      console.log(`[DJ Track] Spotify ID detected: ${spotifyId}`);
+      audioFeatures = await fetchDJTrackAnalysis(spotifyId);
+
+      if (audioFeatures) {
+        analysisSource = 'dj_track_direct';
+        songName = audioFeatures.trackName || songName;
+        trackInfo = {
+          name: songName,
+          artist: artistName,
+          popularity: audioFeatures.popularity,
+          genres: audioFeatures.genres,
+          spotifyId,
+        };
+        console.log(`[DJ Track] Success: ${songName}, genres: ${audioFeatures.genres?.join(', ')}`);
+      }
     }
 
+    // === Strategy 2: YouTube等 → Spotify Extended検索 → DJ Track Analysis ===
+    if (!audioFeatures && songName) {
+      console.log(`[Spotify Extended] Searching: "${songName}" by "${artistName}"`);
+      const searchResult = await searchSpotifyExtended(songName, artistName || '');
+
+      if (searchResult?.spotifyId) {
+        console.log(`[Spotify Extended] Found: ${searchResult.name} (${searchResult.spotifyId})`);
+        audioFeatures = await fetchDJTrackAnalysis(searchResult.spotifyId);
+
+        if (audioFeatures) {
+          analysisSource = 'dj_track_via_search';
+          trackInfo = {
+            name: searchResult.name || songName,
+            artist: searchResult.artist || artistName,
+            albumImageUrl: searchResult.albumImageUrl,
+            popularity: searchResult.popularity,
+            spotifyUrl: searchResult.spotifyUrl,
+            genres: audioFeatures.genres,
+          };
+        }
+      }
+    }
+
+    // === Strategy 3: SoundNet フォールバック ===
+    if (!audioFeatures && songName) {
+      console.log(`[SoundNet] Fallback: "${songName}" by "${artistName}"`);
+      try {
+        audioFeatures = await fetchSoundNetFeatures(songName, artistName || '');
+        if (audioFeatures) {
+          analysisSource = 'soundnet_fallback';
+          trackInfo = { name: songName, artist: artistName };
+        }
+      } catch (e) {
+        console.warn('[SoundNet] Error:', e.message);
+      }
+    }
+
+    // === songName が取れない場合 ===
+    if (!songName) {
+      const hint = trackUrl
+        ? 'Could not extract song name from URL. Enter song title manually.'
+        : 'Please provide songName.';
+      return NextResponse.json({
+        songName: '',
+        artistName,
+        audioFeatures: null,
+        source: 'url',
+        analysisSource: 'none',
+        metadata,
+        soundnetError: hint,
+      });
+    }
+
+    // === 全て失敗した場合 ===
+    if (!audioFeatures) {
+      return NextResponse.json({
+        songName,
+        artistName,
+        audioFeatures: null,
+        source: 'manual',
+        analysisSource: 'none',
+        metadata,
+        soundnetError: 'Could not analyze track via any API.',
+      });
+    }
+
+    // === track_features テーブルに保存（upsert） ===
+    const moods = [
+      audioFeatures.chill > 0.6 && 'chill',
+      audioFeatures.aggressive > 0.6 && 'aggressive',
+      audioFeatures.hype > 0.6 && 'hype',
+      audioFeatures.groove > 0.6 && 'groovy',
+      audioFeatures.dance_floor > 0.6 && 'dance',
+    ].filter(Boolean);
+
+    if (trackUrl) {
+      try {
+        const featureRecord = {
+          track_url: trackUrl,
+          song_name: trackInfo?.name || songName,
+          artist_name: trackInfo?.artist || artistName,
+          energy: audioFeatures.energy,
+          danceability: audioFeatures.danceability,
+          acousticness: audioFeatures.acousticness,
+          instrumentalness: audioFeatures.instrumentalness,
+          valence: audioFeatures.valence,
+          speechiness: audioFeatures.speechiness,
+          liveness: audioFeatures.liveness,
+          tempo: audioFeatures.tempo,
+          key: audioFeatures.key != null ? String(audioFeatures.key) : null,
+          mode: audioFeatures.mode || null,
+          loudness: audioFeatures.loudness != null ? String(audioFeatures.loudness) : null,
+          popularity: trackInfo?.popularity || audioFeatures.popularity,
+          genres: audioFeatures.genres || [],
+          moods,
+          source: analysisSource,
+          confidence: analysisSource.startsWith('dj_track') ? 0.95 : 0.5,
+          raw_response: analysisSource.startsWith('dj_track') ? audioFeatures._raw : null,
+        };
+
+        const { data: existing } = await getSupabase()
+          .from('track_features')
+          .select('id')
+          .eq('track_url', trackUrl)
+          .maybeSingle();
+
+        if (existing) {
+          await getSupabase().from('track_features').update(featureRecord).eq('id', existing.id);
+        } else {
+          await getSupabase().from('track_features').insert(featureRecord);
+        }
+      } catch (e) {
+        console.warn('[DB Save] Skipped:', e.message);
+      }
+    }
+
+    // === レスポンス（既存フロントエンド互換性を維持） ===
     return NextResponse.json({
-      songName,
-      artistName,
-      audioFeatures,
-      source: trackUrl ? (metadata.source || 'url') : 'manual',
+      songName: trackInfo?.name || songName,
+      artistName: trackInfo?.artist || artistName,
+      audioFeatures: {
+        energy: audioFeatures.energy,
+        danceability: audioFeatures.danceability,
+        acousticness: audioFeatures.acousticness,
+        instrumentalness: audioFeatures.instrumentalness,
+        valence: audioFeatures.valence,
+        speechiness: audioFeatures.speechiness,
+        liveness: audioFeatures.liveness,
+        tempo: audioFeatures.tempo,
+        key: audioFeatures.key,
+        mode: audioFeatures.mode,
+        // DJ/Mood スコア（DJ Track APIの場合のみ）
+        chill: audioFeatures.chill,
+        aggressive: audioFeatures.aggressive,
+        hype: audioFeatures.hype,
+        groove: audioFeatures.groove,
+        dance_floor: audioFeatures.dance_floor,
+        // ジャンル
+        genres: audioFeatures.genres || [],
+        moods,
+      },
+      source: analysisSource.startsWith('dj_track') ? 'spotify' : (metadata.source || 'manual'),
+      analysisSource,
       metadata,
-      ...(soundnetError ? { soundnetError } : {}),
+      matchData: {
+        energy: audioFeatures.energy,
+        danceability: audioFeatures.danceability,
+        acousticness: audioFeatures.acousticness,
+        instrumentalness: audioFeatures.instrumentalness,
+        valence: audioFeatures.valence,
+        tempo: audioFeatures.tempo,
+      },
     });
+
   } catch (error) {
-    console.error('Track analyze error:', error);
+    console.error('[Track Analyze] Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -949,6 +949,43 @@ function parseYTTitle(title, authorName) {
   return t;
 }
 
+// ─── Track Summary Generator ───
+function generateTrackSummary(features) {
+  if (!features) return '';
+  const parts = [];
+  const tempo = features.tempo || 0;
+  if (tempo < 80) parts.push('ゆったりとしたテンポの');
+  else if (tempo < 110) parts.push('ミッドテンポの');
+  else if (tempo < 140) parts.push('アップテンポの');
+  else parts.push('ハイテンポな');
+  const valence = features.valence || 0;
+  if (valence > 0.7) parts.push('明るくポジティブな');
+  else if (valence > 0.4) parts.push('バランスの取れた');
+  else parts.push('深みのある');
+  const energy = features.energy || 0;
+  if (energy > 0.7) parts.push('エネルギッシュな楽曲。');
+  else if (energy > 0.4) parts.push('程よいエネルギーの楽曲。');
+  else parts.push('落ち着いた雰囲気の楽曲。');
+  if (features.genres?.length > 0) parts.push(features.genres.slice(0, 2).join(' / ') + 'の要素を感じます。');
+  const highlights = [];
+  if (features.danceability > 0.6) highlights.push('グルーヴ感');
+  if (features.acousticness > 0.6) highlights.push('アコースティックな温もり');
+  if (features.hype > 0.6) highlights.push('盛り上がるエネルギー');
+  if (features.chill > 0.6) highlights.push('チルな空気感');
+  if (features.groove > 0.6) highlights.push('心地よいリズム');
+  if (highlights.length > 0) parts.push(highlights.join('と') + 'が魅力。');
+  parts.push('この特徴に合うキュレーターをおすすめ順に表示しています。');
+  return parts.join('');
+}
+
+// ─── Match Score Circle Style ───
+function getMatchCircleStyle(score) {
+  if (score >= 80) return { size: 54, color: '#16a34a', bg: '#f0fdf4', border: '2px solid #16a34a', fontWeight: 700, fontSize: 16 };
+  if (score >= 60) return { size: 50, color: '#c4956a', bg: '#fffcf8', border: '2px solid #c4956a', fontWeight: 600, fontSize: 15 };
+  if (score >= 40) return { size: 46, color: '#f59e0b', bg: '#fffbeb', border: '1px solid #f59e0b', fontWeight: 500, fontSize: 14 };
+  return { size: 42, color: '#9ca3af', bg: '#f9fafb', border: '1px solid #e5e7eb', fontWeight: 400, fontSize: 13 };
+}
+
 // ─── Curator Browser ───
 function CuratorBrowser({curators, selected, setSelected, setPage, trackData, setTrackData, notify, artist}) {
   const [q, setQ] = useState(""); const [genre, setGenre] = useState(""); const [type, setType] = useState("");
@@ -1148,18 +1185,21 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
           publisher:  {bg:'rgba(96,165,250,0.12)',text:'#60a5fa',label:'📚 Publisher'},
         };
         const regionFlags = {'Japan':'🇯🇵','US':'🇺🇸','USA':'🇺🇸','UK':'🇬🇧','France':'🇫🇷','Germany':'🇩🇪','Australia':'🇦🇺','Global':'🌍'};
-        const msColor = (score) => score >= 85 ? '#4ade80' : score >= 70 ? '#60a5fa' : '#fbbf24';
-        const circumference = 113;
-        return list.map(c => {
+        const renderCard = (c, isRecommended) => {
           const on = selected.includes(c.id);
           const ms = c.matchScore;
           const ml = ms != null ? getMatchLabel(ms) : null;
+          const mcs = ms != null ? getMatchCircleStyle(ms) : null;
           const colorIdx = c.name.charCodeAt(0) % avatarColors.length;
           const av = avatarColors[colorIdx];
           const initials = c.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
           const typeBadge = typeBadgeMap[c.type];
           const flag = c.region ? (regionFlags[c.region] || null) : null;
-          return <div key={c.id} onClick={()=>setDetailCurator(c)} className="curator-list-card" style={{background:on?'rgba(196,149,106,0.08)':'#ffffff',border:on?'1px solid rgba(196,149,106,0.4)':'1px solid rgba(0,0,0,0.05)',borderRadius:12,padding:'20px',display:'flex',gap:16,alignItems:'flex-start',cursor:'pointer',transition:'all 0.2s ease'}}>
+          const cardBg = on ? 'rgba(196,149,106,0.08)' : isRecommended ? '#fffcf8' : '#ffffff';
+          const cardBorder = on ? '1px solid rgba(196,149,106,0.4)' : isRecommended ? '1px solid #e5e2dc' : '1px solid rgba(0,0,0,0.05)';
+          const cardBorderLeft = isRecommended ? '3px solid #c4956a' : undefined;
+          const cardRadius = isRecommended ? '0 12px 12px 0' : '12px';
+          return <div key={c.id} onClick={()=>setDetailCurator(c)} className="curator-list-card" style={{background:cardBg,border:cardBorder,borderLeft:cardBorderLeft,borderRadius:cardRadius,padding:'20px',display:'flex',gap:16,alignItems:'flex-start',cursor:'pointer',transition:'all 0.2s ease'}}>
             {/* Avatar */}
             <div style={{width:48,height:48,borderRadius:'50%',flexShrink:0,position:'relative',overflow:'hidden'}}>
               {c.iconUrl && <img src={c.iconUrl} alt={c.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',border:'2px solid rgba(0,0,0,0.06)'}} onError={e=>{e.target.style.display='none';}} />}
@@ -1169,6 +1209,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
             <div style={{flex:1,minWidth:0}}>
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>
                 <span style={{fontSize:16,fontWeight:600,color:'#1a1a1a'}}>{c.name}</span>
+                {isRecommended && <span style={{background:'#c4956a',color:'#fff',fontSize:10,fontWeight:500,padding:'2px 8px',borderRadius:999}}>おすすめ</span>}
                 {flag && <span style={{fontSize:14}}>{flag}</span>}
                 {typeBadge && <span style={{padding:'3px 10px',borderRadius:20,fontSize:11,background:typeBadge.bg,color:typeBadge.text,fontWeight:500}}>{typeBadge.label}</span>}
                 {c.badges?.map(b => <span key={b} style={{fontSize:'0.6rem',padding:'0.1rem 0.4rem',borderRadius:6,background:b==='verified'?'#dcfce7':'#eff6ff',color:b==='verified'?'#16a34a':'#2563eb'}}>{BADGES[b]}</span>)}
@@ -1183,13 +1224,13 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
             </div>
             {/* Right: match gauge + select button */}
             <div onClick={e=>{e.stopPropagation();toggle(c.id);}} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,flexShrink:0,borderRadius:10,padding:'6px',transition:'background 0.15s',cursor:'pointer'}} title={on?'選択解除':'選択する'}>
-              {ms != null ? (
-                <div style={{position:'relative',width:44,height:44,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <svg width="44" height="44" style={{position:'absolute',transform:'rotate(-90deg)'}}>
-                    <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="3"/>
-                    <circle cx="22" cy="22" r="18" fill="none" stroke={msColor(ms)} strokeWidth="3" strokeDasharray={`${(ms/100)*circumference} ${circumference}`} strokeLinecap="round"/>
+              {ms != null && mcs ? (
+                <div style={{position:'relative',width:mcs.size,height:mcs.size,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <svg width={mcs.size} height={mcs.size} style={{position:'absolute',transform:'rotate(-90deg)'}}>
+                    <circle cx={mcs.size/2} cy={mcs.size/2} r={mcs.size/2-5} fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="3"/>
+                    <circle cx={mcs.size/2} cy={mcs.size/2} r={mcs.size/2-5} fill="none" stroke={mcs.color} strokeWidth="3" strokeDasharray={`${(ms/100)*2*Math.PI*(mcs.size/2-5)} ${2*Math.PI*(mcs.size/2-5)}`} strokeLinecap="round" style={{transition:'stroke-dasharray 0.8s ease-out'}}/>
                   </svg>
-                  <span style={{fontSize:14,fontWeight:600,color:msColor(ms)}}>{ms}%</span>
+                  <span style={{fontSize:mcs.fontSize,fontWeight:mcs.fontWeight,color:mcs.color}}>{ms}%</span>
                 </div>
               ) : (
                 <div style={{width:44,height:44}}/>
@@ -1198,7 +1239,27 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
               <div style={{width:22,height:22,borderRadius:'50%',background:on?'#c4956a':'rgba(0,0,0,0.06)',border:on?'none':'1px solid rgba(0,0,0,0.1)',color:on?'#fff':'#9a958e',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700,transition:'all 0.15s'}}>{on?'✓':'+'}</div>
             </div>
           </div>;
-        });
+        };
+        // Group by recommended (score>=50) vs others
+        const hasAnalysis = !!trackData?.audioFeatures;
+        const recommended = hasAnalysis ? list.filter(c => typeof c.matchScore === 'number' && c.matchScore >= 50) : [];
+        const others = hasAnalysis ? list.filter(c => typeof c.matchScore !== 'number' || c.matchScore < 50) : list;
+        return (<>
+          {recommended.length > 0 && (<>
+            <div style={{display:'flex',alignItems:'center',gap:8,margin:'20px 0 12px'}}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l2.12 4.3 4.74.69-3.43 3.34.81 4.72L8 11.77l-4.24 2.23.81-4.72L1.14 5.94l4.74-.69L8 1z" fill="#c4956a"/></svg>
+              <span style={{fontSize:14,fontWeight:600,color:'#c4956a'}}>あなたの曲におすすめ</span>
+              <span style={{fontSize:12,color:'#6b6560'}}>— マッチ度の高いキュレーター</span>
+            </div>
+            {recommended.map(c => renderCard(c, true))}
+          </>)}
+          {others.length > 0 && (<>
+            {recommended.length > 0 && (
+              <div style={{fontSize:13,color:'#6b6560',margin:'24px 0 12px',borderTop:'1px solid #f0ede6',paddingTop:16}}>その他のキュレーター</div>
+            )}
+            {others.map(c => renderCard(c, false))}
+          </>)}
+        </>);
       })()}
     </div>
     {/* Floating action bar when curators selected */}
@@ -1869,41 +1930,80 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         </div>
         {/* Audio features analysis status */}
         {trackAnalysisStatus === 'loading' && (
-          <div style={{marginTop:6,display:"flex",alignItems:"center",gap:6,fontSize:"0.68rem",color:"#6b6560"}}>
-            <span style={{display:"inline-block",width:12,height:12,border:"2px solid rgba(0,0,0,0.06)",borderTopColor:"#c4956a",borderRadius:"50%",animation:"spin 0.8s linear infinite",flexShrink:0}}/>
-            🔍 楽曲を分析中...
+          <div style={{background:'#fff',border:'1px solid #e5e2dc',borderLeft:'3px solid #c4956a',borderRadius:'0 12px 12px 0',padding:'20px 24px',marginTop:16}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+              <div style={{width:16,height:16,border:'2px solid #c4956a',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
+              <span style={{fontSize:14,color:'#6b6560'}}>楽曲を分析中...</span>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4, minmax(0, 1fr))',gap:12,opacity:0.3}}>
+              {['Energy','Groove','Acoustic','Mood'].map(label=>(
+                <div key={label} style={{textAlign:'center'}}>
+                  <svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#f0ede6" strokeWidth="5"/></svg>
+                  <div style={{fontSize:11,color:'#b8b0a3',marginTop:2}}>{label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
         {trackAnalysisStatus === 'done' && trackData?.audioFeatures && (() => {
-          const desc = describeTrackCharacteristics(trackData.audioFeatures);
-          const pillTags = [];
           const af = trackData.audioFeatures;
-          if (af.energy != null) pillTags.push({ icon: '⚡', label: af.energy >= 0.67 ? 'High Energy' : af.energy >= 0.33 ? 'Mid Energy' : 'Low Energy' });
-          if (af.danceability >= 0.5) pillTags.push({ icon: '💃', label: 'Danceable' });
-          if (af.acousticness >= 0.5) pillTags.push({ icon: '🎹', label: 'Acoustic' });
-          if (af.instrumentalness >= 0.5) pillTags.push({ icon: '🎸', label: 'Instrumental' });
-          if (af.valence != null) pillTags.push({ icon: af.valence >= 0.6 ? '☀️' : af.valence >= 0.3 ? '🌤' : '🌧', label: af.valence >= 0.6 ? 'Positive' : af.valence >= 0.3 ? 'Balanced' : 'Dark' });
-          if (af.tempo != null) pillTags.push({ icon: '⏱', label: Math.round(af.tempo) + ' BPM' });
+          const gaugeData = [
+            {label:'Energy',value:af.energy,color:'#c4956a'},
+            {label:'Groove',value:af.danceability,color:'#c4956a'},
+            {label:'Acoustic',value:af.acousticness,color:'#c4956a'},
+            {label:'Mood',value:af.valence,color:'#c4956a'},
+          ];
+          const circumR = 26;
+          const circumLen = 2 * Math.PI * circumR;
           return (
-            <div style={{marginTop:6,padding:"0.5rem 0.6rem",background:"rgba(196,149,106,0.06)",borderRadius:8,border:"1px solid rgba(196,149,106,0.25)"}}>
-              <div style={{fontSize:"0.62rem",fontWeight:700,color:"#c4956a",marginBottom:5}}>
-                {trackData.analysisSource?.startsWith('dj_track') ? '🎯 高精度分析完了' : '✅ 楽曲分析完了'}
-                {trackData.analysisSource?.includes('cached') && ' (キャッシュ)'}
-                {(pitchSongTitle || trackData.songName) && <span style={{fontWeight:400,color:"#6b6560",marginLeft:6}}>{pitchSongTitle || trackData.songName}{trackData.artistName ? ` — ${trackData.artistName}` : ''}</span>}
+            <div style={{background:'#fff',border:'1px solid #e5e2dc',borderLeft:'3px solid #c4956a',borderRadius:'0 12px 12px 0',padding:'20px 24px',marginTop:16,marginBottom:16}}>
+              {/* Header */}
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16,flexWrap:'wrap'}}>
+                <span style={{fontSize:17,fontWeight:500,color:'#1a1a1a'}}>{pitchSongTitle || trackData.songName}</span>
+                <span style={{fontSize:13,color:'#6b6560'}}>{trackData.artistName}</span>
+                {trackData.analysisSource?.includes('dj_track') && (
+                  <span style={{background:'#c4956a',color:'#fff',fontSize:10,fontWeight:500,padding:'2px 8px',borderRadius:999,marginLeft:'auto'}}>high accuracy</span>
+                )}
+                {trackData.analysisSource?.includes('soundnet') && (
+                  <span style={{background:'#e5e2dc',color:'#6b6560',fontSize:10,fontWeight:500,padding:'2px 8px',borderRadius:999,marginLeft:'auto'}}>standard</span>
+                )}
               </div>
-              {trackData.audioFeatures?.genres?.length > 0 && (
-                <div style={{fontSize:"0.58rem",color:"#6b6560",marginBottom:4}}>🎵 検出ジャンル: {trackData.audioFeatures.genres.join(', ')}</div>
-              )}
-              <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                {pillTags.map(({icon,label}) => (
-                  <span key={label} style={{display:"inline-flex",alignItems:"center",gap:3,padding:"0.18rem 0.55rem",background:"#ffffff",border:"1px solid rgba(196,149,106,0.25)",borderRadius:20,fontSize:"0.65rem",color:"#c4956a",fontWeight:500}}>
-                    {icon} {label}
-                  </span>
+              {/* Radial Gauges */}
+              <div style={{display:'grid',gridTemplateColumns:'repeat(4, minmax(0, 1fr))',gap:12,marginBottom:16}}>
+                {gaugeData.map(feat=>{
+                  const pct = Math.round((feat.value||0)*100);
+                  const offset = circumLen - (circumLen * pct / 100);
+                  const barColor = pct >= 70 ? '#e85d3a' : feat.color;
+                  return (
+                    <div key={feat.label} style={{textAlign:'center'}}>
+                      <svg width="64" height="64" viewBox="0 0 64 64">
+                        <circle cx="32" cy="32" r={circumR} fill="none" stroke="#f0ede6" strokeWidth="5"/>
+                        <circle cx="32" cy="32" r={circumR} fill="none" stroke={barColor} strokeWidth="5"
+                          strokeLinecap="round" strokeDasharray={circumLen} strokeDashoffset={offset}
+                          transform="rotate(-90 32 32)" style={{transition:'stroke-dashoffset 1s ease-out'}}/>
+                        <text x="32" y="35" textAnchor="middle" fontSize="14" fontWeight="500" fill="#1a1a1a">{pct}</text>
+                      </svg>
+                      <div style={{fontSize:11,color:'#6b6560',marginTop:2}}>{feat.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Genre tags + BPM + Key */}
+              <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:14}}>
+                {af.genres?.length > 0 && af.genres.slice(0,3).map(g=>(
+                  <span key={g} style={{fontSize:12,color:'#c4956a',border:'1px solid #c4956a',padding:'2px 10px',borderRadius:999}}>{g}</span>
                 ))}
+                {af.tempo != null && (
+                  <span style={{fontSize:12,color:'#6b6560',border:'1px solid #e5e2dc',padding:'2px 10px',borderRadius:999}}>{Math.round(af.tempo)} BPM</span>
+                )}
+                {af.key != null && af.mode && (
+                  <span style={{fontSize:12,color:'#6b6560',border:'1px solid #e5e2dc',padding:'2px 10px',borderRadius:999}}>{af.note||''} {af.mode}</span>
+                )}
               </div>
-              {desc.characteristics && (
-                <div style={{marginTop:4,fontSize:"0.6rem",color:"#9a958e",fontStyle:"italic"}}>ピッチ生成に使用: {desc.characteristics}</div>
-              )}
+              {/* Natural language summary */}
+              <div style={{fontSize:13,color:'#6b6560',lineHeight:1.6,borderTop:'1px solid #f0ede6',paddingTop:12}}>
+                {generateTrackSummary(af)}
+              </div>
             </div>
           );
         })()}

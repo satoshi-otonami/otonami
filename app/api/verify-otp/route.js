@@ -35,6 +35,7 @@ export async function POST(request) {
       .single();
 
     if (otpError || !otpRecord) {
+      console.error('OTP lookup failed:', { email, type, otpError: otpError?.message || otpError, hasRecord: !!otpRecord });
       return NextResponse.json({ error: 'No valid OTP found. Please request a new code.' }, { status: 400 });
     }
 

@@ -12,34 +12,61 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get('token');
   const type = searchParams.get('type');
+  // Use request.url as redirect base so domain always matches the user's browser
+  const baseUrl = new URL(request.url).origin;
 
   if (!token || !['artist', 'curator'].includes(type)) {
-    return NextResponse.redirect(new URL('/verify-error?reason=invalid', APP_URL));
+    console.error('verify-email: invalid params', { token: !!token, type });
+    return NextResponse.redirect(new URL('/verify-error?reason=invalid', baseUrl));
   }
 
   const supabase = getServiceSupabase();
   const table = type === 'artist' ? 'artists' : 'curators';
 
-  const { data: record, error } = await supabase
+  // First try exact token match
+  let record = null;
+  let queryError = null;
+
+  const { data, error } = await supabase
     .from(table)
     .select('*')
     .eq('verification_token', token)
-    .single();
+    .maybeSingle();
 
-  if (error || !record) {
-    return NextResponse.redirect(new URL('/verify-error?reason=not_found', APP_URL));
+  record = data;
+  queryError = error;
+
+  if (queryError) {
+    console.error('verify-email: DB query error', queryError);
+    return NextResponse.redirect(new URL(`/verify-error?reason=not_found&type=${type}`, baseUrl));
+  }
+
+  if (!record) {
+    // Token not found — might be already verified (token cleared)
+    console.error('verify-email: token not found in', table, '— may be already used');
+    return NextResponse.redirect(new URL(`/verify-error?reason=not_found&type=${type}`, baseUrl));
+  }
+
+  if (record.email_verified) {
+    // Already verified — redirect to success
+    return NextResponse.redirect(new URL(`/verify-success?type=${type}`, baseUrl));
   }
 
   if (record.verification_expires_at && new Date(record.verification_expires_at) < new Date()) {
-    return NextResponse.redirect(new URL('/verify-error?reason=expired&type=' + type, APP_URL));
+    return NextResponse.redirect(new URL(`/verify-error?reason=expired&type=${type}`, baseUrl));
   }
 
   // Mark as verified
-  await supabase.from(table).update({
+  const { error: updateError } = await supabase.from(table).update({
     email_verified: true,
     verification_token: null,
     verification_expires_at: null,
   }).eq('id', record.id);
+
+  if (updateError) {
+    console.error('verify-email: update failed', updateError);
+    return NextResponse.redirect(new URL(`/verify-error?reason=not_found&type=${type}`, baseUrl));
+  }
 
   // Send Welcome email now (moved from registration)
   const name = record.name;
@@ -114,5 +141,5 @@ export async function GET(request) {
     console.error('Welcome email after verification failed (non-fatal):', e);
   }
 
-  return NextResponse.redirect(new URL(`/verify-success?type=${type}`, APP_URL));
+  return NextResponse.redirect(new URL(`/verify-success?type=${type}`, baseUrl));
 }

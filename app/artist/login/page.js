@@ -306,11 +306,12 @@ export default function ArtistLoginPage() {
                     onKeyDown={e => handleOtpKeyDown(i, e)}
                     onPaste={i === 0 ? handleOtpPaste : undefined}
                     style={{
-                      width: 48, height: 56, textAlign: 'center', fontSize: 24,
+                      width: 52, height: 60, textAlign: 'center', fontSize: 28,
                       fontWeight: 700, fontFamily: 'monospace',
-                      border: `2px solid ${otpError ? THEME.coral : THEME.border}`,
-                      borderRadius: 12, outline: 'none', background: THEME.card,
-                      color: THEME.text, transition: 'border-color 0.15s',
+                      border: `2px solid ${otpError ? '#ef4444' : THEME.gold}`,
+                      borderRadius: 12, outline: 'none', background: '#ffffff',
+                      color: '#1a1a1a', caretColor: THEME.coral,
+                      transition: 'border-color 0.2s',
                     }}
                   />
                 ))}
@@ -325,7 +326,7 @@ export default function ArtistLoginPage() {
               )}
 
               {otpError && (
-                <p style={{ color: THEME.coral, fontSize: 13, textAlign: 'center', marginBottom: 16, fontFamily: THEME.font }}>{otpError}</p>
+                <p style={{ color: '#ef4444', fontSize: 14, fontWeight: 500, textAlign: 'center', marginBottom: 16, marginTop: 12, fontFamily: THEME.font }}>{otpError}</p>
               )}
 
               <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 12 }}>

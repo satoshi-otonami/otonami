@@ -95,12 +95,17 @@ export async function POST(request) {
     const otp = generateOTP();
     const otpHash = await bcrypt.hash(otp, 10);
 
-    await supabase.from('login_otps').insert({
+    const { error: otpInsertError } = await supabase.from('login_otps').insert({
       email,
       user_type: 'artist',
       otp_code: otpHash,
       expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
     });
+
+    if (otpInsertError) {
+      console.error('Artist OTP insert failed:', otpInsertError);
+      return NextResponse.json({ error: 'Failed to generate verification code. Please try again.' }, { status: 500 });
+    }
 
     await sendOTPEmail(email, artist.name, otp);
 

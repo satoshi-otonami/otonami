@@ -50,10 +50,14 @@ export default function VerifyErrorPage() {
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </div>
         <h1 style={{ fontFamily: THEME.fontDisplay, fontSize: 24, fontWeight: 700, color: THEME.text, marginBottom: 12 }}>
-          認証リンクが無効です
+          {reason === 'expired' ? '認証リンクの期限切れ' : reason === 'invalid' ? '無効なリンク' : '認証リンクが無効です'}
         </h1>
         <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.7, marginBottom: 24 }}>
-          {reason === 'expired' ? 'リンクの有効期限が切れました。認証メールを再送信してください。' : 'リンクの有効期限が切れたか、既に認証済みです。'}
+          {reason === 'expired'
+            ? 'リンクの有効期限（24時間）が切れました。認証メールを再送信してください。'
+            : reason === 'invalid'
+            ? 'リンクのパラメータが不正です。メール内のリンクをもう一度お試しください。'
+            : 'リンクの有効期限が切れたか、既に認証済みです。再送信するか、ログインをお試しください。'}
         </p>
 
         {!showResend ? (

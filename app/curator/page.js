@@ -405,6 +405,8 @@ export default function CuratorRegistrationPage() {
         }
         .curator-input:focus { border-color: ${T.accent} !important; box-shadow: 0 0 0 3px rgba(196,149,106,0.15) !important; }
         .curator-input:hover { border-color: ${T.textMuted} !important; }
+        .curator-otp-input:focus { border-color: #e85d3a !important; box-shadow: 0 0 0 3px rgba(232,93,58,0.15) !important; }
+        .curator-otp-input::placeholder { color: #d4d0ca; }
         .pill-tag { transition: all 0.15s; }
         .pill-tag:hover { border-color: ${T.accent} !important; background: ${T.accentLight} !important; color: ${T.accent} !important; }
         .pill-tag-sel:hover { opacity: 0.85 !important; }
@@ -553,15 +555,16 @@ export default function CuratorRegistrationPage() {
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
                     {loginOtpValues.map((val, i) => (
                       <input key={i} ref={el => loginOtpRefs.current[i] = el}
+                        className="curator-otp-input"
                         type="text" inputMode="numeric" maxLength={1} value={val}
                         onChange={e => handleLoginOtpChange(i, e.target.value)}
                         onKeyDown={e => handleLoginOtpKeyDown(i, e)}
                         onPaste={i === 0 ? handleLoginOtpPaste : undefined}
-                        style={{ width: 44, height: 52, textAlign: 'center', fontSize: 22, fontWeight: 700, fontFamily: 'monospace', border: `2px solid ${loginOtpError ? '#e85d3a' : T.border}`, borderRadius: 10, outline: 'none', background: '#fff', color: T.text }} />
+                        style={{ width: 52, height: 60, textAlign: 'center', fontSize: 28, fontWeight: 700, fontFamily: 'monospace', border: `2px solid ${loginOtpError ? '#ef4444' : '#c4956a'}`, borderRadius: 12, outline: 'none', background: '#ffffff', color: '#1a1a1a', caretColor: '#e85d3a', transition: 'border-color 0.2s' }} />
                     ))}
                   </div>
                   {loginOtpLoading && <p style={{ fontSize: 13, color: T.textSub }}>検証中...</p>}
-                  {loginOtpError && <p style={{ fontSize: 13, color: '#e85d3a', marginBottom: 12 }}>{loginOtpError}</p>}
+                  {loginOtpError && <p style={{ fontSize: 14, fontWeight: 500, color: '#ef4444', marginBottom: 12, marginTop: 12 }}>{loginOtpError}</p>}
                   <button onClick={handleLoginResendOtp} disabled={loginResendCooldown > 0}
                     style={{ background: 'none', border: 'none', color: loginResendCooldown > 0 ? T.textMuted : T.accent, fontSize: 13, cursor: loginResendCooldown > 0 ? 'default' : 'pointer', fontFamily: T.font }}>
                     {loginResendCooldown > 0 ? `再送信（${loginResendCooldown}秒）` : '認証コードを再送信'}

@@ -49,6 +49,9 @@ export async function GET(request) {
 
     const allEarnings = earningsRaw || [];
 
+    // Debug: log raw earnings pitch_ids
+    console.log('[earnings] raw count:', allEarnings.length, 'sample:', allEarnings[0] ? { id: allEarnings[0].id, pitch_id: allEarnings[0].pitch_id, pitch_id_type: typeof allEarnings[0].pitch_id } : 'none');
+
     // Enrich with pitch data (artist_name, subject/song_title)
     const pitchIds = [...new Set(allEarnings.map(e => e.pitch_id).filter(Boolean))];
     let pitchMap = {};
@@ -58,12 +61,17 @@ export async function GET(request) {
         .select('id, artist_name, song_title, subject')
         .in('id', pitchIds);
       if (pitchError) {
-        console.error('Pitches enrichment query error:', pitchError);
+        console.error('[earnings] Pitches enrichment query error:', JSON.stringify(pitchError));
+      }
+      console.log('[earnings] pitchIds queried:', pitchIds.length, 'pitches returned:', (pitches || []).length);
+      if (pitches && pitches.length > 0) {
+        console.log('[earnings] sample pitch:', { id: pitches[0].id, artist_name: pitches[0].artist_name, subject: pitches[0].subject });
       }
       for (const p of (pitches || [])) {
         pitchMap[p.id] = p;
       }
-      console.log(`[earnings] pitchIds=${pitchIds.length}, pitchesFound=${Object.keys(pitchMap).length}, samplePitchId=${pitchIds[0] || 'none'}`);
+    } else {
+      console.log('[earnings] no pitch_ids found in earnings records');
     }
 
     const enrichedEarnings = allEarnings.map(e => {
@@ -74,6 +82,11 @@ export async function GET(request) {
         song_title: pitch?.song_title || pitch?.subject || null,
       };
     });
+
+    // Debug: log first enriched earning
+    if (enrichedEarnings.length > 0) {
+      console.log('[earnings] first enriched:', { id: enrichedEarnings[0].id, artist_name: enrichedEarnings[0].artist_name, song_title: enrichedEarnings[0].song_title, pitch_id: enrichedEarnings[0].pitch_id });
+    }
 
     const total_earned = allEarnings.reduce((sum, e) => sum + (e.amount || 0), 0);
     const total_credits = allEarnings.reduce((sum, e) => sum + (e.credits_earned || 0), 0);

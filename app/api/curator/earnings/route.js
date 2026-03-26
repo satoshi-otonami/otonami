@@ -32,39 +32,45 @@ export async function GET(request) {
     const uniqueIds = [...new Set(curatorIds)];
 
     if (uniqueIds.length === 0) {
-      return NextResponse.json({ total_earned: 0, available_balance: 0, total_paid: 0, pending_count: 0, earnings: [], last_payout: null });
+      return NextResponse.json({ total_earned: 0, total_credits: 0, available_balance: 0, total_paid: 0, pending_count: 0, review_count: 0, earnings: [], last_payout: null });
     }
 
-    // Fetch earnings
-    const { data: earnings, error } = await db
+    // Fetch earnings (without join — more reliable)
+    const { data: earningsRaw, error } = await db
       .from('curator_earnings')
-      .select('*, pitches(artist_name, song_title)')
+      .select('*')
       .in('curator_id', uniqueIds)
-      .order('earned_at', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(100);
 
     if (error) {
       console.error('Earnings fetch error:', error);
-      // Fallback without join
-      const { data: earningsBasic } = await db
-        .from('curator_earnings')
-        .select('*')
-        .in('curator_id', uniqueIds)
-        .order('earned_at', { ascending: false })
-        .limit(100);
-
-      const allEarnings = earningsBasic || [];
-      const total_earned = allEarnings.reduce((sum, e) => sum + (e.amount || 0), 0);
-      const total_credits = allEarnings.reduce((sum, e) => sum + (e.credits_earned || 0), 0);
-      const available_balance = allEarnings.filter(e => e.status === 'approved').reduce((sum, e) => sum + (e.amount || 0), 0);
-      const total_paid = allEarnings.filter(e => e.status === 'paid').reduce((sum, e) => sum + (e.amount || 0), 0);
-      const pending_count = allEarnings.filter(e => e.status === 'pending').length;
-      const review_count = allEarnings.length;
-
-      return NextResponse.json({ total_earned, total_credits, available_balance, total_paid, pending_count, review_count, earnings: allEarnings, last_payout: null });
     }
 
-    const allEarnings = earnings || [];
+    const allEarnings = earningsRaw || [];
+
+    // Enrich with pitch data (artist_name, subject/song_title)
+    const pitchIds = [...new Set(allEarnings.map(e => e.pitch_id).filter(Boolean))];
+    let pitchMap = {};
+    if (pitchIds.length > 0) {
+      const { data: pitches } = await db
+        .from('pitches')
+        .select('id, artist_name, song_title, subject')
+        .in('id', pitchIds);
+      for (const p of (pitches || [])) {
+        pitchMap[p.id] = p;
+      }
+    }
+
+    const enrichedEarnings = allEarnings.map(e => {
+      const pitch = pitchMap[e.pitch_id];
+      return {
+        ...e,
+        artist_name: pitch?.artist_name || null,
+        song_title: pitch?.song_title || pitch?.subject || null,
+      };
+    });
+
     const total_earned = allEarnings.reduce((sum, e) => sum + (e.amount || 0), 0);
     const total_credits = allEarnings.reduce((sum, e) => sum + (e.credits_earned || 0), 0);
     const available_balance = allEarnings.filter(e => e.status === 'approved').reduce((sum, e) => sum + (e.amount || 0), 0);
@@ -89,12 +95,7 @@ export async function GET(request) {
       total_paid,
       pending_count,
       review_count,
-      earnings: allEarnings.map(e => ({
-        ...e,
-        artist_name: e.pitches?.artist_name || null,
-        song_title: e.pitches?.song_title || null,
-        pitches: undefined,
-      })),
+      earnings: enrichedEarnings,
       last_payout: lastPayout ? { date: lastPayout.completed_at, amount: lastPayout.amount } : null,
     });
   } catch (e) {

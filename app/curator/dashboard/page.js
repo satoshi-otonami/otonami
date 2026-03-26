@@ -819,10 +819,10 @@ export default function CuratorDashboard() {
                   return (
                     <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid rgba(196,149,106,0.1)`, fontSize: 13, fontFamily: T.font }}>
                       <span style={{ color: T.textMuted, fontSize: 12, minWidth: 70 }}>
-                        {new Date(e.earned_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}
+                        {new Date(e.earned_at || e.created_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}
                       </span>
                       <span style={{ flex: 1, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {e.artist_name || '—'} {e.song_title ? `| ${e.song_title}` : ''}
+                        {e.artist_name || '—'}{e.song_title ? ` — ${e.song_title}` : ''}
                       </span>
                       {e.credits_earned && <span style={{ color: T.textMuted, fontSize: 11, minWidth: 55, textAlign: 'right' }}>{e.credits_earned} credits</span>}
                       <span style={{ color: T.accent, fontWeight: 700, minWidth: 50, textAlign: 'right' }}>¥{(e.amount || 0).toLocaleString()}</span>

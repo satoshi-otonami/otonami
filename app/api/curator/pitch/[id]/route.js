@@ -262,16 +262,18 @@ export async function PATCH(request, { params }) {
         .maybeSingle();
 
       if (!existingEarning) {
-        // Get curator tier for credit-based earnings
+        // Get curator credit_cost (the single source of truth for credits)
         const { data: curatorInfo } = await db
           .from('curators')
-          .select('tier')
+          .select('credit_cost')
           .eq('id', pCuratorId)
           .maybeSingle();
 
-        const credits = curatorInfo?.tier || 2;
-        const amountPerCredit = 80;
-        const totalAmount = credits * amountPerCredit;
+        const credits = curatorInfo?.credit_cost || 2;
+        // Revenue: credit_cost × ¥160 × 0.7 (accepted) or 0.5 (declined/feedback)
+        const creditPrice = 160;
+        const rate = status === 'accepted' ? 0.7 : 0.5;
+        const totalAmount = Math.round(credits * creditPrice * rate);
 
         const { error: earningError } = await db.from('curator_earnings').insert({
           curator_id: pCuratorId,

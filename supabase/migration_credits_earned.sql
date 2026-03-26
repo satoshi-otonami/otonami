@@ -8,12 +8,18 @@ ALTER TABLE curator_earnings ADD COLUMN IF NOT EXISTS credits_earned INTEGER DEF
 NOTIFY pgrst, 'reload schema';
 
 -- 3. Backfill: create earnings for existing feedback pitches that have no earnings record
+--    Uses credit_cost (the single source of truth for curator credits)
+--    Amount = credit_cost × ¥160 × 0.5 (conservative: declined rate)
+--    For accepted pitches: credit_cost × ¥160 × 0.7
 INSERT INTO curator_earnings (curator_id, pitch_id, credits_earned, amount, currency, status)
 SELECT
   p.curator_id,
   p.id,
-  COALESCE(c.tier, 2),
-  COALESCE(c.tier, 2) * 80,
+  COALESCE(c.credit_cost, 2),
+  CASE
+    WHEN p.status = 'accepted' THEN ROUND(COALESCE(c.credit_cost, 2) * 160 * 0.7)
+    ELSE ROUND(COALESCE(c.credit_cost, 2) * 160 * 0.5)
+  END,
   'JPY',
   'approved'
 FROM pitches p
@@ -23,13 +29,9 @@ WHERE p.feedback_message IS NOT NULL
   AND p.feedback_message != ''
   AND ce.id IS NULL;
 
--- 4. Update existing earnings records that have credits_earned = default (2)
---    but curator has different tier
+-- 4. Fix existing earnings records to use correct credit_cost values
 UPDATE curator_earnings ce
-SET credits_earned = COALESCE(c.tier, 2),
-    amount = COALESCE(c.tier, 2) * 80
+SET credits_earned = COALESCE(c.credit_cost, 2),
+    amount = ROUND(COALESCE(c.credit_cost, 2) * 160 * 0.5)
 FROM curators c
-WHERE ce.curator_id = c.id
-  AND ce.credits_earned = 2
-  AND c.tier IS NOT NULL
-  AND c.tier != 2;
+WHERE ce.curator_id = c.id;

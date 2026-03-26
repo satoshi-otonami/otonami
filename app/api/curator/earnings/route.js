@@ -58,7 +58,7 @@ export async function GET(request) {
     if (pitchIds.length > 0) {
       const { data: pitches, error: pitchError } = await db
         .from('pitches')
-        .select('id, artist_name, song_title, subject')
+        .select('id, artist_name, subject')
         .in('id', pitchIds);
       if (pitchError) {
         console.error('[earnings] Pitches enrichment query error:', JSON.stringify(pitchError));
@@ -79,7 +79,7 @@ export async function GET(request) {
       return {
         ...e,
         artist_name: pitch?.artist_name || null,
-        song_title: pitch?.song_title || pitch?.subject || null,
+        song_title: pitch?.subject || null,
       };
     });
 

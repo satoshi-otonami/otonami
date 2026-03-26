@@ -125,16 +125,18 @@ export async function POST(request) {
       const otp = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
       const otpHash = await bcrypt.hash(otp, 10);
 
-      const { error: otpInsertError } = await db.from('login_otps').insert({
+      const { data: otpData, error: otpInsertError } = await db.from('login_otps').insert({
         email,
         user_type: 'curator',
         otp_code: otpHash,
         expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
-      });
+        used: false,
+        attempts: 0,
+      }).select().single();
 
       if (otpInsertError) {
-        console.error('Curator OTP insert failed:', otpInsertError);
-        return NextResponse.json({ error: 'Failed to generate verification code. Please try again.' }, { status: 500 });
+        console.error('Curator OTP INSERT error:', JSON.stringify(otpInsertError));
+        return NextResponse.json({ error: 'Failed to generate OTP', details: otpInsertError.message }, { status: 500 });
       }
 
       // Send OTP email

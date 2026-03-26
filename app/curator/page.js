@@ -168,6 +168,11 @@ export default function CuratorRegistrationPage() {
         setLoginStatus('error');
         return;
       }
+      if (res.status === 500 && data.error === 'Failed to generate OTP') {
+        setLoginError('認証コードの生成に失敗しました。管理者にお問い合わせください。\nFailed to generate verification code. Please contact support.');
+        setLoginStatus('error');
+        return;
+      }
       if (!res.ok) throw new Error(data.error || 'Login failed');
       if (data.step === 'otp_required') {
         setLoginMaskedEmail(data.email);

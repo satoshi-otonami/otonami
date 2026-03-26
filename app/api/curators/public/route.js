@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/curators/public?name=CuratorName  or  ?id=uuid
 export async function GET(request) {
   try {

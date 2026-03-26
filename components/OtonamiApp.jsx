@@ -1640,7 +1640,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const [aiLoading, setAiLoading] = useState(false);
   const [fetchingFollowers, setFetchingFollowers] = useState(false);
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
-  const [trackAnalysisStatus, setTrackAnalysisStatus] = useState('idle'); // 'idle'|'loading'|'done'|'error'
+  const [trackAnalysisStatus, setTrackAnalysisStatus] = useState(trackData?.audioFeatures ? 'done' : 'idle'); // 'idle'|'loading'|'done'|'error'
   const analyzeInFlightRef = useRef(false);
   // Separate title for the specific track being pitched (vs artist.songTitle = 代表曲)
   const [pitchSongTitle, setPitchSongTitle] = useState('');
@@ -1689,6 +1689,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const hasStreamingUrl = /spotify\.com\/track\/|youtube\.com\/|youtu\.be\/|soundcloud\.com\//.test(artist.songLink || '');
   useEffect(() => {
     if (hasStreamingUrl) return; // URL trigger takes priority
+    // Skip re-analysis if CuratorBrowser already provided real audioFeatures
+    if (trackData?.audioFeatures?.energy > 0 || trackData?.audioFeatures?.danceability > 0) return;
     const song = artist.songTitle?.trim();
     const name = (artist.nameEn || artist.name)?.trim();
     if (!song || !name) return;
@@ -1704,6 +1706,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   // Trigger analysis after pitchSongTitle is confirmed (oEmbed resolved or manually entered)
   // This replaces the old URL-only trigger so we always send the correct song name to SoundNet
   useEffect(() => {
+    // Skip re-analysis if CuratorBrowser already provided real audioFeatures
+    if (trackData?.audioFeatures?.energy > 0 || trackData?.audioFeatures?.danceability > 0) return;
     const url = artist.songLink?.trim();
     const song = pitchSongTitle?.trim();
     if (!url || !song) return;

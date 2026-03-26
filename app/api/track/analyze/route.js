@@ -238,12 +238,22 @@ async function fetchSoundNetFeatures(songName, artistName) {
 
   const normalize = (v) => (v != null ? Math.min(1, Math.max(0, v / 100)) : null);
 
+  const energy = normalize(raw.energy);
+  const danceability = normalize(raw.danceability);
+  const valence = normalize(raw.valence ?? raw.happiness);
+
+  // If all key values are zero or null, treat as no data
+  if (!energy && !danceability && !valence) {
+    console.log('[SoundNet] All values are 0/null, treating as no data');
+    return null;
+  }
+
   return {
-    energy: normalize(raw.energy),
-    danceability: normalize(raw.danceability),
+    energy,
+    danceability,
     acousticness: normalize(raw.acousticness),
     instrumentalness: normalize(raw.instrumentalness),
-    valence: normalize(raw.valence ?? raw.happiness),
+    valence,
     speechiness: normalize(raw.speechiness),
     liveness: normalize(raw.liveness),
     tempo: raw.tempo ?? raw.bpm ?? null,
@@ -291,7 +301,8 @@ export async function POST(request) {
           .eq('track_url', trackUrl)
           .maybeSingle();
 
-        if (cached && cached.source && cached.source !== 'manual' && cached.energy !== null) {
+        const hasRealData = cached && (cached.energy > 0 || cached.danceability > 0 || cached.valence > 0);
+        if (cached && cached.source && cached.source !== 'manual' && hasRealData) {
           console.log(`[Cache Hit] ${trackUrl} — source: ${cached.source}`);
           const af = {
             energy: cached.energy,

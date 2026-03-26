@@ -173,6 +173,32 @@ export async function PATCH(request) {
       }
     }
 
+    // ── 報酬レコード作成（フィードバック提供時）──
+    if (['accepted', 'declined', 'feedback'].includes(status) && feedback_message) {
+      try {
+        // Check if earnings already exist for this pitch+curator to prevent duplicates
+        const { data: existingEarning } = await db
+          .from('curator_earnings')
+          .select('id')
+          .eq('pitch_id', pitchId)
+          .eq('curator_id', cId)
+          .limit(1)
+          .single();
+
+        if (!existingEarning) {
+          await db.from('curator_earnings').insert({
+            curator_id: cId,
+            pitch_id: pitchId,
+            amount: 80,
+            currency: 'JPY',
+            status: 'pending',
+          });
+        }
+      } catch (earningsErr) {
+        console.warn('[dashboard] Earnings insert failed (non-fatal):', earningsErr.message);
+      }
+    }
+
     // アーティストへの通知メール（失敗してもレスポンスには影響しない）
     if (data.artist_email) {
       const sc = { accepted: '✅ Accepted', declined: '❌ Declined', feedback: '💬 Feedback' };

@@ -112,6 +112,13 @@ export default function CuratorDashboard() {
   const [saveError, setSaveError] = useState('');
   const editAvatarRef = useRef(null);
 
+  // Earnings state
+  const [earnings, setEarnings] = useState(null);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [payoutLoading, setPayoutLoading] = useState(false);
+  const [payoutError, setPayoutError] = useState('');
+  const [showEarningsDetail, setShowEarningsDetail] = useState(false);
+
   // ── 認証 + 初期データ取得 ──
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('curator_token') : null;
@@ -126,6 +133,11 @@ export default function CuratorDashboard() {
         const pr = await fetch('/api/curator/dashboard', { headers: { Authorization: `Bearer ${token}` } });
         const { pitches: p } = await pr.json();
         setPitches(p || []);
+        // Fetch earnings
+        try {
+          const er = await fetch('/api/curator/earnings', { headers: { Authorization: `Bearer ${token}` } });
+          if (er.ok) { const ed = await er.json(); setEarnings(ed); }
+        } catch {}
       } catch { setAuthError('error'); } finally { setLoading(false); }
     })();
   }, []);
@@ -269,6 +281,29 @@ export default function CuratorDashboard() {
 
   const handleLogout = () => { localStorage.removeItem('curator_token'); window.location.href = '/curator'; };
 
+  const handlePayoutRequest = async () => {
+    setPayoutLoading(true);
+    setPayoutError('');
+    try {
+      const token = localStorage.getItem('curator_token');
+      const res = await fetch('/api/curator/payout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Payout request failed');
+      showToast('✅ 支払いリクエストを送信しました');
+      setShowPayoutModal(false);
+      // Refresh earnings
+      const er = await fetch('/api/curator/earnings', { headers: { Authorization: `Bearer ${token}` } });
+      if (er.ok) { const ed = await er.json(); setEarnings(ed); }
+    } catch (e) {
+      setPayoutError(e.message);
+    } finally {
+      setPayoutLoading(false);
+    }
+  };
+
   const renderBody = (text) => {
     if (!text) return null;
     const parts = text.split(/(https?:\/\/[^\s]+)/g);
@@ -364,6 +399,9 @@ export default function CuratorDashboard() {
           .pitch-fb-stars button { min-width: 44px !important; min-height: 44px !important; font-size: 26px !important; padding: 0 !important; }
           .dash-filter-tabs { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; flex-wrap: nowrap !important; }
           .dash-filter-tabs button { flex-shrink: 0 !important; min-height: 44px !important; }
+        }
+        @media (max-width: 640px) {
+          .earnings-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
         }
       `}</style>
 
@@ -723,6 +761,82 @@ export default function CuratorDashboard() {
           </div>
         )}
 
+        {/* ── 報酬サマリー ── */}
+        {curator && earnings && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(196,149,106,0.15), rgba(196,149,106,0.05))',
+            border: '1px solid rgba(196,149,106,0.3)',
+            borderRadius: 16, padding: 24, marginBottom: 24,
+          }}>
+            <div className="earnings-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>💰 Total Earned / 獲得報酬合計</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: T.accent, fontFamily: T.fontDisplay }}>¥{(earnings.total_earned || 0).toLocaleString()}</div>
+                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginTop: 2 }}>{(earnings.pending_count || 0) + ((earnings.earnings || []).filter(e => e.status === 'approved').length)}件のフィードバック</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>🏦 Available / 支払い可能額</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: (earnings.available_balance || 0) >= 5000 ? '#10b981' : T.accent, fontFamily: T.fontDisplay }}>¥{(earnings.available_balance || 0).toLocaleString()}</div>
+                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginTop: 2 }}>最低支払額: ¥5,000</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>📤 Paid / 支払い済み</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: T.text, fontFamily: T.fontDisplay }}>¥{(earnings.total_paid || 0).toLocaleString()}</div>
+                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginTop: 2 }}>{earnings.last_payout ? `最終: ${new Date(earnings.last_payout.date).toLocaleDateString('ja-JP')}` : '—'}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 16 }}>
+              {(earnings.available_balance || 0) >= 5000 && (
+                <button onClick={() => { setPayoutError(''); setShowPayoutModal(true); }} style={{
+                  padding: '10px 24px', borderRadius: 9999, border: 'none',
+                  background: T.accent, color: '#fff', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: T.font,
+                }}>
+                  支払いをリクエスト / Request Payout
+                </button>
+              )}
+              <button onClick={() => setShowEarningsDetail(!showEarningsDetail)} style={{
+                padding: '10px 24px', borderRadius: 9999,
+                border: `1px solid ${T.border}`, background: T.white,
+                color: T.textSub, fontSize: 13, fontWeight: 500,
+                cursor: 'pointer', fontFamily: T.font,
+              }}>
+                {showEarningsDetail ? '明細を閉じる' : '💰 報酬明細 / Details'}
+              </button>
+            </div>
+
+            {/* Earnings detail */}
+            {showEarningsDetail && (earnings.earnings || []).length > 0 && (
+              <div style={{ marginTop: 16, borderTop: `1px solid rgba(196,149,106,0.2)`, paddingTop: 16 }}>
+                {(earnings.earnings || []).slice(0, 20).map(e => {
+                  const statusMap = {
+                    pending: { label: '承認待ち', color: '#eab308', bg: 'rgba(234,179,8,0.12)' },
+                    approved: { label: '承認済み', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+                    paid: { label: '支払い済み', color: T.textMuted, bg: T.border },
+                    cancelled: { label: 'キャンセル', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+                  };
+                  const s = statusMap[e.status] || statusMap.pending;
+                  return (
+                    <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid rgba(196,149,106,0.1)`, fontSize: 13, fontFamily: T.font }}>
+                      <span style={{ color: T.textMuted, fontSize: 12, minWidth: 70 }}>
+                        {new Date(e.earned_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}
+                      </span>
+                      <span style={{ flex: 1, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {e.artist_name || '—'} {e.song_title ? `"${e.song_title}"` : ''}
+                      </span>
+                      <span style={{ color: T.accent, fontWeight: 700, minWidth: 40, textAlign: 'right' }}>¥{e.amount}</span>
+                      <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 10, fontWeight: 600, background: s.bg, color: s.color, whiteSpace: 'nowrap' }}>{s.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {showEarningsDetail && (earnings.earnings || []).length === 0 && (
+              <p style={{ textAlign: 'center', color: T.textMuted, fontSize: 13, marginTop: 16, fontFamily: T.font }}>まだ報酬記録はありません</p>
+            )}
+          </div>
+        )}
+
         {/* ── フィルタータブ ── */}
         <div className="dash-filter-tabs" style={{ display: 'flex', marginBottom: 24, borderBottom: `2px solid ${T.border}` }}>
           {FILTER_TABS.map(t => {
@@ -897,6 +1011,39 @@ export default function CuratorDashboard() {
           })
         )}
       </div>
+
+      {/* ── Payout Request Modal ── */}
+      {showPayoutModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400, padding: 20 }}
+          onClick={() => setShowPayoutModal(false)}>
+          <div style={{ background: T.white, borderRadius: 20, padding: 32, maxWidth: 440, width: '100%', boxShadow: '0 16px 48px rgba(0,0,0,0.15)' }}
+            onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: T.text, fontFamily: T.fontDisplay, margin: '0 0 16px' }}>支払いリクエスト / Payout Request</h2>
+            <div style={{ background: T.bg, borderRadius: 12, padding: 16, marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 14, color: T.textSub, fontFamily: T.font }}>支払い金額</span>
+                <span style={{ fontSize: 20, fontWeight: 800, color: T.accent, fontFamily: T.fontDisplay }}>¥{(earnings?.available_balance || 0).toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 14, color: T.textSub, fontFamily: T.font }}>支払い方法</span>
+                <span style={{ fontSize: 14, color: T.text, fontFamily: T.font }}>PayPal: {curator?.paypal_email || '未設定'}</span>
+              </div>
+            </div>
+            {!curator?.paypal_email && (
+              <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12, fontFamily: T.font }}>⚠️ PayPalメールアドレスが設定されていません。プロフィールから設定してください。</p>
+            )}
+            <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 20, fontFamily: T.font }}>通常3〜5営業日以内にお支払いします。/ Payment within 3-5 business days.</p>
+            {payoutError && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12, fontFamily: T.font }}>{payoutError}</p>}
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={() => setShowPayoutModal(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid ${T.border}`, background: T.white, color: T.textSub, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: T.font }}>キャンセル</button>
+              <button onClick={handlePayoutRequest} disabled={payoutLoading || !curator?.paypal_email}
+                style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: payoutLoading || !curator?.paypal_email ? T.border : T.accent, color: '#fff', fontSize: 14, fontWeight: 700, cursor: payoutLoading ? 'not-allowed' : 'pointer', fontFamily: T.font }}>
+                {payoutLoading ? '送信中...' : 'リクエスト送信'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Footer ── */}
       <footer style={{ padding: '32px 24px', background: T.white, borderTop: `1px solid ${T.border}`, textAlign: 'center', fontFamily: T.font, fontSize: 13, color: T.textMuted }}>

@@ -1009,6 +1009,21 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   const analyzeUrlRef = useRef(analyzeUrl);
   useEffect(() => { analyzeUrlRef.current = analyzeUrl; }, [analyzeUrl]);
 
+  // Sync from artist props when they arrive after initial mount (dashboard → studio handoff)
+  const didSyncFromArtistRef = useRef(false);
+  useEffect(() => {
+    if (didSyncFromArtistRef.current) return;
+    const song = artist?.songTitle?.trim();
+    const name = artist?.name?.trim();
+    const link = artist?.songLink?.trim();
+    if (song || name || link) {
+      if (song && !detectedSong) setDetectedSong(song);
+      if (name && !detectedArtist) setDetectedArtist(name);
+      if (link && !analyzeUrl) setAnalyzeUrl(link);
+      didSyncFromArtistRef.current = true;
+    }
+  }, [artist?.songTitle, artist?.name, artist?.songLink]); // eslint-disable-line
+
   const resolveGenreMood = (artistName) => {
     if (artist?.genre) return { genre: artist.genre, mood: artist.mood || '' };
     const demo = DEMO_ARTISTS.find(d =>
@@ -1024,7 +1039,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
     const currentUrl = analyzeUrlRef.current.trim() || null;
     const fallback = resolveGenreMood(artistName);
     try {
-      const result = await analyzeTrack({ songName: song, artistName });
+      const result = await analyzeTrack({ trackUrl: currentUrl || undefined, songName: song, artistName });
       setTrackData({ ...result, songName: song, artistName, notInDb: false, listeningUrl: currentUrl, genre: result.genre || fallback.genre, mood: result.mood || fallback.mood });
       setSortByMatch(true);
     } catch (e) {
@@ -1128,29 +1143,105 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
           <span style={{fontSize:"0.62rem",color:"#92400e",flexShrink:0}}>Enter または入力後クリックで確定</span>
         </div>
       )}
-      {/* Result line */}
-      {analyzeLoading && <div style={{fontSize:"0.72rem",color:"#c4956a"}}>🔍 楽曲分析中…</div>}
+      {/* Analysis loading placeholder */}
+      {analyzeLoading && (
+        <div style={{background:'#fff',border:'1px solid #e5e2dc',borderLeft:'3px solid #c4956a',borderRadius:'0 12px 12px 0',padding:'20px 24px',marginTop:12}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+            <div style={{width:16,height:16,border:'2px solid #c4956a',borderTopColor:'transparent',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
+            <span style={{fontSize:14,color:'#6b6560'}}>楽曲を分析中...</span>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4, minmax(0, 1fr))',gap:12,opacity:0.3}}>
+            {['Energy','Groove','Acoustic','Mood'].map(label=>(
+              <div key={label} style={{textAlign:'center'}}>
+                <svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="#f0ede6" strokeWidth="5"/></svg>
+                <div style={{fontSize:11,color:'#b8b0a3',marginTop:2}}>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* Radial gauge analysis card */}
       {!analyzeLoading && trackData && (() => {
         const af = trackData.audioFeatures;
-        const level = v => v >= 0.67 ? '高' : v >= 0.33 ? '中' : '低';
         const genres = trackData.genre || artist?.genre || '';
-        return <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
-          {af ? (
-            <span style={{fontSize:"0.72rem",color:"#15803d",fontWeight:600}}>
-              {trackData.analysisSource?.startsWith('dj_track') ? '🎯' : '✅'} 分析完了{trackData.analysisSource?.startsWith('dj_track') ? '（高精度）' : trackData.analysisSource === 'soundnet_fallback' ? '（SoundNet）' : ''}: {af.tempo!=null && `Tempo ${Math.round(af.tempo)}BPM`}{af.energy!=null && ` / Energy ${level(af.energy)}`}{af.danceability!=null && ` / Danceability ${level(af.danceability)}`}{af.genres?.length > 0 && ` / ${af.genres.slice(0,3).join(', ')}`}
-            </span>
-          ) : (
+        if (!af) {
+          return <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
             <span style={{fontSize:"0.72rem",color:genres?"#15803d":"#b45309",fontWeight:600}}>
-              {genres ? `✅ ジャンル(${genres})でマッチスコア計算中` : '⚠️ DBに未登録 — ピッチ作成画面でジャンルを入力するとマッチスコアが計算されます'}
+              {genres ? `ジャンル(${genres})でマッチスコア計算中` : 'DBに未登録 — ピッチ作成画面でジャンルを入力するとマッチスコアが計算されます'}
             </span>
-          )}
-          <div style={{display:"flex",gap:6,flexShrink:0}}>
-            <button onClick={()=>setSortByMatch(p=>!p)} style={{...css.btnSm,background:sortByMatch?"#c4956a":"#f0ede6",color:sortByMatch?"#fff":"#6b6560",border:"1px solid "+(sortByMatch?"#c4956a":"rgba(0,0,0,0.06)"),fontWeight:600,fontSize:"0.68rem"}}>
-              {sortByMatch ? "🎯 マッチ順" : "🎯 マッチ順で並べる"}
-            </button>
-            <button onClick={()=>{setTrackData(null);setDetectedSong("");setDetectedArtist("");lastAnalyzedKeyRef.current="";setSortByMatch(false);}} style={{fontSize:"0.62rem",color:"#9a958e",background:"none",border:"1px solid rgba(0,0,0,0.06)",borderRadius:6,padding:"0.2rem 0.5rem",cursor:"pointer"}}>✕</button>
+            <div style={{display:"flex",gap:6,flexShrink:0}}>
+              <button onClick={()=>setSortByMatch(p=>!p)} style={{...css.btnSm,background:sortByMatch?"#c4956a":"#f0ede6",color:sortByMatch?"#fff":"#6b6560",border:"1px solid "+(sortByMatch?"#c4956a":"rgba(0,0,0,0.06)"),fontWeight:600,fontSize:"0.68rem"}}>
+                {sortByMatch ? "マッチ順" : "マッチ順で並べる"}
+              </button>
+              <button onClick={()=>{setTrackData(null);setDetectedSong("");setDetectedArtist("");lastAnalyzedKeyRef.current="";setSortByMatch(false);}} style={{fontSize:"0.62rem",color:"#9a958e",background:"none",border:"1px solid rgba(0,0,0,0.06)",borderRadius:6,padding:"0.2rem 0.5rem",cursor:"pointer"}}>✕</button>
+            </div>
+          </div>;
+        }
+        const circumR = 26;
+        const circumLen = 2 * Math.PI * circumR;
+        const gaugeData = [
+          {label:'Energy',value:af.energy,color:'#c4956a'},
+          {label:'Groove',value:af.danceability,color:'#c4956a'},
+          {label:'Acoustic',value:af.acousticness,color:'#c4956a'},
+          {label:'Mood',value:af.valence,color:'#c4956a'},
+        ];
+        return <>
+          <div style={{background:'#fff',border:'1px solid #e5e2dc',borderLeft:'3px solid #c4956a',borderRadius:'0 12px 12px 0',padding:'20px 24px',marginTop:12,marginBottom:8}}>
+            {/* Header */}
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16,flexWrap:'wrap'}}>
+              <span style={{fontSize:17,fontWeight:500,color:'#1a1a1a'}}>{trackData.songName || detectedSong}</span>
+              <span style={{fontSize:13,color:'#6b6560'}}>{trackData.artistName || detectedArtist}</span>
+              {trackData.analysisSource?.includes('dj_track') && (
+                <span style={{background:'#c4956a',color:'#fff',fontSize:10,fontWeight:500,padding:'2px 8px',borderRadius:999,marginLeft:'auto'}}>high accuracy</span>
+              )}
+              {trackData.analysisSource?.includes('soundnet') && (
+                <span style={{background:'#e5e2dc',color:'#6b6560',fontSize:10,fontWeight:500,padding:'2px 8px',borderRadius:999,marginLeft:'auto'}}>standard</span>
+              )}
+              <button onClick={()=>{setTrackData(null);setDetectedSong("");setDetectedArtist("");lastAnalyzedKeyRef.current="";setSortByMatch(false);}} style={{fontSize:"0.62rem",color:"#9a958e",background:"none",border:"1px solid rgba(0,0,0,0.06)",borderRadius:6,padding:"0.2rem 0.5rem",cursor:"pointer",marginLeft:'auto'}}>✕</button>
+            </div>
+            {/* Radial gauges */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4, minmax(0, 1fr))',gap:12,marginBottom:16}}>
+              {gaugeData.map(feat=>{
+                const pct = Math.round((feat.value||0)*100);
+                const offset = circumLen - (circumLen * pct / 100);
+                const barColor = pct >= 70 ? '#e85d3a' : feat.color;
+                return (
+                  <div key={feat.label} style={{textAlign:'center'}}>
+                    <svg width="64" height="64" viewBox="0 0 64 64">
+                      <circle cx="32" cy="32" r={circumR} fill="none" stroke="#f0ede6" strokeWidth="5"/>
+                      <circle cx="32" cy="32" r={circumR} fill="none" stroke={barColor} strokeWidth="5"
+                        strokeLinecap="round" strokeDasharray={circumLen} strokeDashoffset={offset}
+                        transform="rotate(-90 32 32)" style={{transition:'stroke-dashoffset 1s ease-out'}}/>
+                      <text x="32" y="35" textAnchor="middle" fontSize="14" fontWeight="500" fill="#1a1a1a">{pct}</text>
+                    </svg>
+                    <div style={{fontSize:11,color:'#6b6560',marginTop:2}}>{feat.label}</div>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Genre tags + BPM */}
+            <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:14}}>
+              {af.genres?.length > 0 && af.genres.slice(0,3).map(g=>(
+                <span key={g} style={{fontSize:12,color:'#c4956a',border:'1px solid #c4956a',padding:'2px 10px',borderRadius:999}}>{g}</span>
+              ))}
+              {af.tempo != null && (
+                <span style={{fontSize:12,color:'#6b6560',border:'1px solid #e5e2dc',padding:'2px 10px',borderRadius:999}}>{Math.round(af.tempo)} BPM</span>
+              )}
+              {af.key != null && af.mode && (
+                <span style={{fontSize:12,color:'#6b6560',border:'1px solid #e5e2dc',padding:'2px 10px',borderRadius:999}}>{af.note||''} {af.mode}</span>
+              )}
+            </div>
+            {/* Natural language summary */}
+            <div style={{fontSize:13,color:'#6b6560',lineHeight:1.6,borderTop:'1px solid #f0ede6',paddingTop:12}}>
+              {generateTrackSummary(af)}
+            </div>
           </div>
-        </div>;
+          <div style={{display:"flex",justifyContent:"flex-end",gap:6,marginBottom:8}}>
+            <button onClick={()=>setSortByMatch(p=>!p)} style={{...css.btnSm,background:sortByMatch?"#c4956a":"#f0ede6",color:sortByMatch?"#fff":"#6b6560",border:"1px solid "+(sortByMatch?"#c4956a":"rgba(0,0,0,0.06)"),fontWeight:600,fontSize:"0.68rem"}}>
+              {sortByMatch ? "マッチ順" : "マッチ順で並べる"}
+            </button>
+          </div>
+        </>;
       })()}
       {!analyzeLoading && !trackData && artist?.genre && (
         <div style={{fontSize:"0.72rem",color:"#c4956a"}}>✅ ジャンル設定済み（{artist.genre}）— 分析なしでもスコア表示中</div>

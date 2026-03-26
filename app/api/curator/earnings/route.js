@@ -53,13 +53,17 @@ export async function GET(request) {
     const pitchIds = [...new Set(allEarnings.map(e => e.pitch_id).filter(Boolean))];
     let pitchMap = {};
     if (pitchIds.length > 0) {
-      const { data: pitches } = await db
+      const { data: pitches, error: pitchError } = await db
         .from('pitches')
         .select('id, artist_name, song_title, subject')
         .in('id', pitchIds);
+      if (pitchError) {
+        console.error('Pitches enrichment query error:', pitchError);
+      }
       for (const p of (pitches || [])) {
         pitchMap[p.id] = p;
       }
+      console.log(`[earnings] pitchIds=${pitchIds.length}, pitchesFound=${Object.keys(pitchMap).length}, samplePitchId=${pitchIds[0] || 'none'}`);
     }
 
     const enrichedEarnings = allEarnings.map(e => {

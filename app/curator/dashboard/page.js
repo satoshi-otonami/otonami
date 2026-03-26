@@ -822,7 +822,7 @@ export default function CuratorDashboard() {
                         {new Date(e.earned_at || e.created_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}
                       </span>
                       <span style={{ flex: 1, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {e.artist_name || '—'}{e.song_title ? ` — ${e.song_title}` : ''}
+                        {e.artist_name || '—'}{(e.song_title || e.subject) ? ` — ${e.song_title || e.subject}` : ''}
                       </span>
                       {e.credits_earned && <span style={{ color: T.textMuted, fontSize: 11, minWidth: 55, textAlign: 'right' }}>{e.credits_earned} credits</span>}
                       <span style={{ color: T.accent, fontWeight: 700, minWidth: 50, textAlign: 'right' }}>¥{(e.amount || 0).toLocaleString()}</span>

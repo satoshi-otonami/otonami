@@ -68,6 +68,19 @@ async function getSpotifyThumbnail(url) {
   return null;
 }
 
+// YouTube oEmbed APIからタイトル自動取得
+async function fetchYoutubeTitle(url) {
+  if (!url) return null;
+  try {
+    const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+    if (res.ok) {
+      const data = await res.json();
+      return data.title || null;
+    }
+  } catch (e) { /* ignore */ }
+  return null;
+}
+
 // Count-up animation hook
 function useCountUp(target, duration = 1200) {
   const [count, setCount] = useState(0);
@@ -148,6 +161,9 @@ export default function ArtistDashboard() {
   const [trackMenu, setTrackMenu] = useState(null);
   const [editTrack, setEditTrack] = useState(null);
   const trackMenuRef = useRef(null);
+  const [expandedTrackId, setExpandedTrackId] = useState(null);
+  const [trackSortBy, setTrackSortBy] = useState('date');
+  const [trackSortDir, setTrackSortDir] = useState('desc');
 
   // Curator profile modal
   const [selectedCurator, setSelectedCurator] = useState(null);
@@ -319,6 +335,7 @@ export default function ArtistDashboard() {
             onMouseEnter={e => e.currentTarget.style.background = THEME.goldLight}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
+            <span style={{ padding: '3px 10px', borderRadius: 9999, fontSize: 12, fontWeight: 600, background: THEME.gold, color: '#fff', fontFamily: THEME.font }}>🪙 {artist.credits ?? 3}</span>
             <div style={{ width: 32, height: 32, borderRadius: '50%', background: THEME.goldLight, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: `2px solid ${THEME.border}`, flexShrink: 0 }}>
               {artist.avatar_url ? <img src={artist.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14 }}>🎵</span>}
             </div>
@@ -537,6 +554,33 @@ export default function ArtistDashboard() {
               <StatCard label="採用" value={pitchStats?.interested || 0} color={THEME.green} />
             </div>
 
+            {/* 直近のアクティビティ */}
+            {recentPitches.length > 0 ? (
+              <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, padding: '20px 24px' }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: THEME.text, margin: '0 0 12px', fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 6 }}>📋 直近のアクティビティ</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {recentPitches.slice(0, 5).map(p => (
+                    <div key={`activity-${p.id}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0', borderBottom: `1px solid ${THEME.borderLight}` }}>
+                      <span style={{ fontSize: 12, color: THEME.textMuted, whiteSpace: 'nowrap', fontFamily: THEME.font }}>
+                        {p.updated_at ? new Date(p.updated_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) + ' ' + new Date(p.updated_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : p.sent_at ? new Date(p.sent_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) + ' ' + new Date(p.sent_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : ''}
+                      </span>
+                      <span style={{ fontSize: 13, color: THEME.text, fontFamily: THEME.font, lineHeight: 1.5 }}>
+                        {p.status === 'interested' || p.status === 'accepted' ? `${p.curator_name} が "${p.song_title || '楽曲'}" を採用しました 🎉` :
+                         p.status === 'feedback' ? `${p.curator_name} が "${p.song_title || '楽曲'}" にフィードバックを送信しました` :
+                         p.status === 'listened' ? `${p.curator_name} が "${p.song_title || '楽曲'}" を試聴しました` :
+                         p.status === 'opened' ? `${p.curator_name} が "${p.song_title || '楽曲'}" を開封しました` :
+                         `"${p.song_title || '楽曲'}" を ${p.curator_name} にピッチしました`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, padding: '20px 24px', textAlign: 'center' }}>
+                <p style={{ fontSize: 14, color: THEME.textMuted, fontFamily: THEME.font }}>まだアクティビティはありません。楽曲を登録してピッチを送りましょう！</p>
+              </div>
+            )}
+
             {/* 最近のピッチ */}
             {recentPitches.length > 0 && (
               <div style={{ marginTop: 8 }}>
@@ -680,166 +724,257 @@ export default function ArtistDashboard() {
                 <button onClick={() => setShowAddTrack(true)} className="btn-gold" style={{ padding: '14px 32px', borderRadius: 100, background: THEME.gold, border: 'none', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: THEME.font }}>楽曲を追加する</button>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
-                <button onClick={() => setShowAddTrack(true)} className="add-track-card" style={{
-                  background: THEME.card, border: `2px dashed ${THEME.border}`, borderRadius: 16,
-                  padding: 24, minHeight: 280, cursor: 'pointer',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 12, transition: 'all 0.2s',
-                }}>
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: THEME.goldLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, color: THEME.gold }}>+</div>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: THEME.gold, fontFamily: THEME.font }}>楽曲を追加</span>
-                </button>
+              <div>
+                {/* Column Header */}
+                <div className="track-list-header" style={{ display: 'flex', alignItems: 'center', padding: '8px 16px', color: THEME.textMuted, fontSize: 12, fontWeight: 500, borderBottom: `1px solid ${THEME.border}`, marginBottom: 8, fontFamily: THEME.font }}>
+                  <div style={{ width: 60, flexShrink: 0 }} />
+                  <div style={{ flex: 1, paddingLeft: 16, cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+                    onClick={() => { setTrackSortBy('name'); setTrackSortDir(trackSortBy === 'name' && trackSortDir === 'asc' ? 'desc' : 'asc'); }}
+                  >
+                    楽曲名 {trackSortBy === 'name' ? (trackSortDir === 'asc' ? '↑' : '↓') : ''}
+                  </div>
+                  <div className="track-col-genre" style={{ width: 80, textAlign: 'center' }}>ジャンル</div>
+                  <div className="track-col-date" style={{ width: 80, textAlign: 'center', cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                    onClick={() => { setTrackSortBy('date'); setTrackSortDir(trackSortBy === 'date' && trackSortDir === 'desc' ? 'asc' : 'desc'); }}
+                  >
+                    登録日 {trackSortBy === 'date' ? (trackSortDir === 'asc' ? '↑' : '↓') : ''}
+                  </div>
+                  <div style={{ width: 80, textAlign: 'center' }}>結果</div>
+                  <div style={{ width: 120 }} />
+                </div>
 
-                {tracks.map(track => {
+                {/* Track rows */}
+                {[...tracks].sort((a, b) => {
+                  if (trackSortBy === 'name') {
+                    const cmp = (a.title || '').localeCompare(b.title || '', 'ja');
+                    return trackSortDir === 'asc' ? cmp : -cmp;
+                  }
+                  const da = new Date(a.created_at || a.release_date || 0);
+                  const db = new Date(b.created_at || b.release_date || 0);
+                  return trackSortDir === 'asc' ? da - db : db - da;
+                }).map(track => {
                   const trackThumbnail = track.cover_image_url || getYoutubeThumbnail(track.youtube_url) || null;
-                  const ytVideoId = getYoutubeVideoId(track.youtube_url);
+                  const isExpanded = expandedTrackId === track.id;
+                  const trackPitches = recentPitches.filter(p =>
+                    p.track_id === track.id ||
+                    (track.youtube_url && p.song_link?.includes(track.youtube_url)) ||
+                    (track.spotify_url && p.song_link?.includes(track.spotify_url))
+                  );
+                  const sentCount = trackPitches.length;
+                  const acceptedCount = trackPitches.filter(p => p.status === 'interested' || p.status === 'accepted').length;
                   const spotifyEmbed = getSpotifyEmbedUrl(track.spotify_url);
-                  const isPlayingYT = playingYT === track.id;
+
                   return (
-                  <div key={track.id} className="track-card" style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, overflow: 'hidden', transition: 'all 0.2s', position: 'relative' }}>
-                    <div style={{ aspectRatio: '1', position: 'relative', overflow: 'hidden' }}>
-                      {isPlayingYT && ytVideoId ? (
-                        <iframe
-                          src={`https://www.youtube.com/embed/${ytVideoId}?autoplay=1&rel=0`}
-                          style={{ width: '100%', height: '100%', border: 'none' }}
-                          allow="autoplay; encrypted-media"
-                          allowFullScreen
-                        />
-                      ) : (
-                        <>
+                    <div key={track.id} style={{ marginBottom: 8 }}>
+                      {/* Main row */}
+                      <div
+                        className="track-row"
+                        onClick={() => setExpandedTrackId(isExpanded ? null : track.id)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 16,
+                          background: THEME.card, border: `1px solid ${THEME.border}`,
+                          borderRadius: isExpanded ? '12px 12px 0 0' : 12,
+                          padding: '12px 16px', cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        {/* Thumbnail */}
+                        <div style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: THEME.borderLight, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           {trackThumbnail ? (
-                            <img src={trackThumbnail} alt={track.title}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
-                            />
+                            <img src={trackThumbnail} alt={track.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              onError={e => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }} />
                           ) : null}
-                          <div style={{
-                            display: trackThumbnail ? 'none' : 'flex',
-                            width: '100%', height: '100%', position: trackThumbnail ? 'absolute' : 'relative', top: 0, left: 0,
-                            background: 'linear-gradient(135deg, #c4956a 0%, #e85d3a 50%, #c4956a 100%)',
-                            alignItems: 'center', justifyContent: 'center',
-                          }}>
-                            <span style={{ fontSize: 48, opacity: 0.5 }}>🎵</span>
+                          <div style={{ display: trackThumbnail ? 'none' : 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', background: THEME.borderLight }}>
+                            <span style={{ fontSize: 24 }}>🎵</span>
                           </div>
-                          {/* YouTube play button overlay */}
-                          {ytVideoId && (
-                            <button onClick={(e) => { e.stopPropagation(); setPlayingYT(track.id); }} style={{
-                              position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                              width: 56, height: 56, borderRadius: '50%',
-                              background: 'rgba(0,0,0,0.7)', border: '2px solid rgba(255,255,255,0.8)',
-                              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              transition: 'all 0.2s',
-                            }}
-                              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,0,0,0.85)'; e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.1)'; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.7)'; e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)'; }}
-                            >
-                              <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
-                            </button>
-                          )}
-                        </>
-                      )}
-                      <div style={{ position: 'absolute', top: 8, right: 8 }}>
-                        <button onClick={(e) => { e.stopPropagation(); setTrackMenu(trackMenu === track.id ? null : track.id); }} style={{
-                          width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
-                          backdropFilter: 'blur(4px)', border: 'none', cursor: 'pointer',
-                          fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          color: THEME.text,
-                        }}>•••</button>
-                        {trackMenu === track.id && (
-                          <div ref={trackMenuRef} style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.08)', minWidth: 140, zIndex: 50, overflow: 'hidden' }}>
-                            <button onClick={(e) => { e.stopPropagation(); setTrackMenu(null); setEditTrack(track); }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.text, fontFamily: THEME.font }}
-                              onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
-                              onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                            >✏️ 編集</button>
-                            <button onClick={(e) => { e.stopPropagation(); setTrackMenu(null); setDeleteConfirm(track); }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.coral, fontFamily: THEME.font }}
-                              onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
-                              onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                            >🗑️ 削除</button>
-                            {track.cover_image_url && (
-                              <button onClick={async (e) => {
-                                e.stopPropagation(); setTrackMenu(null);
-                                try {
-                                  const res = await fetch('/api/artists/tracks', {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                                    body: JSON.stringify({ id: track.id, cover_image_url: '' }),
-                                  });
-                                  if (res.ok) fetchTracks();
-                                } catch {}
-                              }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.textSub, fontFamily: THEME.font }}
-                                onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
-                                onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                              >🖼 画像をリセット</button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div style={{ padding: '16px 18px' }}>
-                      <h3 style={{ fontSize: 16, fontWeight: 700, color: THEME.text, margin: '0 0 4px', fontFamily: THEME.font }}>{track.title}</h3>
-                      {track.release_date && (
-                        <div style={{ fontSize: 13, color: THEME.textMuted, marginBottom: 8 }}>
-                          Release date: {new Date(track.release_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                         </div>
-                      )}
-                      {track.genre && (
-                        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 100, fontSize: 11, background: THEME.goldLight, color: THEME.gold, fontWeight: 500, marginBottom: 8 }}>{track.genre}</span>
-                      )}
-                      {/* Track pitch results */}
-                      {(() => {
-                        const trackPitches = recentPitches.filter(p =>
-                          p.track_id === track.id ||
-                          (track.youtube_url && p.song_link?.includes(track.youtube_url)) ||
-                          (track.spotify_url && p.song_link?.includes(track.spotify_url))
-                        );
-                        if (trackPitches.length === 0) return null;
-                        return (
-                          <div style={{ marginBottom: 10, padding: '10px 0', borderTop: `1px solid ${THEME.borderLight}` }}>
-                            <p style={{ fontSize: 12, fontWeight: 600, color: THEME.textSub, marginBottom: 6, fontFamily: THEME.font }}>📊 ピッチ結果 ({trackPitches.length}件)</p>
-                            {trackPitches.map(p => (
-                              <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0' }}>
-                                <span onClick={() => openCuratorProfile(p.curator_name)} style={{ fontSize: 12, fontWeight: 500, color: THEME.gold, fontFamily: THEME.font, cursor: 'pointer', textDecoration: 'underline', textDecorationColor: `${THEME.gold}40`, textUnderlineOffset: 2 }}>{p.curator_name}</span>
-                                <span style={{
-                                  padding: '2px 8px', borderRadius: 9999, fontSize: 10, fontWeight: 600, fontFamily: THEME.font,
-                                  background: p.status === 'interested' || p.status === 'accepted' ? THEME.greenLight : p.status === 'feedback' ? '#3b82f620' : p.status === 'declined' ? '#ef444420' : THEME.borderLight,
-                                  color: p.status === 'interested' || p.status === 'accepted' ? THEME.green : p.status === 'feedback' ? '#3b82f6' : p.status === 'declined' ? '#ef4444' : THEME.textSub,
-                                }}>
-                                  {p.status === 'interested' || p.status === 'accepted' ? '✅ 採用' : p.status === 'feedback' ? '💬 FB' : p.status === 'declined' ? '❌' : p.status === 'sent' ? '📤 送信済' : p.status}
-                                </span>
-                              </div>
-                            ))}
-                            {trackPitches.filter(p => p.feedback_message).map(p => (
-                              <div key={`fb-${p.id}`} style={{ marginTop: 6, padding: 8, background: THEME.bg, borderRadius: 6, borderLeft: `3px solid ${THEME.gold}` }}>
-                                <p style={{ fontSize: 11, color: THEME.textMuted, margin: '0 0 2px', fontFamily: THEME.font }}>{p.curator_name}:</p>
-                                <p style={{ fontSize: 12, color: THEME.text, lineHeight: 1.4, margin: 0, fontFamily: THEME.font }}>{p.feedback_message}</p>
-                                {p.placement_url && (
-                                  <a href={p.placement_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: THEME.gold, display: 'block', marginTop: 4 }}>🎉 {p.placement_url}</a>
+
+                        {/* Track info */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: 15, color: THEME.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: THEME.font }}>{track.title}</div>
+                          {track.artist_name && track.artist_name !== artist?.name && (
+                            <div style={{ fontSize: 13, color: THEME.textMuted, marginTop: 2 }}>{track.artist_name}</div>
+                          )}
+                        </div>
+
+                        {/* Genre pill */}
+                        <div className="track-col-genre" style={{ width: 80, textAlign: 'center' }}>
+                          {track.genre && (
+                            <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 100, fontSize: 11, background: THEME.goldLight, color: THEME.gold, fontWeight: 500, border: `1px solid ${THEME.gold}30` }}>{track.genre}</span>
+                          )}
+                        </div>
+
+                        {/* Date */}
+                        <div className="track-col-date" style={{ width: 80, textAlign: 'center', fontSize: 13, color: THEME.textMuted }}>
+                          {(track.created_at || track.release_date) ? new Date(track.created_at || track.release_date).toLocaleDateString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric' }) : '—'}
+                        </div>
+
+                        {/* Pitch results summary */}
+                        <div style={{ width: 80, textAlign: 'center' }}>
+                          {sentCount > 0 ? (
+                            <div>
+                              <div style={{ fontSize: 13, color: THEME.textSub }}>📤 {sentCount}件</div>
+                              {acceptedCount > 0 && <div style={{ fontSize: 13, color: THEME.green }}>✅ {acceptedCount}件</div>}
+                            </div>
+                          ) : (
+                            <span style={{ color: '#c4c0ba', fontSize: 13 }}>—</span>
+                          )}
+                        </div>
+
+                        {/* Action area */}
+                        <div style={{ width: 120, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                          <a href={buildPitchUrl(track)} onClick={e => e.stopPropagation()} style={{
+                            padding: '6px 14px', borderRadius: 9999, background: THEME.coral, color: '#fff',
+                            fontSize: 12, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap',
+                            fontFamily: THEME.font, transition: 'all 0.15s',
+                          }}
+                            onMouseEnter={e => e.currentTarget.style.background = THEME.coralDark}
+                            onMouseLeave={e => e.currentTarget.style.background = THEME.coral}
+                          >ピッチを送る</a>
+                          <div style={{ position: 'relative' }}>
+                            <button onClick={(e) => { e.stopPropagation(); setTrackMenu(trackMenu === track.id ? null : track.id); }} style={{
+                              width: 28, height: 28, borderRadius: '50%', background: 'transparent',
+                              border: `1px solid ${THEME.border}`, cursor: 'pointer',
+                              fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color: THEME.textMuted, transition: 'all 0.15s',
+                            }}
+                              onMouseEnter={e => { e.currentTarget.style.background = THEME.bg; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                            >•••</button>
+                            {trackMenu === track.id && (
+                              <div ref={trackMenuRef} style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.08)', minWidth: 140, zIndex: 50, overflow: 'hidden' }}>
+                                <button onClick={(e) => { e.stopPropagation(); setTrackMenu(null); setEditTrack(track); }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.text, fontFamily: THEME.font }}
+                                  onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
+                                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                >✏️ 編集</button>
+                                <button onClick={(e) => { e.stopPropagation(); setTrackMenu(null); setDeleteConfirm(track); }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.coral, fontFamily: THEME.font }}
+                                  onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
+                                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                >🗑️ 削除</button>
+                                {track.cover_image_url && (
+                                  <button onClick={async (e) => {
+                                    e.stopPropagation(); setTrackMenu(null);
+                                    try {
+                                      const res = await fetch('/api/artists/tracks', {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                        body: JSON.stringify({ id: track.id, cover_image_url: '' }),
+                                      });
+                                      if (res.ok) fetchTracks();
+                                    } catch {}
+                                  }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.textSub, fontFamily: THEME.font }}
+                                    onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                  >🖼 画像をリセット</button>
                                 )}
                               </div>
-                            ))}
+                            )}
                           </div>
-                        );
-                      })()}
-                      {/* Spotify embedded player */}
-                      {spotifyEmbed && (
-                        <div style={{ margin: '8px 0', borderRadius: 10, overflow: 'hidden' }}>
-                          <iframe
-                            src={spotifyEmbed}
-                            width="100%"
-                            height="80"
-                            frameBorder="0"
-                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                            loading="lazy"
-                            style={{ borderRadius: 10 }}
-                          />
+                        </div>
+                      </div>
+
+                      {/* Expanded accordion */}
+                      {isExpanded && (
+                        <div style={{
+                          background: '#faf9f7', borderTop: `1px solid ${THEME.border}`,
+                          border: `1px solid ${THEME.border}`, borderTop: 'none',
+                          borderRadius: '0 0 12px 12px',
+                          padding: '16px 16px 16px 92px',
+                          animation: 'fadeIn 0.2s ease',
+                        }}>
+                          {/* Track URLs */}
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                            {track.youtube_url && (
+                              <a href={track.youtube_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#FF0000', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#FF000010', fontFamily: THEME.font }}>▶️ YouTube</a>
+                            )}
+                            {track.spotify_url && (
+                              <a href={track.spotify_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#1DB954', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#1DB95410', fontFamily: THEME.font }}>🟢 Spotify</a>
+                            )}
+                            {track.soundcloud_url && (
+                              <a href={track.soundcloud_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#FF5500', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#FF550010', fontFamily: THEME.font }}>☁️ SoundCloud</a>
+                            )}
+                            {track.bandcamp_url && (
+                              <a href={track.bandcamp_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#1DA0C3', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#1DA0C310', fontFamily: THEME.font }}>📀 Bandcamp</a>
+                            )}
+                          </div>
+
+                          {/* Spotify mini player */}
+                          {spotifyEmbed && (
+                            <div style={{ marginBottom: 12, borderRadius: 8, overflow: 'hidden' }}>
+                              <iframe src={spotifyEmbed} width="100%" height="80" frameBorder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style={{ borderRadius: 8 }} />
+                            </div>
+                          )}
+
+                          {/* Pitch results */}
+                          {trackPitches.length > 0 && (
+                            <div style={{ marginBottom: 12 }}>
+                              <p style={{ fontSize: 13, fontWeight: 600, color: THEME.textSub, marginBottom: 8, fontFamily: THEME.font }}>ピッチ結果</p>
+                              {trackPitches.map(p => (
+                                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: `1px solid ${THEME.borderLight}` }}>
+                                  <span onClick={() => openCuratorProfile(p.curator_name)} style={{ fontSize: 13, fontWeight: 500, color: THEME.gold, cursor: 'pointer', textDecoration: 'underline', textDecorationColor: `${THEME.gold}40`, textUnderlineOffset: 2, fontFamily: THEME.font }}>{p.curator_name}</span>
+                                  <span style={{
+                                    padding: '2px 8px', borderRadius: 9999, fontSize: 10, fontWeight: 600, fontFamily: THEME.font,
+                                    background: p.status === 'interested' || p.status === 'accepted' ? THEME.greenLight :
+                                               p.status === 'feedback' ? '#3b82f620' :
+                                               p.status === 'listened' ? '#a855f720' :
+                                               p.status === 'opened' ? '#f59e0b20' :
+                                               p.status === 'declined' ? '#ef444420' :
+                                               THEME.borderLight,
+                                    color: p.status === 'interested' || p.status === 'accepted' ? THEME.green :
+                                           p.status === 'feedback' ? '#3b82f6' :
+                                           p.status === 'listened' ? '#a855f7' :
+                                           p.status === 'opened' ? '#f59e0b' :
+                                           p.status === 'declined' ? '#ef4444' :
+                                           THEME.textSub,
+                                  }}>
+                                    {p.status === 'sent' ? '送信済み' :
+                                     p.status === 'opened' ? '開封済み' :
+                                     p.status === 'listened' ? '試聴済み' :
+                                     p.status === 'feedback' ? 'FB受信' :
+                                     p.status === 'interested' || p.status === 'accepted' ? '✅ 採用' :
+                                     p.status === 'declined' ? '不採用' : p.status}
+                                  </span>
+                                  <span style={{ fontSize: 11, color: THEME.textMuted, marginLeft: 'auto' }}>
+                                    {p.sent_at ? new Date(p.sent_at).toLocaleDateString('ja-JP') : ''}
+                                  </span>
+                                </div>
+                              ))}
+                              {/* Feedback messages */}
+                              {trackPitches.filter(p => p.feedback_message).map(p => (
+                                <div key={`fb-${p.id}`} style={{ marginTop: 8, padding: 10, background: THEME.card, borderRadius: 8, borderLeft: `3px solid ${THEME.gold}` }}>
+                                  <p style={{ fontSize: 11, color: THEME.textMuted, margin: '0 0 2px', fontFamily: THEME.font }}>{p.curator_name}:</p>
+                                  <p style={{ fontSize: 13, color: THEME.text, lineHeight: 1.5, margin: 0, fontFamily: THEME.font }}>{p.feedback_message}</p>
+                                  {p.placement_url && (
+                                    <a href={p.placement_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: THEME.gold, display: 'block', marginTop: 4 }}>🎉 {p.placement_url}</a>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Full-width pitch button */}
+                          <a href={buildPitchUrl(track)} style={{
+                            display: 'block', textAlign: 'center', padding: '12px 20px',
+                            borderRadius: 9999, background: THEME.coral, color: '#fff',
+                            textDecoration: 'none', fontSize: 14, fontWeight: 600,
+                            fontFamily: THEME.font, width: '100%', boxSizing: 'border-box',
+                          }}>この曲でピッチを送る →</a>
                         </div>
                       )}
-                      <a href={buildPitchUrl(track)} className="btn-pitch-track" style={{ display: 'block', textAlign: 'center', padding: '10px 20px', borderRadius: 9999, background: THEME.coral, color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font, width: '100%', boxSizing: 'border-box', transition: 'all 0.15s' }}>🎵 ピッチを送る →</a>
                     </div>
-                  </div>
                   );
                 })}
+
+                {/* Add track row */}
+                <button onClick={() => setShowAddTrack(true)} style={{
+                  width: '100%', border: `2px dashed ${THEME.gold}40`, borderRadius: 12,
+                  padding: 16, textAlign: 'center', color: THEME.gold, fontWeight: 500,
+                  cursor: 'pointer', background: 'transparent', fontFamily: THEME.font,
+                  fontSize: 14, transition: 'all 0.2s',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = THEME.gold; e.currentTarget.style.background = '#fffbf5'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = `${THEME.gold}40`; e.currentTarget.style.background = 'transparent'; }}
+                >+ 楽曲を追加</button>
               </div>
             )}
           </>
@@ -1275,7 +1410,7 @@ function TrackModal({ token, track, onClose, onSuccess }) {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const handleYoutubeUrlChange = (url) => {
+  const handleYoutubeUrlChange = async (url) => {
     set('youtube_url', url);
     if (!coverFile) {
       const thumb = getYoutubeThumbnail(url);
@@ -1283,6 +1418,11 @@ function TrackModal({ token, track, onClose, onSuccess }) {
         setForm(f => ({ ...f, cover_image_url: thumb }));
         setCoverPreview(thumb);
       }
+    }
+    // Auto-fetch title from YouTube oEmbed
+    if (url && !form.title.trim()) {
+      const title = await fetchYoutubeTitle(url);
+      if (title) set('title', title);
     }
   };
 
@@ -1708,5 +1848,11 @@ const globalStyles = `
     .header-name { display: none; }
     .logo-text { font-size: 18px !important; }
     .floating-pitch-bar > div { max-width: 100% !important; }
+    .track-col-genre { display: none !important; }
+    .track-col-date { display: none !important; }
+    .track-list-header .track-col-genre { display: none !important; }
+    .track-list-header .track-col-date { display: none !important; }
   }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .track-row:hover { background: #faf9f7 !important; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
 `;

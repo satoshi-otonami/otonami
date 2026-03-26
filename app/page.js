@@ -29,8 +29,10 @@ const COPY = {
       h1: ['From Japan to the world.', 'Your music crosses borders.'],
       h1Gold: 1,
       sub: 'AI creates tailored English pitches and connects your music directly to international playlists, blogs, and radio stations.',
-      ctaPrimary: 'Get started free →',
-      ctaGhost: 'Join as Curator',
+      ctaPrimary: '🎵 Sign Up as Artist (Free) →',
+      ctaPrimarySub: '3 free credits included',
+      ctaGhost: '🎧 Join as Curator →',
+      ctaGhostSub: 'Earn per review',
     },
     stats: [
       { target: 3449, suffix: '',  l: 'Curators & Pros' },
@@ -130,8 +132,10 @@ const COPY = {
       h1: ['日本から世界へ。', 'あなたの音楽が、海を越える。'],
       h1Gold: 1,
       sub: '海外のプレイリスト・音楽ブログ・ラジオ局に、AIが最適な英語紹介文を作成して直接アプローチ。英語が苦手でも大丈夫。',
-      ctaPrimary: '無料で始める →',
-      ctaGhost: 'キュレーターとして参加',
+      ctaPrimary: '🎵 アーティスト登録（無料）→',
+      ctaPrimarySub: '3クレジット無料プレゼント',
+      ctaGhost: '🎧 キュレーター登録 →',
+      ctaGhostSub: 'レビュー報酬あり',
     },
     stats: [
       { target: 3449, suffix: '',   l: '登録キュレーター' },
@@ -843,8 +847,14 @@ export default function HomePage() {
             {t.hero.sub}
           </p>
           <div className="cta-group hero-cta-anim" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginBottom: 80, flexWrap: 'wrap' }}>
-            <a href="/artist"  className="cta-coral" style={{ fontSize: 16, padding: '15px 32px' }}>{t.hero.ctaPrimary}</a>
-            <a href="/curator" className="cta-ghost" style={{ fontSize: 16, padding: '15px 32px' }}>{t.hero.ctaGhost}</a>
+            <a href="/artist" className="cta-coral" style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', fontSize: 16, padding: '16px 36px 12px' }}>
+              {t.hero.ctaPrimary}
+              <span style={{ fontSize: 12, opacity: 0.7, marginTop: 4, fontWeight: 400 }}>{t.hero.ctaPrimarySub}</span>
+            </a>
+            <a href="/curator" className="cta-ghost" style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', fontSize: 16, padding: '16px 36px 12px' }}>
+              {t.hero.ctaGhost}
+              <span style={{ fontSize: 12, opacity: 0.5, marginTop: 4, fontWeight: 400 }}>{t.hero.ctaGhostSub}</span>
+            </a>
           </div>
           {/* Stats — count-up animation */}
           <div className="stats-grid hero-stat-anim" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0 32px', maxWidth: 640, margin: '0 auto' }}>

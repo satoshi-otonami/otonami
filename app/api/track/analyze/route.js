@@ -88,7 +88,7 @@ function parseYouTubeTitle(title, channelTitle) {
 // ============================================================
 async function fetchDJTrackAnalysis(spotifyId) {
   try {
-    const url = `https://dj-track-audio-analysis-api.p.rapidapi.com/v2/tracks/${spotifyId}/audio-analysis`;
+    const url = `https://dj-track-audio-analysis-api.p.rapidapi.com/v2/audio-analysis/${spotifyId}`;
     console.log(`[DJ Track] Calling: ${url}`);
     const response = await fetch(url, {
       method: 'GET',

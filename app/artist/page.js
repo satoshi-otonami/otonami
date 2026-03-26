@@ -113,14 +113,6 @@ export default function ArtistRegistrationPage() {
     setError('');
 
     try {
-      // Upload avatar first if present
-      let avatar_url = '';
-      if (avatarFile) {
-        const fd = new FormData();
-        fd.append('file', avatarFile);
-        // We'll upload after registration since we need the token
-      }
-
       const res = await fetch('/api/artists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -128,22 +120,6 @@ export default function ArtistRegistrationPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Registration failed');
-
-      // Save token
-      localStorage.setItem('artist_token', data.token);
-
-      // Upload avatar if present
-      if (avatarFile) {
-        try {
-          const fd = new FormData();
-          fd.append('file', avatarFile);
-          await fetch('/api/artists/avatar', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${data.token}` },
-            body: fd,
-          });
-        } catch { /* non-fatal */ }
-      }
 
       setCreatedArtist(data.artist);
       setSuccess(true);
@@ -169,46 +145,41 @@ export default function ArtistRegistrationPage() {
       <style>{globalStyles}</style>
       {renderHeader()}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 64px)', padding: 24 }}>
-        <div style={{ textAlign: 'center', maxWidth: 520 }}>
-          {/* Green check */}
-          <div style={{ width: 64, height: 64, borderRadius: '50%', background: THEME.green, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-          </div>
-          <h1 style={{ fontFamily: THEME.fontDisplay, fontSize: 28, fontWeight: 700, color: THEME.text, marginBottom: 8 }}>
-            ようこそ、OTONAMI へ！
+        <div style={{ textAlign: 'center', maxWidth: 480 }}>
+          <div style={{ fontSize: 64, marginBottom: 24 }}>✉️</div>
+          <h1 style={{ fontFamily: THEME.fontDisplay, fontSize: 24, fontWeight: 700, color: THEME.text, marginBottom: 12 }}>
+            認証メールを送信しました
           </h1>
-          <p style={{ color: THEME.textSub, fontSize: 15, lineHeight: 1.7, marginBottom: 32 }}>
-            アカウントが作成されました。さっそく楽曲を登録しましょう。
+          <p style={{ color: THEME.textSub, fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>
+            <strong>{form.email}</strong> に認証メールを送りました。<br />
+            メール内のリンクをクリックして登録を完了してください。
+          </p>
+          <p style={{ color: THEME.textMuted, fontSize: 13, marginBottom: 32 }}>
+            メールが届かない場合は迷惑メールフォルダをご確認ください
           </p>
 
-          {/* Profile preview card */}
-          <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, padding: '24px 28px', marginBottom: 32, textAlign: 'left', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 52, height: 52, borderRadius: '50%', background: THEME.goldLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, overflow: 'hidden', border: `2px solid ${THEME.border}` }}>
-                {avatarPreview ? <img src={avatarPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🎵'}
-              </div>
-              <div>
-                <div style={{ color: THEME.text, fontWeight: 700, fontSize: 16, fontFamily: THEME.fontDisplay }}>{createdArtist.name}</div>
-                <div style={{ color: THEME.textMuted, fontSize: 12 }}>{form.region}</div>
-              </div>
-            </div>
-            {form.genres.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 14 }}>
-                {form.genres.slice(0, 6).map(g => (
-                  <span key={g} style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, background: THEME.goldLight, color: THEME.gold, border: `1px solid ${THEME.gold}30`, fontFamily: THEME.font }}>{g}</span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* CTA buttons */}
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/artist/dashboard" style={{ display: 'inline-block', padding: '14px 32px', background: THEME.gold, borderRadius: 100, color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 15, fontFamily: THEME.font }}>
-              ダッシュボードへ →
-            </a>
-            <a href="/artist/dashboard?tab=tracks" style={{ display: 'inline-block', padding: '14px 32px', background: THEME.card, borderRadius: 100, color: THEME.gold, textDecoration: 'none', fontWeight: 700, fontSize: 15, fontFamily: THEME.font, border: `2px solid ${THEME.gold}` }}>
-              楽曲を登録する →
-            </a>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+            <button onClick={async () => {
+              try {
+                await fetch('/api/resend-verification', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: form.email, type: 'artist' }),
+                });
+                alert('認証メールを再送信しました');
+              } catch {}
+            }} style={{
+              padding: '12px 32px', borderRadius: 100,
+              border: `1.5px solid ${THEME.gold}`, background: 'transparent',
+              color: THEME.gold, fontSize: 14, fontWeight: 600,
+              cursor: 'pointer', fontFamily: THEME.font,
+            }}>
+              認証メールを再送信
+            </button>
+            <button onClick={() => { setSuccess(false); setStep(1); }}
+              style={{ background: 'none', border: 'none', color: THEME.textMuted, fontSize: 13, cursor: 'pointer', fontFamily: THEME.font }}>
+              別のメールアドレスで登録
+            </button>
           </div>
         </div>
       </div>

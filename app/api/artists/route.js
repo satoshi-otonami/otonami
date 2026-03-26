@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { verifyToken, signToken } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { Resend } from 'resend';
 import {
   createArtist,
@@ -48,11 +49,18 @@ export async function POST(request) {
     // パスワードハッシュ化
     const password_hash = await bcrypt.hash(password, 10);
 
+    // Generate verification token
+    const verification_token = crypto.randomUUID();
+    const verification_expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
     // INSERT
     const artist = await createArtist({
       name,
       email,
       password_hash,
+      email_verified: false,
+      verification_token,
+      verification_expires_at,
       artist_type: rest.artist_type || 'solo',
       bio: rest.bio || null,
       hot_news: rest.hot_news || null,
@@ -71,62 +79,38 @@ export async function POST(request) {
       website_url: rest.website_url || null,
     });
 
-    // JWT生成
-    const token = await signToken({
-      artistId: artist.id,
-      email: artist.email,
-      role: 'artist',
-    });
-
-    // Welcomeメール送信（日英併記、失敗してもエラーにしない）
-    const artistTo = testMode ? safeEmail : email;
-    const welcomeSubject = (testMode ? `[TEST] (→${email}) ` : '') +
-      'Welcome to OTONAMI! あなたの音楽を世界へ';
+    // Send verification email instead of Welcome email
+    const verifyUrl = `${APP_URL}/api/verify-email?token=${verification_token}&type=artist`;
+    const verifyTo = testMode ? safeEmail : email;
+    const verifySubject = (testMode ? `[TEST] (→${email}) ` : '') +
+      'OTONAMIへようこそ — メールアドレスを認証してください / Verify your email';
     try {
       await resend.emails.send({
         from: FROM,
-        to: artistTo,
+        to: verifyTo,
         reply_to: 'info@otonami.io',
-        subject: welcomeSubject,
+        subject: verifySubject,
         html: `
           <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
-            <h1 style="font-size:28px;text-align:center;color:#1a1a1a;margin-bottom:8px;">OTONAMI</h1>
-            <h2 style="font-size:22px;color:#1a1a1a;margin-top:32px;">ようこそ、${name}さん！</h2>
-            <p style="color:#6b6560;font-size:15px;line-height:1.7;">OTONAMIへのご登録ありがとうございます。あなたの音楽を世界中のキュレーターに届けましょう。</p>
-            <div style="background:#f8f7f4;border-radius:12px;padding:24px;margin:24px 0;">
-              <p style="font-weight:600;color:#1a1a1a;margin:0 0 12px;">はじめの3ステップ:</p>
-              <ol style="color:#6b6560;font-size:14px;line-height:2;margin:0;padding-left:20px;">
-                <li>プロフィールを完成させる（Bio、リンク、ジャンル）</li>
-                <li>楽曲を登録する（YouTube、Spotify、SoundCloud、Bandcamp）</li>
-                <li>AIマッチングでキュレーターを見つけてピッチを送る</li>
-              </ol>
+            <h1 style="font-size:28px;text-align:center;color:#1a1a1a;margin-bottom:32px;">OTONAMI</h1>
+            <h2 style="font-size:20px;color:#1a1a1a;margin-bottom:12px;">${name}さん、OTONAMIへの登録ありがとうございます。</h2>
+            <p style="color:#6b6560;font-size:15px;line-height:1.7;margin-bottom:8px;">以下のボタンをクリックしてメールアドレスを認証してください。</p>
+            <div style="text-align:center;margin:32px 0;">
+              <a href="${verifyUrl}" style="background:#c4956a;color:#fff;padding:16px 48px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">メールアドレスを認証する / Verify Email</a>
             </div>
-            <p style="text-align:center;color:#c4956a;font-weight:600;font-size:15px;">🎁 初回 <span style="color:#e85d3a;">3クレジット</span> をプレゼント中！</p>
-            <div style="text-align:center;margin:28px 0;">
-              <a href="${APP_URL}/artist/dashboard" style="background:#c4956a;color:#fff;padding:14px 40px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">ダッシュボードへ →</a>
-            </div>
+            <p style="color:#9b9590;font-size:13px;line-height:1.6;text-align:center;">このリンクは24時間有効です。<br/>This link expires in 24 hours.</p>
             <hr style="border:none;border-top:1px solid #e5e2dc;margin:32px 0;" />
-            <h2 style="font-size:18px;color:#9b9590;">Welcome, ${name}!</h2>
-            <p style="color:#9b9590;font-size:14px;line-height:1.7;">Thank you for joining OTONAMI. Let's connect your music with curators around the world.</p>
-            <div style="background:#f8f7f4;border-radius:12px;padding:24px;margin:24px 0;">
-              <p style="font-weight:600;color:#9b9590;margin:0 0 12px;">Here's how to get started:</p>
-              <ol style="color:#9b9590;font-size:13px;line-height:2;margin:0;padding-left:20px;">
-                <li>Complete your artist profile with bio, links, and genres</li>
-                <li>Add your tracks — YouTube, Spotify, SoundCloud, or Bandcamp</li>
-                <li>Pitch your music to curators matched by our AI system</li>
-              </ol>
-            </div>
-            <p style="text-align:center;color:#9b9590;font-size:13px;">🎁 You have <strong>3 free credits</strong> to start pitching!</p>
-            <p style="text-align:center;color:#9b9590;font-size:12px;margin-top:32px;">Questions? Reply to this email — we'd love to hear from you.<br/>ご質問はこのメールに返信してください。</p>
+            <p style="color:#9b9590;font-size:14px;line-height:1.7;">Hi ${name}, thank you for signing up for OTONAMI. Please click the button above to verify your email address.</p>
+            <p style="color:#9b9590;font-size:12px;margin-top:24px;text-align:center;">心当たりがない場合はこのメールを無視してください。<br/>If you didn't request this, please ignore this email.</p>
           </div>
         `,
-        text: `ようこそ、${name}さん！\n\nOTONAMIへのご登録ありがとうございます。あなたの音楽を世界中のキュレーターに届けましょう。\n\nはじめの3ステップ:\n1. プロフィールを完成させる（Bio、リンク、ジャンル）\n2. 楽曲を登録する（YouTube、Spotify、SoundCloud、Bandcamp）\n3. AIマッチングでキュレーターを見つけてピッチを送る\n\n🎁 初回3クレジットをプレゼント中！\n\nダッシュボード: ${APP_URL}/artist/dashboard\n\n---\n\nWelcome, ${name}!\n\nThank you for joining OTONAMI. Let's connect your music with curators around the world.\n\nHow to get started:\n1. Complete your artist profile with bio, links, and genres\n2. Add your tracks\n3. Pitch your music to curators\n\nYou have 3 free credits to start pitching!\n\nDashboard: ${APP_URL}/artist/dashboard\n\nOTONAMI — Connecting Japanese Music to the World\nhttps://otonami.io`,
+        text: `${name}さん、OTONAMIへの登録ありがとうございます。\n\n以下のリンクをクリックしてメールアドレスを認証してください:\n${verifyUrl}\n\nこのリンクは24時間有効です。\n\n---\n\nHi ${name}, thank you for signing up for OTONAMI.\nPlease verify your email: ${verifyUrl}\n\nThis link expires in 24 hours.`,
       });
     } catch (e) {
-      console.error('Artist welcome email failed (non-fatal):', e);
+      console.error('Verification email failed (non-fatal):', e);
     }
 
-    // 管理者通知メール
+    // Admin notification email
     try {
       const adminSubject = (testMode ? '[TEST] ' : '') +
         `【OTONAMI】新規アーティスト登録: ${name}`;
@@ -151,6 +135,9 @@ export async function POST(request) {
                   <td style="padding:8px;">${rest.region || 'JP'}</td></tr>
               <tr><td style="padding:8px;color:#666;">ジャンル</td>
                   <td style="padding:8px;">${(rest.genres || []).join(', ') || '-'}</td></tr>
+              <tr style="background:#f9f9f9;">
+                  <td style="padding:8px;color:#666;">メール認証</td>
+                  <td style="padding:8px;">⏳ 未認証</td></tr>
             </table>
             <p style="margin-top:24px;color:#888;font-size:13px;">
               Supabaseで確認:
@@ -158,15 +145,15 @@ export async function POST(request) {
             </p>
           </div>
         `,
-        text: `新規アーティスト登録\n\n名前: ${name}\nメール: ${email}\nタイプ: ${rest.artist_type || 'solo'}\nリージョン: ${rest.region || 'JP'}\nジャンル: ${(rest.genres || []).join(', ') || '-'}`,
+        text: `新規アーティスト登録\n\n名前: ${name}\nメール: ${email}\nタイプ: ${rest.artist_type || 'solo'}\nリージョン: ${rest.region || 'JP'}\nジャンル: ${(rest.genres || []).join(', ') || '-'}\nメール認証: 未認証`,
       });
     } catch (e) {
       console.error('Admin notification failed (non-fatal):', e);
     }
 
-    // password_hash を返さない
-    const { password_hash: _, ...safeArtist } = artist;
-    return NextResponse.json({ success: true, token, artist: safeArtist });
+    // Don't issue JWT yet - email verification required first
+    const { password_hash: _, verification_token: _vt, ...safeArtist } = artist;
+    return NextResponse.json({ success: true, needsVerification: true, message: 'verification_email_sent', artist: safeArtist });
   } catch (e) {
     console.error('Artist registration error:', e);
     return NextResponse.json({ error: e.message }, { status: 500 });

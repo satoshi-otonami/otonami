@@ -89,7 +89,6 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
       }
 
-      // Direct HTTP call to curator_auth (bypasses PostgREST schema cache)
       const info = await callCuratorAuth('get', email);
 
       if (!info || !info.found) {
@@ -108,15 +107,74 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
       }
 
-      // キュレーター情報取得（pw_hashを含まないselect — これはPostgRESTで問題ない）
-      const { data: curator } = await db
-        .from('curators')
-        .select('id, name, email, type, playlist, url, genres, followers, region, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, accepts')
-        .eq('id', info.id)
-        .single();
+      // Check email verification for curators with verification_token set
+      const { data: curatorCheck } = await db.from('curators').select('email_verified, verification_token').eq('id', info.id).single();
+      if (curatorCheck && curatorCheck.email_verified === false && curatorCheck.verification_token) {
+        return NextResponse.json({
+          error: 'email_not_verified',
+          message: 'メール認証が完了していません。',
+        }, { status: 403 });
+      }
 
-      const token = await signToken({ id: info.id, email, name: info.name, role: 'curator' });
-      return NextResponse.json({ curator, token });
+      // Cleanup old OTPs
+      await db.from('login_otps')
+        .delete()
+        .lt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+      // Generate and send OTP
+      const otp = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+      const otpHash = await bcrypt.hash(otp, 10);
+
+      await db.from('login_otps').insert({
+        email,
+        user_type: 'curator',
+        otp_code: otpHash,
+        expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      });
+
+      // Send OTP email
+      const resend = new (await import('resend')).Resend(process.env.RESEND_API_KEY || 'placeholder');
+      const FROM_EMAIL = `OTONAMI <${process.env.EMAIL_FROM || 'info@otonami.io'}>`;
+      const isTestMode = process.env.EMAIL_TEST_MODE === 'true';
+      const testEmail = process.env.EMAIL_TEST_REDIRECT || 'satoshiy339@gmail.com';
+      const recipientEmail = isTestMode ? testEmail : email;
+      const otpSubject = (isTestMode ? `[TEST] (→${email}) ` : '') + 'OTONAMI ログイン認証コード / Your login code';
+
+      try {
+        await resend.emails.send({
+          from: FROM_EMAIL,
+          to: recipientEmail,
+          reply_to: 'info@otonami.io',
+          subject: otpSubject,
+          html: `
+            <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
+              <h1 style="font-size:28px;text-align:center;color:#1a1a1a;margin-bottom:32px;">OTONAMI</h1>
+              <h2 style="font-size:20px;color:#1a1a1a;margin-bottom:8px;">ログイン認証コード / Login Code</h2>
+              <p style="color:#6b6560;font-size:14px;margin-bottom:24px;">ログインの認証コードです。</p>
+              <div style="background:#f5f3f0;border-radius:12px;padding:24px;text-align:center;margin:0 0 24px;">
+                <div style="font-size:32px;font-weight:700;letter-spacing:8px;color:#1a1a1a;font-family:monospace;">${otp.split('').join(' ')}</div>
+              </div>
+              <p style="color:#9b9590;font-size:13px;text-align:center;line-height:1.6;">
+                このコードは10分間有効です。心当たりがない場合は無視してください。<br/>
+                This code expires in 10 minutes. If you didn't request this, please ignore.
+              </p>
+            </div>
+          `,
+          text: `OTONAMI ログイン認証コード\n\nコード: ${otp}\n\nこのコードは10分間有効です。\n\n---\n\nYour OTONAMI login code: ${otp}\n\nThis code expires in 10 minutes.`,
+        });
+      } catch (e) {
+        console.error('OTP email failed:', e);
+      }
+
+      // Mask email for response
+      const [local, domain] = email.split('@');
+      const maskedEmail = local[0] + '***@' + domain;
+
+      return NextResponse.json({
+        success: true,
+        step: 'otp_required',
+        email: maskedEmail,
+      });
     }
 
     // ── 新規登録 / パスワード設定 ──

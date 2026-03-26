@@ -3,6 +3,7 @@ import { getServiceSupabase } from '@/lib/supabase';
 import { Resend } from 'resend';
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
+import crypto from 'crypto';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-otonami-secret-change-me'
@@ -94,17 +95,22 @@ export async function POST(request) {
 
     if (error) throw new Error(error.message);
 
+    // Generate verification token
+    const verificationToken = crypto.randomUUID();
+    const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    await supabase.from('curators').update({
+      email_verified: false,
+      verification_token: verificationToken,
+      verification_expires_at: verificationExpiresAt,
+    }).eq('id', data.id);
+
     // 1b. パスワードをハッシュ化して curator_auth に保存
     if (form.password) {
       const hash = await bcrypt.hash(form.password, 10);
       await setCuratorPasswordHash(form.email, hash);
     }
 
-    // 1c. JWTトークン生成（登録後すぐダッシュボードに入れるように）
-    const token = await new SignJWT({ id: data.id, email: data.email, name: data.name, role: 'curator' })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('30d')
-      .sign(JWT_SECRET);
+    // No JWT at registration — email verification required first
 
     // 2. Satoshiへの通知メール
     const adminSubject = (testMode ? '[TEST] ' : '') + `【OTONAMI】新規キュレーター登録: ${form.name}`;
@@ -161,67 +167,39 @@ export async function POST(request) {
       text: `新規キュレーター登録\n\n名前: ${form.name}\nメール: ${form.email}\n媒体名: ${form.outletName}\nタイプ: ${form.type}\nURL: ${form.url || '-'}\nフォロワー: ${form.followers || 0}\nリージョン: ${form.region}\nジャンル: ${(form.genres || []).join(', ') || '-'}\nBio: ${form.bio || '-'}`,
     });
 
-    // 3. キュレーター本人へのWelcomeメール
+    // 3. Send verification email (instead of Welcome email)
+    const verifyUrl = `${APP_URL}/api/verify-email?token=${verificationToken}&type=curator`;
     const curatorTo = testMode ? safeEmail : data.email;
-    const curatorSubject = (testMode ? `[TEST] (→${data.email}) ` : '') + `Welcome to OTONAMI! Your curator profile is ready 🎵`;
+    const verifySubject = (testMode ? `[TEST] (→${data.email}) ` : '') +
+      'OTONAMIへようこそ — メールアドレスを認証してください / Verify your email';
     try {
       await resend.emails.send({
         from: FROM,
         to: curatorTo,
         reply_to: 'info@otonami.io',
-        subject: curatorSubject,
+        subject: verifySubject,
         html: `
-          <div style="max-width:600px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif;background:#1a1a1a;color:#f0ede6;padding:0;">
-            <div style="background:#232323;padding:24px 32px;border-bottom:1px solid #3a3a3a;text-align:center;">
-              <span style="font-size:28px;font-weight:700;color:#f0ede6;letter-spacing:1px;">🎵 OTONAMI</span>
+          <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
+            <h1 style="font-size:28px;text-align:center;color:#1a1a1a;margin-bottom:32px;">OTONAMI</h1>
+            <h2 style="font-size:20px;color:#1a1a1a;margin-bottom:12px;">${data.name}さん、OTONAMIへの登録ありがとうございます。</h2>
+            <p style="color:#6b6560;font-size:15px;line-height:1.7;margin-bottom:8px;">以下のボタンをクリックしてメールアドレスを認証してください。</p>
+            <div style="text-align:center;margin:32px 0;">
+              <a href="${verifyUrl}" style="background:#c4956a;color:#fff;padding:16px 48px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">メールアドレスを認証する / Verify Email</a>
             </div>
-            <div style="padding:40px 32px;">
-              <h1 style="font-size:24px;font-weight:700;color:#f0ede6;margin:0 0 8px;">Welcome, ${data.name}!</h1>
-              <p style="color:#b8b0a3;font-size:15px;margin:0 0 28px;">Thank you for joining OTONAMI's curator network.</p>
-              <div style="background:#2a2a2a;border:1px solid #3a3a3a;border-radius:12px;padding:24px;margin:0 0 28px;">
-                <p style="color:#f0ede6;font-size:15px;margin:0 0 16px;">Your profile is now active. Here's what happens next:</p>
-                <table style="width:100%;border-collapse:collapse;">
-                  <tr>
-                    <td style="padding:8px 12px 8px 0;color:#c4956a;font-weight:bold;vertical-align:top;width:28px;">1.</td>
-                    <td style="padding:8px 0;color:#f0ede6;font-size:14px;">Artists discover your profile through our AI matching system</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:8px 12px 8px 0;color:#c4956a;font-weight:bold;vertical-align:top;">2.</td>
-                    <td style="padding:8px 0;color:#f0ede6;font-size:14px;">You'll receive pitch notifications via email with a direct link to listen</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:8px 12px 8px 0;color:#c4956a;font-weight:bold;vertical-align:top;">3.</td>
-                    <td style="padding:8px 0;color:#f0ede6;font-size:14px;">Listen, review, and provide feedback — earn rewards for every response</td>
-                  </tr>
-                </table>
-              </div>
-              <div style="text-align:center;margin:32px 0;">
-                <a href="${APP_URL}/curator" style="display:inline-block;background-color:#c4956a;color:#1a1a1a;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">
-                  Go to Your Dashboard →
-                </a>
-              </div>
-              <p style="color:#b8b0a3;font-size:13px;text-align:center;margin:24px 0 0;">
-                Questions? Reply to this email — we'd love to hear from you.
-              </p>
-            </div>
-            <div style="background:#141414;padding:20px 32px;border-top:1px solid #3a3a3a;text-align:center;">
-              <p style="color:#666;font-size:12px;margin:0;">
-                OTONAMI — Connecting Japanese Music to the World<br>
-                <a href="https://otonami.io" style="color:#c4956a;text-decoration:none;">otonami.io</a>
-              </p>
-            </div>
+            <p style="color:#9b9590;font-size:13px;line-height:1.6;text-align:center;">このリンクは24時間有効です。<br/>This link expires in 24 hours.</p>
+            <hr style="border:none;border-top:1px solid #e5e2dc;margin:32px 0;" />
+            <p style="color:#9b9590;font-size:14px;line-height:1.7;">Hi ${data.name}, thank you for signing up for OTONAMI. Please click the button above to verify your email address.</p>
+            <p style="color:#9b9590;font-size:12px;margin-top:24px;text-align:center;">心当たりがない場合はこのメールを無視してください。<br/>If you didn't request this, please ignore this email.</p>
           </div>
         `,
-        text: `Welcome to OTONAMI, ${data.name}!\n\nThank you for joining our curator network. Your profile is now active.\n\nWhat happens next:\n1. Artists discover your profile through our AI matching system\n2. You'll receive pitch notifications via email\n3. Listen, review, and provide feedback — earn rewards for every response\n\nLog in to your dashboard: ${APP_URL}/curator\n\nOTONAMI — Connecting Japanese Music to the World\nhttps://otonami.io`,
-        headers: {
-          'List-Unsubscribe': '<mailto:info@otonami.io?subject=unsubscribe>',
-        },
+        text: `${data.name}さん、OTONAMIへの登録ありがとうございます。\n\n認証リンク: ${verifyUrl}\n\nこのリンクは24時間有効です。`,
+        headers: { 'List-Unsubscribe': '<mailto:info@otonami.io?subject=unsubscribe>' },
       });
     } catch (welcomeErr) {
-      console.error('Welcome email failed (non-fatal):', welcomeErr);
+      console.error('Verification email failed (non-fatal):', welcomeErr);
     }
 
-    return NextResponse.json({ success: true, curator: data, token });
+    return NextResponse.json({ success: true, needsVerification: true, message: 'verification_email_sent', curator: data });
   } catch (e) {
     console.error('Curator registration error:', e);
     return NextResponse.json({ error: e.message }, { status: 500 });

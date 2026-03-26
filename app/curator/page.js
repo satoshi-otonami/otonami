@@ -67,6 +67,13 @@ export default function CuratorRegistrationPage() {
   const [loginStatus, setLoginStatus] = useState(null);
   const [loginError, setLoginError] = useState('');
   const [loggedInCurator, setLoggedInCurator] = useState(null);
+  const [loginOtpStep, setLoginOtpStep] = useState(false);
+  const [loginOtpValues, setLoginOtpValues] = useState(['', '', '', '', '', '']);
+  const [loginMaskedEmail, setLoginMaskedEmail] = useState('');
+  const [loginOtpError, setLoginOtpError] = useState('');
+  const [loginOtpLoading, setLoginOtpLoading] = useState(false);
+  const [loginResendCooldown, setLoginResendCooldown] = useState(0);
+  const loginOtpRefs = useRef([]);
 
   // Register
   const [form, setForm] = useState({
@@ -110,6 +117,12 @@ export default function CuratorRegistrationPage() {
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
+  useEffect(() => {
+    if (loginResendCooldown <= 0) return;
+    const timer = setTimeout(() => setLoginResendCooldown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [loginResendCooldown]);
+
   const switchLang = (l) => { setLang(l); try { localStorage.setItem('otonami_locale', l); } catch {} };
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
   const toggleArray = (key, val, max) => {
@@ -150,11 +163,91 @@ export default function CuratorRegistrationPage() {
       });
       const data = await res.json();
       if (res.status === 409 && data.error === 'password_not_set') { setLoginStatus('password_not_set'); return; }
+      if (res.status === 403 && data.error === 'email_not_verified') {
+        setLoginError(data.message || 'Email not verified.');
+        setLoginStatus('error');
+        return;
+      }
       if (!res.ok) throw new Error(data.error || 'Login failed');
+      if (data.step === 'otp_required') {
+        setLoginMaskedEmail(data.email);
+        setLoginOtpStep(true);
+        setLoginResendCooldown(60);
+        setLoginStatus(null);
+        setTimeout(() => loginOtpRefs.current[0]?.focus(), 100);
+        return;
+      }
       localStorage.setItem('curator_token', data.token);
       setLoggedInCurator(data.curator); setLoginStatus('success');
       window.location.href = '/curator/dashboard';
     } catch (e) { setLoginError(e.message); setLoginStatus('error'); }
+  };
+
+  const handleLoginOtpChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return;
+    const newValues = [...loginOtpValues];
+    newValues[index] = value.slice(-1);
+    setLoginOtpValues(newValues);
+    setLoginOtpError('');
+    if (value && index < 5) loginOtpRefs.current[index + 1]?.focus();
+    if (newValues.every(v => v !== '')) {
+      const code = newValues.join('');
+      if (code.length === 6) submitLoginOtp(code);
+    }
+  };
+
+  const handleLoginOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !loginOtpValues[index] && index > 0) {
+      loginOtpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleLoginOtpPaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasted.length) return;
+    const newValues = [...loginOtpValues];
+    for (let i = 0; i < 6; i++) newValues[i] = pasted[i] || '';
+    setLoginOtpValues(newValues);
+    if (pasted.length === 6) submitLoginOtp(pasted);
+  };
+
+  const submitLoginOtp = async (code) => {
+    setLoginOtpLoading(true); setLoginOtpError('');
+    try {
+      const res = await fetch('/api/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginForm.email, otp_code: code, type: 'curator' }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.attemptsRemaining !== undefined) {
+          setLoginOtpError(data.attemptsRemaining === 0 ? '試行回数を超えました。' : `コードが正しくありません。残り${data.attemptsRemaining}回`);
+        } else {
+          setLoginOtpError(data.error || 'Verification failed');
+        }
+        setLoginOtpValues(['', '', '', '', '', '']);
+        loginOtpRefs.current[0]?.focus();
+        return;
+      }
+      localStorage.setItem('curator_token', data.token);
+      window.location.href = '/curator/dashboard';
+    } catch (e) { setLoginOtpError(e.message); }
+    finally { setLoginOtpLoading(false); }
+  };
+
+  const handleLoginResendOtp = async () => {
+    if (loginResendCooldown > 0) return;
+    try {
+      await fetch('/api/curators/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', email: loginForm.email, password: loginForm.password }),
+      });
+      setLoginResendCooldown(60);
+      setLoginOtpValues(['', '', '', '', '', '']);
+      loginOtpRefs.current[0]?.focus();
+    } catch {}
   };
 
   const goToStep2 = () => {
@@ -200,9 +293,6 @@ export default function CuratorRegistrationPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Registration failed');
-      if (data.token) {
-        try { localStorage.setItem('curator_token', data.token); } catch {}
-      }
       setStatus('success');
     } catch (e) { setError(e.message); setStatus('error'); }
   };
@@ -240,45 +330,44 @@ export default function CuratorRegistrationPage() {
     </div>
   );
 
-  // ── Register success screen ──
+  // ── Register success screen (email verification) ──
   if (status === 'success') return (
     <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ textAlign: 'center', maxWidth: 520 }}>
-        <div style={{ width: 80, height: 80, borderRadius: '50%', background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 24px' }}>✅</div>
-        <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12, color: T.text, fontFamily: T.fontDisplay }}>
-          Welcome to OTONAMI!
+      <div style={{ textAlign: 'center', maxWidth: 480 }}>
+        <div style={{ fontSize: 64, marginBottom: 24 }}>✉️</div>
+        <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12, color: T.text, fontFamily: T.fontDisplay }}>
+          認証メールを送信しました
         </h1>
         <p style={{ color: T.textSub, lineHeight: 1.8, fontSize: 15, fontFamily: T.font, marginBottom: 8 }}>
-          Your profile is ready. Artists will start matching with you based on your preferences.<br />
-          <span style={{ color: T.textMuted, fontSize: 13 }}>プロフィールが完成しました。好みに基づいてアーティストとのマッチングが始まります。</span>
+          <strong>{form.email}</strong> に認証メールを送りました。<br />
+          メール内のリンクをクリックして登録を完了してください。
+        </p>
+        <p style={{ color: T.textSub, lineHeight: 1.8, fontSize: 14, fontFamily: T.font, marginBottom: 8 }}>
+          A verification email has been sent to <strong>{form.email}</strong>.<br />
+          Please click the link in the email to complete your registration.
         </p>
         <p style={{ color: T.textMuted, fontSize: 13, lineHeight: 1.7, fontFamily: T.font, marginBottom: 28 }}>
-          We&apos;ll review your profile within 2–3 business days.<br />
-          <span style={{ fontSize: 12 }}>2〜3営業日以内にご連絡いたします。</span>
+          メールが届かない場合は迷惑メールフォルダをご確認ください<br />
+          <span style={{ fontSize: 12 }}>Check your spam folder if you don&apos;t see the email.</span>
         </p>
-        {/* Mini profile preview */}
-        <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: T.radiusLg, padding: '20px 24px', marginBottom: 28, boxShadow: T.shadow, textAlign: 'left' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 52, height: 52, borderRadius: '50%', background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0, overflow: 'hidden' }}>
-              {avatarPreview ? <img src={avatarPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🎵'}
-            </div>
-            <div>
-              <div style={{ color: T.text, fontWeight: 700, fontSize: 16, fontFamily: T.fontDisplay }}>{form.name}</div>
-              <div style={{ color: T.textMuted, fontSize: 12, fontFamily: T.font }}>{form.outletName} · {form.region}</div>
-            </div>
-          </div>
-          {form.genres.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 12 }}>
-              {form.genres.slice(0, 6).map(g => (
-                <span key={g} style={{ padding: '2px 9px', borderRadius: 12, fontSize: 11, background: T.accentLight, color: T.accent, border: `1px solid ${T.accentBorder}`, fontFamily: T.font }}>{g}</span>
-              ))}
-            </div>
-          )}
-        </div>
-        <a href="/curator/dashboard" style={{ display: 'inline-block', padding: '14px 36px', background: T.accentGrad, borderRadius: 24, color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: 15, fontFamily: T.font }}>
-          Go to Dashboard →
-        </a>
-        <div style={{ marginTop: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+          <button onClick={async () => {
+            try {
+              await fetch('/api/resend-verification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: form.email, type: 'curator' }),
+              });
+              alert('認証メールを再送信しました / Verification email resent');
+            } catch {}
+          }} style={{
+            padding: '12px 32px', borderRadius: 100,
+            border: `1.5px solid ${T.accent}`, background: 'transparent',
+            color: T.accent, fontSize: 14, fontWeight: 600,
+            cursor: 'pointer', fontFamily: T.font,
+          }}>
+            認証メールを再送信 / Resend
+          </button>
           <a href="/" style={{ color: T.textMuted, fontSize: 12, textDecoration: 'none', fontFamily: T.font }}>← Back to OTONAMI</a>
         </div>
       </div>
@@ -418,6 +507,8 @@ export default function CuratorRegistrationPage() {
           {/* ── LOGIN TAB ── */}
           {tab === 'login' && (
             <div style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+              {!loginOtpStep && (
+                <>
               <p style={{ color: T.textSub, fontSize: 13, marginTop: 0, marginBottom: 24, lineHeight: 1.6, fontFamily: T.font }}>
                 Already registered? Log in to your curator account.<br />
                 <span style={{ color: T.textMuted, fontSize: 12 }}>登録済みのキュレーターの方はこちら</span>
@@ -452,6 +543,36 @@ export default function CuratorRegistrationPage() {
               <p style={{ textAlign: 'center', fontSize: 12, marginTop: 8 }}>
                 <a href="/curator/set-password" style={{ color: T.textMuted, textDecoration: 'none', fontFamily: T.font }}>Forgot password? / パスワードを忘れた方</a>
               </p>
+                </>
+              )}
+              {loginOtpStep && (
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 8, fontFamily: T.fHead }}>Enter verification code</h3>
+                  <p style={{ fontSize: 13, color: T.textSec, marginBottom: 24 }}>{loginMaskedEmail} に認証コードを送信しました</p>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+                    {loginOtpValues.map((val, i) => (
+                      <input key={i} ref={el => loginOtpRefs.current[i] = el}
+                        type="text" inputMode="numeric" maxLength={1} value={val}
+                        onChange={e => handleLoginOtpChange(i, e.target.value)}
+                        onKeyDown={e => handleLoginOtpKeyDown(i, e)}
+                        onPaste={i === 0 ? handleLoginOtpPaste : undefined}
+                        style={{ width: 44, height: 52, textAlign: 'center', fontSize: 22, fontWeight: 700, fontFamily: 'monospace', border: `2px solid ${loginOtpError ? '#e85d3a' : T.border}`, borderRadius: 10, outline: 'none', background: '#fff', color: T.text }} />
+                    ))}
+                  </div>
+                  {loginOtpLoading && <p style={{ fontSize: 13, color: T.textSub }}>検証中...</p>}
+                  {loginOtpError && <p style={{ fontSize: 13, color: '#e85d3a', marginBottom: 12 }}>{loginOtpError}</p>}
+                  <button onClick={handleLoginResendOtp} disabled={loginResendCooldown > 0}
+                    style={{ background: 'none', border: 'none', color: loginResendCooldown > 0 ? T.textMuted : T.accent, fontSize: 13, cursor: loginResendCooldown > 0 ? 'default' : 'pointer', fontFamily: T.font }}>
+                    {loginResendCooldown > 0 ? `再送信（${loginResendCooldown}秒）` : '認証コードを再送信'}
+                  </button>
+                  <br />
+                  <button onClick={() => { setLoginOtpStep(false); setLoginOtpValues(['', '', '', '', '', '']); setLoginOtpError(''); }}
+                    style={{ background: 'none', border: 'none', color: T.textMuted, fontSize: 13, cursor: 'pointer', marginTop: 8, fontFamily: T.font }}>
+                    ← 戻る
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

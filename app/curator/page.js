@@ -555,8 +555,8 @@ export default function CuratorRegistrationPage() {
               {loginOtpStep && (
                 <div style={{ textAlign: 'center', padding: '20px 0' }}>
                   <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 8, fontFamily: T.fHead }}>Enter verification code</h3>
-                  <p style={{ fontSize: 13, color: T.textSec, marginBottom: 24 }}>{loginMaskedEmail} に認証コードを送信しました</p>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f0ede6', marginBottom: 8, fontFamily: T.fontDisplay }}>Enter verification code</h3>
+                  <p style={{ fontSize: 13, color: '#b8b0a3', marginBottom: 24 }}>{loginMaskedEmail} に認証コードを送信しました</p>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
                     {loginOtpValues.map((val, i) => (
                       <input key={i} ref={el => loginOtpRefs.current[i] = el}
@@ -568,15 +568,15 @@ export default function CuratorRegistrationPage() {
                         style={{ width: 52, height: 60, textAlign: 'center', fontSize: 28, fontWeight: 700, fontFamily: 'monospace', border: `2px solid ${loginOtpError ? '#ef4444' : '#c4956a'}`, borderRadius: 12, outline: 'none', background: '#ffffff', color: '#1a1a1a', caretColor: '#e85d3a', transition: 'border-color 0.2s' }} />
                     ))}
                   </div>
-                  {loginOtpLoading && <p style={{ fontSize: 13, color: T.textSub }}>検証中...</p>}
+                  {loginOtpLoading && <p style={{ fontSize: 13, color: '#c4956a' }}>検証中...</p>}
                   {loginOtpError && <p style={{ fontSize: 14, fontWeight: 500, color: '#ef4444', marginBottom: 12, marginTop: 12 }}>{loginOtpError}</p>}
                   <button onClick={handleLoginResendOtp} disabled={loginResendCooldown > 0}
-                    style={{ background: 'none', border: 'none', color: loginResendCooldown > 0 ? T.textMuted : T.accent, fontSize: 13, cursor: loginResendCooldown > 0 ? 'default' : 'pointer', fontFamily: T.font }}>
+                    style={{ background: 'none', border: 'none', color: loginResendCooldown > 0 ? '#9b9590' : '#c4956a', fontSize: 13, cursor: loginResendCooldown > 0 ? 'default' : 'pointer', fontFamily: T.font }}>
                     {loginResendCooldown > 0 ? `再送信（${loginResendCooldown}秒）` : '認証コードを再送信'}
                   </button>
                   <br />
                   <button onClick={() => { setLoginOtpStep(false); setLoginOtpValues(['', '', '', '', '', '']); setLoginOtpError(''); }}
-                    style={{ background: 'none', border: 'none', color: T.textMuted, fontSize: 13, cursor: 'pointer', marginTop: 8, fontFamily: T.font }}>
+                    style={{ background: 'none', border: 'none', color: '#c4956a', fontSize: 13, cursor: 'pointer', marginTop: 8, fontFamily: T.font }}>
                     ← 戻る
                   </button>
                 </div>

@@ -772,7 +772,7 @@ export default function CuratorDashboard() {
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>💰 Total Earned / 獲得報酬合計</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: T.accent, fontFamily: T.fontDisplay }}>¥{(earnings.total_earned || 0).toLocaleString()}</div>
-                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginTop: 2 }}>{(earnings.pending_count || 0) + ((earnings.earnings || []).filter(e => e.status === 'approved').length)}件のフィードバック</div>
+                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginTop: 2 }}>{earnings.review_count || (earnings.earnings || []).length}件のレビュー</div>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>🏦 Available / 支払い可能額</div>
@@ -822,9 +822,10 @@ export default function CuratorDashboard() {
                         {new Date(e.earned_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}
                       </span>
                       <span style={{ flex: 1, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {e.artist_name || '—'} {e.song_title ? `"${e.song_title}"` : ''}
+                        {e.artist_name || '—'} {e.song_title ? `| ${e.song_title}` : ''}
                       </span>
-                      <span style={{ color: T.accent, fontWeight: 700, minWidth: 40, textAlign: 'right' }}>¥{e.amount}</span>
+                      {e.credits_earned && <span style={{ color: T.textMuted, fontSize: 11, minWidth: 55, textAlign: 'right' }}>{e.credits_earned} credits</span>}
+                      <span style={{ color: T.accent, fontWeight: 700, minWidth: 50, textAlign: 'right' }}>¥{(e.amount || 0).toLocaleString()}</span>
                       <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 10, fontWeight: 600, background: s.bg, color: s.color, whiteSpace: 'nowrap' }}>{s.label}</span>
                     </div>
                   );

@@ -182,17 +182,32 @@ export async function PATCH(request) {
           .select('id')
           .eq('pitch_id', pitchId)
           .eq('curator_id', cId)
-          .limit(1)
-          .single();
+          .maybeSingle();
 
         if (!existingEarning) {
-          await db.from('curator_earnings').insert({
+          // Get curator tier for credit-based earnings
+          const { data: curatorInfo } = await db
+            .from('curators')
+            .select('tier')
+            .eq('id', cId)
+            .maybeSingle();
+
+          const credits = curatorInfo?.tier || 2;
+          const amountPerCredit = 80;
+          const totalAmount = credits * amountPerCredit;
+
+          const { error: earningError } = await db.from('curator_earnings').insert({
             curator_id: cId,
             pitch_id: pitchId,
-            amount: 80,
+            credits_earned: credits,
+            amount: totalAmount,
             currency: 'JPY',
-            status: 'pending',
+            status: 'approved',
           });
+
+          if (earningError) {
+            console.error('[dashboard] Earning insert error:', earningError);
+          }
         }
       } catch (earningsErr) {
         console.warn('[dashboard] Earnings insert failed (non-fatal):', earningsErr.message);

@@ -55,18 +55,22 @@ export async function GET(request) {
 
       const allEarnings = earningsBasic || [];
       const total_earned = allEarnings.reduce((sum, e) => sum + (e.amount || 0), 0);
+      const total_credits = allEarnings.reduce((sum, e) => sum + (e.credits_earned || 0), 0);
       const available_balance = allEarnings.filter(e => e.status === 'approved').reduce((sum, e) => sum + (e.amount || 0), 0);
       const total_paid = allEarnings.filter(e => e.status === 'paid').reduce((sum, e) => sum + (e.amount || 0), 0);
       const pending_count = allEarnings.filter(e => e.status === 'pending').length;
+      const review_count = allEarnings.length;
 
-      return NextResponse.json({ total_earned, available_balance, total_paid, pending_count, earnings: allEarnings, last_payout: null });
+      return NextResponse.json({ total_earned, total_credits, available_balance, total_paid, pending_count, review_count, earnings: allEarnings, last_payout: null });
     }
 
     const allEarnings = earnings || [];
     const total_earned = allEarnings.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const total_credits = allEarnings.reduce((sum, e) => sum + (e.credits_earned || 0), 0);
     const available_balance = allEarnings.filter(e => e.status === 'approved').reduce((sum, e) => sum + (e.amount || 0), 0);
     const total_paid = allEarnings.filter(e => e.status === 'paid').reduce((sum, e) => sum + (e.amount || 0), 0);
     const pending_count = allEarnings.filter(e => e.status === 'pending').length;
+    const review_count = allEarnings.length;
 
     // Last payout
     const { data: lastPayout } = await db
@@ -76,13 +80,15 @@ export async function GET(request) {
       .eq('status', 'completed')
       .order('completed_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     return NextResponse.json({
       total_earned,
+      total_credits,
       available_balance,
       total_paid,
       pending_count,
+      review_count,
       earnings: allEarnings.map(e => ({
         ...e,
         artist_name: e.pitches?.artist_name || null,

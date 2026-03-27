@@ -76,7 +76,7 @@ Name: ${artist.nameEn || artist.name}
 Japanese Name: ${artist.name}
 Genre: ${artist.genre}
 Mood/Sound: ${artist.mood || 'N/A'}
-Description: ${artist.description || 'N/A'}
+Description (may be in Japanese — extract meaning, NEVER quote raw Japanese): ${artist.description || 'N/A'}
 Key Track: ${artist.songTitle || 'N/A'}
 Influences/Similar: ${artist.influences || 'N/A'}
 Achievements: ${artist.achievements || 'None listed'}
@@ -104,7 +104,9 @@ ${style === 'casual' ? 'Warm, personal tone — like messaging a fellow music fa
 - NEVER write "I hope this email finds you well"
 - NEVER invent achievements, numbers, or awards not in the profile
 - NEVER use vague superlatives without evidence
-- ALL text must be in English (translate Japanese content naturally)
+- ALL output text must be 100% English. ZERO Japanese characters allowed in the pitch or EPK.
+- If the artist description/bio is in Japanese, translate the MEANING into natural English. NEVER include the original Japanese text, not even in parentheses like "(楽しいバンドです)".
+- Do NOT put romanized Japanese or Japanese text in quotes, parentheses, or inline translations.
 - Keep pitch body under 180 words
 - ${socialLines.length > 0 ? 'DO include follower/listener counts as social proof — curators use these numbers to evaluate potential' : 'Do NOT invent follower counts'}
 
@@ -125,10 +127,14 @@ Start with "Subject: " line. Then the pitch. Then "---EPK---" separator. Then th
       .map(b => b.text)
       .join('\n');
 
+    // Strip any Japanese text in parentheses that may have leaked through
+    const stripJapaneseParens = (s) =>
+      s.replace(/\s*[（(][^）)]*[ぁ-んァ-ヶー一-龠][^）)]*[）)]/g, '');
+
     // Split pitch and EPK
     const parts = text.split('---EPK---');
-    const pitch = (parts[0] || '').trim();
-    const epk = (parts[1] || '').trim();
+    const pitch = stripJapaneseParens((parts[0] || '').trim());
+    const epk = stripJapaneseParens((parts[1] || '').trim());
 
     return NextResponse.json({
       pitch,

@@ -39,12 +39,31 @@ export async function POST(request) {
 
     // Build audio features section if data is available
     const trackDesc = describeTrackCharacteristics(trackFeatures);
+    const rawScores = trackFeatures ? [
+      trackFeatures.tempo ? `Tempo: ${Math.round(trackFeatures.tempo)} BPM` : null,
+      trackFeatures.energy != null ? `Energy: ${Math.round(trackFeatures.energy * 100)}/100` : null,
+      trackFeatures.danceability != null ? `Groove/Danceability: ${Math.round(trackFeatures.danceability * 100)}/100` : null,
+      trackFeatures.acousticness != null ? `Acousticness: ${Math.round(trackFeatures.acousticness * 100)}/100` : null,
+      trackFeatures.valence != null ? `Mood/Valence: ${Math.round(trackFeatures.valence * 100)}/100` : null,
+      trackFeatures.instrumentalness != null ? `Instrumentalness: ${Math.round(trackFeatures.instrumentalness * 100)}/100` : null,
+      trackFeatures.chill != null ? `Chill: ${Math.round(trackFeatures.chill * 100)}/100` : null,
+      trackFeatures.hype != null ? `Hype: ${Math.round(trackFeatures.hype * 100)}/100` : null,
+      trackFeatures.groove != null ? `Groove: ${Math.round(trackFeatures.groove * 100)}/100` : null,
+      trackFeatures.aggressive != null ? `Aggressive: ${Math.round(trackFeatures.aggressive * 100)}/100` : null,
+      trackFeatures.genres?.length > 0 ? `Detected Genres: ${trackFeatures.genres.join(', ')}` : null,
+      trackFeatures.note && trackFeatures.mode ? `Key: ${trackFeatures.note} ${trackFeatures.mode}` : null,
+    ].filter(Boolean).join('\n') : '';
     const audioSection = trackDesc.characteristics ? `
 ═══ TRACK ANALYSIS DATA ═══
 Musical characteristics: ${trackDesc.characteristics}
 ${trackDesc.genreText ? trackDesc.genreText : ''}
 ${trackDesc.moodText ? trackDesc.moodText : ''}
-Use these characteristics naturally in the pitch — weave them into vivid sound descriptions rather than listing them as data points.
+${rawScores ? `\nRaw scores:\n${rawScores}` : ''}
+
+IMPORTANT: Use these audio characteristics to write vivid, specific descriptions of the track's sound.
+Translate the numbers into evocative musical language — do NOT list them as data points.
+For example: Energy 65 + Groove 61 → "moderately energetic groove"; Acousticness 68 → "rich acoustic textures".
+If Detected Genres are available, weave them naturally into the pitch.
 ` : '';
 
     const prompt = `You are an expert music publicist who has successfully pitched hundreds of Japanese artists to international curators, playlist editors, bloggers, and radio hosts. You understand what makes curators open emails, click play, and add tracks.

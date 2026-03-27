@@ -8,7 +8,7 @@ import { analyzeTrack } from '@/lib/api-track';
 import { describeTrackCharacteristics } from '@/lib/track-description';
 import { getMatchLabel, rankCurators, calculateMatchScore } from '@/lib/match-score';
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 
 // ─── Constants ───
 const GENRES = ["Jazz","Fusion","Funk","City Pop","Lo-Fi","Electronic","Indie Rock","Alt Rock","Pop","Math Rock","Shoegaze","J-Rock","Hip-Hop","R&B","Experimental","Noise","Metal","Post Rock","Dream Pop","Neo-Soul","Soul","Instrumental","Prog","Punk","Visual Kei","World"];
@@ -676,7 +676,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
   const [pendingCuratorId, setPendingCuratorId] = useState(null);
   const [pendingCuratorName, setPendingCuratorName] = useState(null);
 
-  useEffect(() => {
+  const readUrlParams = useCallback(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const trackTitle = params.get('track_title');
@@ -685,6 +685,9 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       const artistGenre = params.get('artist_genre');
       const trackId    = params.get('track_id');
       if (trackTitle || songLink || artistName || artistGenre) {
+        // Clear stale data from previous track
+        setTrackData(null);
+        setSelected([]);
         setArtist(prev => ({
           ...prev,
           ...(songLink   ? { songLink }   : {}),
@@ -707,6 +710,21 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       }
     } catch {}
   }, []); // eslint-disable-line
+
+  useEffect(() => {
+    readUrlParams();
+  }, []); // eslint-disable-line
+
+  // ── Handle bfcache restoration (browser back/forward) ──
+  useEffect(() => {
+    const handlePageShow = (event) => {
+      if (event.persisted) {
+        readUrlParams();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, [readUrlParams]);
 
   // ── Auto-select curator when curators are loaded and pending ──
   useEffect(() => {

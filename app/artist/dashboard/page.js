@@ -1426,7 +1426,7 @@ function PromoToolkitModal({ track, artist, onClose }) {
   const [step, setStep] = useState('home'); // home | card | caption
   const [palette, setPalette] = useState(null);
   const [allPalettes, setAllPalettes] = useState([]);
-  const [template, setTemplate] = useState('new_release');
+  const [template, setTemplate] = useState('player');
   const [format, setFormat] = useState('feed');
   const [cardLoading, setCardLoading] = useState(false);
   const [cardUrl, setCardUrl] = useState(null);
@@ -1530,9 +1530,9 @@ function PromoToolkitModal({ track, artist, onClose }) {
   };
 
   const TEMPLATES = [
-    { value: 'new_release', label: 'New Release', icon: '🎵', desc: 'ジャケ写 + タイポグラフィ' },
-    { value: 'out_now', label: 'Out Now', icon: '🔥', desc: 'ボールドタイポ + 背景ぼかし' },
-    { value: 'streaming_now', label: 'Streaming', icon: '🎧', desc: 'スプリットレイアウト' },
+    { value: 'player', label: 'Player', icon: '🎵', desc: 'プレーヤーUIパネル' },
+    { value: 'vinyl', label: 'Vinyl', icon: '💿', desc: 'ジャケ写 + タイポグラフィ' },
+    { value: 'live', label: 'Live', icon: '🎸', desc: 'ライブ写真 + グラスパネル' },
   ];
   const FORMATS = [
     { value: 'feed', label: '⬜ Feed (1:1)' },

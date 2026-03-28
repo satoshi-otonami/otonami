@@ -107,102 +107,153 @@ function renderTemplate({ template, format, width, height, trackTitle, artistNam
 
 // ═══ Template 1: NEW RELEASE ═══
 function templateNewRelease({ containerStyle, isStory, width, height, trackTitle, artistName, formattedDate, genreTags, imageUrl, palette }) {
-  const titleSize = isStory ? 64 : 56;
-  const artistSize = isStory ? 28 : 24;
+  const titleSize = isStory ? 60 : 52;
+  const artistSize = isStory ? 26 : 22;
 
   return (
     <div style={{ ...containerStyle, background: palette.bg }}>
+      {/* グラデーションメッシュ背景（3レイヤー重ね） */}
       <div style={{
         position: 'absolute', inset: 0, display: 'flex',
-        background: palette.gradient, opacity: 0.15
+        background: `radial-gradient(ellipse at 20% 80%, ${palette.accent}18 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, ${palette.accent}12 0%, transparent 40%), radial-gradient(ellipse at 50% 50%, ${palette.accent}06 0%, transparent 70%)`
       }} />
 
+      {/* 装飾: 上部の細いアクセントライン */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: '4px',
+        display: 'flex', background: palette.gradient
+      }} />
+
+      {/* 装飾: コーナーの幾何学的サークル */}
+      <div style={{
+        position: 'absolute', top: isStory ? '80px' : '50px', right: isStory ? '50px' : '40px',
+        width: isStory ? '120px' : '80px', height: isStory ? '120px' : '80px',
+        borderRadius: '50%', border: `1.5px solid ${palette.accent}20`,
+        display: 'flex'
+      }} />
+      <div style={{
+        position: 'absolute', bottom: isStory ? '160px' : '100px', left: isStory ? '40px' : '30px',
+        width: isStory ? '60px' : '40px', height: isStory ? '60px' : '40px',
+        borderRadius: '50%', background: `${palette.accent}08`,
+        display: 'flex'
+      }} />
+
+      {/* メインコンテンツ */}
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center',
-        flex: 1, padding: isStory ? '120px 60px' : '80px 60px',
+        justifyContent: 'center', flex: 1,
+        padding: isStory ? '100px 56px' : '70px 56px',
         position: 'relative', zIndex: 1
       }}>
+        {/* NEW RELEASE ラベル — レタースペース広め */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '8px',
-          background: palette.tagBg, borderRadius: '999px',
-          padding: '8px 24px', marginBottom: '32px',
-          border: `1px solid ${palette.accent}40`
+          display: 'flex', alignItems: 'center', gap: '10px',
+          marginBottom: isStory ? '40px' : '28px'
         }}>
-          <span style={{ color: palette.accent, fontSize: 14, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>
-            ♪ New Release
+          <div style={{ width: '24px', height: '1.5px', background: palette.accent, display: 'flex' }} />
+          <span style={{
+            color: palette.accent, fontSize: 11, fontWeight: 600,
+            letterSpacing: '4px', textTransform: 'uppercase'
+          }}>
+            New Release
           </span>
+          <div style={{ width: '24px', height: '1.5px', background: palette.accent, display: 'flex' }} />
         </div>
 
+        {/* ジャケ写 — 角丸+シャドウで立体感 */}
         {imageUrl ? (
           <div style={{
-            display: 'flex', width: isStory ? 480 : 400, height: isStory ? 480 : 400,
-            borderRadius: '16px', overflow: 'hidden', marginBottom: '40px',
-            boxShadow: `0 20px 60px ${palette.accent}30`
+            display: 'flex', position: 'relative',
+            marginBottom: isStory ? '48px' : '36px'
           }}>
+            {/* シャドウレイヤー */}
+            <div style={{
+              position: 'absolute', inset: '8px',
+              borderRadius: '20px', background: palette.accent,
+              opacity: 0.15, filter: 'blur(30px)',
+              display: 'flex'
+            }} />
             <img
               src={imageUrl}
-              width={isStory ? 480 : 400}
-              height={isStory ? 480 : 400}
-              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+              width={isStory ? 400 : 320}
+              height={isStory ? 400 : 320}
+              style={{
+                objectFit: 'cover',
+                width: isStory ? '400px' : '320px',
+                height: isStory ? '400px' : '320px',
+                borderRadius: '20px',
+                position: 'relative'
+              }}
             />
           </div>
         ) : (
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: isStory ? 480 : 400, height: isStory ? 480 : 400,
-            borderRadius: '16px', marginBottom: '40px',
-            background: `${palette.accent}15`, border: `2px dashed ${palette.accent}40`
+            width: isStory ? 400 : 320, height: isStory ? 400 : 320,
+            borderRadius: '20px', marginBottom: isStory ? '48px' : '36px',
+            background: `linear-gradient(135deg, ${palette.accent}12, ${palette.accent}06)`,
+            border: `1px solid ${palette.accent}15`
           }}>
-            <span style={{ fontSize: 80, opacity: 0.5 }}>🎵</span>
+            <span style={{ fontSize: 64, opacity: 0.3 }}>♪</span>
           </div>
         )}
 
+        {/* 曲名 — 大きく、太く、インパクト */}
         <span style={{
-          color: palette.text, fontSize: titleSize, fontWeight: 700,
-          textAlign: 'center', lineHeight: 1.2, marginBottom: '12px',
-          maxWidth: '90%'
+          color: palette.text, fontSize: titleSize, fontWeight: 800,
+          textAlign: 'center', lineHeight: 1.1, marginBottom: '10px',
+          maxWidth: '92%', letterSpacing: '-1px'
         }}>
           {trackTitle}
         </span>
 
+        {/* アーティスト名 */}
         <span style={{
           color: palette.accent, fontSize: artistSize, fontWeight: 500,
-          textAlign: 'center', marginBottom: '24px'
+          textAlign: 'center', marginBottom: '20px', letterSpacing: '1px'
         }}>
           {artistName}
         </span>
 
-        {formattedDate && (
-          <span style={{
-            color: `${palette.text}80`, fontSize: 16, fontWeight: 400,
-            marginBottom: '24px'
-          }}>
-            {formattedDate}
-          </span>
-        )}
-
-        {genreTags.length > 0 && (
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            {genreTags.map((g, i) => (
-              <span key={i} style={{
-                background: palette.tagBg, color: palette.tagText,
-                padding: '6px 16px', borderRadius: '999px', fontSize: 13,
-                fontWeight: 500, border: `1px solid ${palette.accent}30`
-              }}>
-                {g}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* リリース日 + ジャンルを1行に */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {formattedDate && (
+            <span style={{
+              color: `${palette.text}50`, fontSize: 12, fontWeight: 400,
+              letterSpacing: '1px', textTransform: 'uppercase'
+            }}>
+              {formattedDate}
+            </span>
+          )}
+          {formattedDate && genreTags.length > 0 && (
+            <span style={{ color: `${palette.text}20`, fontSize: 12, display: 'flex' }}>•</span>
+          )}
+          {genreTags.map((g, i) => (
+            <span key={i} style={{
+              color: `${palette.text}45`, fontSize: 12, fontWeight: 400,
+              letterSpacing: '0.5px'
+            }}>
+              {g}
+            </span>
+          ))}
+        </div>
       </div>
 
+      {/* フッター: OTONAMIブランド */}
       <div style={{
-        display: 'flex', justifyContent: 'center', paddingBottom: '40px',
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        paddingBottom: isStory ? '60px' : '36px', gap: '8px',
         position: 'relative', zIndex: 1
       }}>
-        <span style={{ color: `${palette.text}30`, fontSize: 12, letterSpacing: '3px', textTransform: 'uppercase' }}>
-          otonami.io
+        <div style={{
+          width: '18px', height: '18px', borderRadius: '50%',
+          background: palette.gradient, display: 'flex'
+        }} />
+        <span style={{
+          color: `${palette.text}35`, fontSize: 11, fontWeight: 500,
+          letterSpacing: '2.5px', textTransform: 'uppercase'
+        }}>
+          OTONAMI
         </span>
       </div>
     </div>
@@ -211,64 +262,87 @@ function templateNewRelease({ containerStyle, isStory, width, height, trackTitle
 
 // ═══ Template 2: OUT NOW ═══
 function templateOutNow({ containerStyle, isStory, width, height, trackTitle, artistName, formattedDate, genreTags, imageUrl, palette }) {
-  const titleSize = isStory ? 72 : 64;
-  const artistSize = isStory ? 32 : 28;
+  const titleSize = isStory ? 80 : 72;
 
   return (
     <div style={{ ...containerStyle, background: palette.bg }}>
+      {/* 背景画像ぼかし */}
       {imageUrl && (
-        <div style={{ position: 'absolute', inset: 0, display: 'flex' }}>
-          <img src={imageUrl} width={width} height={height} style={{ objectFit: 'cover', width: '100%', height: '100%', opacity: 0.3 }} />
+        <div style={{ position: 'absolute', inset: '-20px', display: 'flex', overflow: 'hidden' }}>
+          <img src={imageUrl} width={width + 40} height={height + 40}
+            style={{ objectFit: 'cover', width: '100%', height: '100%', opacity: 0.2 }} />
         </div>
       )}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', background: `${palette.bg}cc` }} />
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', background: palette.gradient, opacity: 0.08 }} />
+      {/* ダークオーバーレイ */}
+      <div style={{
+        position: 'absolute', inset: 0, display: 'flex',
+        background: `linear-gradient(180deg, ${palette.bg}f0 0%, ${palette.bg}dd 40%, ${palette.bg}f5 100%)`
+      }} />
+      {/* グラデーションメッシュ */}
+      <div style={{
+        position: 'absolute', inset: 0, display: 'flex',
+        background: `radial-gradient(ellipse at 30% 70%, ${palette.accent}15 0%, transparent 50%), radial-gradient(ellipse at 70% 30%, ${palette.accent}10 0%, transparent 40%)`
+      }} />
 
+      {/* 装飾: 上下のアクセントライン */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', display: 'flex', background: palette.gradient }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '4px', display: 'flex', background: palette.gradient }} />
+
+      {/* メインコンテンツ — 中央寄せ */}
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', flex: 1,
-        padding: isStory ? '120px 60px' : '80px 60px',
+        padding: isStory ? '120px 48px' : '60px 48px',
         position: 'relative', zIndex: 1
       }}>
+        {/* OUT NOW ラベル */}
         <span style={{
-          color: palette.accent, fontSize: 18, fontWeight: 700,
-          letterSpacing: '6px', textTransform: 'uppercase', marginBottom: '24px'
+          color: palette.accent, fontSize: 13, fontWeight: 700,
+          letterSpacing: '8px', textTransform: 'uppercase',
+          marginBottom: '12px'
         }}>
           OUT NOW
         </span>
 
-        <div style={{ display: 'flex', width: '60px', height: '3px', background: palette.accent, marginBottom: '40px', borderRadius: '2px' }} />
+        {/* 装飾ライン */}
+        <div style={{
+          display: 'flex', width: '40px', height: '2px',
+          background: palette.accent, marginBottom: isStory ? '48px' : '32px',
+          borderRadius: '1px'
+        }} />
 
+        {/* 曲名 — 超大型タイポ */}
         <span style={{
-          color: palette.text, fontSize: titleSize, fontWeight: 700,
-          textAlign: 'center', lineHeight: 1.1, marginBottom: '20px',
-          maxWidth: '90%'
+          color: palette.text, fontSize: titleSize, fontWeight: 900,
+          textAlign: 'center', lineHeight: 1.0, marginBottom: '16px',
+          maxWidth: '95%', letterSpacing: '-2px',
+          textShadow: `0 2px 40px ${palette.accent}20`
         }}>
           {trackTitle}
         </span>
 
+        {/* アクセントライン（曲名の下） */}
+        <div style={{
+          display: 'flex', width: '60px', height: '3px',
+          background: palette.gradient, marginBottom: '20px',
+          borderRadius: '2px'
+        }} />
+
+        {/* アーティスト名 */}
         <span style={{
-          color: palette.accent, fontSize: artistSize, fontWeight: 500,
-          textAlign: 'center', marginBottom: '32px'
+          color: palette.accent, fontSize: isStory ? 24 : 20, fontWeight: 500,
+          textAlign: 'center', letterSpacing: '2px', marginBottom: '28px'
         }}>
           {artistName}
         </span>
 
-        {formattedDate && (
-          <span style={{
-            color: `${palette.text}60`, fontSize: 15, fontWeight: 400, marginBottom: '28px'
-          }}>
-            {formattedDate}
-          </span>
-        )}
-
+        {/* ジャンルタグ */}
         {genreTags.length > 0 && (
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
             {genreTags.map((g, i) => (
               <span key={i} style={{
-                background: palette.tagBg, color: palette.tagText,
-                padding: '6px 16px', borderRadius: '999px', fontSize: 13,
-                fontWeight: 500
+                color: `${palette.text}40`, fontSize: 11,
+                letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 400
               }}>
                 {g}
               </span>
@@ -277,8 +351,22 @@ function templateOutNow({ containerStyle, isStory, width, height, trackTitle, ar
         )}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '40px', position: 'relative', zIndex: 1 }}>
-        <span style={{ color: `${palette.text}30`, fontSize: 12, letterSpacing: '3px', textTransform: 'uppercase' }}>otonami.io</span>
+      {/* フッター */}
+      <div style={{
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        paddingBottom: isStory ? '60px' : '36px', gap: '8px',
+        position: 'relative', zIndex: 1
+      }}>
+        <div style={{
+          width: '18px', height: '18px', borderRadius: '50%',
+          background: palette.gradient, display: 'flex'
+        }} />
+        <span style={{
+          color: `${palette.text}35`, fontSize: 11, fontWeight: 500,
+          letterSpacing: '2.5px', textTransform: 'uppercase'
+        }}>
+          OTONAMI
+        </span>
       </div>
     </div>
   );
@@ -286,64 +374,117 @@ function templateOutNow({ containerStyle, isStory, width, height, trackTitle, ar
 
 // ═══ Template 3: STREAMING NOW ═══
 function templateStreamingNow({ containerStyle, isStory, width, height, trackTitle, artistName, formattedDate, genreTags, imageUrl, palette }) {
-  const titleSize = isStory ? 56 : 48;
-  const artistSize = isStory ? 26 : 22;
+  const imageHeight = isStory ? Math.round(height * 0.55) : Math.round(height * 0.5);
+  const titleSize = isStory ? 48 : 44;
 
   return (
     <div style={{ ...containerStyle, background: palette.bg }}>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', background: palette.gradient, opacity: 0.1 }} />
-
+      {/* 上半分: ジャケ写エリア */}
       <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', flex: 1,
-        padding: isStory ? '120px 60px' : '80px 60px',
-        position: 'relative', zIndex: 1
+        display: 'flex', position: 'relative',
+        width: '100%', height: `${imageHeight}px`, overflow: 'hidden'
       }}>
-        {imageUrl && (
+        {imageUrl ? (
+          <img src={imageUrl} width={width} height={imageHeight}
+            style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
+        ) : (
           <div style={{
-            display: 'flex', width: isStory ? 280 : 240, height: isStory ? 280 : 240,
-            borderRadius: '12px', overflow: 'hidden', marginBottom: '32px',
-            boxShadow: `0 12px 40px ${palette.accent}25`
+            display: 'flex', width: '100%', height: '100%',
+            alignItems: 'center', justifyContent: 'center',
+            background: `linear-gradient(135deg, ${palette.accent}15, ${palette.accent}05)`
           }}>
-            <img src={imageUrl} width={isStory ? 280 : 240} height={isStory ? 280 : 240} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
+            <span style={{ fontSize: 80, opacity: 0.15 }}>♪</span>
           </div>
         )}
+        {/* 下部のフェード */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: '80px',
+          display: 'flex',
+          background: `linear-gradient(0deg, ${palette.bg} 0%, transparent 100%)`
+        }} />
 
+        {/* 左上に STREAMING NOW バッジ */}
+        <div style={{
+          position: 'absolute', top: '24px', left: '24px',
+          display: 'flex', alignItems: 'center', gap: '6px',
+          background: `${palette.bg}cc`, backdropFilter: 'blur(12px)',
+          padding: '8px 16px', borderRadius: '999px'
+        }}>
+          <span style={{
+            width: '8px', height: '8px', borderRadius: '50%',
+            background: '#22c55e', display: 'flex'
+          }} />
+          <span style={{
+            color: palette.text, fontSize: 10, fontWeight: 600,
+            letterSpacing: '2px', textTransform: 'uppercase'
+          }}>
+            Streaming Now
+          </span>
+        </div>
+      </div>
+
+      {/* 下半分: テキストエリア */}
+      <div style={{
+        display: 'flex', flexDirection: 'column',
+        flex: 1, padding: isStory ? '20px 48px 60px' : '16px 48px 36px',
+        justifyContent: 'center', alignItems: 'center',
+        position: 'relative', zIndex: 1
+      }}>
+        {/* グラデーションメッシュ */}
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex',
+          background: `radial-gradient(ellipse at 50% 0%, ${palette.accent}10 0%, transparent 60%)`
+        }} />
+
+        {/* 曲名 */}
         <span style={{
-          color: palette.text, fontSize: titleSize, fontWeight: 700,
-          textAlign: 'center', lineHeight: 1.2, marginBottom: '8px', maxWidth: '90%'
+          color: palette.text, fontSize: titleSize, fontWeight: 800,
+          textAlign: 'center', lineHeight: 1.1, marginBottom: '8px',
+          maxWidth: '95%', letterSpacing: '-1px', position: 'relative'
         }}>
           {trackTitle}
         </span>
 
+        {/* アーティスト名 */}
         <span style={{
-          color: palette.accent, fontSize: artistSize, fontWeight: 500,
-          textAlign: 'center', marginBottom: '32px'
+          color: palette.accent, fontSize: isStory ? 20 : 18, fontWeight: 500,
+          textAlign: 'center', marginBottom: '20px', letterSpacing: '1px',
+          position: 'relative'
         }}>
           {artistName}
         </span>
 
+        {/* プラットフォーム表示 */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: '12px',
-          background: palette.tagBg, borderRadius: '12px',
-          padding: '16px 32px', marginBottom: '24px',
-          border: `1px solid ${palette.accent}30`
+          display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center',
+          position: 'relative'
         }}>
-          <span style={{ color: palette.accent, fontSize: 15, fontWeight: 600 }}>
-            🎧 Streaming Now on All Platforms
-          </span>
+          {['Spotify', 'Apple Music', 'YouTube Music'].map((p, i) => (
+            <span key={i} style={{
+              color: `${palette.text}35`, fontSize: 11,
+              letterSpacing: '1px', fontWeight: 400
+            }}>
+              {p}
+            </span>
+          ))}
         </div>
 
-        <span style={{
-          color: `${palette.text}50`, fontSize: 13, fontWeight: 400,
-          textAlign: 'center'
+        {/* OTONAMIロゴ */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '6px',
+          marginTop: 'auto', paddingTop: '20px', position: 'relative'
         }}>
-          Spotify • Apple Music • YouTube Music • Amazon Music
-        </span>
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '40px', position: 'relative', zIndex: 1 }}>
-        <span style={{ color: `${palette.text}30`, fontSize: 12, letterSpacing: '3px', textTransform: 'uppercase' }}>otonami.io</span>
+          <div style={{
+            width: '14px', height: '14px', borderRadius: '50%',
+            background: palette.gradient, display: 'flex'
+          }} />
+          <span style={{
+            color: `${palette.text}30`, fontSize: 10, fontWeight: 500,
+            letterSpacing: '2px', textTransform: 'uppercase'
+          }}>
+            OTONAMI
+          </span>
+        </div>
       </div>
     </div>
   );

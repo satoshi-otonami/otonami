@@ -828,12 +828,14 @@ export default function ArtistDashboard() {
                         {/* Action area */}
                         <div style={{ width: 180, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
                           <button onClick={(e) => { e.stopPropagation(); setPromoTrack(track); setShowPromoModal(true); }} style={{
-                            padding: '6px 12px', borderRadius: 9999, background: THEME.goldLight, color: THEME.gold,
-                            fontSize: 11, fontWeight: 600, border: `1px solid ${THEME.gold}40`, cursor: 'pointer',
-                            whiteSpace: 'nowrap', fontFamily: THEME.font, transition: 'all 0.15s',
+                            background: '#1a1a1a', color: '#c4956a',
+                            border: '1.5px solid #c4956a', borderRadius: 9999,
+                            padding: '8px 18px', fontSize: 13, fontWeight: 600,
+                            cursor: 'pointer', whiteSpace: 'nowrap',
+                            fontFamily: THEME.font, transition: 'all 0.2s',
                           }}
-                            onMouseEnter={e => { e.currentTarget.style.background = THEME.gold; e.currentTarget.style.color = '#fff'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = THEME.goldLight; e.currentTarget.style.color = THEME.gold; }}
+                            onMouseEnter={e => { e.currentTarget.style.background = '#c4956a'; e.currentTarget.style.color = '#fff'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#c4956a'; }}
                           >🎨 プロモ</button>
                           <a href={buildPitchUrl(track)} onClick={e => e.stopPropagation()} style={{
                             padding: '6px 14px', borderRadius: 9999, background: THEME.coral, color: '#fff',
@@ -1528,14 +1530,42 @@ function PromoToolkitModal({ track, artist, onClose }) {
   };
 
   const TEMPLATES = [
-    { value: 'new_release', label: '🎵 New Release' },
-    { value: 'out_now', label: '🔥 Out Now' },
-    { value: 'streaming_now', label: '🎧 Streaming Now' },
+    { value: 'new_release', label: 'New Release', icon: '🎵', desc: 'ジャケ写 + タイポグラフィ' },
+    { value: 'out_now', label: 'Out Now', icon: '🔥', desc: 'ボールドタイポ + 背景ぼかし' },
+    { value: 'streaming_now', label: 'Streaming', icon: '🎧', desc: 'スプリットレイアウト' },
   ];
   const FORMATS = [
     { value: 'feed', label: '⬜ Feed (1:1)' },
     { value: 'story', label: '📱 Story (9:16)' },
   ];
+  const paletteOptions = [
+    { key: 'vivid', label: '🔥 Vivid', color: '#e85d3a', gradient: 'linear-gradient(135deg, #e85d3a, #ff8a5c, #c4956a)' },
+    { key: 'earth', label: '🌿 Earth', color: '#7a8c5e', gradient: 'linear-gradient(135deg, #4a5c3a, #7a8c5e, #c4956a)' },
+    { key: 'neon', label: '⚡ Neon', color: '#a78bfa', gradient: 'linear-gradient(135deg, #a78bfa, #4ecdc4, #06b6d4)' },
+    { key: 'moody', label: '🌙 Moody', color: '#6366f1', gradient: 'linear-gradient(135deg, #312e81, #6366f1, #818cf8)' },
+    { key: 'warm', label: '✨ Warm', color: '#c4956a', gradient: 'linear-gradient(135deg, #c4956a, #e85d3a, #c4956a)' },
+  ];
+
+  // 3c: 自動プレビュー — テンプレート/フォーマット/パレット変更時に自動生成
+  const generatePreviewRef = useRef(null);
+  generatePreviewRef.current = generateCard;
+  useEffect(() => {
+    if (step === 'card' && palette) {
+      const timer = setTimeout(() => generatePreviewRef.current(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [template, format, palette, step]);
+
+  // 4b: キャプション画面遷移時に自動生成
+  const generateCaptionsRef = useRef(null);
+  generateCaptionsRef.current = generateCaptions;
+  const captionsGeneratedRef = useRef(false);
+  useEffect(() => {
+    if (step === 'caption' && !captions && !captionLoading && !captionsGeneratedRef.current) {
+      captionsGeneratedRef.current = true;
+      generateCaptionsRef.current();
+    }
+  }, [step, captions, captionLoading]);
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: 20 }}
@@ -1572,6 +1602,11 @@ function PromoToolkitModal({ track, artist, onClose }) {
                     <span style={{ color: palette.text, fontSize: 14, fontWeight: 600, fontFamily: THEME.font }}>{palette.label}</span>
                     <span style={{ color: `${palette.text}60`, fontSize: 12 }}>— auto selected</span>
                   </div>
+                  {/* パレットのグラデーションバー */}
+                  <div style={{
+                    height: 6, borderRadius: 3, marginBottom: 12, overflow: 'hidden',
+                    background: paletteOptions.find(o => o.key === palette.name)?.gradient || palette.accent,
+                  }} />
                   <div style={{ display: 'flex', gap: 6 }}>
                     {allPalettes.map(p => (
                       <button key={p.name} onClick={() => setPalette(p)} style={{
@@ -1623,22 +1658,28 @@ function PromoToolkitModal({ track, artist, onClose }) {
           {step === 'card' && (
             <div>
               <SectionLabel>テンプレート</SectionLabel>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
                 {TEMPLATES.map(t => (
-                  <button key={t.value} onClick={() => { setTemplate(t.value); setCardUrl(null); }} style={{
-                    padding: '8px 16px', borderRadius: 9999, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                    fontFamily: THEME.font, transition: 'all 0.15s',
-                    background: template === t.value ? THEME.gold : THEME.card,
-                    color: template === t.value ? '#fff' : THEME.textSub,
-                    border: `1.5px solid ${template === t.value ? THEME.gold : THEME.border}`,
-                  }}>{t.label}</button>
+                  <button key={t.value} onClick={() => setTemplate(t.value)} style={{
+                    flex: 1, padding: '14px 10px', borderRadius: 14,
+                    border: template === t.value ? '2.5px solid #c4956a' : '2px solid #e5e2dc',
+                    background: template === t.value ? '#faf6f1' : '#fff',
+                    cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s',
+                    transform: template === t.value ? 'scale(1.02)' : 'scale(1)',
+                    boxShadow: template === t.value ? '0 4px 16px rgba(196,149,106,0.15)' : 'none',
+                    fontFamily: THEME.font,
+                  }}>
+                    <div style={{ fontSize: 24, marginBottom: 6 }}>{t.icon}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>{t.label}</div>
+                    <div style={{ fontSize: 10, color: '#999', marginTop: 3, lineHeight: 1.3 }}>{t.desc}</div>
+                  </button>
                 ))}
               </div>
 
               <SectionLabel>フォーマット</SectionLabel>
               <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
                 {FORMATS.map(f => (
-                  <button key={f.value} onClick={() => { setFormat(f.value); setCardUrl(null); }} style={{
+                  <button key={f.value} onClick={() => setFormat(f.value)} style={{
                     padding: '8px 16px', borderRadius: 9999, fontSize: 13, fontWeight: 600, cursor: 'pointer',
                     fontFamily: THEME.font, transition: 'all 0.15s',
                     background: format === f.value ? THEME.gold : THEME.card,
@@ -1648,48 +1689,61 @@ function PromoToolkitModal({ track, artist, onClose }) {
                 ))}
               </div>
 
-              {/* Palette selector */}
+              {/* カラーパレット — グラデーションプレビュー付き */}
               {allPalettes.length > 0 && (
                 <>
                   <SectionLabel>カラーパレット</SectionLabel>
                   <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
-                    {allPalettes.map(p => (
-                      <button key={p.name} onClick={() => { setPalette(p); setCardUrl(null); }} style={{
-                        display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, fontSize: 12, fontWeight: 600,
-                        cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s',
-                        background: palette?.name === p.name ? p.accent + '20' : THEME.card,
-                        color: palette?.name === p.name ? p.accent : THEME.textSub,
-                        border: `1.5px solid ${palette?.name === p.name ? p.accent : THEME.border}`,
-                      }}>
-                        <span style={{ width: 12, height: 12, borderRadius: 4, background: p.accent, display: 'inline-block' }} />
-                        {p.label}
-                      </button>
-                    ))}
+                    {allPalettes.map(p => {
+                      const po = paletteOptions.find(o => o.key === p.name);
+                      return (
+                        <button key={p.name} onClick={() => setPalette(p)} style={{
+                          padding: 0, borderRadius: 12, cursor: 'pointer', overflow: 'hidden',
+                          transition: 'all 0.2s', minWidth: 80, flex: '1 1 0',
+                          border: palette?.name === p.name ? `2.5px solid ${p.accent}` : '2px solid #e5e2dc',
+                          background: '#fff',
+                          transform: palette?.name === p.name ? 'scale(1.05)' : 'scale(1)',
+                          fontFamily: THEME.font,
+                        }}>
+                          <div style={{
+                            height: 24, width: '100%',
+                            background: po?.gradient || p.accent,
+                          }} />
+                          <div style={{
+                            padding: '6px 8px', fontSize: 11, fontWeight: 600, textAlign: 'center',
+                            color: palette?.name === p.name ? p.accent : '#6b6560',
+                          }}>
+                            {p.label}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </>
               )}
 
-              <button onClick={generateCard} disabled={cardLoading} style={{
-                width: '100%', padding: '14px', borderRadius: 100, background: cardLoading ? THEME.border : THEME.coral,
-                border: 'none', color: '#fff', fontSize: 15, fontWeight: 700, cursor: cardLoading ? 'not-allowed' : 'pointer',
-                fontFamily: THEME.font, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              }}>
-                {cardLoading ? (
-                  <>
-                    <svg width="18" height="18" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="3" fill="none" strokeDasharray="31.4 31.4" strokeLinecap="round" /></svg>
-                    生成中...
-                  </>
-                ) : '🖼 カードを生成'}
-              </button>
+              {/* プレビューエリア — 自動生成 */}
+              {cardLoading && (
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="10" stroke={THEME.gold} strokeWidth="3" fill="none" strokeDasharray="31.4 31.4" strokeLinecap="round" /></svg>
+                  <p style={{ color: THEME.textSub, fontSize: 14, marginTop: 12, fontFamily: THEME.font }}>カードを生成中...</p>
+                </div>
+              )}
 
-              {cardUrl && (
-                <div style={{ marginTop: 20, textAlign: 'center' }}>
+              {cardUrl && !cardLoading && (
+                <div style={{ marginTop: 8, textAlign: 'center' }}>
                   <img src={cardUrl} alt="Promo card" style={{ maxWidth: '100%', maxHeight: 400, borderRadius: 12, border: `1px solid ${THEME.border}` }} />
+                  {/* ジャンル未設定の案内 */}
+                  {!track.genre && !(track.audio_features?.genres?.length > 0) && (
+                    <p style={{ fontSize: 12, color: THEME.textMuted, marginTop: 8, fontFamily: THEME.font }}>
+                      💡 楽曲を分析するとジャンルタグが自動追加されます
+                    </p>
+                  )}
                   <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
                     <button onClick={downloadCard} style={{
                       padding: '10px 24px', borderRadius: 9999, background: THEME.gold, color: '#fff',
                       fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: THEME.font,
-                    }}>⬇ ダウンロード</button>
+                    }}>📥 PNG をダウンロード ({format === 'feed' ? '1080×1080' : '1080×1920'})</button>
                     <button onClick={generateCard} style={{
                       padding: '10px 24px', borderRadius: 9999, background: THEME.card, color: THEME.textSub,
                       fontSize: 13, fontWeight: 600, border: `1.5px solid ${THEME.border}`, cursor: 'pointer', fontFamily: THEME.font,
@@ -1703,13 +1757,6 @@ function PromoToolkitModal({ track, artist, onClose }) {
           {/* ── CAPTION STEP ── */}
           {step === 'caption' && (
             <div>
-              {!captions && !captionLoading && (
-                <button onClick={generateCaptions} style={{
-                  width: '100%', padding: '14px', borderRadius: 100, background: THEME.coral,
-                  border: 'none', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
-                  fontFamily: THEME.font, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}>✍️ キャプションを生成</button>
-              )}
 
               {captionLoading && (
                 <div style={{ textAlign: 'center', padding: '40px 0' }}>

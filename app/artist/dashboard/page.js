@@ -176,6 +176,10 @@ export default function ArtistDashboard() {
   const [showTrackSelectModal, setShowTrackSelectModal] = useState(false);
   const [pendingCuratorForPitch, setPendingCuratorForPitch] = useState(null);
 
+  // Promo toolkit
+  const [showPromoModal, setShowPromoModal] = useState(false);
+  const [promoTrack, setPromoTrack] = useState(null);
+
   // Header dropdown
   const [headerMenu, setHeaderMenu] = useState(false);
   const headerMenuRef = useRef(null);
@@ -822,7 +826,15 @@ export default function ArtistDashboard() {
                         </div>
 
                         {/* Action area */}
-                        <div style={{ width: 120, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                        <div style={{ width: 180, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                          <button onClick={(e) => { e.stopPropagation(); setPromoTrack(track); setShowPromoModal(true); }} style={{
+                            padding: '6px 12px', borderRadius: 9999, background: THEME.goldLight, color: THEME.gold,
+                            fontSize: 11, fontWeight: 600, border: `1px solid ${THEME.gold}40`, cursor: 'pointer',
+                            whiteSpace: 'nowrap', fontFamily: THEME.font, transition: 'all 0.15s',
+                          }}
+                            onMouseEnter={e => { e.currentTarget.style.background = THEME.gold; e.currentTarget.style.color = '#fff'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = THEME.goldLight; e.currentTarget.style.color = THEME.gold; }}
+                          >🎨 プロモ</button>
                           <a href={buildPitchUrl(track)} onClick={e => e.stopPropagation()} style={{
                             padding: '6px 14px', borderRadius: 9999, background: THEME.coral, color: '#fff',
                             fontSize: 12, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap',
@@ -1361,6 +1373,15 @@ export default function ArtistDashboard() {
         </div>
       )}
 
+      {/* ── Promo Toolkit Modal ── */}
+      {showPromoModal && promoTrack && (
+        <PromoToolkitModal
+          track={promoTrack}
+          artist={artist}
+          onClose={() => { setShowPromoModal(false); setPromoTrack(null); }}
+        />
+      )}
+
       {/* ── Delete Confirm ── */}
       {deleteConfirm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: 20 }}
@@ -1381,6 +1402,391 @@ export default function ArtistDashboard() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   Section Label (shared)
+   ══════════════════════════════════════════════ */
+function SectionLabel({ children }) {
+  return (
+    <div style={{ fontSize: 11, fontWeight: 700, color: THEME.textMuted, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: 12, fontFamily: THEME.font }}>
+      {children}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   Promo Toolkit Modal
+   ══════════════════════════════════════════════ */
+function PromoToolkitModal({ track, artist, onClose }) {
+  const [step, setStep] = useState('home'); // home | card | caption
+  const [palette, setPalette] = useState(null);
+  const [allPalettes, setAllPalettes] = useState([]);
+  const [template, setTemplate] = useState('new_release');
+  const [format, setFormat] = useState('feed');
+  const [cardLoading, setCardLoading] = useState(false);
+  const [cardUrl, setCardUrl] = useState(null);
+
+  const [captions, setCaptions] = useState(null);
+  const [captionLoading, setCaptionLoading] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(null);
+
+  // パレット取得
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/promo/palette', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ audioFeatures: track.audio_features || {} }),
+        });
+        const data = await res.json();
+        setPalette(data.selected);
+        setAllPalettes(data.all);
+      } catch (e) {
+        console.error('Palette fetch error:', e);
+      }
+    })();
+  }, [track]);
+
+  // カード生成
+  const generateCard = async () => {
+    setCardLoading(true);
+    setCardUrl(null);
+    try {
+      const res = await fetch('/api/promo/card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          template,
+          format,
+          trackTitle: track.title,
+          artistName: artist.name,
+          releaseDate: track.release_date,
+          genres: track.genre ? [track.genre] : [],
+          imageUrl: track.cover_image_url || null,
+          palette: palette?.name,
+          audioFeatures: track.audio_features || {},
+        }),
+      });
+      if (!res.ok) throw new Error('Card generation failed');
+      const blob = await res.blob();
+      setCardUrl(URL.createObjectURL(blob));
+    } catch (e) {
+      console.error('Card generation error:', e);
+      alert('カード生成に失敗しました');
+    } finally {
+      setCardLoading(false);
+    }
+  };
+
+  // キャプション生成
+  const generateCaptions = async () => {
+    setCaptionLoading(true);
+    setCaptions(null);
+    try {
+      const res = await fetch('/api/promo/caption', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trackTitle: track.title,
+          artistName: artist.name,
+          genres: track.genre ? [track.genre] : [],
+          moods: track.audio_features?.moods || [],
+          releaseDate: track.release_date,
+          bio: artist.bio,
+          spotifyUrl: track.spotify_url,
+          youtubeUrl: track.youtube_url,
+          language: 'both',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) setCaptions(data.captions);
+      else throw new Error(data.error);
+    } catch (e) {
+      console.error('Caption generation error:', e);
+      alert('キャプション生成に失敗しました');
+    } finally {
+      setCaptionLoading(false);
+    }
+  };
+
+  const copyText = (text, key) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 1500);
+  };
+
+  const downloadCard = () => {
+    if (!cardUrl) return;
+    const a = document.createElement('a');
+    a.href = cardUrl;
+    a.download = `otonami-${template}-${format}.png`;
+    a.click();
+  };
+
+  const TEMPLATES = [
+    { value: 'new_release', label: '🎵 New Release' },
+    { value: 'out_now', label: '🔥 Out Now' },
+    { value: 'streaming_now', label: '🎧 Streaming Now' },
+  ];
+  const FORMATS = [
+    { value: 'feed', label: '⬜ Feed (1:1)' },
+    { value: 'story', label: '📱 Story (9:16)' },
+  ];
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: 20 }}
+      onClick={onClose}
+    >
+      <div style={{ background: THEME.card, borderRadius: 20, maxWidth: 640, width: '100%', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.15)', position: 'relative' }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ padding: '24px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            {step !== 'home' && (
+              <button onClick={() => setStep('home')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: THEME.textMuted, fontSize: 13, fontFamily: THEME.font, marginBottom: 4 }}>
+                ← 戻る
+              </button>
+            )}
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: THEME.text, margin: 0, fontFamily: THEME.font }}>
+              🎨 プロモ素材
+            </h2>
+            <p style={{ fontSize: 13, color: THEME.textSub, margin: '4px 0 0' }}>{track.title}</p>
+          </div>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', border: `1px solid ${THEME.border}`, background: 'none', cursor: 'pointer', fontSize: 16, color: THEME.textMuted, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+        </div>
+
+        <div style={{ padding: '24px 28px 28px' }}>
+          {/* ── HOME ── */}
+          {step === 'home' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Palette preview */}
+              {palette && (
+                <div style={{ background: palette.bg, borderRadius: 14, padding: '20px 24px', border: `1px solid ${THEME.border}` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: 6, background: palette.accent }} />
+                    <span style={{ color: palette.text, fontSize: 14, fontWeight: 600, fontFamily: THEME.font }}>{palette.label}</span>
+                    <span style={{ color: `${palette.text}60`, fontSize: 12 }}>— auto selected</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {allPalettes.map(p => (
+                      <button key={p.name} onClick={() => setPalette(p)} style={{
+                        width: 28, height: 28, borderRadius: 8, background: p.accent, border: palette.name === p.name ? '2px solid #fff' : '2px solid transparent',
+                        cursor: 'pointer', boxShadow: palette.name === p.name ? `0 0 0 2px ${p.accent}` : 'none', transition: 'all 0.15s',
+                      }} title={p.label} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Card button */}
+              <button onClick={() => setStep('card')} style={{
+                display: 'flex', alignItems: 'center', gap: 16, padding: '20px 24px', borderRadius: 14,
+                background: THEME.card, border: `1.5px solid ${THEME.border}`, cursor: 'pointer', textAlign: 'left',
+                transition: 'all 0.15s', fontFamily: THEME.font,
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = THEME.gold; e.currentTarget.style.background = '#faf9f7'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = THEME.border; e.currentTarget.style.background = THEME.card; }}
+              >
+                <span style={{ fontSize: 32 }}>🖼</span>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: THEME.text }}>プロモカード</div>
+                  <div style={{ fontSize: 12, color: THEME.textSub, marginTop: 2 }}>SNS用の画像を生成（Feed / Story）</div>
+                </div>
+                <span style={{ marginLeft: 'auto', color: THEME.textMuted, fontSize: 18 }}>→</span>
+              </button>
+
+              {/* Caption button */}
+              <button onClick={() => setStep('caption')} style={{
+                display: 'flex', alignItems: 'center', gap: 16, padding: '20px 24px', borderRadius: 14,
+                background: THEME.card, border: `1.5px solid ${THEME.border}`, cursor: 'pointer', textAlign: 'left',
+                transition: 'all 0.15s', fontFamily: THEME.font,
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = THEME.gold; e.currentTarget.style.background = '#faf9f7'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = THEME.border; e.currentTarget.style.background = THEME.card; }}
+              >
+                <span style={{ fontSize: 32 }}>✍️</span>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: THEME.text }}>SNSキャプション</div>
+                  <div style={{ fontSize: 12, color: THEME.textSub, marginTop: 2 }}>Instagram / X / Facebook 用の投稿文 + ハッシュタグ</div>
+                </div>
+                <span style={{ marginLeft: 'auto', color: THEME.textMuted, fontSize: 18 }}>→</span>
+              </button>
+            </div>
+          )}
+
+          {/* ── CARD STEP ── */}
+          {step === 'card' && (
+            <div>
+              <SectionLabel>テンプレート</SectionLabel>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+                {TEMPLATES.map(t => (
+                  <button key={t.value} onClick={() => { setTemplate(t.value); setCardUrl(null); }} style={{
+                    padding: '8px 16px', borderRadius: 9999, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: THEME.font, transition: 'all 0.15s',
+                    background: template === t.value ? THEME.gold : THEME.card,
+                    color: template === t.value ? '#fff' : THEME.textSub,
+                    border: `1.5px solid ${template === t.value ? THEME.gold : THEME.border}`,
+                  }}>{t.label}</button>
+                ))}
+              </div>
+
+              <SectionLabel>フォーマット</SectionLabel>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+                {FORMATS.map(f => (
+                  <button key={f.value} onClick={() => { setFormat(f.value); setCardUrl(null); }} style={{
+                    padding: '8px 16px', borderRadius: 9999, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: THEME.font, transition: 'all 0.15s',
+                    background: format === f.value ? THEME.gold : THEME.card,
+                    color: format === f.value ? '#fff' : THEME.textSub,
+                    border: `1.5px solid ${format === f.value ? THEME.gold : THEME.border}`,
+                  }}>{f.label}</button>
+                ))}
+              </div>
+
+              {/* Palette selector */}
+              {allPalettes.length > 0 && (
+                <>
+                  <SectionLabel>カラーパレット</SectionLabel>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+                    {allPalettes.map(p => (
+                      <button key={p.name} onClick={() => { setPalette(p); setCardUrl(null); }} style={{
+                        display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, fontSize: 12, fontWeight: 600,
+                        cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s',
+                        background: palette?.name === p.name ? p.accent + '20' : THEME.card,
+                        color: palette?.name === p.name ? p.accent : THEME.textSub,
+                        border: `1.5px solid ${palette?.name === p.name ? p.accent : THEME.border}`,
+                      }}>
+                        <span style={{ width: 12, height: 12, borderRadius: 4, background: p.accent, display: 'inline-block' }} />
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <button onClick={generateCard} disabled={cardLoading} style={{
+                width: '100%', padding: '14px', borderRadius: 100, background: cardLoading ? THEME.border : THEME.coral,
+                border: 'none', color: '#fff', fontSize: 15, fontWeight: 700, cursor: cardLoading ? 'not-allowed' : 'pointer',
+                fontFamily: THEME.font, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}>
+                {cardLoading ? (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="3" fill="none" strokeDasharray="31.4 31.4" strokeLinecap="round" /></svg>
+                    生成中...
+                  </>
+                ) : '🖼 カードを生成'}
+              </button>
+
+              {cardUrl && (
+                <div style={{ marginTop: 20, textAlign: 'center' }}>
+                  <img src={cardUrl} alt="Promo card" style={{ maxWidth: '100%', maxHeight: 400, borderRadius: 12, border: `1px solid ${THEME.border}` }} />
+                  <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
+                    <button onClick={downloadCard} style={{
+                      padding: '10px 24px', borderRadius: 9999, background: THEME.gold, color: '#fff',
+                      fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: THEME.font,
+                    }}>⬇ ダウンロード</button>
+                    <button onClick={generateCard} style={{
+                      padding: '10px 24px', borderRadius: 9999, background: THEME.card, color: THEME.textSub,
+                      fontSize: 13, fontWeight: 600, border: `1.5px solid ${THEME.border}`, cursor: 'pointer', fontFamily: THEME.font,
+                    }}>🔄 再生成</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── CAPTION STEP ── */}
+          {step === 'caption' && (
+            <div>
+              {!captions && !captionLoading && (
+                <button onClick={generateCaptions} style={{
+                  width: '100%', padding: '14px', borderRadius: 100, background: THEME.coral,
+                  border: 'none', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                  fontFamily: THEME.font, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}>✍️ キャプションを生成</button>
+              )}
+
+              {captionLoading && (
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" style={{ animation: 'spin 1s linear infinite' }}><circle cx="12" cy="12" r="10" stroke={THEME.gold} strokeWidth="3" fill="none" strokeDasharray="31.4 31.4" strokeLinecap="round" /></svg>
+                  <p style={{ color: THEME.textSub, fontSize: 14, marginTop: 12, fontFamily: THEME.font }}>AIがキャプションを生成中...</p>
+                </div>
+              )}
+
+              {captions && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  {['instagram', 'x', 'facebook'].map(platform => {
+                    const label = platform === 'instagram' ? '📸 Instagram' : platform === 'x' ? '𝕏 X (Twitter)' : '📘 Facebook';
+                    const cap = captions[platform];
+                    if (!cap) return null;
+                    return (
+                      <div key={platform}>
+                        <SectionLabel>{label}</SectionLabel>
+                        {['en', 'ja'].map(lang => (
+                          <div key={lang} style={{ marginBottom: 10, background: '#faf9f7', borderRadius: 10, padding: '12px 16px', border: `1px solid ${THEME.border}` }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: THEME.textMuted }}>{lang === 'en' ? '🇺🇸 EN' : '🇯🇵 JA'}</span>
+                              <button onClick={() => copyText(cap[lang], `${platform}-${lang}`)} style={{
+                                padding: '3px 10px', borderRadius: 9999, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                                background: copiedKey === `${platform}-${lang}` ? THEME.green : THEME.card,
+                                color: copiedKey === `${platform}-${lang}` ? '#fff' : THEME.textSub,
+                                border: `1px solid ${copiedKey === `${platform}-${lang}` ? THEME.green : THEME.border}`,
+                                fontFamily: THEME.font, transition: 'all 0.15s',
+                              }}>{copiedKey === `${platform}-${lang}` ? '✓ Copied' : 'Copy'}</button>
+                            </div>
+                            <p style={{ fontSize: 13, color: THEME.text, lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap', fontFamily: THEME.font }}>{cap[lang]}</p>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+
+                  {/* Hashtags */}
+                  {captions.hashtags && (
+                    <div>
+                      <SectionLabel># ハッシュタグ</SectionLabel>
+                      {['en', 'ja'].map(lang => (
+                        <div key={lang} style={{ marginBottom: 10 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: THEME.textMuted }}>{lang === 'en' ? '🇺🇸 EN' : '🇯🇵 JA'}</span>
+                            <button onClick={() => copyText((captions.hashtags[lang] || []).join(' '), `hash-${lang}`)} style={{
+                              padding: '3px 10px', borderRadius: 9999, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                              background: copiedKey === `hash-${lang}` ? THEME.green : THEME.card,
+                              color: copiedKey === `hash-${lang}` ? '#fff' : THEME.textSub,
+                              border: `1px solid ${copiedKey === `hash-${lang}` ? THEME.green : THEME.border}`,
+                              fontFamily: THEME.font, transition: 'all 0.15s',
+                            }}>{copiedKey === `hash-${lang}` ? '✓ Copied' : 'Copy All'}</button>
+                          </div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {(captions.hashtags[lang] || []).map((tag, i) => (
+                              <span key={i} onClick={() => copyText(tag, `tag-${lang}-${i}`)} style={{
+                                padding: '4px 10px', borderRadius: 9999, background: THEME.goldLight, color: THEME.gold,
+                                fontSize: 12, fontWeight: 500, cursor: 'pointer', border: `1px solid ${THEME.gold}30`,
+                                fontFamily: THEME.font, transition: 'all 0.15s',
+                              }}>{tag}</span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <button onClick={generateCaptions} style={{
+                    width: '100%', padding: '12px', borderRadius: 100, background: THEME.card,
+                    border: `1.5px solid ${THEME.border}`, color: THEME.textSub, fontSize: 14, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: THEME.font, marginTop: 8,
+                  }}>🔄 再生成</button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

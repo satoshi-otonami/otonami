@@ -1470,6 +1470,7 @@ function PromoToolkitModal({ track, artist, onClose }) {
           genres: track.genre ? [track.genre] : [],
           imageUrl: track.cover_image_url || null,
           palette: palette?.name,
+          audioFeatures: track.audio_features || {},
         }),
       });
       const data = await res.json();

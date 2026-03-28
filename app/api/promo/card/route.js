@@ -1,6 +1,8 @@
 // app/api/promo/card/route.js
 // Placid.app REST API 経由でプロモカード画像を生成
 
+import { selectPalette, getPaletteByName } from '@/lib/promo-palette';
+
 // テンプレートUUID マッピング（Placidで作成後に実際のUUIDを入れる）
 const TEMPLATE_MAP = {
   'player-feed':  process.env.PLACID_TPL_PLAYER_FEED  || 'PLACEHOLDER',
@@ -22,8 +24,14 @@ export async function POST(request) {
       releaseDate,
       genres = [],
       imageUrl,
-      palette,
+      palette: paletteOverride,
+      audioFeatures,
     } = body;
+
+    // パレット選択（手動指定 or audioFeaturesから自動）
+    const palette = paletteOverride
+      ? getPaletteByName(paletteOverride)
+      : selectPalette(audioFeatures || {});
 
     const templateKey = `${template}-${format}`;
     const templateUuid = TEMPLATE_MAP[templateKey];
@@ -58,13 +66,19 @@ export async function POST(request) {
         template_uuid: templateUuid,
         create_now: true,
         layers: {
+          // 動的コンテンツレイヤー
+          bg_image: imageUrl ? { image: imageUrl } : undefined,
           artwork: imageUrl ? { image: imageUrl } : undefined,
           track_title: { text: trackTitle },
           artist_name: { text: artistName },
           release_date: { text: formattedDate },
           genre_tags: { text: genreText },
-          badge_text: { text: badgeText },
+          badge_text: { text: badgeText, color: palette.accent },
           brand_logo: { text: 'OTONAMI' },
+          // パレット連動カラーレイヤー
+          bg_gradient: { color: palette.accent },
+          bg_glow: { color: palette.accent },
+          progress_fill: { color: palette.accent },
         },
       }),
     });

@@ -1453,7 +1453,7 @@ function PromoToolkitModal({ track, artist, onClose }) {
     })();
   }, [track]);
 
-  // カード生成
+  // カード生成（Placid API経由 — JSON応答で画像URLを受け取る）
   const generateCard = async () => {
     setCardLoading(true);
     setCardUrl(null);
@@ -1470,12 +1470,14 @@ function PromoToolkitModal({ track, artist, onClose }) {
           genres: track.genre ? [track.genre] : [],
           imageUrl: track.cover_image_url || null,
           palette: palette?.name,
-          audioFeatures: track.audio_features || {},
         }),
       });
-      if (!res.ok) throw new Error('Card generation failed');
-      const blob = await res.blob();
-      setCardUrl(URL.createObjectURL(blob));
+      const data = await res.json();
+      if (data.success && data.imageUrl) {
+        setCardUrl(data.imageUrl);
+      } else {
+        throw new Error(data.error || 'Card generation failed');
+      }
     } catch (e) {
       console.error('Card generation error:', e);
       alert('カード生成に失敗しました');
@@ -1521,12 +1523,20 @@ function PromoToolkitModal({ track, artist, onClose }) {
     setTimeout(() => setCopiedKey(null), 1500);
   };
 
-  const downloadCard = () => {
+  const downloadCard = async () => {
     if (!cardUrl) return;
-    const a = document.createElement('a');
-    a.href = cardUrl;
-    a.download = `otonami-${template}-${format}.png`;
-    a.click();
+    try {
+      const res = await fetch(cardUrl);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `otonami-${template}-${format}-${(track?.title || 'track').replace(/\s+/g, '-').toLowerCase()}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+    }
   };
 
   const TEMPLATES = [

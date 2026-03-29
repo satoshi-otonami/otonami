@@ -47,7 +47,7 @@ const COPY = {
         { label: 'For Artists',  href: '/artist' },
         { label: 'Contact',      href: 'mailto:info@otonami.io' },
       ],
-      copy: '© 2026 TYCompany LLC / ILCJ',
+      copy: '© 2026 TYCompany LLC',
       email: 'info@otonami.io',
     },
   },
@@ -78,7 +78,7 @@ const COPY = {
         { label: 'アーティスト向け', href: '/artist' },
         { label: 'お問い合わせ',     href: 'mailto:info@otonami.io' },
       ],
-      copy: '© 2026 TYCompany LLC / ILCJ',
+      copy: '© 2026 TYCompany LLC',
       email: 'info@otonami.io',
     },
   },
@@ -676,7 +676,7 @@ export default function HomePage() {
               {
                 icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="15" y1="14" x2="15" y2="14.01"/></svg>,
                 num: '70+',
-                label: lang === 'en' ? 'Labels represented' : 'レーベルを代表',
+                label: lang === 'en' ? 'Industry network' : '業界ネットワーク',
               },
               {
                 icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8M12 17v4M7 4h10M7 4c0 0-2 0-2 3s2 5 2 5M17 4c0 0 2 0 2 3s-2 5-2 5M7 12c1 2 3 3 5 3s4-1 5-3"/></svg>,
@@ -824,6 +824,48 @@ export default function HomePage() {
               </p>
             </div>
 
+            {/* Live photo — shows what kind of artists curators will discover */}
+            <div style={{
+              marginBottom: 40,
+              borderRadius: 16,
+              overflow: 'hidden',
+              maxWidth: 700,
+              margin: '0 auto 40px',
+              position: 'relative',
+            }}>
+              <img
+                src="/images/sxsw-trumpet.jpg"
+                alt={lang === 'en'
+                  ? 'Japanese indie artists performing at SXSW'
+                  : 'SXSWで演奏する日本のインディーアーティスト'}
+                style={{
+                  width: '100%',
+                  display: 'block',
+                  borderRadius: 16,
+                }}
+              />
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: '24px 20px 16px',
+                background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                borderRadius: '0 0 16px 16px',
+              }}>
+                <p style={{
+                  fontSize: 12,
+                  color: 'rgba(255,255,255,0.7)',
+                  margin: 0,
+                  textAlign: 'center',
+                }}>
+                  {lang === 'en'
+                    ? 'ROUTE14band performing at SXSW, Austin TX'
+                    : 'ROUTE14band — SXSW（テキサス州オースティン）でのライブ'}
+                </p>
+              </div>
+            </div>
+
             {/* 3 Benefit Cards */}
             <div style={{
               display: 'grid',
@@ -887,10 +929,10 @@ export default function HomePage() {
               {[
                 {
                   num: '70+',
-                  title: lang === 'en' ? 'Independent labels' : 'インディーレーベル',
+                  title: lang === 'en' ? 'Label network' : 'レーベルネットワーク',
                   desc: lang === 'en'
-                    ? "Access artists from Japan's largest indie label coalition (ILCJ)."
-                    : 'ILCJ（日本最大のインディーレーベル連合）からアーティストにアクセス。',
+                    ? "Our founder's deep connections with Japan's independent label scene bring you undiscovered talent."
+                    : '創業者の日本インディーレーベル業界との深い繋がりから、まだ知られていない才能が届きます。',
                 },
                 {
                   num: lang === 'en' ? 'AI-filtered' : 'AI精査済み',
@@ -1372,6 +1414,47 @@ export default function HomePage() {
                   ? 'OTONAMI advantage: Japanese UI + AI English pitch generation + AI Match Score'
                   : 'OTONAMIだけの強み：日本語UI + AI英語ピッチ自動生成 + AIマッチスコア'}
               </p>
+            </div>
+
+            {/* Artist live photo — emotional connection */}
+            <div style={{
+              marginBottom: 32,
+              borderRadius: 16,
+              overflow: 'hidden',
+              position: 'relative',
+            }}>
+              <img
+                src="/images/stage-performance.jpg"
+                alt={lang === 'en'
+                  ? 'Japanese indie band performing on international stage'
+                  : '海外ステージで演奏する日本のインディーバンド'}
+                style={{
+                  width: '100%',
+                  display: 'block',
+                  borderRadius: 16,
+                }}
+              />
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: '24px 20px 16px',
+                background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                borderRadius: '0 0 16px 16px',
+              }}>
+                <p style={{
+                  fontSize: 13,
+                  color: '#fff',
+                  margin: 0,
+                  textAlign: 'center',
+                  fontWeight: 500,
+                }}>
+                  {lang === 'en'
+                    ? 'Your music could be on stages like these.'
+                    : 'あなたの音楽も、こんなステージに届けられる。'}
+                </p>
+              </div>
             </div>
 
             {/* Dashboard Screenshot */}

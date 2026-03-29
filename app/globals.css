@@ -118,6 +118,151 @@
   .stats-cards-grid {
     grid-template-columns: repeat(2, 1fr) !important;
   }
+
+  /* ===== LP Mobile Optimizations ===== */
+
+  /* Nav */
+  .nav-links {
+    display: none !important;
+  }
+
+  /* Hero */
+  .hero-heading {
+    font-size: 28px !important;
+    line-height: 1.4 !important;
+    padding: 0 8px !important;
+  }
+
+  .hero-desc {
+    font-size: 14px !important;
+    padding: 0 12px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .hero-cta-group {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 0 20px !important;
+  }
+
+  .hero-cta-primary,
+  .hero-cta-secondary {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 16px 24px !important;
+    font-size: 15px !important;
+    min-height: 48px !important;
+  }
+
+  .hero-cta-secondary {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  }
+
+  .launch-badge {
+    padding: 6px 14px !important;
+  }
+
+  .launch-badge span:last-child {
+    font-size: 11px !important;
+  }
+
+  /* Founder Strip */
+  .founder-strip {
+    padding: 40px 16px !important;
+  }
+
+  .founder-photo {
+    width: 72px !important;
+    height: 72px !important;
+    font-size: 28px !important;
+  }
+
+  .founder-badges {
+    gap: 12px !important;
+  }
+
+  .founder-badges > div {
+    padding: 12px 16px !important;
+    min-width: 100px !important;
+  }
+
+  /* Section common */
+  .for-curators-section {
+    padding: 48px 16px !important;
+  }
+
+  .for-artists-section {
+    padding: 48px 16px !important;
+  }
+
+  .for-curators-section h2,
+  .for-artists-section h2 {
+    font-size: 24px !important;
+  }
+
+  /* Cards compact */
+  .benefit-card,
+  .value-card,
+  .barrier-card {
+    padding: 20px 16px !important;
+  }
+
+  .metric-card {
+    padding: 16px 12px !important;
+  }
+
+  .metric-card > div:first-child {
+    font-size: 28px !important;
+  }
+
+  .early-adopter-box {
+    padding: 24px 16px !important;
+  }
+
+  /* Comparison table */
+  .comparison-table {
+    margin-left: -16px !important;
+    margin-right: -16px !important;
+    border-radius: 0 !important;
+  }
+
+  .comparison-table table {
+    font-size: 12px !important;
+  }
+
+  .comparison-table th,
+  .comparison-table td {
+    padding: 10px 10px !important;
+  }
+
+  /* Photos */
+  .live-photo {
+    border-radius: 12px !important;
+    margin-bottom: 24px !important;
+  }
+
+  /* FAQ */
+  .faq-button {
+    font-size: 14px !important;
+    padding: 14px 0 !important;
+  }
+
+  /* CTA buttons */
+  .cta-button {
+    min-height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    font-size: 15px !important;
+  }
+
+  /* Step cards */
+  .step-card {
+    padding: 20px 16px !important;
+  }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {

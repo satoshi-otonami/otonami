@@ -151,6 +151,7 @@ function FAQItem({ question, answer, isOpen, onClick, theme = 'light' }) {
       marginBottom: 8,
     }}>
       <button
+        className="faq-button"
         onClick={onClick}
         style={{
           display: 'flex',
@@ -464,7 +465,7 @@ export default function HomePage() {
       }}>
         <div style={{ ...wrap, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <a href="/" style={{ textDecoration: 'none', fontFamily: D.fHead, fontSize: 20, letterSpacing: '2px', color: D.text, fontWeight: 500 }}>OTONAMI</a>
-          <nav className="nav-desktop-links liquid-glass" style={{ display: 'flex', alignItems: 'center', gap: 4, borderRadius: 9999, padding: '4px 4px' }}>
+          <nav className="nav-desktop-links nav-links liquid-glass" style={{ display: 'flex', alignItems: 'center', gap: 4, borderRadius: 9999, padding: '4px 4px' }}>
             <a href="#for-curators" className="nav-link">{t.nav.curators}</a>
             <a href="#for-artists"  className="nav-link">{t.nav.artists}</a>
           </nav>
@@ -506,7 +507,7 @@ export default function HomePage() {
         <div style={{ ...wrap, textAlign: 'center', position: 'relative', zIndex: 1 }}>
 
           {/* Launch Badge */}
-          <div className="hero-tag-anim" style={{
+          <div className="hero-tag-anim launch-badge" style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: 10,
@@ -537,7 +538,7 @@ export default function HomePage() {
             </span>
           </div>
 
-          <h1 className="hero-h1" style={{ fontFamily: D.fHead, fontSize: 52, fontWeight: 500, lineHeight: 1.2, color: D.text, marginBottom: 28, letterSpacing: '-0.5px' }}>
+          <h1 className="hero-h1 hero-heading" style={{ fontFamily: D.fHead, fontSize: 52, fontWeight: 500, lineHeight: 1.2, color: D.text, marginBottom: 28, letterSpacing: '-0.5px' }}>
             {t.hero.h1.map((line, i) => (
               <span key={i} className="hero-line" style={{ display: 'block', color: i === t.hero.h1Gold ? '#c4956a' : D.text }}>
                 <BlurText text={line} delay={120} />
@@ -545,7 +546,7 @@ export default function HomePage() {
             ))}
           </h1>
 
-          <p className="hero-sub hero-sub-anim" style={{
+          <p className="hero-sub hero-sub-anim hero-desc" style={{
             fontSize: 17,
             color: 'rgba(255,255,255,0.75)',
             maxWidth: 540,
@@ -556,13 +557,13 @@ export default function HomePage() {
           </p>
 
           {/* Dual CTAs */}
-          <div className="hero-cta-anim" style={{
+          <div className="hero-cta-anim hero-cta-group" style={{
             display: 'flex',
             gap: 16,
             flexWrap: 'wrap',
             justifyContent: 'center',
           }}>
-            <a href="/curator" style={{
+            <a href="/curator" className="hero-cta-primary" style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
@@ -578,7 +579,7 @@ export default function HomePage() {
             }}>
               {lang === 'en' ? 'Register as Curator →' : 'キュレーターとして登録 →'}
             </a>
-            <a href="/artist" style={{
+            <a href="/artist" className="hero-cta-secondary" style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
@@ -599,7 +600,7 @@ export default function HomePage() {
       </section>
 
       {/* ========== SECTION 3: FOUNDER STRIP ========== */}
-      <section id="founder" style={{
+      <section id="founder" className="founder-strip" style={{
         padding: '64px 20px',
         background: '#fff',
         borderBottom: '1px solid #e5e2dc',
@@ -616,7 +617,7 @@ export default function HomePage() {
             gap: 16,
             marginBottom: 32,
           }}>
-            <div style={{
+            <div className="founder-photo" style={{
               width: 96,
               height: 96,
               borderRadius: '50%',
@@ -660,7 +661,7 @@ export default function HomePage() {
           </div>
 
           {/* 3 Badge Cards */}
-          <div style={{
+          <div className="founder-badges" style={{
             display: 'flex',
             justifyContent: 'center',
             gap: 20,
@@ -759,7 +760,7 @@ export default function HomePage() {
           <div className="how-grid artist-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
             {t.how.steps.map((step, i) => (
               <AnimatedSection key={i} delay={i * 100}>
-                <div className="how-card-light artist-step-card" style={{ padding: 24 }}>
+                <div className="how-card-light artist-step-card step-card" style={{ padding: 24 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                     {/* Step number circle — replaces emoji icons */}
                     <div style={{
@@ -788,7 +789,7 @@ export default function HomePage() {
 
           <AnimatedSection delay={300}>
             <div style={{ textAlign: 'center', marginTop: 48 }}>
-              <a href="/artist" className="cta-coral" style={{ fontSize: 16, padding: '15px 36px' }}>{t.how.cta}</a>
+              <a href="/artist" className="cta-coral cta-button" style={{ fontSize: 16, padding: '15px 36px' }}>{t.how.cta}</a>
             </div>
           </AnimatedSection>
         </div>
@@ -796,7 +797,7 @@ export default function HomePage() {
 
       {/* ========== SECTION 5: FOR CURATORS ========== */}
       <AnimatedSection>
-        <section id="for-curators" style={{
+        <section id="for-curators" className="for-curators-section" style={{
           padding: '80px 20px',
           background: '#1a1715',
           color: '#fff',
@@ -825,7 +826,7 @@ export default function HomePage() {
             </div>
 
             {/* Live photo — shows what kind of artists curators will discover */}
-            <div style={{
+            <div className="live-photo" style={{
               marginBottom: 40,
               borderRadius: 16,
               overflow: 'hidden',
@@ -896,7 +897,7 @@ export default function HomePage() {
                     : 'あなたのペースでレビュー。プレッシャーなし。',
                 },
               ].map((card, i) => (
-                <div key={i} style={{
+                <div key={i} className="benefit-card" style={{
                   padding: '28px 24px',
                   background: 'rgba(255,255,255,0.05)',
                   borderRadius: 16,
@@ -949,7 +950,7 @@ export default function HomePage() {
                     : 'ジャンル・ムード・好みを設定するだけ。すぐにピッチを受信開始。',
                 },
               ].map((item, i) => (
-                <div key={i} style={{
+                <div key={i} className="value-card" style={{
                   padding: '24px 20px',
                   background: 'rgba(255,255,255,0.05)',
                   borderRadius: 12,
@@ -980,7 +981,7 @@ export default function HomePage() {
             </div>
 
             {/* Early Adopter Benefits Box */}
-            <div style={{
+            <div className="early-adopter-box" style={{
               padding: '32px',
               background: 'linear-gradient(135deg, rgba(196,149,106,0.1) 0%, rgba(232,93,58,0.08) 100%)',
               borderRadius: 16,
@@ -1041,7 +1042,7 @@ export default function HomePage() {
 
             {/* CTA */}
             <div style={{ textAlign: 'center' }}>
-              <a href="/curator" style={{
+              <a href="/curator" className="cta-button" style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
@@ -1063,7 +1064,7 @@ export default function HomePage() {
 
       {/* ========== SECTION 6: FOR ARTISTS ========== */}
       <AnimatedSection>
-        <section id="for-artists" style={{
+        <section id="for-artists" className="for-artists-section" style={{
           padding: '80px 20px',
           background: '#f8f7f4',
         }}>
@@ -1120,7 +1121,7 @@ export default function HomePage() {
                     : '海外ブロガー・プレイリスター・ラジオDJに直接届く。',
                 },
               ].map((card, i) => (
-                <div key={i} style={{
+                <div key={i} className="barrier-card" style={{
                   padding: '28px 24px',
                   background: '#fff',
                   borderRadius: 16,
@@ -1228,7 +1229,7 @@ export default function HomePage() {
                     : '海外PR会社と比較して1/100以下のコスト。',
                 },
               ].map((item, i) => (
-                <div key={i} style={{
+                <div key={i} className="metric-card" style={{
                   padding: '24px 20px',
                   background: '#fff',
                   borderRadius: 12,
@@ -1281,7 +1282,7 @@ export default function HomePage() {
                 {lang === 'en' ? 'Compared to alternatives' : '従来の方法との比較'}
               </h3>
 
-              <div style={{
+              <div className="comparison-table" style={{
                 overflowX: 'auto',
                 borderRadius: 12,
                 border: '1px solid #e5e2dc',
@@ -1417,7 +1418,7 @@ export default function HomePage() {
             </div>
 
             {/* Artist live photo — emotional connection */}
-            <div style={{
+            <div className="live-photo" style={{
               marginBottom: 32,
               borderRadius: 16,
               overflow: 'hidden',
@@ -1473,7 +1474,7 @@ export default function HomePage() {
             </div>
 
             {/* Early Adopter Benefits Box (Artist) */}
-            <div style={{
+            <div className="early-adopter-box" style={{
               padding: '32px',
               background: '#fff',
               borderRadius: 16,
@@ -1532,7 +1533,7 @@ export default function HomePage() {
 
             {/* CTA */}
             <div style={{ textAlign: 'center' }}>
-              <a href="/artist" style={{
+              <a href="/artist" className="cta-button" style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,

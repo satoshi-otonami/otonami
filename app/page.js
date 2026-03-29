@@ -670,7 +670,7 @@ export default function HomePage() {
             {[
               {
                 icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="20" x2="16" y2="8"/><line x1="8" y1="20" x2="20" y2="8"/><circle cx="17.5" cy="6.5" r="2.5" fill="#c4956a" stroke="none"/><circle cx="13.5" cy="6.5" r="2.5" fill="#c4956a" stroke="none"/></svg>,
-                num: lang === 'en' ? '11 years' : '11年連続',
+                num: lang === 'en' ? '10 years' : '10回出演',
                 label: lang === 'en' ? 'at SXSW' : 'SXSW出演',
               },
               {
@@ -877,6 +877,66 @@ export default function HomePage() {
               ))}
             </div>
 
+            {/* Curator value proposition — concrete numbers */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: 16,
+              marginBottom: 40,
+            }}>
+              {[
+                {
+                  num: '70+',
+                  title: lang === 'en' ? 'Independent labels' : 'インディーレーベル',
+                  desc: lang === 'en'
+                    ? "Access artists from Japan's largest indie label coalition (ILCJ)."
+                    : 'ILCJ（日本最大のインディーレーベル連合）からアーティストにアクセス。',
+                },
+                {
+                  num: lang === 'en' ? 'AI-filtered' : 'AI精査済み',
+                  title: lang === 'en' ? 'Quality pitches only' : '高品質ピッチのみ',
+                  desc: lang === 'en'
+                    ? 'Audio analysis ensures you only receive music that matches your taste.'
+                    : '音響分析により、あなたの好みに合う音楽だけが届きます。',
+                },
+                {
+                  num: lang === 'en' ? '3 min' : '3分',
+                  title: lang === 'en' ? 'Quick sign-up' : '登録はすぐ完了',
+                  desc: lang === 'en'
+                    ? 'Set your genres, moods, and preferences. Start receiving pitches.'
+                    : 'ジャンル・ムード・好みを設定するだけ。すぐにピッチを受信開始。',
+                },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  padding: '24px 20px',
+                  background: 'rgba(255,255,255,0.05)',
+                  borderRadius: 12,
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    fontSize: 28,
+                    fontWeight: 700,
+                    color: '#c4956a',
+                    lineHeight: 1,
+                    marginBottom: 8,
+                    fontStyle: 'italic',
+                  }}>{item.num}</div>
+                  <div style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: '#f0ede6',
+                    marginBottom: 6,
+                  }}>{item.title}</div>
+                  <div style={{
+                    fontSize: 12,
+                    color: 'rgba(240,237,230,0.6)',
+                    lineHeight: 1.5,
+                  }}>{item.desc}</div>
+                </div>
+              ))}
+            </div>
+
             {/* Early Adopter Benefits Box */}
             <div style={{
               padding: '32px',
@@ -1040,6 +1100,278 @@ export default function HomePage() {
                   }}>{card.desc}</p>
                 </div>
               ))}
+            </div>
+
+            {/* Bridge text after 3 barriers */}
+            <div style={{
+              textAlign: 'center',
+              margin: '8px 0 40px',
+            }}>
+              <div style={{
+                width: 40,
+                height: 3,
+                background: 'linear-gradient(90deg, #c4956a, #e85d3a)',
+                borderRadius: 2,
+                margin: '0 auto 16px',
+              }} />
+              <p style={{
+                fontSize: 15,
+                fontWeight: 600,
+                color: '#1a1a1a',
+              }}>
+                {lang === 'en'
+                  ? 'OTONAMI solves all three — so you can focus on making music.'
+                  : 'OTONAMIは、この3つの壁をすべて解決します。'}
+              </p>
+            </div>
+
+            {/* Success Metrics — proven model */}
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
+              <p style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#c4956a',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+                marginBottom: 8,
+              }}>
+                {lang === 'en' ? 'Proven Model' : '実証済みのモデル'}
+              </p>
+              <p style={{
+                fontSize: 15,
+                color: '#6b6560',
+                maxWidth: 600,
+                margin: '0 auto 24px',
+                lineHeight: 1.6,
+              }}>
+                {lang === 'en'
+                  ? 'Over 300,000 artists use similar platforms overseas. OTONAMI brings this model to Japan — with AI matching, Japanese UI, and AI-generated English pitches.'
+                  : '海外では同様のプラットフォームで30万人以上のアーティストが活動中。OTONAMIはこの実証済みモデルに「日本語UI」「AIピッチ生成」「AIマッチング」を加えた日本初のサービスです。'}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: 16,
+              marginBottom: 48,
+            }}>
+              {[
+                {
+                  num: '2X',
+                  title: lang === 'en' ? 'Spotify listeners' : 'Spotify月間リスナー増加',
+                  desc: lang === 'en'
+                    ? 'Artists who use curator pitching see double their monthly listeners on average.'
+                    : 'キュレーターピッチ活用で月間リスナーが倍増した事例。',
+                },
+                {
+                  num: '43K',
+                  title: lang === 'en' ? 'Plays in 1 month' : '1ヶ月での再生回数',
+                  desc: lang === 'en'
+                    ? 'A single playlist placement can generate tens of thousands of streams.'
+                    : '1つのプレイリスト掲載から短期間で獲得。',
+                },
+                {
+                  num: '40%',
+                  title: lang === 'en' ? 'Pitch acceptance rate' : 'ピッチ採用率',
+                  desc: lang === 'en'
+                    ? 'AI matching dramatically improves acceptance rates vs. cold emails.'
+                    : '従来のメール営業では考えられない採用率を記録。',
+                },
+                {
+                  num: '1/100',
+                  title: lang === 'en' ? 'Cost reduction' : 'コスト削減',
+                  desc: lang === 'en'
+                    ? 'Compared to hiring an overseas PR agency, costs are reduced by 99%.'
+                    : '海外PR会社と比較して1/100以下のコスト。',
+                },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  padding: '24px 20px',
+                  background: '#fff',
+                  borderRadius: 12,
+                  border: '1px solid #e5e2dc',
+                  textAlign: 'center',
+                }}>
+                  <div style={{
+                    fontSize: 36,
+                    fontWeight: 700,
+                    color: '#c4956a',
+                    lineHeight: 1,
+                    marginBottom: 8,
+                    fontStyle: 'italic',
+                  }}>{item.num}</div>
+                  <div style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: '#1a1a1a',
+                    marginBottom: 6,
+                  }}>{item.title}</div>
+                  <div style={{
+                    fontSize: 12,
+                    color: '#6b6560',
+                    lineHeight: 1.5,
+                  }}>{item.desc}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Comparison Table */}
+            <div style={{ marginBottom: 48 }}>
+              <p style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#c4956a',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+                textAlign: 'center',
+                marginBottom: 8,
+              }}>
+                {lang === 'en' ? 'Why OTONAMI' : 'OTONAMIの優位性'}
+              </p>
+              <h3 style={{
+                fontSize: 22,
+                fontWeight: 700,
+                color: '#1a1a1a',
+                textAlign: 'center',
+                marginBottom: 24,
+              }}>
+                {lang === 'en' ? 'Compared to alternatives' : '従来の方法との比較'}
+              </h3>
+
+              <div style={{
+                overflowX: 'auto',
+                borderRadius: 12,
+                border: '1px solid #e5e2dc',
+              }}>
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: 14,
+                  minWidth: 600,
+                }}>
+                  <thead>
+                    <tr>
+                      <th style={{
+                        padding: '14px 16px',
+                        textAlign: 'left',
+                        background: '#f8f7f4',
+                        borderBottom: '1px solid #e5e2dc',
+                        color: '#6b6560',
+                        fontWeight: 500,
+                      }}></th>
+                      <th style={{
+                        padding: '14px 16px',
+                        textAlign: 'left',
+                        background: '#c4956a',
+                        color: '#fff',
+                        fontWeight: 700,
+                        borderBottom: '1px solid #e5e2dc',
+                      }}>OTONAMI</th>
+                      <th style={{
+                        padding: '14px 16px',
+                        textAlign: 'left',
+                        background: '#f8f7f4',
+                        borderBottom: '1px solid #e5e2dc',
+                        color: '#6b6560',
+                        fontWeight: 500,
+                      }}>{lang === 'en' ? 'Overseas services' : '海外の類似サービス'}</th>
+                      <th style={{
+                        padding: '14px 16px',
+                        textAlign: 'left',
+                        background: '#f8f7f4',
+                        borderBottom: '1px solid #e5e2dc',
+                        color: '#6b6560',
+                        fontWeight: 500,
+                      }}>{lang === 'en' ? 'Cold email' : '自力でのメール営業'}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      {
+                        label: lang === 'en' ? 'Language' : '操作言語',
+                        otonami: lang === 'en' ? 'Japanese' : '日本語',
+                        overseas: lang === 'en' ? 'English only' : '英語のみ',
+                        diy: lang === 'en' ? 'English required' : '英語必須',
+                      },
+                      {
+                        label: lang === 'en' ? 'Pitch writing' : 'ピッチ文作成',
+                        otonami: lang === 'en' ? 'AI auto-generated (EN)' : 'AI自動生成（英語）',
+                        overseas: lang === 'en' ? 'Manual in English' : '手動で英語入力',
+                        diy: lang === 'en' ? 'Write your own' : '自分で英語作成',
+                      },
+                      {
+                        label: lang === 'en' ? 'Curator matching' : 'キュレーター選定',
+                        otonami: lang === 'en' ? 'AI Match Score (auto)' : 'AIマッチスコア（自動）',
+                        overseas: lang === 'en' ? 'Manual filter' : '手動フィルター',
+                        diy: lang === 'en' ? 'Research yourself' : '自分でリサーチ',
+                      },
+                      {
+                        label: lang === 'en' ? 'Audio analysis' : '楽曲分析',
+                        otonami: lang === 'en' ? 'AI auto (BPM, genre, mood)' : 'AI自動（BPM・ジャンル・ムード）',
+                        overseas: lang === 'en' ? 'None' : 'なし',
+                        diy: lang === 'en' ? 'None' : 'なし',
+                      },
+                      {
+                        label: lang === 'en' ? 'Feedback' : 'フィードバック',
+                        otonami: lang === 'en' ? 'Guaranteed within 7 days' : '7日以内に保証',
+                        overseas: lang === 'en' ? '7-48 hours' : '7日〜48時間',
+                        diy: lang === 'en' ? '<3% reply rate' : '返信率3%以下',
+                      },
+                      {
+                        label: lang === 'en' ? 'Price' : '価格',
+                        otonami: lang === 'en' ? '~¥160 per pitch' : '約¥160/件〜',
+                        overseas: lang === 'en' ? '~¥150-450 per pitch' : '約¥150〜450/件',
+                        diy: lang === 'en' ? 'Free (huge time cost)' : '無料（時間コスト大）',
+                      },
+                      {
+                        label: lang === 'en' ? 'Japanese music expertise' : '日本音楽への理解',
+                        otonami: lang === 'en' ? 'Japan-specialized curators' : '日本音楽に特化したキュレーター',
+                        overseas: lang === 'en' ? 'Global (generic)' : '汎用（全世界対象）',
+                        diy: lang === 'en' ? 'Depends on recipient' : '相手次第',
+                      },
+                    ].map((row, i) => (
+                      <tr key={i}>
+                        <td style={{
+                          padding: '12px 16px',
+                          borderBottom: '1px solid #e5e2dc',
+                          fontWeight: 500,
+                          color: '#1a1a1a',
+                        }}>{row.label}</td>
+                        <td style={{
+                          padding: '12px 16px',
+                          borderBottom: '1px solid #e5e2dc',
+                          color: '#1a1a1a',
+                          fontWeight: 500,
+                          background: 'rgba(196,149,106,0.05)',
+                        }}>{row.otonami}</td>
+                        <td style={{
+                          padding: '12px 16px',
+                          borderBottom: '1px solid #e5e2dc',
+                          color: '#6b6560',
+                        }}>{row.overseas}</td>
+                        <td style={{
+                          padding: '12px 16px',
+                          borderBottom: '1px solid #e5e2dc',
+                          color: '#6b6560',
+                        }}>{row.diy}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p style={{
+                textAlign: 'center',
+                fontSize: 13,
+                color: '#c4956a',
+                marginTop: 16,
+                fontWeight: 500,
+              }}>
+                {lang === 'en'
+                  ? 'OTONAMI advantage: Japanese UI + AI English pitch generation + AI Match Score'
+                  : 'OTONAMIだけの強み：日本語UI + AI英語ピッチ自動生成 + AIマッチスコア'}
+              </p>
             </div>
 
             {/* Dashboard Screenshot */}
@@ -1250,7 +1582,7 @@ export default function HomePage() {
         {[
           { target: 3449, suffix: '',  l: lang === 'en' ? 'Curators & Pros' : '登録キュレーター' },
           { target: 70,   suffix: '+', l: lang === 'en' ? 'Partner Labels' : '対応レーベル' },
-          { target: 11,   suffix: lang === 'en' ? '×' : '回', l: lang === 'en' ? 'Years at SXSW' : 'SXSW連続出演' },
+          { target: 10,   suffix: lang === 'en' ? '×' : '回', l: lang === 'en' ? 'Years at SXSW' : 'SXSW出演' },
           { target: 6,    suffix: '',  l: lang === 'en' ? 'Countries' : '対応国' },
         ].map((s, i) => (
           <div key={i} style={{ textAlign: 'center' }}>
@@ -1355,7 +1687,7 @@ export default function HomePage() {
           <div style={{ textAlign: 'center', marginBottom: 48 }}>TRUSTED BY</div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 48 }}>
             <span>Japan Independent Music Scene</span>
-            <span>SXSW — 11 Consecutive Years</span>
+            <span>SXSW — 10 Years</span>
           </div>
         </div>
       </section>

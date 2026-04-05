@@ -26,18 +26,22 @@ export default function VerifySuccessPage() {
         <div style={{ width: 64, height: 64, borderRadius: '50%', background: THEME.green, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
         </div>
-        <h1 style={{ fontFamily: THEME.fontDisplay, fontSize: 24, fontWeight: 700, color: THEME.text, marginBottom: 12 }}>
+        <h1 style={{ fontFamily: THEME.fontDisplay, fontSize: 24, fontWeight: 700, color: THEME.text, marginBottom: 4 }}>
           メール認証が完了しました！
         </h1>
-        <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.7, marginBottom: 32 }}>
+        <p style={{ fontSize: 16, color: THEME.textSub, marginBottom: 12 }}>Email Verified!</p>
+        <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.7, marginBottom: 4 }}>
           アカウントが有効になりました。ログインして始めましょう。
+        </p>
+        <p style={{ fontSize: 13, color: THEME.textMuted, lineHeight: 1.7, marginBottom: 32 }}>
+          Your account is now active. Log in to get started.
         </p>
         <a href={loginUrl} style={{
           display: 'inline-block', padding: '14px 40px', borderRadius: 9999,
           background: THEME.coral, color: '#fff', textDecoration: 'none',
           fontWeight: 700, fontSize: 15, fontFamily: THEME.font,
         }}>
-          ログインへ →
+          ログインへ / Login →
         </a>
       </div>
     </div>

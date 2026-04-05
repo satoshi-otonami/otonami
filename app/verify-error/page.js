@@ -49,15 +49,25 @@ export default function VerifyErrorPage() {
         <div style={{ width: 64, height: 64, borderRadius: '50%', background: THEME.coral, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </div>
-        <h1 style={{ fontFamily: THEME.fontDisplay, fontSize: 24, fontWeight: 700, color: THEME.text, marginBottom: 12 }}>
+        <h1 style={{ fontFamily: THEME.fontDisplay, fontSize: 24, fontWeight: 700, color: THEME.text, marginBottom: 4 }}>
           {reason === 'expired' ? '認証リンクの期限切れ' : reason === 'invalid' ? '無効なリンク' : '認証リンクが無効です'}
         </h1>
-        <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.7, marginBottom: 24 }}>
+        <p style={{ fontSize: 14, color: THEME.textMuted, marginBottom: 12 }}>
+          {reason === 'expired' ? 'Verification Link Expired' : reason === 'invalid' ? 'Invalid Link' : 'Verification Link Invalid'}
+        </p>
+        <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.7, marginBottom: 4 }}>
           {reason === 'expired'
             ? 'リンクの有効期限（24時間）が切れました。認証メールを再送信してください。'
             : reason === 'invalid'
             ? 'リンクのパラメータが不正です。メール内のリンクをもう一度お試しください。'
             : 'リンクの有効期限が切れたか、既に認証済みです。再送信するか、ログインをお試しください。'}
+        </p>
+        <p style={{ fontSize: 13, color: THEME.textMuted, lineHeight: 1.7, marginBottom: 24 }}>
+          {reason === 'expired'
+            ? 'This link has expired (24 hours). Please resend the verification email.'
+            : reason === 'invalid'
+            ? 'The link parameters are invalid. Please try the link in the email again.'
+            : 'The link has expired or the account is already verified. Please resend or try logging in.'}
         </p>
 
         {!showResend ? (
@@ -67,16 +77,16 @@ export default function VerifyErrorPage() {
               background: THEME.coral, color: '#fff', border: 'none',
               fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: THEME.font,
             }}>
-              認証メールを再送信
+              認証メールを再送信 / Resend
             </button>
             <a href={loginUrl} style={{ color: THEME.gold, fontSize: 14, textDecoration: 'none', fontFamily: THEME.font }}>
-              ログインへ →
+              ログインへ / Login →
             </a>
           </div>
         ) : (
           <div>
             <input className="resend-input" type="email" value={email} onChange={e => setEmail(e.target.value)}
-              placeholder="メールアドレスを入力"
+              placeholder="メールアドレス / Email address"
               style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: `1px solid ${THEME.border}`, fontSize: 15, outline: 'none', marginBottom: 12, boxSizing: 'border-box', fontFamily: THEME.font }} />
             <button onClick={handleResend} disabled={resendStatus === 'loading'}
               style={{
@@ -85,13 +95,13 @@ export default function VerifyErrorPage() {
                 color: '#fff', border: 'none', fontWeight: 700, fontSize: 15,
                 cursor: resendStatus === 'loading' ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
               }}>
-              {resendStatus === 'loading' ? '送信中...' : '再送信する'}
+              {resendStatus === 'loading' ? '送信中... / Sending...' : '再送信する / Resend'}
             </button>
-            {resendStatus === 'sent' && <p style={{ color: THEME.green, fontSize: 13, marginTop: 12 }}>認証メールを送信しました。メールをご確認ください。</p>}
-            {resendStatus === 'rate_limited' && <p style={{ color: THEME.coral, fontSize: 13, marginTop: 12 }}>60秒後に再度お試しください。</p>}
-            {resendStatus === 'error' && <p style={{ color: THEME.coral, fontSize: 13, marginTop: 12 }}>送信に失敗しました。メールアドレスを確認してください。</p>}
+            {resendStatus === 'sent' && <p style={{ color: THEME.green, fontSize: 13, marginTop: 12 }}>認証メールを送信しました。メールをご確認ください。<br/><span style={{ color: THEME.textMuted }}>Verification email sent. Please check your inbox.</span></p>}
+            {resendStatus === 'rate_limited' && <p style={{ color: THEME.coral, fontSize: 13, marginTop: 12 }}>60秒後に再度お試しください。<br/><span style={{ color: THEME.textMuted }}>Please wait 60 seconds before trying again.</span></p>}
+            {resendStatus === 'error' && <p style={{ color: THEME.coral, fontSize: 13, marginTop: 12 }}>送信に失敗しました。メールアドレスを確認してください。<br/><span style={{ color: THEME.textMuted }}>Failed to send. Please check the email address.</span></p>}
             <a href={loginUrl} style={{ display: 'block', marginTop: 16, color: THEME.gold, fontSize: 14, textDecoration: 'none', fontFamily: THEME.font }}>
-              ログインへ →
+              ログインへ / Login →
             </a>
           </div>
         )}

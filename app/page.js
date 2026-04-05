@@ -1577,6 +1577,9 @@ export default function HomePage() {
                 color: '#c4956a',
                 marginTop: 16,
                 fontWeight: 500,
+                maxWidth: 600,
+                margin: '16px auto 0',
+                wordBreak: 'keep-all',
               }}>
                 {lang === 'en'
                   ? 'OTONAMI advantage: Japanese UI + AI English pitch generation + AI Match Score'
@@ -1607,16 +1610,17 @@ export default function HomePage() {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                padding: '24px 20px 16px',
-                background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+                padding: '40px 20px 20px',
+                background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
                 borderRadius: '0 0 16px 16px',
               }}>
                 <p style={{
-                  fontSize: 13,
+                  fontSize: 18,
                   color: '#fff',
                   margin: 0,
                   textAlign: 'center',
-                  fontWeight: 500,
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
                 }}>
                   {lang === 'en'
                     ? 'Your music could be on stages like these.'
@@ -1625,7 +1629,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Dashboard Screenshot */}
+            {/* PRELAUNCH: HIDDEN — dashboard screenshot */}
+            {/*
             <div style={{
               marginBottom: 40,
               borderRadius: 16,
@@ -1639,6 +1644,7 @@ export default function HomePage() {
                 style={{ width: '100%', display: 'block' }}
               />
             </div>
+            */}
 
             {/* Early Adopter Benefits Box (Artist) */}
             <div className="early-adopter-box" style={{

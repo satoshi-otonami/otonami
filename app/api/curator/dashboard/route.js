@@ -44,26 +44,15 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const filter = searchParams.get('status');
 
-    const cEmail = String(curator.email || '').trim();
-
-    // emailに紐づく全キュレーターIDを取得
-    const { data: curatorRows } = await db
-      .from('curators')
-      .select('id')
-      .eq('email', cEmail)
-      .limit(20);
-    const myIds = curatorRows?.map(r => r.id) || [];
-    // JWT自身のIDも含める（curatorsテーブルにない場合の安全策）
     const cId = String(curator.id || '').trim();
-    if (cId && !myIds.includes(cId)) myIds.push(cId);
-
-    // curator_idが自分のいずれかのIDに一致するピッチを取得
-    const orFilter = myIds.map(id => `curator_id.eq.${id}`).join(',');
+    if (!cId) {
+      return NextResponse.json({ pitches: [] });
+    }
 
     let query = db
       .from('pitches')
       .select('*')
-      .or(orFilter)
+      .eq('curator_id', cId)
       .order('created_at', { ascending: false })
       .limit(100);
 
@@ -76,7 +65,7 @@ export async function GET(request) {
     const { data, error } = await query;
     if (error) throw new Error(error.message);
 
-    console.log(`[dashboard] email=${cEmail} curatorIds=[${myIds.join(',')}] pitchCount=${data?.length ?? 0}`);
+    console.log(`[dashboard] curatorId=${cId} pitchCount=${data?.length ?? 0}`);
 
     return NextResponse.json({ pitches: data || [] });
   } catch (error) {
@@ -116,24 +105,12 @@ export async function PATCH(request) {
       return NextResponse.json({ error: 'Pitch not found' }, { status: 404 });
     }
 
-    // 2. 認可チェック: emailに紐づく全curator IDで照合
-    const cEmail = String(curator.email || '').trim();
+    // 2. 認可チェック: JWTのcurator IDで照合
     const cId = String(curator.id || '').trim();
     const pCuratorId = String(existingPitch.curator_id || '').trim();
 
-    let patchAuthorized = cId && cId === pCuratorId;
-    if (!patchAuthorized && cEmail) {
-      const { data: curatorRows } = await db
-        .from('curators')
-        .select('id')
-        .eq('email', cEmail)
-        .limit(20);
-      const myIds = curatorRows?.map(r => r.id) || [];
-      patchAuthorized = myIds.includes(pCuratorId);
-    }
-
-    if (!patchAuthorized) {
-      console.error(`[dashboard] PATCH auth failed: curator {id:${cId}, email:${cEmail}} vs pitch curator_id=${pCuratorId}`);
+    if (!cId || cId !== pCuratorId) {
+      console.error(`[dashboard] PATCH auth failed: curator id=${cId} vs pitch curator_id=${pCuratorId}`);
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 

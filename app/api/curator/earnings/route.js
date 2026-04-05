@@ -23,23 +23,17 @@ export async function GET(request) {
     if (!curator) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const db = getServiceSupabase();
-    const cEmail = String(curator.email || '').trim();
+    const cId = String(curator.id || '').trim();
 
-    // Get all curator IDs for this email
-    const { data: curatorRows } = await db.from('curators').select('id').eq('email', cEmail);
-    const curatorIds = curatorRows?.map(r => r.id) || [];
-    if (curator.id) curatorIds.push(curator.id);
-    const uniqueIds = [...new Set(curatorIds)];
-
-    if (uniqueIds.length === 0) {
+    if (!cId) {
       return NextResponse.json({ total_earned: 0, total_credits: 0, available_balance: 0, total_paid: 0, pending_count: 0, review_count: 0, earnings: [], last_payout: null });
     }
 
-    // Fetch earnings (without join — more reliable)
+    // Fetch earnings for this curator ID only
     const { data: earningsRaw, error } = await db
       .from('curator_earnings')
       .select('*')
-      .in('curator_id', uniqueIds)
+      .eq('curator_id', cId)
       .order('created_at', { ascending: false })
       .limit(100);
 
@@ -99,7 +93,7 @@ export async function GET(request) {
     const { data: lastPayout } = await db
       .from('payouts')
       .select('*')
-      .in('curator_id', uniqueIds)
+      .eq('curator_id', cId)
       .eq('status', 'completed')
       .order('completed_at', { ascending: false })
       .limit(1)

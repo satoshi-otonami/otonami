@@ -765,7 +765,7 @@ export default function HomePage() {
             </div>
           </AnimatedSection>
 
-          <div className="how-grid artist-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16, width: '100%', boxSizing: 'border-box' }}>
+          <div className="how-grid artist-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))', gap: 16, width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
             {t.how.steps.map((step, i) => (
               <AnimatedSection key={i} delay={i * 100}>
                 <div className="how-card-light artist-step-card step-card" style={{ padding: 24 }}>

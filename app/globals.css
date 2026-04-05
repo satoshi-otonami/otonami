@@ -293,7 +293,26 @@ section {
 
   /* Step cards */
   .step-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
     padding: 20px 16px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .step-card h3,
+  .step-card p,
+  .step-card span,
+  .step-card div {
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+    white-space: normal !important;
   }
 
   /* Prevent any horizontal overflow on mobile */

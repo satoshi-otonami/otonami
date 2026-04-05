@@ -331,7 +331,14 @@ export default function CuratorRegistrationPage() {
         body: JSON.stringify({ ...form, iconUrl, socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : null }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      if (!res.ok) {
+        if (data.error === 'already_registered') {
+          setError('already_registered');
+          setStatus('error');
+          return;
+        }
+        throw new Error(data.error || 'Registration failed');
+      }
       setStatus('success');
     } catch (e) {
       const msg = e instanceof TypeError
@@ -960,7 +967,22 @@ export default function CuratorRegistrationPage() {
                       </div>
                     </div>
 
-                    {error && (
+                    {error && error === 'already_registered' && (
+                      <div style={{ background: '#fef9ee', border: '1px solid #f5e6c8', borderRadius: 10, padding: 16, marginTop: 16, fontFamily: T.font }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                          <span style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a' }}>Already registered / 登録済みです</span>
+                        </div>
+                        <p style={{ fontSize: 14, color: '#6b6560', marginBottom: 12, lineHeight: 1.6 }}>
+                          This email is already registered.<br/>このメールアドレスは既に登録されています。
+                        </p>
+                        <button onClick={() => { setError(''); setStatus(null); setTab('login'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          style={{ background: '#c4956a', color: '#fff', border: 'none', borderRadius: 9999, padding: '10px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: T.font }}>
+                          Login instead / ログインへ →
+                        </button>
+                      </div>
+                    )}
+                    {error && error !== 'already_registered' && (
                       <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '12px 16px', marginTop: 16, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                         <span style={{ fontSize: 16, flexShrink: 0, lineHeight: 1.4 }}>⚠</span>
                         <p style={{ color: '#dc2626', fontSize: 13, margin: 0, fontFamily: T.font, whiteSpace: 'pre-line', lineHeight: 1.6 }}>{error}</p>

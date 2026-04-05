@@ -38,12 +38,12 @@ export async function POST(request) {
     }
 
     // メール重複チェック
-    const existing = await getArtistByEmail(email);
+    const existing = await getArtistByEmail(email.toLowerCase().trim());
     if (existing) {
-      return NextResponse.json(
-        { error: 'このメールアドレスは既に登録されています' },
-        { status: 409 }
-      );
+      return NextResponse.json({
+        error: 'already_registered',
+        message: 'This email is already registered. Please log in instead.\nこのメールアドレスは既に登録されています。ログインしてください。',
+      }, { status: 409 });
     }
 
     // パスワードハッシュ化

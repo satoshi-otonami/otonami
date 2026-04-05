@@ -119,7 +119,13 @@ export default function ArtistRegistrationPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      if (!res.ok) {
+        if (data.error === 'already_registered') {
+          setError('already_registered');
+          return;
+        }
+        throw new Error(data.error || 'Registration failed');
+      }
 
       setCreatedArtist(data.artist);
       setSuccess(true);
@@ -401,7 +407,21 @@ export default function ArtistRegistrationPage() {
                 </div>
               )}
 
-              {error && <p style={{ color: THEME.coral, fontSize: 13, marginTop: 16, fontFamily: THEME.font }}>{error}</p>}
+              {error && error === 'already_registered' && (
+                <div style={{ background: '#fef9ee', border: '1px solid #f5e6c8', borderRadius: 10, padding: 16, marginTop: 16, fontFamily: THEME.font }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a' }}>Already registered / 登録済みです</span>
+                  </div>
+                  <p style={{ fontSize: 14, color: '#6b6560', marginBottom: 12, lineHeight: 1.6 }}>
+                    This email is already registered.<br/>このメールアドレスは既に登録されています。
+                  </p>
+                  <a href="/artist/login" style={{ display: 'inline-block', background: '#c4956a', color: '#fff', borderRadius: 9999, padding: '10px 24px', fontSize: 14, fontWeight: 600, textDecoration: 'none', fontFamily: THEME.font }}>
+                    Login instead / ログインへ →
+                  </a>
+                </div>
+              )}
+              {error && error !== 'already_registered' && <p style={{ color: THEME.coral, fontSize: 13, marginTop: 16, fontFamily: THEME.font }}>{error}</p>}
 
               <div style={{ display: 'flex', gap: 12, marginTop: 28 }}>
                 <button onClick={() => goToStep(2)} style={{ flex: 1, padding: '14px', borderRadius: 100, background: THEME.card, border: `1.5px solid ${THEME.border}`, color: THEME.textSub, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: THEME.font }}>

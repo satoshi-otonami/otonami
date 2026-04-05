@@ -54,8 +54,23 @@ export async function POST(request) {
       );
     }
 
-    // 1. Supabaseに保存
     const supabase = getServiceSupabase();
+
+    // 重複メールチェック
+    const { data: existingCurator } = await supabase
+      .from('curators')
+      .select('id')
+      .eq('email', form.email.toLowerCase().trim())
+      .limit(1);
+
+    if (existingCurator && existingCurator.length > 0) {
+      return NextResponse.json({
+        error: 'already_registered',
+        message: 'This email is already registered. Please log in instead.\nこのメールアドレスは既に登録されています。ログインしてください。',
+      }, { status: 409 });
+    }
+
+    // 1. Supabaseに保存
     const id = `${form.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -66,7 +81,7 @@ export async function POST(request) {
       .insert({
         id,
         name: form.name,
-        email: form.email,
+        email: form.email.toLowerCase().trim(),
         type: form.type || 'blog',
         playlist: form.outletName,
         url: form.url || null,

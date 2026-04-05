@@ -26,9 +26,9 @@ const COPY = {
       cta: 'Join as Curator →', lang: 'JA',
     },
     hero: {
-      h1: ['From Japan to the world.', 'Your music crosses borders.'],
+      h1: ['Is your music actually reaching anyone?', 'OTONAMI delivers your tracks to people who truly listen.'],
       h1Gold: 1,
-      sub: 'AI-powered pitch platform connecting Japanese independent artists with international curators, playlist makers, and media.',
+      sub: 'Send your tracks directly to international playlist curators, music bloggers, and radio DJs — and get professional feedback on every submission.',
     },
     how: {
       label: 'FOR ARTISTS & LABELS',
@@ -53,13 +53,13 @@ const COPY = {
   },
   ja: {
     nav: {
-      how: '使い方', curators: 'キュレーターの方', artists: 'アーティストの方',
+      how: '使い方', curators: 'キュレーター（音楽メディア）の方', artists: 'アーティストの方',
       cta: 'キュレーター登録 →', lang: 'EN',
     },
     hero: {
-      h1: ['日本から世界へ。', 'あなたの音楽が、海を越える。'],
+      h1: ['配信した音楽、ちゃんと届いていますか？', 'あなたの曲を、本当に聴いてくれる人に届けます。'],
       h1Gold: 1,
-      sub: 'AIマッチングで、日本のインディーアーティストと海外キュレーター・プレイリスター・メディアを繋ぐピッチプラットフォーム。',
+      sub: '海外のプレイリスト運営者・音楽ブロガー・ラジオDJに、あなたの曲を直接届けて、プロのフィードバックをもらえるサービスです。',
     },
     how: {
       label: 'アーティスト・レーベルの方へ',
@@ -330,6 +330,12 @@ export default function HomePage() {
 
   const artistFaqs = [
     {
+      q: lang === 'en' ? 'What is a "curator"?' : '「キュレーター」って何ですか？',
+      a: lang === 'en'
+        ? 'Curators are music professionals who discover and share new music — playlist makers on Spotify/Apple Music, music bloggers, radio DJs, and online music magazines. When they feature your track, it reaches their audience of real music fans.'
+        : 'キュレーターとは、新しい音楽を発見して紹介する音楽のプロフェッショナルです。Spotify/Apple Musicのプレイリスト運営者、音楽ブロガー、ラジオDJ、音楽ウェブマガジンなどが含まれます。彼らがあなたの曲を紹介すると、彼らのフォロワーである本物の音楽ファンに届きます。',
+    },
+    {
       q: lang === 'en' ? 'Do I need to write pitches in English?' : 'ピッチは英語で書く必要がありますか？',
       a: lang === 'en'
         ? 'No. Write in Japanese — our AI automatically generates a professional English pitch tailored to each curator.'
@@ -577,7 +583,7 @@ export default function HomePage() {
               boxShadow: '0 4px 20px rgba(196,149,106,0.3)',
               transition: 'transform 0.2s, box-shadow 0.2s',
             }}>
-              {lang === 'en' ? 'Register as Curator →' : 'キュレーターとして登録 →'}
+              {lang === 'en' ? 'Register as Curator →' : 'キュレーター（音楽メディア）として登録 →'}
             </a>
             <a href="/artist" className="hero-cta-secondary" style={{
               display: 'inline-flex',
@@ -823,6 +829,17 @@ export default function HomePage() {
                   ? "Discover Japan's best independent music — and get paid for every review."
                   : '日本の優れたインディー音楽を発見し、レビューごとに報酬を受け取れます。'}
               </p>
+              <p style={{
+                fontSize: 13,
+                color: 'rgba(240,237,230,0.5)',
+                textAlign: 'center',
+                marginTop: -8,
+                marginBottom: 32,
+              }}>
+                {lang === 'en'
+                  ? '— Playlist curators, music bloggers, radio DJs, and media outlets'
+                  : '— プレイリスト運営者・音楽ブロガー・ラジオDJ・音楽メディアの方'}
+              </p>
             </div>
 
             {/* Live photo — shows what kind of artists curators will discover */}
@@ -1055,7 +1072,7 @@ export default function HomePage() {
                 textDecoration: 'none',
                 boxShadow: '0 4px 20px rgba(196,149,106,0.3)',
               }}>
-                {lang === 'en' ? 'Register as Curator →' : 'キュレーターとして登録 →'}
+                {lang === 'en' ? 'Register as Curator →' : 'キュレーター（音楽メディア）として登録 →'}
               </a>
             </div>
           </div>
@@ -1077,7 +1094,7 @@ export default function HomePage() {
                 marginBottom: 12,
                 fontFamily: D.fHead,
               }}>
-                {lang === 'en' ? 'For Artists & Labels' : 'アーティスト・レーベルの方へ'}
+                {lang === 'en' ? 'Beyond distribution.' : '配信したその先へ。'}
               </h2>
               <p style={{
                 fontSize: 17,
@@ -1086,9 +1103,81 @@ export default function HomePage() {
                 margin: '0 auto',
               }}>
                 {lang === 'en'
-                  ? 'Three barriers solved with AI — reach international curators from Japan.'
-                  : 'AIが3つの壁を解決。日本から海外キュレーターに直接アプローチ。'}
+                  ? "There's a way to get your music heard by the right people."
+                  : '音楽を「聴いてほしい人」に届ける方法があります。'}
               </p>
+            </div>
+
+            {/* Common mistakes — what doesn't work */}
+            <div style={{
+              maxWidth: 700,
+              margin: '0 auto 48px',
+              padding: '32px 28px',
+              background: '#fff',
+              borderRadius: 16,
+              border: '1px solid #e5e2dc',
+            }}>
+              <p style={{
+                fontSize: 15,
+                fontWeight: 600,
+                color: '#1a1a1a',
+                marginBottom: 20,
+                textAlign: 'center',
+              }}>
+                {lang === 'en'
+                  ? "Common ways artists try to grow — and why they don't work"
+                  : 'こんな方法で再生数を増やそうとしていませんか？'}
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {[
+                  {
+                    en: 'Paying bots to inflate stream counts',
+                    ja: 'ボット業者に頼んで再生数を水増し',
+                    enD: 'Risk of account suspension. Zero real fans gained.',
+                    jaD: 'アカウント停止のリスク。本当のファンは1人も増えません。',
+                  },
+                  {
+                    en: 'Paying influencers to use your track as BGM',
+                    ja: 'インフルエンサーにBGMとして使ってもらう',
+                    enD: 'Indirect exposure — viewers come for the influencer, not your music.',
+                    jaD: '間接的な露出。視聴者はインフルエンサー目当てで、あなたの音楽を聴きに来ません。',
+                  },
+                  {
+                    en: 'Grinding on social media every day',
+                    ja: 'SNSでひたすら宣伝し続ける',
+                    enD: 'Only reaches existing followers. Exhausting and unsustainable.',
+                    jaD: 'フォロワー以外には届かない。疲弊するだけで持続できません。',
+                  },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: 16, color: '#e85d3a', fontWeight: 700, flexShrink: 0, lineHeight: '24px' }}>×</span>
+                    <div>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', margin: '0 0 4px' }}>
+                        {lang === 'en' ? item.en : item.ja}
+                      </p>
+                      <p style={{ fontSize: 13, color: '#6b6560', margin: 0, lineHeight: 1.5 }}>
+                        {lang === 'en' ? item.enD : item.jaD}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <div style={{ width: '100%', height: 1, background: '#e5e2dc', margin: '4px 0' }} />
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 16, color: '#4ade80', fontWeight: 700, flexShrink: 0, lineHeight: '24px' }}>✓</span>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', margin: '0 0 4px' }}>
+                      {lang === 'en'
+                        ? 'OTONAMI: Reach real music fans through professional curators'
+                        : 'OTONAMIなら：プロのキュレーターを通じて、本当の音楽ファンに届く'}
+                    </p>
+                    <p style={{ fontSize: 13, color: '#6b6560', margin: 0, lineHeight: 1.5 }}>
+                      {lang === 'en'
+                        ? 'Playlist curators, music bloggers, and radio DJs listen to your track, give honest feedback, and share it with their audience — real people who love discovering new music.'
+                        : '海外のプレイリスト運営者・音楽ブロガー・ラジオDJがあなたの曲を実際に聴き、正直なフィードバックをくれて、彼らのオーディエンスに届けてくれます。新しい音楽を探している本物の音楽ファンに届きます。'}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* 3 Barriers Cards */}
@@ -1103,22 +1192,22 @@ export default function HomePage() {
                   icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><ellipse cx="12" cy="12" rx="4" ry="9"/></svg>,
                   title: lang === 'en' ? 'Language barrier' : '言語の壁',
                   desc: lang === 'en'
-                    ? 'AI generates professional English pitches from your Japanese input.'
-                    : 'AIがあなたの日本語からプロの英語ピッチを自動生成。',
+                    ? "Don't speak English? No problem. AI creates professional English introductions from your Japanese input."
+                    : '英語が苦手でも大丈夫。AIがあなたの日本語から、プロの英語紹介文を自動作成します。',
                 },
                 {
                   icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="1.5" strokeLinecap="round"><path d="M9 8h6M9 12h6M9 16h4"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>,
                   title: lang === 'en' ? 'Cost barrier' : 'コストの壁',
                   desc: lang === 'en'
-                    ? 'Starting from ¥160 per credit — a fraction of overseas alternatives.'
-                    : '¥160/クレジット〜。海外サービスの数分の一。',
+                    ? 'Reach international music media from ¥160 per submission. Overseas PR agencies charge ¥300K-1M/month.'
+                    : '1件¥160〜で海外の音楽メディアに直接届けられます。PR会社に頼むと月30〜100万円。',
                 },
                 {
                   icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13.8 12H3"/></svg>,
                   title: lang === 'en' ? 'Access barrier' : 'アクセスの壁',
                   desc: lang === 'en'
-                    ? 'Reach international bloggers, playlist curators, and radio DJs directly.'
-                    : '海外ブロガー・プレイリスター・ラジオDJに直接届く。',
+                    ? "No need to hunt for contacts. AI finds the right playlist curators and music bloggers for your sound."
+                    : '海外のプレイリスト運営者や音楽ブロガーの連絡先を自分で探す必要はありません。AIが最適な相手を見つけます。',
                 },
               ].map((card, i) => (
                 <div key={i} className="barrier-card" style={{

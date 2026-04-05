@@ -95,8 +95,8 @@ section {
   }
 
   .artist-steps-grid {
-    display: flex !important;
-    flex-direction: column !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
     gap: 16px !important;
   }
 
@@ -291,6 +291,23 @@ section {
   /* Step cards */
   .step-card {
     padding: 20px 16px !important;
+  }
+
+  /* Prevent any horizontal overflow on mobile */
+  * {
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+
+  section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    overflow-x: hidden !important;
+  }
+
+  section > div {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
   }
 }
 

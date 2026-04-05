@@ -823,7 +823,7 @@ export default function HomePage() {
                 fontSize: 17,
                 color: 'rgba(240,237,230,0.7)',
                 maxWidth: 500,
-                margin: '0 auto',
+                margin: '0 auto 16px',
               }}>
                 {lang === 'en'
                   ? "Discover Japan's best independent music — and get paid for every review."
@@ -833,7 +833,7 @@ export default function HomePage() {
                 fontSize: 13,
                 color: 'rgba(240,237,230,0.5)',
                 textAlign: 'center',
-                marginTop: -8,
+                marginTop: 8,
                 marginBottom: 32,
               }}>
                 {lang === 'en'

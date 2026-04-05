@@ -311,8 +311,8 @@ export default function HomePage() {
     {
       q: lang === 'en' ? 'How do I get paid?' : '報酬はどのように受け取れますか？',
       a: lang === 'en'
-        ? 'You earn $1 or more for every pitch you respond to — whether you accept, decline, or leave feedback. Payouts are processed monthly via bank transfer.'
-        : 'ピッチへの回答ごとに$1以上の報酬を受け取れます。採用・不採用・フィードバックのいずれでも支払われます。報酬は毎月銀行振込で処理されます。',
+        ? 'You earn credits for every pitch you respond to — whether you accept, decline, or leave feedback. Compensation varies by tier. Payouts are processed monthly via bank transfer.'
+        : 'ピッチへの回答ごとにクレジットを獲得できます。採用・不採用・フィードバックのいずれでも付与されます。報酬額はティアによって異なります。毎月銀行振込で処理されます。',
     },
     {
       q: lang === 'en' ? 'What kind of music will I receive?' : 'どのような音楽が届きますか？',
@@ -963,7 +963,7 @@ export default function HomePage() {
               {[
                 {
                   icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5c-.5-1-1.5-1.5-2.5-1.5s-2 .5-2 1.5 1.5 1.5 2.5 2 2.5 1 2.5 2-1 1.5-2 1.5-2-.5-2.5-1.5M12 6.5v1M12 16.5v1"/></svg>,
-                  title: lang === 'en' ? '$1+ per review' : '$1+/レビュー',
+                  title: lang === 'en' ? 'Get paid for every review' : 'すべてのレビューに報酬',
                   desc: lang === 'en'
                     ? 'Guaranteed compensation for every response — accept, decline, or feedback.'
                     : 'すべての回答に報酬が保証。採用・不採用・フィードバックいずれでも。',
@@ -1956,7 +1956,7 @@ export default function HomePage() {
                 <li>AI-matched recommendations based on your taste profile</li>
                 <li>Listen before you commit</li>
                 <li>Respond at your pace</li>
-                <li>Compensation for your expertise ($1+ per review, paid via bank transfer)</li>
+                <li>Compensation for your expertise (paid via bank transfer)</li>
               </ul>
             </div>
           </div>

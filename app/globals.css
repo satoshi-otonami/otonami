@@ -280,6 +280,21 @@
   }
 }
 
+/* Curator form input focus */
+.curator-form input:focus,
+.curator-form select:focus,
+.curator-form textarea:focus {
+  border-color: #c4956a !important;
+  box-shadow: 0 0 0 3px rgba(196, 149, 106, 0.1) !important;
+}
+
+@media (max-width: 767px) {
+  .curator-form {
+    padding: 24px 16px !important;
+    border-radius: 16px !important;
+  }
+}
+
 @media (min-width: 768px) and (max-width: 1023px) {
   .promo-inner {
     transform: scale(0.8);

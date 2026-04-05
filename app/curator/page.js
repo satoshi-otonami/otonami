@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { D as T } from '@/lib/design-tokens';
+import { CL as T } from '@/lib/design-tokens';
 import { supabase } from '@/lib/supabase';
 
 const TYPE_OPTIONS = [
@@ -55,7 +55,7 @@ const RESPONSE_TIME_OPTIONS = [
 ];
 
 export default function CuratorRegistrationPage() {
-  const [tab, setTab] = useState('login');
+  const [tab, setTab] = useState('register');
   const [registerStep, setRegisterStep] = useState(1);
   const [lang, setLang] = useState('ja');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -310,12 +310,12 @@ export default function CuratorRegistrationPage() {
   const navCtaLabel = lang === 'ja' ? 'キュレーター登録' : 'Join as Curator';
 
   const inp = {
-    width: '100%', padding: '12px 16px', borderRadius: 8,
-    border: `1px solid ${T.border}`, background: T.white, color: T.text,
-    fontSize: 14, outline: 'none', marginTop: 6, boxSizing: 'border-box',
-    fontFamily: T.font, minHeight: 48,
+    width: '100%', padding: '14px 16px', borderRadius: 10,
+    border: `1px solid ${T.border}`, background: '#fff', color: '#1a1a1a',
+    fontSize: 15, outline: 'none', marginTop: 6, boxSizing: 'border-box',
+    fontFamily: T.font, minHeight: 48, transition: 'border-color 0.2s',
   };
-  const lbl = { fontSize: 13, color: T.textMuted, display: 'block', marginTop: 18, fontWeight: 500, fontFamily: T.font };
+  const lbl = { fontSize: 14, color: '#1a1a1a', display: 'block', marginTop: 18, fontWeight: 600, marginBottom: 6, fontFamily: T.font };
   const sub = { fontSize: 11, color: T.textMuted, marginLeft: 6, fontWeight: 400 };
 
   // ── Login success screen ──
@@ -403,7 +403,7 @@ export default function CuratorRegistrationPage() {
           .header-cta { padding: 8px 11px !important; font-size: 12px !important; }
           .mobile-menu-overlay {
             display: flex !important; position: fixed; inset: 0; z-index: 200;
-            background: #1a1a1a; flex-direction: column;
+            background: #fff; flex-direction: column;
           }
           .curator-hero { padding: 56px 18px 48px !important; }
           .curator-form-wrap { padding: 0 0 80px !important; }
@@ -448,7 +448,7 @@ export default function CuratorRegistrationPage() {
       )}
 
       {/* Header */}
-      <header className="header-pad" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(26,26,26,0.85)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${T.border}`, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: T.font }}>
+      <header className="header-pad" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${T.border}`, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: T.font }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 17 }}>O</div>
@@ -481,7 +481,7 @@ export default function CuratorRegistrationPage() {
       </header>
 
       {/* Hero */}
-      <section className="curator-hero" style={{ textAlign: 'center', padding: '72px 24px 60px', background: 'linear-gradient(135deg, #1a1a1a 0%, #2a1f1a 50%, #1a1a1a 100%)', borderBottom: `1px solid ${T.border}` }}>
+      <section className="curator-hero" style={{ textAlign: 'center', padding: '72px 24px 60px', background: 'linear-gradient(135deg, #f8f7f4 0%, #f0ebe3 50%, #f8f7f4 100%)', borderBottom: `1px solid ${T.border}` }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 16px', background: T.accentLight, borderRadius: 24, fontSize: 12, fontWeight: 600, color: T.accent, border: `1px solid ${T.accentBorder}`, marginBottom: 24 }}>♪ Curator Network</div>
           <h1 style={{ fontFamily: T.fontDisplay, fontSize: 36, fontWeight: 700, color: T.text, lineHeight: 1.2, marginBottom: 16 }}>
@@ -500,20 +500,20 @@ export default function CuratorRegistrationPage() {
         <div style={{ maxWidth: 580, margin: '0 auto' }}>
 
           {/* Tab switcher */}
-          <div style={{ display: 'flex', marginBottom: 32, borderBottom: `2px solid ${T.border}` }}>
+          <div style={{ display: 'flex', background: '#f0ede6', borderRadius: 12, padding: 4, marginBottom: 32 }}>
             {[
-              { key: 'login', en: 'Login', ja: 'ログイン' },
               { key: 'register', en: 'Join as Curator', ja: '新規登録' },
+              { key: 'login', en: 'Login', ja: 'ログイン' },
             ].map(t => (
-              <button key={t.key} onClick={() => { setTab(t.key); if (t.key === 'register') setRegisterStep(1); }} className="curator-tab-btn" style={{ flex: 1, padding: '12px 8px', border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: tab === t.key ? 700 : 500, fontSize: 14, color: tab === t.key ? T.accent : T.textSub, borderBottom: tab === t.key ? `2px solid ${T.accent}` : '2px solid transparent', marginBottom: -2, fontFamily: T.font }}>
-                {t.en} <span style={{ fontSize: 11, fontWeight: 400, color: tab === t.key ? T.accent : T.textMuted }}>/ {t.ja}</span>
+              <button key={t.key} onClick={() => { setTab(t.key); if (t.key === 'register') setRegisterStep(1); }} className="curator-tab-btn" style={{ flex: 1, padding: '12px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 600, transition: 'all 0.2s', fontFamily: T.font, background: tab === t.key ? '#c4956a' : 'transparent', color: tab === t.key ? '#fff' : '#6b6560' }}>
+                {t.en} <span style={{ fontSize: 11, fontWeight: 400, opacity: 0.85 }}>/ {t.ja}</span>
               </button>
             ))}
           </div>
 
           {/* ── LOGIN TAB ── */}
           {tab === 'login' && (
-            <div style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+            <div className="curator-form" style={{ background: '#fff', borderRadius: 20, padding: '40px 36px', border: `1px solid ${T.border}`, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
               {!loginOtpStep && (
                 <>
               <p style={{ color: T.textSub, fontSize: 13, marginTop: 0, marginBottom: 24, lineHeight: 1.6, fontFamily: T.font }}>
@@ -555,8 +555,8 @@ export default function CuratorRegistrationPage() {
               {loginOtpStep && (
                 <div style={{ textAlign: 'center', padding: '20px 0' }}>
                   <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f0ede6', marginBottom: 8, fontFamily: T.fontDisplay }}>Enter verification code</h3>
-                  <p style={{ fontSize: 13, color: '#b8b0a3', marginBottom: 24 }}>{loginMaskedEmail} に認証コードを送信しました</p>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a', marginBottom: 8, fontFamily: T.fontDisplay }}>Enter verification code</h3>
+                  <p style={{ fontSize: 13, color: '#6b6560', marginBottom: 24 }}>{loginMaskedEmail} に認証コードを送信しました</p>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
                     {loginOtpValues.map((val, i) => (
                       <input key={i} ref={el => loginOtpRefs.current[i] = el}
@@ -571,7 +571,7 @@ export default function CuratorRegistrationPage() {
                   {loginOtpLoading && <p style={{ fontSize: 13, color: '#c4956a' }}>検証中...</p>}
                   {loginOtpError && <p style={{ fontSize: 14, fontWeight: 500, color: '#ef4444', marginBottom: 12, marginTop: 12 }}>{loginOtpError}</p>}
                   <button onClick={handleLoginResendOtp} disabled={loginResendCooldown > 0}
-                    style={{ background: 'none', border: 'none', color: loginResendCooldown > 0 ? '#9b9590' : '#c4956a', fontSize: 13, cursor: loginResendCooldown > 0 ? 'default' : 'pointer', fontFamily: T.font }}>
+                    style={{ background: 'none', border: 'none', color: loginResendCooldown > 0 ? '#9a9490' : '#c4956a', fontSize: 13, cursor: loginResendCooldown > 0 ? 'default' : 'pointer', fontFamily: T.font }}>
                     {loginResendCooldown > 0 ? `再送信（${loginResendCooldown}秒）` : '認証コードを再送信'}
                   </button>
                   <br />
@@ -591,7 +591,7 @@ export default function CuratorRegistrationPage() {
               <div style={{ marginBottom: 28 }}>
                 <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
                   {[1, 2, 3].map(s => (
-                    <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: registerStep >= s ? T.accent : '#3a3a3a', transition: 'background 0.3s' }} />
+                    <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: registerStep >= s ? T.accent : '#e5e2dc', transition: 'background 0.3s' }} />
                   ))}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -603,9 +603,9 @@ export default function CuratorRegistrationPage() {
 
               {/* ── STEP 1: Basic Info ── */}
               {registerStep === 1 && (
-                <div className="register-card" style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
-                  <h2 style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.text, margin: '0 0 4px' }}>Tell us about yourself</h2>
-                  <p style={{ color: T.textMuted, fontSize: 12, marginBottom: 24, fontFamily: T.font }}>自己紹介を教えてください</p>
+                <div className="register-card curator-form" style={{ background: '#fff', borderRadius: 20, padding: '40px 36px', border: `1px solid ${T.border}`, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+                  <h2 style={{ fontFamily: T.fontDisplay, fontSize: 24, fontWeight: 700, color: '#1a1a1a', margin: '0 0 4px' }}>Tell us about yourself</h2>
+                  <p style={{ color: '#6b6560', fontSize: 14, marginBottom: 32, fontFamily: T.font }}>自己紹介を教えてください</p>
 
                   {/* Profile photo */}
                   <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: `1px solid ${T.border}` }}>
@@ -668,7 +668,7 @@ export default function CuratorRegistrationPage() {
 
                   {step1Error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 16, fontFamily: T.font }}>{step1Error}</p>}
 
-                  <button onClick={goToStep2} style={{ width: '100%', marginTop: 28, padding: '14px', height: 48, background: T.accent, border: 'none', borderRadius: 10, color: T.bg, fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
+                  <button onClick={goToStep2} style={{ width: '100%', marginTop: 28, padding: '14px', height: 48, background: T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
                   onMouseEnter={e => e.currentTarget.style.background = T.accentDark}
                   onMouseLeave={e => e.currentTarget.style.background = T.accent}
                   >Next → / 次へ</button>
@@ -677,9 +677,9 @@ export default function CuratorRegistrationPage() {
 
               {/* ── STEP 2: Music Taste ── */}
               {registerStep === 2 && (
-                <div className="register-card" style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
-                  <h2 style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.text, margin: '0 0 4px' }}>What music do you love?</h2>
-                  <p style={{ color: T.textMuted, fontSize: 12, marginBottom: 24, fontFamily: T.font }}>どんな音楽が好きですか？</p>
+                <div className="register-card curator-form" style={{ background: '#fff', borderRadius: 20, padding: '40px 36px', border: `1px solid ${T.border}`, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+                  <h2 style={{ fontFamily: T.fontDisplay, fontSize: 24, fontWeight: 700, color: '#1a1a1a', margin: '0 0 4px' }}>What music do you love?</h2>
+                  <p style={{ color: '#6b6560', fontSize: 14, marginBottom: 32, fontFamily: T.font }}>どんな音楽が好きですか？</p>
 
                   {/* Genres */}
                   <div style={{ marginBottom: 24 }}>
@@ -692,7 +692,7 @@ export default function CuratorRegistrationPage() {
                         const maxed = !sel && form.genres.length >= 10;
                         return (
                           <button key={g} onClick={() => toggleArray('genres', g, 10)} className={sel ? 'pill-tag pill-tag-sel' : 'pill-tag'} disabled={maxed}
-                            style={{ padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: maxed ? 'not-allowed' : 'pointer', border: '1px solid', borderColor: sel ? T.accent : T.border, background: sel ? T.accent : T.white, color: sel ? T.bg : maxed ? T.textMuted : T.textSub, fontFamily: T.font, opacity: maxed ? 0.5 : 1, fontWeight: sel ? 600 : 400 }}>{g}</button>
+                            style={{ padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: maxed ? 'not-allowed' : 'pointer', border: '1px solid', borderColor: sel ? T.accent : T.border, background: sel ? T.accent : '#f8f7f4', color: sel ? '#fff' : maxed ? T.textMuted : T.textSub, fontFamily: T.font, opacity: maxed ? 0.5 : 1, fontWeight: sel ? 600 : 400 }}>{g}</button>
                         );
                       })}
                     </div>
@@ -725,7 +725,7 @@ export default function CuratorRegistrationPage() {
                         const sel = form.moods.includes(m);
                         return (
                           <button key={m} onClick={() => toggleArray('moods', m, null)} className={sel ? 'pill-tag pill-tag-sel' : 'pill-tag'}
-                            style={{ padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: sel ? T.accent : T.border, background: sel ? T.accent : T.white, color: sel ? T.bg : T.textSub, fontFamily: T.font, fontWeight: sel ? 600 : 400 }}>{m}</button>
+                            style={{ padding: '5px 12px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: sel ? T.accent : T.border, background: sel ? T.accent : '#f8f7f4', color: sel ? '#fff' : T.textSub, fontFamily: T.font, fontWeight: sel ? 600 : 400 }}>{m}</button>
                         );
                       })}
                     </div>
@@ -773,7 +773,7 @@ export default function CuratorRegistrationPage() {
 
                   <div className="step-btns-row" style={{ display: 'flex', gap: 10, marginTop: 28 }}>
                     <button onClick={() => setRegisterStep(1)} className="step-btn-back" style={{ padding: '14px 20px', height: 48, border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>
-                    <button onClick={goToStep3} style={{ flex: 1, padding: '14px', height: 48, background: T.accent, border: 'none', borderRadius: 10, color: T.bg, fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
+                    <button onClick={goToStep3} style={{ flex: 1, padding: '14px', height: 48, background: T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
                     onMouseEnter={e => e.currentTarget.style.background = T.accentDark}
                     onMouseLeave={e => e.currentTarget.style.background = T.accent}
                     >Next → / 次へ</button>
@@ -795,9 +795,9 @@ export default function CuratorRegistrationPage() {
                     </div>
                   </div>
 
-                  <div className="register-card" style={{ background: T.white, borderRadius: T.radiusLg, padding: 32, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
-                    <h2 style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.text, margin: '0 0 4px' }}>Complete your profile</h2>
-                    <p style={{ color: T.textMuted, fontSize: 12, marginBottom: 24, fontFamily: T.font }}>プロフィールを完成させましょう</p>
+                  <div className="register-card curator-form" style={{ background: '#fff', borderRadius: 20, padding: '40px 36px', border: `1px solid ${T.border}`, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+                    <h2 style={{ fontFamily: T.fontDisplay, fontSize: 24, fontWeight: 700, color: '#1a1a1a', margin: '0 0 4px' }}>Complete your profile</h2>
+                    <p style={{ color: '#6b6560', fontSize: 14, marginBottom: 32, fontFamily: T.font }}>プロフィールを完成させましょう</p>
 
                     {/* Bio */}
                     <div style={{ marginBottom: 24 }}>
@@ -818,7 +818,7 @@ export default function CuratorRegistrationPage() {
                           const sel = form.opportunities.includes(o.value);
                           return (
                             <button key={o.value} onClick={() => toggleArray('opportunities', o.value, null)} className={sel ? 'pill-tag pill-tag-sel' : 'pill-tag'}
-                              style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: sel ? T.accent : T.border, background: sel ? T.accent : T.white, color: sel ? T.bg : T.textSub, fontFamily: T.font, display: 'flex', alignItems: 'center', gap: 5, fontWeight: sel ? 600 : 400 }}>
+                              style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, cursor: 'pointer', border: '1px solid', borderColor: sel ? T.accent : T.border, background: sel ? T.accent : '#f8f7f4', color: sel ? '#fff' : T.textSub, fontFamily: T.font, display: 'flex', alignItems: 'center', gap: 5, fontWeight: sel ? 600 : 400 }}>
                               <span>{o.icon}</span><span>{o.en}</span>
                             </button>
                           );
@@ -897,7 +897,7 @@ export default function CuratorRegistrationPage() {
 
                     <div className="step-btns-row" style={{ display: 'flex', gap: 10, marginTop: 28 }}>
                       <button onClick={() => setRegisterStep(2)} className="step-btn-back" style={{ padding: '14px 20px', height: 48, border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>
-                      <button onClick={handleSubmit} disabled={status === 'loading' || avatarUploading} style={{ flex: 1, padding: '14px', height: 48, background: (status === 'loading' || avatarUploading) ? T.border : '#e85d3a', border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: (status === 'loading' || avatarUploading) ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}>
+                      <button onClick={handleSubmit} disabled={status === 'loading' || avatarUploading} style={{ flex: 1, padding: '16px', height: 48, background: (status === 'loading' || avatarUploading) ? T.border : '#c4956a', border: 'none', borderRadius: 12, color: '#fff', fontSize: 16, fontWeight: 600, cursor: (status === 'loading' || avatarUploading) ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background 0.15s', boxShadow: '0 4px 16px rgba(196,149,106,0.25)' }}>
                         {avatarUploading ? 'Uploading... / アップロード中...' : status === 'loading' ? 'Submitting... / 送信中...' : 'Complete Registration / 登録完了 →'}
                       </button>
                     </div>

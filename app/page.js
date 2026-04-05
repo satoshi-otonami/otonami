@@ -801,6 +801,59 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ========== AUDIENCE SELECTOR BANNER ========== */}
+      <div style={{
+        padding: '40px 20px',
+        background: 'linear-gradient(135deg, #f0ede6 0%, #e5e2dc 100%)',
+        textAlign: 'center',
+      }}>
+        <p style={{
+          fontSize: 14,
+          color: '#6b6560',
+          marginBottom: 16,
+          fontWeight: 500,
+        }}>
+          {lang === 'en' ? 'I am a...' : 'あなたはどちらですか？'}
+        </p>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: 16,
+          flexWrap: 'wrap',
+        }}>
+          <a href="#for-curators" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '14px 32px',
+            borderRadius: 9999,
+            background: '#1a1715',
+            color: '#f0ede6',
+            fontWeight: 600,
+            fontSize: 15,
+            textDecoration: 'none',
+            transition: 'transform 0.2s',
+          }}>
+            {lang === 'en' ? 'Curator / Media' : 'キュレーター・メディア'}
+          </a>
+          <a href="#for-artists" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '14px 32px',
+            borderRadius: 9999,
+            background: '#c4956a',
+            color: '#fff',
+            fontWeight: 600,
+            fontSize: 15,
+            textDecoration: 'none',
+            transition: 'transform 0.2s',
+          }}>
+            {lang === 'en' ? 'Artist / Label' : 'アーティスト・レーベル'}
+          </a>
+        </div>
+      </div>
+
       {/* ========== SECTION 5: FOR CURATORS ========== */}
       <AnimatedSection>
         <section id="for-curators" className="for-curators-section" style={{
@@ -810,6 +863,21 @@ export default function HomePage() {
         }}>
           <div style={{ maxWidth: 900, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 16px',
+                borderRadius: 9999,
+                background: 'rgba(255,255,255,0.1)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                marginBottom: 20,
+              }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c4956a' }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(240,237,230,0.7)', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  {lang === 'en' ? 'For Curators & Media' : 'キュレーター・メディア向け'}
+                </span>
+              </div>
               <h2 style={{
                 fontSize: 32,
                 fontWeight: 700,
@@ -1087,6 +1155,21 @@ export default function HomePage() {
         }}>
           <div style={{ maxWidth: 900, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 16px',
+                borderRadius: 9999,
+                background: 'rgba(196,149,106,0.1)',
+                border: '1px solid rgba(196,149,106,0.2)',
+                marginBottom: 20,
+              }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c4956a' }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#c4956a', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  {lang === 'en' ? 'For Artists & Labels' : 'アーティスト・レーベル向け'}
+                </span>
+              </div>
               <h2 style={{
                 fontSize: 32,
                 fontWeight: 700,

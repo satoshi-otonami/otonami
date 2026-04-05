@@ -26,9 +26,9 @@ const COPY = {
       cta: 'Join as Curator →', lang: 'JA',
     },
     hero: {
-      h1: ['Is your music actually reaching anyone?', 'OTONAMI delivers your tracks to people who truly listen.'],
+      h1: ['Is your music actually reaching anyone?', 'Reach real fans, not just numbers.'],
       h1Gold: 1,
-      sub: 'Send your tracks directly to international playlist curators, music bloggers, and radio DJs — and get professional feedback on every submission.',
+      sub: 'Send your music to international curators and get professional feedback.',
     },
     how: {
       label: 'FOR ARTISTS & LABELS',
@@ -57,9 +57,9 @@ const COPY = {
       cta: 'キュレーター登録 →', lang: 'EN',
     },
     hero: {
-      h1: ['配信した音楽、ちゃんと届いていますか？', 'あなたの曲を、本当に聴いてくれる人に届けます。'],
+      h1: ['配信した音楽、ちゃんと届いていますか？', '本当のファンに届ける方法があります。'],
       h1Gold: 1,
-      sub: '海外のプレイリスト運営者・音楽ブロガー・ラジオDJに、あなたの曲を直接届けて、プロのフィードバックをもらえるサービスです。',
+      sub: '海外の音楽メディアに曲を届けて、プロのフィードバックをもらえるサービス。',
     },
     how: {
       label: 'アーティスト・レーベルの方へ',
@@ -837,8 +837,8 @@ export default function HomePage() {
                 marginBottom: 32,
               }}>
                 {lang === 'en'
-                  ? '— Playlist curators, music bloggers, radio DJs, and media outlets'
-                  : '— プレイリスト運営者・音楽ブロガー・ラジオDJ・音楽メディアの方'}
+                  ? '— Playlist, blog, radio & music media professionals'
+                  : '— プレイリスト・ブログ・ラジオ・音楽メディア運営者の方'}
               </p>
             </div>
 
@@ -1103,79 +1103,70 @@ export default function HomePage() {
                 margin: '0 auto',
               }}>
                 {lang === 'en'
-                  ? "There's a way to get your music heard by the right people."
-                  : '音楽を「聴いてほしい人」に届ける方法があります。'}
+                  ? 'Get your music heard by real fans.'
+                  : 'あなたの曲を、本当の音楽ファンに届けます。'}
               </p>
             </div>
 
-            {/* Common mistakes — what doesn't work */}
-            <div style={{
-              maxWidth: 700,
-              margin: '0 auto 48px',
-              padding: '32px 28px',
-              background: '#fff',
-              borderRadius: 16,
-              border: '1px solid #e5e2dc',
-            }}>
+            {/* What doesn't work vs OTONAMI — visual comparison */}
+            <div style={{ maxWidth: 900, margin: '0 auto 48px' }}>
               <p style={{
                 fontSize: 15,
                 fontWeight: 600,
                 color: '#1a1a1a',
-                marginBottom: 20,
+                marginBottom: 24,
                 textAlign: 'center',
               }}>
                 {lang === 'en'
-                  ? "Common ways artists try to grow — and why they don't work"
-                  : 'こんな方法で再生数を増やそうとしていませんか？'}
+                  ? "Why other methods don't work"
+                  : 'なぜ他の方法ではうまくいかないのか'}
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: 16,
+                marginBottom: 24,
+              }}>
                 {[
-                  {
-                    en: 'Paying bots to inflate stream counts',
-                    ja: 'ボット業者に頼んで再生数を水増し',
-                    enD: 'Risk of account suspension. Zero real fans gained.',
-                    jaD: 'アカウント停止のリスク。本当のファンは1人も増えません。',
-                  },
-                  {
-                    en: 'Paying influencers to use your track as BGM',
-                    ja: 'インフルエンサーにBGMとして使ってもらう',
-                    enD: 'Indirect exposure — viewers come for the influencer, not your music.',
-                    jaD: '間接的な露出。視聴者はインフルエンサー目当てで、あなたの音楽を聴きに来ません。',
-                  },
-                  {
-                    en: 'Grinding on social media every day',
-                    ja: 'SNSでひたすら宣伝し続ける',
-                    enD: 'Only reaches existing followers. Exhausting and unsustainable.',
-                    jaD: 'フォロワー以外には届かない。疲弊するだけで持続できません。',
-                  },
-                ].map((item, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <span style={{ fontSize: 16, color: '#e85d3a', fontWeight: 700, flexShrink: 0, lineHeight: '24px' }}>×</span>
-                    <div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', margin: '0 0 4px' }}>
-                        {lang === 'en' ? item.en : item.ja}
-                      </p>
-                      <p style={{ fontSize: 13, color: '#6b6560', margin: 0, lineHeight: 1.5 }}>
-                        {lang === 'en' ? item.enD : item.jaD}
-                      </p>
+                  { en: 'Bot services', ja: 'ボット業者', enD: 'Fake numbers. Zero real fans. Risk of account ban.', jaD: '偽の数字。本当のファンはゼロ。アカウント停止リスク。' },
+                  { en: 'Influencer BGM', ja: 'インフルエンサー', enD: 'Viewers come for them, not your music.', jaD: '視聴者は動画目当て。音楽を聴きに来ません。' },
+                  { en: 'SNS promotion', ja: 'SNS宣伝', enD: 'Only reaches followers. Exhausting.', jaD: 'フォロワー以外に届かない。疲弊するだけ。' },
+                ].map((card, i) => (
+                  <div key={i} style={{ padding: '24px 20px', background: '#fff', borderRadius: 14, border: '1px solid #e5e2dc', textAlign: 'center' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(232,93,58,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e85d3a" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </div>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', margin: '0 0 6px' }}>{lang === 'en' ? card.en : card.ja}</p>
+                    <p style={{ fontSize: 12, color: '#6b6560', margin: 0, lineHeight: 1.5 }}>{lang === 'en' ? card.enD : card.jaD}</p>
                   </div>
                 ))}
-                <div style={{ width: '100%', height: 1, background: '#e5e2dc', margin: '4px 0' }} />
-                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: 16, color: '#4ade80', fontWeight: 700, flexShrink: 0, lineHeight: '24px' }}>✓</span>
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', margin: '0 0 4px' }}>
-                      {lang === 'en'
-                        ? 'OTONAMI: Reach real music fans through professional curators'
-                        : 'OTONAMIなら：プロのキュレーターを通じて、本当の音楽ファンに届く'}
-                    </p>
-                    <p style={{ fontSize: 13, color: '#6b6560', margin: 0, lineHeight: 1.5 }}>
-                      {lang === 'en'
-                        ? 'Playlist curators, music bloggers, and radio DJs listen to your track, give honest feedback, and share it with their audience — real people who love discovering new music.'
-                        : '海外のプレイリスト運営者・音楽ブロガー・ラジオDJがあなたの曲を実際に聴き、正直なフィードバックをくれて、彼らのオーディエンスに届けてくれます。新しい音楽を探している本物の音楽ファンに届きます。'}
-                    </p>
-                  </div>
+              </div>
+
+              {/* OTONAMI solution — accent card */}
+              <div style={{
+                padding: '24px 28px',
+                background: 'linear-gradient(135deg, rgba(196,149,106,0.06) 0%, rgba(232,93,58,0.04) 100%)',
+                borderRadius: 14,
+                border: '1px solid rgba(196,149,106,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+              }}>
+                <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(74,222,128,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a', margin: '0 0 4px' }}>
+                    {lang === 'en'
+                      ? 'OTONAMI: Real people listen to your music'
+                      : 'OTONAMI：本物の音楽ファンがあなたの曲を聴く'}
+                  </p>
+                  <p style={{ fontSize: 13, color: '#6b6560', margin: 0, lineHeight: 1.5 }}>
+                    {lang === 'en'
+                      ? 'Playlist curators, music bloggers, and radio DJs discover and share your tracks with their audience.'
+                      : 'プレイリスト運営者・音楽ブロガー・ラジオDJがあなたの曲を聴き、彼らのオーディエンスに届けます。'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1192,22 +1183,22 @@ export default function HomePage() {
                   icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><ellipse cx="12" cy="12" rx="4" ry="9"/></svg>,
                   title: lang === 'en' ? 'Language barrier' : '言語の壁',
                   desc: lang === 'en'
-                    ? "Don't speak English? No problem. AI creates professional English introductions from your Japanese input."
-                    : '英語が苦手でも大丈夫。AIがあなたの日本語から、プロの英語紹介文を自動作成します。',
+                    ? 'Type in Japanese → AI creates your English pitch.'
+                    : '日本語入力 → AIが英語紹介文を自動作成。',
                 },
                 {
                   icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="1.5" strokeLinecap="round"><path d="M9 8h6M9 12h6M9 16h4"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>,
                   title: lang === 'en' ? 'Cost barrier' : 'コストの壁',
                   desc: lang === 'en'
-                    ? 'Reach international music media from ¥160 per submission. Overseas PR agencies charge ¥300K-1M/month.'
-                    : '1件¥160〜で海外の音楽メディアに直接届けられます。PR会社に頼むと月30〜100万円。',
+                    ? 'From ¥160 per pitch. 1/100th the cost of a PR agency.'
+                    : '1件¥160〜。PR会社の1/100以下。',
                 },
                 {
                   icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13.8 12H3"/></svg>,
                   title: lang === 'en' ? 'Access barrier' : 'アクセスの壁',
                   desc: lang === 'en'
-                    ? "No need to hunt for contacts. AI finds the right playlist curators and music bloggers for your sound."
-                    : '海外のプレイリスト運営者や音楽ブロガーの連絡先を自分で探す必要はありません。AIが最適な相手を見つけます。',
+                    ? 'AI matches you with the right curators automatically.'
+                    : 'AIが最適な海外メディアを自動マッチング。',
                 },
               ].map((card, i) => (
                 <div key={i} className="barrier-card" style={{

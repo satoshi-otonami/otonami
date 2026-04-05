@@ -93,6 +93,8 @@ export default function CuratorRegistrationPage() {
   const [avatarDragOver, setAvatarDragOver] = useState(false);
   const [step1Error, setStep1Error] = useState('');
   const [step2Error, setStep2Error] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [shakeFields, setShakeFields] = useState(false);
   const [status, setStatus] = useState(null);
   const [error, setError] = useState('');
 
@@ -124,7 +126,10 @@ export default function CuratorRegistrationPage() {
   }, [loginResendCooldown]);
 
   const switchLang = (l) => { setLang(l); try { localStorage.setItem('otonami_locale', l); } catch {} };
-  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+  const set = (key, val) => {
+    setForm(f => ({ ...f, [key]: val }));
+    if (fieldErrors[key]) setFieldErrors(fe => { const n = { ...fe }; delete n[key]; return n; });
+  };
   const toggleArray = (key, val, max) => {
     setForm(f => {
       const arr = f[key] || [];
@@ -132,6 +137,7 @@ export default function CuratorRegistrationPage() {
       if (max != null && arr.length >= max) return f;
       return { ...f, [key]: [...arr, val] };
     });
+    if (fieldErrors[key]) setFieldErrors(fe => { const n = { ...fe }; delete n[key]; return n; });
   };
 
   const addArtist = () => {
@@ -255,18 +261,46 @@ export default function CuratorRegistrationPage() {
     } catch {}
   };
 
+  const scrollToField = (fieldName) => {
+    const el = document.querySelector(`[data-field="${fieldName}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const triggerShake = () => {
+    setShakeFields(true);
+    setTimeout(() => setShakeFields(false), 500);
+  };
+
   const goToStep2 = () => {
     setStep1Error('');
-    if (!form.name.trim()) { setStep1Error('Name is required. / 名前は必須です。'); return; }
-    if (!form.email.trim()) { setStep1Error('Email is required. / メールアドレスは必須です。'); return; }
-    if (form.password.length < 8) { setStep1Error('Password must be at least 8 characters. / パスワードは8文字以上にしてください。'); return; }
-    if (!form.outletName.trim()) { setStep1Error('Platform name is required. / プラットフォーム名は必須です。'); return; }
+    const errs = {};
+    if (!form.name.trim()) errs.name = 'Name is required. / 名前は必須です。';
+    if (!form.email.trim()) errs.email = 'Email is required. / メールアドレスは必須です。';
+    else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Please enter a valid email. / 有効なメールアドレスを入力してください。';
+    if (form.password.length < 8) errs.password = 'Min 8 characters. / 8文字以上にしてください。';
+    if (!form.outletName.trim()) errs.outletName = 'Platform name is required. / プラットフォーム名は必須です。';
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      triggerShake();
+      const firstKey = ['name', 'email', 'password', 'outletName'].find(k => errs[k]);
+      if (firstKey) scrollToField(firstKey);
+      return;
+    }
+    setFieldErrors({});
     setRegisterStep(2); window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const goToStep3 = () => {
     setStep2Error('');
-    if (form.genres.length === 0) { setStep2Error('Please select at least one genre. / ジャンルを1つ以上選択してください。'); return; }
+    const errs = {};
+    if (form.genres.length === 0) errs.genres = 'Please select at least one genre. / ジャンルを1つ以上選択してください。';
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      triggerShake();
+      scrollToField('genres');
+      return;
+    }
+    setFieldErrors({});
     setRegisterStep(3); window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -299,7 +333,12 @@ export default function CuratorRegistrationPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Registration failed');
       setStatus('success');
-    } catch (e) { setError(e.message); setStatus('error'); }
+    } catch (e) {
+      const msg = e instanceof TypeError
+        ? 'Network error — please check your connection and try again.\nネットワークエラー — 接続を確認して再度お試しください。'
+        : (e.message || 'Registration failed. Please try again.\n登録に失敗しました。もう一度お試しください。');
+      setError(msg); setStatus('error');
+    }
   };
 
   const navItems = [
@@ -643,22 +682,34 @@ export default function CuratorRegistrationPage() {
                     </div>
                   </div>
 
-                  <label style={lbl}>Your Name * <span style={sub}>お名前</span></label>
-                  <input className="curator-input" style={inp} value={form.name} placeholder="e.g. Taro Yamada" autoComplete="name" autoCorrect="off" onChange={e => set('name', e.target.value)} />
+                  <div data-field="name">
+                    <label style={lbl}>Your Name * <span style={sub}>お名前</span></label>
+                    <input className="curator-input" style={{ ...inp, ...(fieldErrors.name ? { borderColor: '#e85d3a' } : {}) }} value={form.name} placeholder="e.g. Taro Yamada" autoComplete="name" autoCorrect="off" onChange={e => set('name', e.target.value)} />
+                    {fieldErrors.name && <p className={shakeFields ? 'field-error-shake' : ''} style={{ color: '#e85d3a', fontSize: 12, marginTop: 6, fontFamily: T.font }}>{fieldErrors.name}</p>}
+                  </div>
 
-                  <label style={lbl}>Email Address * <span style={sub}>メールアドレス</span></label>
-                  <input className="curator-input" style={inp} type="email" value={form.email} placeholder="your@email.com" autoComplete="email" onChange={e => set('email', e.target.value)} />
+                  <div data-field="email">
+                    <label style={lbl}>Email Address * <span style={sub}>メールアドレス</span></label>
+                    <input className="curator-input" style={{ ...inp, ...(fieldErrors.email ? { borderColor: '#e85d3a' } : {}) }} type="email" value={form.email} placeholder="your@email.com" autoComplete="email" onChange={e => set('email', e.target.value)} />
+                    {fieldErrors.email && <p className={shakeFields ? 'field-error-shake' : ''} style={{ color: '#e85d3a', fontSize: 12, marginTop: 6, fontFamily: T.font }}>{fieldErrors.email}</p>}
+                  </div>
 
-                  <label style={lbl}>Password * <span style={sub}>パスワード（8文字以上）</span></label>
-                  <input className="curator-input" style={inp} type="password" value={form.password} placeholder="Minimum 8 characters" autoComplete="new-password" onChange={e => set('password', e.target.value)} />
+                  <div data-field="password">
+                    <label style={lbl}>Password * <span style={sub}>パスワード（8文字以上）</span></label>
+                    <input className="curator-input" style={{ ...inp, ...(fieldErrors.password ? { borderColor: '#e85d3a' } : {}) }} type="password" value={form.password} placeholder="Minimum 8 characters" autoComplete="new-password" onChange={e => set('password', e.target.value)} />
+                    {fieldErrors.password && <p className={shakeFields ? 'field-error-shake' : ''} style={{ color: '#e85d3a', fontSize: 12, marginTop: 6, fontFamily: T.font }}>{fieldErrors.password}</p>}
+                  </div>
 
                   <label style={lbl}>Curator Type * <span style={sub}>タイプ</span></label>
                   <select className="curator-input" style={inp} value={form.type} onChange={e => set('type', e.target.value)}>
                     {TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.en} / {o.ja}</option>)}
                   </select>
 
-                  <label style={lbl}>Platform Name * <span style={sub}>プラットフォーム名・媒体名</span></label>
-                  <input className="curator-input" style={inp} value={form.outletName} placeholder="e.g. Make Believe Melodies, My Indie Playlist" autoComplete="organization" autoCorrect="off" onChange={e => set('outletName', e.target.value)} />
+                  <div data-field="outletName">
+                    <label style={lbl}>Platform Name * <span style={sub}>プラットフォーム名・媒体名</span></label>
+                    <input className="curator-input" style={{ ...inp, ...(fieldErrors.outletName ? { borderColor: '#e85d3a' } : {}) }} value={form.outletName} placeholder="e.g. Make Believe Melodies, My Indie Playlist" autoComplete="organization" autoCorrect="off" onChange={e => set('outletName', e.target.value)} />
+                    {fieldErrors.outletName && <p className={shakeFields ? 'field-error-shake' : ''} style={{ color: '#e85d3a', fontSize: 12, marginTop: 6, fontFamily: T.font }}>{fieldErrors.outletName}</p>}
+                  </div>
 
                   <label style={lbl}>Platform URL <span style={sub}>ウェブサイト（任意）</span></label>
                   <input className="curator-input" style={inp} type="url" value={form.url} placeholder="https://your-site.com" autoComplete="url" onChange={e => set('url', e.target.value)} />
@@ -667,8 +718,6 @@ export default function CuratorRegistrationPage() {
                   <select className="curator-input" style={inp} value={form.region} onChange={e => set('region', e.target.value)}>
                     {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
-
-                  {step1Error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 16, fontFamily: T.font }}>{step1Error}</p>}
 
                   <button onClick={goToStep2} style={{ width: '100%', marginTop: 28, padding: '14px', height: 48, background: T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
                   onMouseEnter={e => e.currentTarget.style.background = T.accentDark}
@@ -684,8 +733,8 @@ export default function CuratorRegistrationPage() {
                   <p style={{ color: '#6b6560', fontSize: 14, marginBottom: 32, fontFamily: T.font }}>どんな音楽が好きですか？</p>
 
                   {/* Genres */}
-                  <div style={{ marginBottom: 24 }}>
-                    <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 10, fontFamily: T.font }}>
+                  <div data-field="genres" style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: 13, color: fieldErrors.genres ? '#e85d3a' : T.textMuted, fontWeight: 600, marginBottom: 10, fontFamily: T.font }}>
                       Genres You Cover * <span style={{ fontWeight: 400, fontSize: 11 }}>カバーするジャンル（必須・最大10個）</span>
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
@@ -771,7 +820,7 @@ export default function CuratorRegistrationPage() {
                     <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="url" value={form.playlistUrl} placeholder="Spotify playlist, YouTube channel, radio show URL..." onChange={e => set('playlistUrl', e.target.value)} />
                   </div>
 
-                  {step2Error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 16, fontFamily: T.font }}>{step2Error}</p>}
+                  {fieldErrors.genres && <p className={shakeFields ? 'field-error-shake' : ''} style={{ color: '#e85d3a', fontSize: 12, marginTop: 8, fontFamily: T.font }}>{fieldErrors.genres}</p>}
 
                   <div className="step-btns-row" style={{ display: 'flex', gap: 10, marginTop: 28 }}>
                     <button onClick={() => setRegisterStep(1)} className="step-btn-back" style={{ padding: '14px 20px', height: 48, border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>
@@ -885,17 +934,38 @@ export default function CuratorRegistrationPage() {
                       <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="number" value={form.followers} placeholder="e.g. 5000" onChange={e => set('followers', e.target.value)} />
                       <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginTop: 20 }}>
                         <div style={{ fontSize: 13, color: T.accent, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
-                          💰 PayPal Email <span style={{ fontWeight: 400, fontSize: 11, color: T.textMuted }}>支払い受取用PayPalメール</span>
+                          💰 PayPal Email <span style={{ fontWeight: 400, fontSize: 11, color: T.textMuted }}>支払い受取用PayPalメール（任意）</span>
                         </div>
                         <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="email" value={form.paypalEmail} placeholder="paypal@email.com" onChange={e => set('paypalEmail', e.target.value)} />
                         <p style={{ color: T.textMuted, fontSize: 11, marginTop: 8, lineHeight: 1.6, fontFamily: T.font }}>
                           Payouts processed via PayPal when balance reaches ¥5,000 / $50 USD.<br />
                           残高が5,000円/$50に達した時点でPayPal経由でお支払いします。
                         </p>
+                        {/* PayPal guidance */}
+                        <div style={{ marginTop: 14, fontSize: 13, lineHeight: 1.8, fontFamily: T.font }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <a href="https://www.paypal.com/welcome/signup" target="_blank" rel="noopener noreferrer" style={{ color: '#c4956a', textDecoration: 'underline', textUnderlineOffset: 2 }}>
+                              Don&apos;t have PayPal? Create a free account →
+                            </a>
+                          </div>
+                          <div style={{ paddingLeft: 20, color: '#a09890', fontSize: 12, marginTop: 2 }}>
+                            PayPalアカウントをお持ちでない方は<a href="https://www.paypal.com/jp/webapps/mpp/personal" target="_blank" rel="noopener noreferrer" style={{ color: '#c4956a', textDecoration: 'underline', textUnderlineOffset: 2 }}>こちら</a>から無料で作成できます。
+                          </div>
+                          <div style={{ paddingLeft: 20, color: '#a09890', fontSize: 12, marginTop: 6 }}>
+                            You can add your PayPal email later from your dashboard.<br/>
+                            PayPalメールはあとからダッシュボードでも設定できます。
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 14, fontFamily: T.font }}>{error}</p>}
+                    {error && (
+                      <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '12px 16px', marginTop: 16, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                        <span style={{ fontSize: 16, flexShrink: 0, lineHeight: 1.4 }}>⚠</span>
+                        <p style={{ color: '#dc2626', fontSize: 13, margin: 0, fontFamily: T.font, whiteSpace: 'pre-line', lineHeight: 1.6 }}>{error}</p>
+                      </div>
+                    )}
 
                     <div className="step-btns-row" style={{ display: 'flex', gap: 10, marginTop: 28 }}>
                       <button onClick={() => setRegisterStep(2)} className="step-btn-back" style={{ padding: '14px 20px', height: 48, border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>

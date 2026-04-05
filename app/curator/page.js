@@ -312,7 +312,7 @@ export default function CuratorRegistrationPage() {
   const inp = {
     width: '100%', padding: '14px 16px', borderRadius: 10,
     border: `1px solid ${T.border}`, background: '#fff', color: '#1a1a1a',
-    fontSize: 15, outline: 'none', marginTop: 6, boxSizing: 'border-box',
+    fontSize: 16, outline: 'none', marginTop: 6, boxSizing: 'border-box',
     fontFamily: T.font, minHeight: 48, transition: 'border-color 0.2s',
   };
   const lbl = { fontSize: 14, color: '#1a1a1a', display: 'block', marginTop: 18, fontWeight: 600, marginBottom: 6, fontFamily: T.font };
@@ -500,12 +500,12 @@ export default function CuratorRegistrationPage() {
         <div style={{ maxWidth: 580, margin: '0 auto' }}>
 
           {/* Tab switcher */}
-          <div style={{ display: 'flex', background: '#f0ede6', borderRadius: 12, padding: 4, marginBottom: 32 }}>
+          <div style={{ display: 'flex', background: '#f0ede6', borderRadius: 9999, padding: 4, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>
             {[
               { key: 'register', en: 'Join as Curator', ja: '新規登録' },
               { key: 'login', en: 'Login', ja: 'ログイン' },
             ].map(t => (
-              <button key={t.key} onClick={() => { setTab(t.key); if (t.key === 'register') setRegisterStep(1); }} className="curator-tab-btn" style={{ flex: 1, padding: '12px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 600, transition: 'all 0.2s', fontFamily: T.font, background: tab === t.key ? '#c4956a' : 'transparent', color: tab === t.key ? '#fff' : '#6b6560' }}>
+              <button key={t.key} onClick={() => { setTab(t.key); if (t.key === 'register') setRegisterStep(1); }} className="curator-tab-btn" style={{ flex: 1, padding: '12px 0', borderRadius: 9999, border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: tab === t.key ? 700 : 500, transition: 'all 0.2s', fontFamily: T.font, background: tab === t.key ? '#c4956a' : 'transparent', color: tab === t.key ? '#fff' : '#6b6560' }}>
                 {t.en} <span style={{ fontSize: 11, fontWeight: 400, opacity: 0.85 }}>/ {t.ja}</span>
               </button>
             ))}

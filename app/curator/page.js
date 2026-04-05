@@ -992,7 +992,7 @@ export default function CuratorRegistrationPage() {
         <div>
           <span>OTONAMI — Connecting Japanese Music to the World</span>
           <span style={{ margin: '0 8px' }}>·</span>
-          <span>TYCompany LLC / ILCJ</span>
+          <span>TYCompany LLC</span>
         </div>
       </footer>
     </div>

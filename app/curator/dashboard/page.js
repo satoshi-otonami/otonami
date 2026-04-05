@@ -1050,7 +1050,7 @@ export default function CuratorDashboard() {
       <footer style={{ padding: '32px 24px', background: T.white, borderTop: `1px solid ${T.border}`, textAlign: 'center', fontFamily: T.font, fontSize: 13, color: T.textMuted }}>
         <span>OTONAMI — Connecting Japanese Music to the World</span>
         <span style={{ margin: '0 8px' }}>·</span>
-        <span>TYCompany LLC / ILCJ</span>
+        <span>TYCompany LLC</span>
       </footer>
     </div>
   );

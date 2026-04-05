@@ -69,12 +69,14 @@ export async function POST(request) {
 
     // Get user and generate JWT
     if (type === 'artist') {
-      const { data: artist } = await supabase
+      const { data: artists } = await supabase
         .from('artists')
         .select('id, name, email, avatar_url, email_verified')
         .eq('email', email)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1);
 
+      const artist = artists?.[0];
       if (!artist) {
         return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
       }
@@ -97,12 +99,14 @@ export async function POST(request) {
       });
     } else {
       // Curator
-      const { data: curator } = await supabase
+      const { data: curators } = await supabase
         .from('curators')
         .select('id, name, email, type, playlist, url, genres, followers, region, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, accepts, email_verified')
         .eq('email', email)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1);
 
+      const curator = curators?.[0];
       if (!curator) {
         return NextResponse.json({ error: 'Curator not found' }, { status: 404 });
       }

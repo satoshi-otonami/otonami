@@ -558,8 +558,6 @@ export default function HomePage() {
             maxWidth: 600,
             margin: '0 auto 32px',
             lineHeight: 1.7,
-            wordBreak: 'keep-all',
-            overflowWrap: 'break-word',
           }}>
             {t.hero.sub}
           </p>
@@ -895,7 +893,6 @@ export default function HomePage() {
                 maxWidth: 560,
                 margin: '0 auto 16px',
                 lineHeight: 1.7,
-                wordBreak: 'keep-all',
               }}>
                 {lang === 'en'
                   ? "Discover Japan's best independent music — and get paid for every review."
@@ -1579,7 +1576,6 @@ export default function HomePage() {
                 fontWeight: 500,
                 maxWidth: 600,
                 margin: '16px auto 0',
-                wordBreak: 'keep-all',
               }}>
                 {lang === 'en'
                   ? 'OTONAMI advantage: Japanese UI + AI English pitch generation + AI Match Score'

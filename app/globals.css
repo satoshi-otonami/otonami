@@ -102,10 +102,10 @@ section {
 
   .artist-step-card {
     display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
     padding: 16px 20px !important;
-    gap: 16px !important;
+    gap: 8px !important;
   }
 
   .artist-step-card .step-icon-area {
@@ -120,11 +120,14 @@ section {
   .artist-step-card .step-title {
     font-size: 15px !important;
     margin-bottom: 4px !important;
+    max-width: 100% !important;
   }
 
   .artist-step-card .step-desc {
     font-size: 13px !important;
     line-height: 1.4 !important;
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
   }
 
   .walls-grid {

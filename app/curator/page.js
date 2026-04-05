@@ -412,9 +412,11 @@ export default function CuratorRegistrationPage() {
         .curator-input:hover { border-color: ${T.textMuted} !important; }
         .curator-otp-input:focus { border-color: #e85d3a !important; box-shadow: 0 0 0 3px rgba(232,93,58,0.15) !important; }
         .curator-otp-input::placeholder { color: #d4d0ca; }
-        .pill-tag { transition: all 0.15s; }
-        .pill-tag:hover { border-color: ${T.accent} !important; background: ${T.accentLight} !important; color: ${T.accent} !important; }
-        .pill-tag-sel:hover { opacity: 0.85 !important; }
+        .pill-tag { transition: all 0.15s; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
+        @media (hover: hover) and (pointer: fine) {
+          .pill-tag:hover { border-color: ${T.accent} !important; background: ${T.accentLight} !important; color: ${T.accent} !important; }
+          .pill-tag-sel:hover { opacity: 0.85 !important; }
+        }
         .curator-tab-btn { transition: all 0.2s; }
         .curator-tab-btn:hover { color: ${T.accent} !important; }
         @media (max-width: 768px) {

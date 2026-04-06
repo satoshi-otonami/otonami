@@ -23,7 +23,7 @@ const COPY = {
   en: {
     nav: {
       how: 'How it works', curators: 'For Curators', artists: 'For Artists',
-      cta: 'Join as Curator →', lang: 'JA',
+      cta: 'Join as Curator →', login: 'Login', lang: 'JA',
     },
     hero: {
       h1: ['Is your music actually reaching anyone?', 'Reach real fans, not just numbers.'],
@@ -56,7 +56,7 @@ const COPY = {
   ja: {
     nav: {
       how: '使い方', curators: 'キュレーターの方', artists: 'アーティストの方',
-      cta: 'キュレーター登録 →', lang: 'EN',
+      cta: 'キュレーター登録 →', login: 'ログイン', lang: 'EN',
     },
     hero: {
       h1: ['配信した音楽、ちゃんと届いていますか？', '本当のファンに届ける方法があります。'],
@@ -462,8 +462,9 @@ export default function HomePage() {
               >{item.label}</a>
             ))}
           </nav>
-          <div style={{ marginTop: 32 }}>
+          <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <a href="/curator" className="cta-coral" style={{ width: '100%', textAlign: 'center', display: 'block' }}>{t.nav.cta}</a>
+            <a href="/curator/login" onClick={() => setMenuOpen(false)} style={{ textAlign: 'center', color: '#c4956a', fontSize: 15, fontWeight: 600, textDecoration: 'none', fontFamily: D.fBody, padding: '10px 0' }}>{t.nav.login}</a>
           </div>
         </div>
       )}
@@ -496,7 +497,10 @@ export default function HomePage() {
                 transition: 'all 0.2s ease',
               }}>JP</button>
             </div>
-            <a href="/curator" className="cta-coral" style={{ padding: '8px 20px', fontSize: 13 }}>{t.nav.cta}</a>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <a href="/curator/login" style={{ color: '#c4956a', fontSize: 14, fontWeight: 600, textDecoration: 'none', fontFamily: D.fBody, whiteSpace: 'nowrap' }}>{t.nav.login}</a>
+              <a href="/curator" className="cta-coral" style={{ padding: '8px 20px', fontSize: 13 }}>{t.nav.cta}</a>
+            </div>
             <button className="hamburger-btn" onClick={() => setMenuOpen(true)} style={{
               display: 'none', background: 'none', border: `1px solid ${D.border}`,
               borderRadius: 9999, width: 44, height: 44, fontSize: 18, cursor: 'pointer',

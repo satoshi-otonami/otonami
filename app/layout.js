@@ -5,8 +5,25 @@ export const metadata = {
   description: 'AI-powered pitch platform connecting Japanese indie artists with international curators, playlist makers, and music blogs.',
   openGraph: {
     title: 'OTONAMI — Connect Japanese Music to the World',
-    description: 'AI-matched pitches. Real music industry connections. Trusted by 70+ independent labels.',
+    description: 'AI-powered pitch platform connecting Japanese independent artists with international curators, playlist editors, and music bloggers.',
+    url: 'https://otonami.io',
+    siteName: 'OTONAMI',
+    images: [
+      {
+        url: 'https://otonami.io/images/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'OTONAMI — Connect Japanese Music to the World',
+      },
+    ],
+    locale: 'ja_JP',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'OTONAMI — Connect Japanese Music to the World',
+    description: 'AI-powered pitch platform for Japanese independent music.',
+    images: ['https://otonami.io/images/og-image.jpg'],
   },
 };
 

@@ -237,7 +237,7 @@ export async function PUT(request) {
     const supabase = getServiceSupabase();
 
     const ALLOWED = [
-      'type', 'playlist', 'url', 'region', 'bio', 'followers',
+      'name', 'type', 'playlist', 'url', 'region', 'bio', 'followers',
       'genres', 'accepts', 'preferred_moods', 'opportunities',
       'similar_artists', 'playlist_url', 'icon_url',
       'rejected_genres', 'response_time', 'social_links',
@@ -246,6 +246,13 @@ export async function PUT(request) {
     const updateData = {};
     for (const key of ALLOWED) {
       if (body[key] !== undefined) updateData[key] = body[key];
+    }
+    if (updateData.name !== undefined) {
+      const trimmed = (updateData.name || '').trim();
+      if (!trimmed || trimmed.length > 100) {
+        return NextResponse.json({ error: 'Name must be 1–100 characters' }, { status: 400 });
+      }
+      updateData.name = trimmed;
     }
     if (updateData.followers !== undefined) {
       updateData.followers = parseInt(updateData.followers) || 0;

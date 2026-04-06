@@ -101,6 +101,11 @@ export default function CuratorDashboard() {
   const [feedbackDraft, setFeedbackDraft] = useState({});
   const [toast, setToast] = useState('');
 
+  // Inline name edit
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const [nameSaving, setNameSaving] = useState(false);
+
   // Edit profile state
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({});
@@ -151,6 +156,31 @@ export default function CuratorDashboard() {
   }, [filter, curator]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3500); };
+
+  // ── Inline name edit ──
+  const startNameEdit = () => { setNameDraft(curator.name || ''); setEditingName(true); };
+  const cancelNameEdit = () => { setEditingName(false); };
+  const saveNameEdit = async () => {
+    const trimmed = nameDraft.trim();
+    if (!trimmed || trimmed.length > 100) return;
+    if (trimmed === curator.name) { setEditingName(false); return; }
+    setNameSaving(true);
+    try {
+      const token = localStorage.getItem('curator_token');
+      const res = await fetch('/api/curator', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save');
+      setCurator(data.curator);
+      setEditingName(false);
+      showToast('✅ Name updated! / 名前を更新しました');
+    } catch (e) {
+      showToast('❌ ' + e.message);
+    } finally { setNameSaving(false); }
+  };
 
   // ── Edit profile ──
   const startEdit = () => {
@@ -656,7 +686,39 @@ export default function CuratorDashboard() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                       <div>
-                        <h2 style={{ color: T.text, fontWeight: 800, fontSize: 20, fontFamily: T.fontDisplay, margin: 0 }}>{curator.name}</h2>
+                        {editingName ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <input
+                              value={nameDraft}
+                              onChange={e => setNameDraft(e.target.value)}
+                              maxLength={100}
+                              autoFocus
+                              onKeyDown={e => { if (e.key === 'Enter') saveNameEdit(); if (e.key === 'Escape') cancelNameEdit(); }}
+                              style={{
+                                fontSize: 18, fontWeight: 800, fontFamily: T.fontDisplay,
+                                color: T.text, background: T.white, border: `1px solid ${T.border}`,
+                                borderRadius: 6, padding: '4px 10px', width: 220, outline: 'none',
+                              }}
+                            />
+                            <button onClick={saveNameEdit} disabled={nameSaving} style={{
+                              padding: '4px 14px', background: '#FF6B4A', color: '#fff',
+                              border: 'none', borderRadius: 6, fontSize: 13, fontWeight: 700,
+                              cursor: nameSaving ? 'not-allowed' : 'pointer', fontFamily: T.font,
+                            }}>{nameSaving ? '...' : 'Save'}</button>
+                            <button onClick={cancelNameEdit} style={{
+                              padding: '4px 10px', background: 'none', border: 'none',
+                              color: T.textSub, fontSize: 13, cursor: 'pointer', fontFamily: T.font,
+                            }}>Cancel</button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <h2 style={{ color: T.text, fontWeight: 800, fontSize: 20, fontFamily: T.fontDisplay, margin: 0 }}>{curator.name}</h2>
+                            <button onClick={startNameEdit} style={{
+                              background: 'none', border: 'none', color: '#c4956a',
+                              fontSize: 14, cursor: 'pointer', fontFamily: T.font, padding: 0,
+                            }}>Edit</button>
+                          </div>
+                        )}
                         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 6 }}>
                           {/* Type badge */}
                           <span style={{ padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, background: typeBadge.bg, color: typeBadge.color, fontFamily: T.font }}>{typeBadge.label}</span>

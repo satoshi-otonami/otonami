@@ -34,7 +34,7 @@ async function sendOTPEmail(email, name, otp) {
         <h2 style="font-size:20px;color:#1a1a1a;margin-bottom:8px;">ログイン認証コード / Login Code</h2>
         <p style="color:#6b6560;font-size:14px;margin-bottom:24px;">${name}さん、ログインの認証コードです。</p>
         <div style="background:#f5f3f0;border-radius:12px;padding:24px;text-align:center;margin:0 0 24px;">
-          <div style="font-size:32px;font-weight:700;letter-spacing:8px;color:#1a1a1a;font-family:monospace;">${otp.split('').join(' ')}</div>
+          <div style="font-size:32px;font-weight:700;letter-spacing:0.15em;color:#1a1a1a;font-family:monospace;white-space:nowrap;display:inline-block;">${otp}</div>
         </div>
         <p style="color:#9b9590;font-size:13px;text-align:center;line-height:1.6;">
           このコードは10分間有効です。心当たりがない場合は無視してください。<br/>

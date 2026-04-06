@@ -45,6 +45,8 @@ const COPY = {
       links: [
         { label: 'For Curators', href: '/curator' },
         { label: 'For Artists',  href: '/artist' },
+        { label: 'Curator Login', href: '/curator/login' },
+        { label: 'Artist Login',  href: '/artist/login' },
         { label: 'Contact',      href: 'mailto:info@otonami.io' },
       ],
       copy: '© 2026 TYCompany LLC',
@@ -76,6 +78,8 @@ const COPY = {
       links: [
         { label: 'キュレーター向け', href: '/curator' },
         { label: 'アーティスト向け', href: '/artist' },
+        { label: 'キュレーターログイン', href: '/curator/login' },
+        { label: 'アーティストログイン', href: '/artist/login' },
         { label: 'お問い合わせ',     href: 'mailto:info@otonami.io' },
       ],
       copy: '© 2026 TYCompany LLC',

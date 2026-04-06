@@ -635,6 +635,10 @@ export default function CuratorRegistrationPage() {
           {/* ── REGISTER TAB ── */}
           {tab === 'register' && (
             <>
+              <p style={{ textAlign: 'center', color: T.textMuted, fontSize: 12, marginBottom: 16, fontFamily: T.font }}>
+                Already have an account? / 既にアカウントをお持ちの方{' '}
+                <a href="/curator/login" style={{ color: T.accent, textDecoration: 'underline', fontWeight: 600 }}>Login / ログイン →</a>
+              </p>
               {/* 3-step progress bar */}
               <div style={{ marginBottom: 28 }}>
                 <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>

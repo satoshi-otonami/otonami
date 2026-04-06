@@ -262,8 +262,7 @@ function SetPasswordContent() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 17 }}>O</div>
-            <span style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.accent, letterSpacing: -0.3 }}>OTONAMI</span>
+            <img src="/images/logo/logo-light.svg" alt="OTONAMI" style={{ height: 24, width: 'auto' }} />
           </a>
           <nav style={{ display: 'flex', gap: 4 }}>
             {navItems.map(item => (

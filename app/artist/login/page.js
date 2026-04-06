@@ -207,8 +207,7 @@ export default function ArtistLoginPage() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: THEME.gold, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 17 }}>O</div>
-          <span style={{ fontFamily: THEME.fontDisplay, fontSize: 22, fontWeight: 700, color: THEME.gold, letterSpacing: -0.3 }}>OTONAMI</span>
+          <img src="/images/logo/logo-light.svg" alt="OTONAMI" style={{ height: 24, width: 'auto' }} />
         </a>
         <a href="/artist" style={{ padding: '8px 20px', borderRadius: 100, border: `1.5px solid ${THEME.gold}`, color: THEME.gold, textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font }}>新規登録</a>
       </header>

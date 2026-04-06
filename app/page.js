@@ -631,7 +631,7 @@ export default function HomePage() {
                 height: 96,
                 borderRadius: '50%',
                 objectFit: 'cover',
-                objectPosition: '55% 20%',
+                objectPosition: '60% 20%',
                 border: '3px solid #c4956a',
                 boxShadow: '0 4px 20px rgba(196,149,106,0.25)',
                 flexShrink: 0,

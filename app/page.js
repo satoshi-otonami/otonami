@@ -434,7 +434,10 @@ export default function HomePage() {
       {menuOpen && (
         <div ref={menuRef} style={{ position: 'fixed', inset: 0, zIndex: 300, background: '#181818', display: 'flex', flexDirection: 'column', padding: '0 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 64, borderBottom: `1px solid ${D.border}` }}>
-            <img src="/images/logo/logo-dark.svg" alt="OTONAMI" style={{ height: 20, width: 'auto' }} />
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <svg width="32" height="32" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="12" cy="20" r="3.5" fill="#FF6B4A"/><path d="M18 8 Q30 20 18 32" stroke="#FF6B4A" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9"/><path d="M24 4 Q38 20 24 36" stroke="#c4956a" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55"/><path d="M30 1 Q44 20 30 39" stroke="#A78BFA" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.3"/></svg>
+              <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 18, letterSpacing: '3px', color: '#ffffff' }}>OTONAMI</span>
+            </span>
             <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', color: D.textSec, fontSize: 28, cursor: 'pointer', lineHeight: 1, padding: 4 }}>✕</button>
           </div>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 24 }}>
@@ -475,7 +478,10 @@ export default function HomePage() {
         transition: 'background 0.3s',
       }}>
         <div style={{ ...wrap, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
-          <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}><img src="/images/logo/logo-dark.svg" alt="OTONAMI" style={{ height: 22, width: 'auto' }} /></a>
+          <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="36" height="36" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="12" cy="20" r="3.5" fill="#FF6B4A"/><path d="M18 8 Q30 20 18 32" stroke="#FF6B4A" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9"/><path d="M24 4 Q38 20 24 36" stroke="#c4956a" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55"/><path d="M30 1 Q44 20 30 39" stroke="#A78BFA" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.3"/></svg>
+            <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '3px', color: '#ffffff' }}>OTONAMI</span>
+          </a>
           <nav className="nav-desktop-links nav-links liquid-glass" style={{ display: 'flex', alignItems: 'center', gap: 4, borderRadius: 9999, padding: '4px 4px' }}>
             <a href="#for-curators" className="nav-link">{t.nav.curators}</a>
             <a href="#for-artists"  className="nav-link">{t.nav.artists}</a>
@@ -1816,7 +1822,10 @@ export default function HomePage() {
         <div style={wrap}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 32, flexWrap: 'wrap', marginBottom: 48 }}>
             <div>
-              <div style={{ marginBottom: 8 }}><img src="/images/logo/logo-dark.svg" alt="OTONAMI" style={{ height: 24, width: 'auto' }} /></div>
+              <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <svg width="36" height="36" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="12" cy="20" r="3.5" fill="#FF6B4A"/><path d="M18 8 Q30 20 18 32" stroke="#FF6B4A" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9"/><path d="M24 4 Q38 20 24 36" stroke="#c4956a" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55"/><path d="M30 1 Q44 20 30 39" stroke="#A78BFA" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.3"/></svg>
+                <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 22, letterSpacing: '3px', color: '#c4956a' }}>OTONAMI</span>
+              </div>
               <div style={{ fontSize: 13, color: D.textMuted, lineHeight: 1.6 }}>
                 {t.footer.tagline}
               </div>

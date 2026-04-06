@@ -481,7 +481,8 @@ export default function CuratorRegistrationPage() {
         <div className="mobile-menu-overlay" ref={menuRef}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', height: 64, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
             <a href="/" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-              <img src="/images/logo/logo-light.svg" alt="OTONAMI" style={{ height: 22, width: 'auto' }} />
+              <svg width="32" height="32" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="12" cy="20" r="3.5" fill="#FF6B4A"/><path d="M18 8 Q30 20 18 32" stroke="#FF6B4A" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9"/><path d="M24 4 Q38 20 24 36" stroke="#c4956a" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55"/><path d="M30 1 Q44 20 30 39" stroke="#A78BFA" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.3"/></svg>
+              <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 18, letterSpacing: '3px', color: '#1a1a1a' }}>OTONAMI</span>
             </a>
             <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: `1px solid ${T.border}`, borderRadius: 8, width: 40, height: 40, fontSize: 20, cursor: 'pointer', color: T.text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
           </div>
@@ -498,7 +499,8 @@ export default function CuratorRegistrationPage() {
       <header className="header-pad" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${T.border}`, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: T.font }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src="/images/logo/logo-light.svg" alt="OTONAMI" style={{ height: 24, width: 'auto' }} />
+            <svg width="36" height="36" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="12" cy="20" r="3.5" fill="#FF6B4A"/><path d="M18 8 Q30 20 18 32" stroke="#FF6B4A" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9"/><path d="M24 4 Q38 20 24 36" stroke="#c4956a" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55"/><path d="M30 1 Q44 20 30 39" stroke="#A78BFA" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.3"/></svg>
+            <span className="logo-text" style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '3px', color: '#1a1a1a' }}>OTONAMI</span>
           </a>
           <nav className="nav-links-center" style={{ display: 'flex', gap: 4 }}>
             {navItems.map(item => (

@@ -212,7 +212,8 @@ export default function CuratorLoginPage() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/images/logo/logo-light.svg" alt="OTONAMI" style={{ height: 24, width: 'auto' }} />
+          <svg width="36" height="36" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="12" cy="20" r="3.5" fill="#FF6B4A"/><path d="M18 8 Q30 20 18 32" stroke="#FF6B4A" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9"/><path d="M24 4 Q38 20 24 36" stroke="#c4956a" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55"/><path d="M30 1 Q44 20 30 39" stroke="#A78BFA" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.3"/></svg>
+          <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '3px', color: '#1a1a1a' }}>OTONAMI</span>
         </a>
         <a href="/curator" style={{ padding: '8px 20px', borderRadius: 100, border: `1.5px solid ${THEME.gold}`, color: THEME.gold, textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font }}>Join as Curator</a>
       </header>

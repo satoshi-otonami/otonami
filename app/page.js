@@ -623,23 +623,20 @@ export default function HomePage() {
             gap: 16,
             marginBottom: 32,
           }}>
-            <div className="founder-photo" style={{
-              width: 96,
-              height: 96,
-              borderRadius: '50%',
-              background: 'linear-gradient(145deg, #c4956a 0%, #b8845d 50%, #e85d3a 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 36,
-              color: '#fff',
-              fontWeight: 700,
-              boxShadow: '0 4px 20px rgba(196,149,106,0.25)',
-              overflow: 'hidden',
-            }}>
-              {/* Replace with <img src="/images/founder.jpg" ... /> when available */}
-              S
-            </div>
+            <img
+              src="/images/founder.jpg"
+              alt="Satoshi Yamashita"
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                objectPosition: 'center top',
+                border: '3px solid #c4956a',
+                boxShadow: '0 4px 20px rgba(196,149,106,0.25)',
+                flexShrink: 0,
+              }}
+            />
 
             <div>
               <p style={{

@@ -497,7 +497,7 @@ export default function HomePage() {
                 transition: 'all 0.2s ease',
               }}>JP</button>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div className="nav-auth-buttons" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <a href="/curator/login" style={{ color: '#c4956a', fontSize: 14, fontWeight: 600, textDecoration: 'none', fontFamily: D.fBody, whiteSpace: 'nowrap' }}>{t.nav.login}</a>
               <a href="/curator" className="cta-coral" style={{ padding: '8px 20px', fontSize: 13 }}>{t.nav.cta}</a>
             </div>
@@ -608,6 +608,16 @@ export default function HomePage() {
               transition: 'transform 0.2s, background 0.2s',
             }}>
               {lang === 'en' ? 'Register as Artist →' : 'アーティストとして登録 →'}
+            </a>
+          </div>
+
+          {/* Mobile-only login links */}
+          <div className="hero-login-links" style={{ display: 'none', justifyContent: 'center', gap: 24, marginTop: 20 }}>
+            <a href="/curator/login" style={{ color: '#c4956a', fontSize: 14, fontWeight: 600, textDecoration: 'none', fontFamily: D.fBody }}>
+              {lang === 'en' ? 'Curator Login' : 'キュレーターログイン'}
+            </a>
+            <a href="/artist/login" style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: 600, textDecoration: 'none', fontFamily: D.fBody }}>
+              {lang === 'en' ? 'Artist Login' : 'アーティストログイン'}
             </a>
           </div>
         </div>

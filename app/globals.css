@@ -147,6 +147,14 @@ section {
     display: none !important;
   }
 
+  .nav-auth-buttons {
+    display: none !important;
+  }
+
+  .hero-login-links {
+    display: flex !important;
+  }
+
   /* Hero */
   /* Force hero heading size — override inline styles */
   .hero-heading,

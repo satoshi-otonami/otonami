@@ -1,33 +1,34 @@
 import './globals.css';
 
 export const metadata = {
+  metadataBase: new URL('https://otonami.io'),
   title: 'OTONAMI — Connect Japanese Music to the World',
-  description: 'AI-powered pitch platform connecting Japanese indie artists with international curators, playlist makers, and music blogs.',
+  description: 'AI-powered pitch platform connecting Japanese independent artists with international curators, playlist editors, bloggers, and radio programmers.',
   icons: {
     icon: '/favicon.svg',
     apple: '/favicon.svg',
   },
   openGraph: {
     title: 'OTONAMI — Connect Japanese Music to the World',
-    description: 'AI-powered pitch platform connecting Japanese independent artists with international curators, playlist editors, and music bloggers.',
+    description: 'AI-powered pitch platform connecting Japanese independent artists with international curators.',
     url: 'https://otonami.io',
     siteName: 'OTONAMI',
     images: [
       {
-        url: 'https://otonami.io/images/og-image.svg',
+        url: '/og-image.png',
         width: 1200,
         height: 630,
         alt: 'OTONAMI — Connect Japanese Music to the World',
       },
     ],
-    locale: 'ja_JP',
+    locale: 'en_US',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'OTONAMI — Connect Japanese Music to the World',
-    description: 'AI-powered pitch platform for Japanese independent music.',
-    images: ['https://otonami.io/images/og-image.svg'],
+    description: 'AI-powered pitch platform connecting Japanese independent artists with international curators.',
+    images: ['/og-image.png'],
   },
 };
 

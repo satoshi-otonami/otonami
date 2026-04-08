@@ -8,6 +8,7 @@ const STATUS_LABELS = {
   accepted: { en: 'Accepted', ja: '承認済み', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
   declined: { en: 'Declined', ja: '却下済み', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
   feedback: { en: 'Feedback', ja: 'FB受信',   color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
+  expired:  { en: 'Expired',  ja: '期限切れ', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
 };
 
 const FILTER_TABS = [
@@ -956,6 +957,17 @@ export default function CuratorDashboard() {
                           ? new Date(pitch.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })
                           : ''}
                       </span>
+                      {pitch.status === 'sent' && pitch.deadline_at && (() => {
+                        const hoursLeft = Math.max(0, Math.floor((new Date(pitch.deadline_at) - new Date()) / (1000 * 60 * 60)));
+                        if (hoursLeft < 48) {
+                          return (
+                            <span style={{ color: '#FF3D6E', fontSize: 11, fontWeight: 600, fontFamily: T.font }}>
+                              ⚠️ {hoursLeft < 24 ? 'EXPIRES TODAY' : `${Math.floor(hoursLeft / 24)}d left`} — respond to keep your earnings
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
                       {pitch.song_link && (
                         <a href={pitch.song_link} target="_blank" rel="noopener noreferrer"
                           onClick={() => {

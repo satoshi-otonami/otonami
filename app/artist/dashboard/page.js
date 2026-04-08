@@ -610,23 +610,42 @@ export default function ArtistDashboard() {
                           background: pitch.status === 'interested' || pitch.status === 'accepted' ? THEME.greenLight :
                                      pitch.status === 'feedback' ? '#3b82f620' :
                                      pitch.status === 'declined' ? '#ef444420' :
+                                     pitch.status === 'expired' ? '#ef444420' :
                                      pitch.status === 'opened' ? '#f59e0b20' :
                                      THEME.borderLight,
                           color: pitch.status === 'interested' || pitch.status === 'accepted' ? THEME.green :
                                  pitch.status === 'feedback' ? '#3b82f6' :
                                  pitch.status === 'declined' ? '#ef4444' :
+                                 pitch.status === 'expired' ? '#ef4444' :
                                  pitch.status === 'opened' ? '#f59e0b' :
                                  THEME.textSub,
                         }}>
                           {pitch.status === 'interested' || pitch.status === 'accepted' ? '✅ 採用' :
                            pitch.status === 'feedback' ? '💬 FB受信' :
                            pitch.status === 'declined' ? '❌ 不採用' :
+                           pitch.status === 'expired' ? '⏰ 期限切れ' :
                            pitch.status === 'opened' ? '👀 開封済' :
                            pitch.status === 'listened' ? '🎧 試聴済' :
                            pitch.status === 'sent' ? '📤 送信済' :
                            pitch.status}
                         </span>
                       </div>
+                      {/* Deadline badge */}
+                      {pitch.status === 'expired' && pitch.refund_credits > 0 && (
+                        <div style={{ marginTop: 6, fontSize: 12, color: '#ef4444', fontFamily: THEME.font }}>
+                          ⏰ 期限切れ — {pitch.refund_credits} credits 返還済み
+                        </div>
+                      )}
+                      {pitch.status === 'sent' && pitch.deadline_at && (() => {
+                        const hoursLeft = Math.max(0, Math.floor((new Date(pitch.deadline_at) - new Date()) / (1000 * 60 * 60)));
+                        const daysLeft = Math.floor(hoursLeft / 24);
+                        const isUrgent = hoursLeft < 48;
+                        return (
+                          <div style={{ marginTop: 6, fontSize: 12, color: isUrgent ? '#ef4444' : THEME.textMuted, fontFamily: THEME.font }}>
+                            ⏳ 回答期限: あと {daysLeft > 0 ? `${daysLeft}日` : `${hoursLeft}時間`}
+                          </div>
+                        );
+                      })()}
                       {pitch.feedback_message && (
                         <div style={{ marginTop: 10, padding: 12, background: THEME.bg, borderRadius: 8, borderLeft: `3px solid ${THEME.gold}` }}>
                           <p style={{ fontSize: 12, color: THEME.textMuted, marginBottom: 4, fontFamily: THEME.font }}>{pitch.curator_name} からのフィードバック</p>

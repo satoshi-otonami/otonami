@@ -237,16 +237,17 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ error: error?.message || 'Update failed' }, { status: 500 });
   }
 
-  // feedback_at を別途更新（column が存在しない場合もメイン更新は成功済み）
+  // feedback_at / responded_at を別途更新（column が存在しない場合もメイン更新は成功済み）
   if (['accepted', 'declined', 'feedback'].includes(status)) {
     const { error: fatError } = await db
       .from('pitches')
-      .update({ feedback_at: now })
+      .update({ feedback_at: now, responded_at: now })
       .eq('id', data.id);
     if (fatError) {
-      console.warn(`[pitch-detail] feedback_at update failed (column may not exist):`, fatError.message);
+      console.warn(`[pitch-detail] feedback_at/responded_at update failed (column may not exist):`, fatError.message);
     } else {
       data.feedback_at = now;
+      data.responded_at = now;
     }
   }
 

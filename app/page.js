@@ -435,7 +435,7 @@ export default function HomePage() {
         <div ref={menuRef} style={{ position: 'fixed', inset: 0, zIndex: 300, background: '#181818', display: 'flex', flexDirection: 'column', padding: '0 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 64, borderBottom: `1px solid ${D.border}` }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <svg width="32" height="32" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="12" cy="20" r="3.5" fill="#FF6B4A"/><path d="M18 8 Q30 20 18 32" stroke="#FF6B4A" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9"/><path d="M24 4 Q38 20 24 36" stroke="#c4956a" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55"/><path d="M30 1 Q44 20 30 39" stroke="#A78BFA" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.3"/></svg>
+              <svg width="32" height="32" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="20" cy="20" r="16" fill="none" stroke="#FF6B4A" strokeWidth="5"/><g style={{clipPath:'circle(32.5% at 50% 50%)'}} fill="#FF6B4A"><rect x="8" y="17" width="2" height="6" rx="1"/><rect x="12" y="14" width="2" height="12" rx="1"/><rect x="16" y="11" width="2" height="18" rx="1"/><rect x="20" y="8" width="2" height="24" rx="1"/><rect x="24" y="11" width="2" height="18" rx="1"/><rect x="28" y="14" width="2" height="12" rx="1"/><rect x="32" y="17" width="2" height="6" rx="1"/></g></svg>
               <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 18, letterSpacing: '3px', color: '#ffffff' }}>OTONAMI</span>
             </span>
             <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', color: D.textSec, fontSize: 28, cursor: 'pointer', lineHeight: 1, padding: 4 }}>✕</button>
@@ -479,7 +479,7 @@ export default function HomePage() {
       }}>
         <div style={{ ...wrap, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <svg width="36" height="36" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="12" cy="20" r="3.5" fill="#FF6B4A"/><path d="M18 8 Q30 20 18 32" stroke="#FF6B4A" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9"/><path d="M24 4 Q38 20 24 36" stroke="#c4956a" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55"/><path d="M30 1 Q44 20 30 39" stroke="#A78BFA" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.3"/></svg>
+            <svg width="36" height="36" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="20" cy="20" r="16" fill="none" stroke="#FF6B4A" strokeWidth="5"/><g style={{clipPath:'circle(32.5% at 50% 50%)'}} fill="#FF6B4A"><rect x="8" y="17" width="2" height="6" rx="1"/><rect x="12" y="14" width="2" height="12" rx="1"/><rect x="16" y="11" width="2" height="18" rx="1"/><rect x="20" y="8" width="2" height="24" rx="1"/><rect x="24" y="11" width="2" height="18" rx="1"/><rect x="28" y="14" width="2" height="12" rx="1"/><rect x="32" y="17" width="2" height="6" rx="1"/></g></svg>
             <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '3px', color: '#ffffff' }}>OTONAMI</span>
           </a>
           <nav className="nav-desktop-links nav-links liquid-glass" style={{ display: 'flex', alignItems: 'center', gap: 4, borderRadius: 9999, padding: '4px 4px' }}>
@@ -1823,7 +1823,7 @@ export default function HomePage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 32, flexWrap: 'wrap', marginBottom: 48 }}>
             <div>
               <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <svg width="36" height="36" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="12" cy="20" r="3.5" fill="#FF6B4A"/><path d="M18 8 Q30 20 18 32" stroke="#FF6B4A" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.9"/><path d="M24 4 Q38 20 24 36" stroke="#c4956a" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.55"/><path d="M30 1 Q44 20 30 39" stroke="#A78BFA" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.3"/></svg>
+                <svg width="36" height="36" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="20" cy="20" r="16" fill="none" stroke="#FF6B4A" strokeWidth="5"/><g style={{clipPath:'circle(32.5% at 50% 50%)'}} fill="#FF6B4A"><rect x="8" y="17" width="2" height="6" rx="1"/><rect x="12" y="14" width="2" height="12" rx="1"/><rect x="16" y="11" width="2" height="18" rx="1"/><rect x="20" y="8" width="2" height="24" rx="1"/><rect x="24" y="11" width="2" height="18" rx="1"/><rect x="28" y="14" width="2" height="12" rx="1"/><rect x="32" y="17" width="2" height="6" rx="1"/></g></svg>
                 <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 22, letterSpacing: '3px', color: '#c4956a' }}>OTONAMI</span>
               </div>
               <div style={{ fontSize: 13, color: D.textMuted, lineHeight: 1.6 }}>

@@ -101,6 +101,7 @@ export async function POST(request) {
         social_links: form.socialLinks || null,
         submission_guidelines: form.submissionGuidelines || null,
         featured_track_url: form.featuredTrackUrl || null,
+        open_to_all_genres: form.openToAllGenres || false,
         tags: ['pending_review'],
         tier: 3,
         is_seed: false,
@@ -241,7 +242,7 @@ export async function PUT(request) {
       'genres', 'accepts', 'preferred_moods', 'opportunities',
       'similar_artists', 'playlist_url', 'icon_url',
       'rejected_genres', 'response_time', 'social_links',
-      'submission_guidelines', 'featured_track_url',
+      'submission_guidelines', 'featured_track_url', 'open_to_all_genres',
     ];
     const updateData = {};
     for (const key of ALLOWED) {
@@ -262,7 +263,7 @@ export async function PUT(request) {
       .from('curators')
       .update(updateData)
       .eq('id', payload.id)
-      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, rejected_genres, response_time, social_links, submission_guidelines, featured_track_url')
+      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, rejected_genres, response_time, social_links, submission_guidelines, featured_track_url, open_to_all_genres')
       .single();
 
     if (error) throw new Error(error.message);

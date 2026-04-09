@@ -83,6 +83,85 @@ function PillRow({ items, color = T.accent, bg = T.accentLight, border = T.accen
   );
 }
 
+function SubmissionWidget({ curatorId, curatorName }) {
+  const [copied, setCopied] = useState('');
+  const baseUrl = 'https://otonami.io';
+  const submitUrl = `${baseUrl}/submit/${curatorId}`;
+  const safeName = (curatorName || '').replace(/[<>"'&]/g, '');
+  const embedCode = `<a href="${submitUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:10px;padding:12px 28px;border-radius:25px;background:linear-gradient(135deg,#FF6B4A,#FF3D6E);color:#fff;font-weight:600;font-size:0.95rem;text-decoration:none;font-family:sans-serif;">🎵 Submit Music to ${safeName}</a><p style="color:#999;font-size:0.75rem;margin-top:6px;">Powered by <a href="${baseUrl}" style="color:#FF6B4A;text-decoration:none;">OTONAMI</a></p>`;
+
+  const copyText = (text, label) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(label);
+      setTimeout(() => setCopied(''), 2000);
+    });
+  };
+
+  return (
+    <div style={{ background: T.white, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24, marginBottom: 24, boxShadow: T.shadow }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <span style={{ fontSize: 16 }}>🔗</span>
+        <h3 style={{ fontFamily: T.fontDisplay, fontSize: 15, fontWeight: 700, color: T.text, margin: 0 }}>Submission Widget</h3>
+      </div>
+      <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 18, fontFamily: T.font, lineHeight: 1.6 }}>
+        Add this to your website to receive music submissions directly through OTONAMI.<br />
+        あなたのサイトに埋め込んで、アーティストからの楽曲を直接受け取れます。
+      </p>
+
+      {/* Preview */}
+      <div style={{ background: '#0d0d1a', borderRadius: 10, padding: 20, textAlign: 'center', marginBottom: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+        <a href={submitUrl} target="_blank" rel="noopener noreferrer" style={{
+          display: 'inline-flex', alignItems: 'center', gap: 10,
+          padding: '12px 28px', borderRadius: 25,
+          background: 'linear-gradient(135deg,#FF6B4A,#FF3D6E)',
+          color: '#fff', fontWeight: 600, fontSize: '0.95rem', textDecoration: 'none', fontFamily: T.font,
+        }}>
+          🎵 Submit Music to {curatorName}
+        </a>
+        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.72rem', marginTop: 8, marginBottom: 0, fontFamily: T.font }}>
+          Powered by OTONAMI
+        </p>
+      </div>
+
+      {/* HTML embed code */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <label style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, fontWeight: 600 }}>HTML embed code:</label>
+          <button onClick={() => copyText(embedCode, 'html')} style={{
+            padding: '3px 12px', borderRadius: 6, border: 'none',
+            background: copied === 'html' ? '#10b981' : T.accent, color: '#fff',
+            fontSize: 11, cursor: 'pointer', fontWeight: 600, fontFamily: T.font,
+            transition: 'background 0.2s',
+          }}>{copied === 'html' ? '✓ Copied!' : 'Copy'}</button>
+        </div>
+        <textarea readOnly value={embedCode} style={{
+          width: '100%', height: 80, padding: 10, boxSizing: 'border-box',
+          background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8,
+          color: '#3b82f6', fontSize: 10, fontFamily: 'monospace', resize: 'none',
+          lineHeight: 1.5,
+        }} />
+      </div>
+
+      {/* Direct link */}
+      <div>
+        <label style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, fontWeight: 600, display: 'block', marginBottom: 6 }}>Direct link:</label>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input readOnly value={submitUrl} style={{
+            flex: 1, padding: '8px 12px', background: T.bg, border: `1px solid ${T.border}`,
+            borderRadius: 8, color: T.text, fontSize: 13, fontFamily: T.font,
+          }} />
+          <button onClick={() => copyText(submitUrl, 'link')} style={{
+            padding: '8px 16px', borderRadius: 8, border: 'none',
+            background: copied === 'link' ? '#10b981' : T.accent, color: '#fff',
+            fontSize: 12, cursor: 'pointer', fontWeight: 600, fontFamily: T.font,
+            whiteSpace: 'nowrap', transition: 'background 0.2s',
+          }}>{copied === 'link' ? '✓ Copied!' : 'Copy'}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SectionLabel({ children }) {
   return (
     <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, letterSpacing: 0.8, marginBottom: 6, fontFamily: T.font, textTransform: 'uppercase' }}>
@@ -192,6 +271,7 @@ export default function CuratorDashboard() {
       region: curator.region || 'Global',
       bio: curator.bio || '',
       followers: curator.followers || '',
+      open_to_all_genres: curator.open_to_all_genres || false,
       genres: [...(curator.genres || [])],
       accepts: [...(curator.accepts || [])],
       preferred_moods: [...(curator.preferred_moods || [])],
@@ -583,9 +663,20 @@ export default function CuratorDashboard() {
                   {editForm.bio?.length > 400 && <div style={{ color: editForm.bio.length > 480 ? '#ef4444' : T.textMuted, fontSize: 11, marginTop: 2, fontFamily: T.font }}>{editForm.bio.length}/500</div>}
                 </div>
 
+                {/* Open to all genres toggle */}
+                <div onClick={() => setEditForm(f => ({ ...f, open_to_all_genres: !f.open_to_all_genres }))} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', marginBottom: 14, background: editForm.open_to_all_genres ? 'rgba(255,107,74,0.08)' : T.white, borderRadius: 10, border: '1px solid', borderColor: editForm.open_to_all_genres ? '#FF6B4A' : T.border, cursor: 'pointer', transition: 'all 0.2s' }}>
+                  <div style={{ width: 40, height: 22, borderRadius: 11, background: editForm.open_to_all_genres ? '#FF6B4A' : '#d1d5db', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: editForm.open_to_all_genres ? 20 : 2, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 12, color: T.text, fontFamily: T.font }}>Open to all genres</div>
+                    <div style={{ fontSize: 10, color: T.textMuted, fontFamily: T.font }}>全ジャンルからピッチを受け付ける</div>
+                  </div>
+                </div>
+
                 {/* Genres */}
                 <div style={{ marginBottom: 14 }}>
-                  <label style={editLbl}>Genres / ジャンル <span style={{ fontSize: 10, fontWeight: 400, color: T.textMuted }}>（最大10個）</span></label>
+                  <label style={editLbl}>{editForm.open_to_all_genres ? 'Preferred Genres / 優先ジャンル' : 'Genres / ジャンル'} <span style={{ fontSize: 10, fontWeight: 400, color: T.textMuted }}>（最大10個）</span></label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {GENRE_OPTIONS.map(g => {
                       const sel = editForm.genres?.includes(g);
@@ -766,9 +857,15 @@ export default function CuratorDashboard() {
 
                 {/* Tags sections */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {curator.open_to_all_genres && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'rgba(255,107,74,0.08)', borderRadius: 8, border: '1px solid rgba(255,107,74,0.2)' }}>
+                      <span style={{ fontSize: 14 }}>🌍</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: '#FF6B4A', fontFamily: T.font }}>Open to all genres / 全ジャンル受付中</span>
+                    </div>
+                  )}
                   {curator.genres?.length > 0 && (
                     <div>
-                      <SectionLabel>Genres / ジャンル</SectionLabel>
+                      <SectionLabel>{curator.open_to_all_genres ? 'Preferred Genres / 優先ジャンル' : 'Genres / ジャンル'}</SectionLabel>
                       <PillRow items={curator.genres} color={T.accent} bg={T.accentLight} border={T.accentBorder} />
                     </div>
                   )}
@@ -800,6 +897,11 @@ export default function CuratorDashboard() {
               </div>
             )}
           </div>
+        )}
+
+        {/* ── Submission Widget ── */}
+        {curator && !editMode && (
+          <SubmissionWidget curatorId={curator.id} curatorName={curator.name} />
         )}
 
         {/* ── ピッチ統計カード ── */}

@@ -58,6 +58,7 @@ export async function GET(request) {
       pitchesResponded: data.pitches_responded || null,
       pitchesAccepted: data.pitches_accepted || null,
       creditCost: data.credit_cost || 2,
+      openToAllGenres: data.open_to_all_genres || false,
     };
 
     return NextResponse.json({ curator });

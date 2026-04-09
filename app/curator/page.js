@@ -95,6 +95,7 @@ export default function CuratorRegistrationPage() {
   const [step2Error, setStep2Error] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [shakeFields, setShakeFields] = useState(false);
+  const [openToAllGenres, setOpenToAllGenres] = useState(false);
   const [status, setStatus] = useState(null);
   const [error, setError] = useState('');
 
@@ -293,7 +294,7 @@ export default function CuratorRegistrationPage() {
   const goToStep3 = () => {
     setStep2Error('');
     const errs = {};
-    if (form.genres.length === 0) errs.genres = 'Please select at least one genre. / ジャンルを1つ以上選択してください。';
+    if (!openToAllGenres && form.genres.length === 0) errs.genres = 'Please select at least one genre. / ジャンルを1つ以上選択してください。';
     if (Object.keys(errs).length > 0) {
       setFieldErrors(errs);
       triggerShake();
@@ -328,7 +329,7 @@ export default function CuratorRegistrationPage() {
       if (form.socialInstagram.trim()) socialLinks.instagram = form.socialInstagram.trim();
       const res = await fetch('/api/curator', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, iconUrl, socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : null }),
+        body: JSON.stringify({ ...form, openToAllGenres, iconUrl, socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : null }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -743,10 +744,21 @@ export default function CuratorRegistrationPage() {
                   <h2 style={{ fontFamily: T.fontDisplay, fontSize: 24, fontWeight: 700, color: '#1a1a1a', margin: '0 0 4px' }}>What music do you love?</h2>
                   <p style={{ color: '#6b6560', fontSize: 14, marginBottom: 32, fontFamily: T.font }}>どんな音楽が好きですか？</p>
 
+                  {/* Open to all genres toggle */}
+                  <div onClick={() => setOpenToAllGenres(!openToAllGenres)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', marginBottom: 20, background: openToAllGenres ? 'rgba(255,107,74,0.08)' : '#f8f7f4', borderRadius: 12, border: '1px solid', borderColor: openToAllGenres ? '#FF6B4A' : T.border, cursor: 'pointer', transition: 'all 0.2s' }}>
+                    <div style={{ width: 44, height: 24, borderRadius: 12, background: openToAllGenres ? '#FF6B4A' : '#d1d5db', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+                      <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: openToAllGenres ? 22 : 2, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: '#1a1a1a', fontFamily: T.font }}>Open to all genres</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2, fontFamily: T.font }}>Receive pitches from any genre / 全ジャンルからピッチを受け付ける</div>
+                    </div>
+                  </div>
+
                   {/* Genres */}
                   <div data-field="genres" style={{ marginBottom: 24 }}>
                     <div style={{ fontSize: 13, color: fieldErrors.genres ? '#e85d3a' : T.textMuted, fontWeight: 600, marginBottom: 10, fontFamily: T.font }}>
-                      Genres You Cover * <span style={{ fontWeight: 400, fontSize: 11 }}>カバーするジャンル（必須・最大10個）</span>
+                      {openToAllGenres ? 'Preferred Genres' : 'Genres You Cover *'} <span style={{ fontWeight: 400, fontSize: 11 }}>{openToAllGenres ? '優先ジャンル（任意・最大10個）' : 'カバーするジャンル（必須・最大10個）'}</span>
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
                       {GENRE_OPTIONS.map(g => {

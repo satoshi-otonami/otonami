@@ -35,7 +35,9 @@ export async function GET() {
         openToAllGenres: c.open_to_all_genres || false,
       }));
 
-    return NextResponse.json({ curators });
+    return NextResponse.json({ curators }, {
+      headers: { 'Cache-Control': 'no-store, max-age=0' },
+    });
   } catch (e) {
     console.error('Curators list error:', e);
     return NextResponse.json({ error: e.message }, { status: 500 });

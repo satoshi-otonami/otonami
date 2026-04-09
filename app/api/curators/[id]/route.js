@@ -14,7 +14,7 @@ export async function GET(request, { params }) {
     const supabase = getServiceSupabase();
     const { data, error } = await supabase
       .from('curators')
-      .select('id, name, type, platform, url, genres, bio, followers, region, icon, icon_url, accepts, preferred_moods, opportunities, playlist_url, open_to_all_genres')
+      .select('id, name, type, playlist, url, genres, bio, followers, region, icon, icon_url, accepts, preferred_moods, opportunities, playlist_url, open_to_all_genres')
       .eq('id', id)
       .single();
 
@@ -26,7 +26,7 @@ export async function GET(request, { params }) {
       id: data.id,
       name: data.name,
       type: data.type,
-      platform: data.platform,
+      platform: data.playlist,
       url: data.url,
       genres: data.genres || [],
       bio: data.bio,

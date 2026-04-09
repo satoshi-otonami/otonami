@@ -7,12 +7,14 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const supabase = getServiceSupabase();
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from('curators')
-      .select('id, name, type, playlist, url, genres, bio, followers, region, icon_url, accepts, preferred_moods, opportunities, similar_artists, tags, tier, open_to_all_genres')
+      .select('id, name, type, playlist, url, genres, bio, followers, region, icon_url, accepts, preferred_moods, opportunities, similar_artists, tags, tier, open_to_all_genres', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
+
+    console.log('[curators/list] DB returned', data?.length, 'rows, count:', count);
 
     const curators = (data || []).map(c => ({
         id: c.id,

@@ -9,15 +9,12 @@ export async function GET() {
     const supabase = getServiceSupabase();
     const { data, error } = await supabase
       .from('curators')
-      .select('id, name, type, playlist, url, genres, bio, followers, region, icon_url, accepts, preferred_moods, opportunities, similar_artists, tags, tier, credit_cost, open_to_all_genres, email_verified')
+      .select('id, name, type, playlist, url, genres, bio, followers, region, icon_url, accepts, preferred_moods, opportunities, similar_artists, tags, tier, credit_cost, open_to_all_genres')
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
 
-    // Only return curators with verified emails (real registrations)
-    const curators = (data || [])
-      .filter(c => c.email_verified !== false)
-      .map(c => ({
+    const curators = (data || []).map(c => ({
         id: c.id,
         name: c.name,
         type: c.type,

@@ -9,7 +9,7 @@ export async function GET() {
     const supabase = getServiceSupabase();
     const { data, error } = await supabase
       .from('curators')
-      .select('id, name, type, playlist, url, genres, bio, followers, region, icon_url, accepts, preferred_moods, opportunities, similar_artists, tags, tier, credit_cost, open_to_all_genres')
+      .select('id, name, type, playlist, url, genres, bio, followers, region, icon_url, accepts, preferred_moods, opportunities, similar_artists, tags, tier, open_to_all_genres')
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
@@ -31,7 +31,7 @@ export async function GET() {
         similarArtists: c.similar_artists || [],
         tags: c.tags || [],
         tier: c.tier,
-        creditCost: c.credit_cost || 2,
+        creditCost: c.tier || 2,
         openToAllGenres: c.open_to_all_genres || false,
       }));
 

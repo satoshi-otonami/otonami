@@ -89,7 +89,8 @@ export async function POST(request) {
         bio: form.bio || null,
         followers: parseInt(form.followers) || 0,
         region: form.region || 'Global',
-        paypal_email: form.paypalEmail || null,
+        payment_method: form.paymentMethod || (form.paypalEmail ? 'paypal' : null),
+        payment_info: form.paymentInfo || form.paypalEmail || null,
         icon_url: form.iconUrl || null,
         accepts: form.accepts || [],
         preferred_moods: form.moods || [],
@@ -162,8 +163,8 @@ export async function POST(request) {
             <tr><td style="padding:8px;color:#666;">Bio</td>
                 <td style="padding:8px;">${form.bio || '-'}</td></tr>
             <tr style="background:#f9f9f9;">
-                <td style="padding:8px;color:#666;">PayPal</td>
-                <td style="padding:8px;">${form.paypalEmail || '未設定'}</td></tr>
+                <td style="padding:8px;color:#666;">支払い方法</td>
+                <td style="padding:8px;">${form.paymentMethod || form.paypalEmail ? 'paypal' : '未設定'} / ${form.paymentInfo || form.paypalEmail || '未設定'}</td></tr>
             ${(form.moods || []).length ? `<tr><td style="padding:8px;color:#666;">ムード</td><td style="padding:8px;">${form.moods.join(', ')}</td></tr>` : ''}
             ${(form.rejectedGenres || []).length ? `<tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;">拒否ジャンル</td><td style="padding:8px;">${form.rejectedGenres.join(', ')}</td></tr>` : ''}
             ${(form.similarArtists || []).length ? `<tr><td style="padding:8px;color:#666;">類似アーティスト</td><td style="padding:8px;">${form.similarArtists.join(', ')}</td></tr>` : ''}
@@ -243,6 +244,7 @@ export async function PUT(request) {
       'similar_artists', 'playlist_url', 'icon_url',
       'rejected_genres', 'response_time', 'social_links',
       'submission_guidelines', 'featured_track_url', 'open_to_all_genres',
+      'payment_method', 'payment_info',
     ];
     const updateData = {};
     for (const key of ALLOWED) {
@@ -263,7 +265,7 @@ export async function PUT(request) {
       .from('curators')
       .update(updateData)
       .eq('id', payload.id)
-      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, rejected_genres, response_time, social_links, submission_guidelines, featured_track_url, open_to_all_genres')
+      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, rejected_genres, response_time, social_links, submission_guidelines, featured_track_url, open_to_all_genres, payment_method, payment_info')
       .single();
 
     if (error) throw new Error(error.message);

@@ -278,6 +278,8 @@ export default function CuratorDashboard() {
       opportunities: [...(curator.opportunities || [])],
       similar_artists: (curator.similar_artists || []).join(', '),
       playlist_url: curator.playlist_url || '',
+      payment_method: curator.payment_method || 'paypal',
+      payment_info: curator.payment_info || '',
     });
     setEditAvatarPreview(curator.icon_url || null);
     setEditAvatarFile(null);
@@ -737,6 +739,27 @@ export default function CuratorDashboard() {
                 <div style={{ marginBottom: 20 }}>
                   <label style={editLbl}>Music Similar To... / こんな音楽が好き <span style={{ fontSize: 10, fontWeight: 400, color: T.textMuted }}>カンマ区切り・最大5アーティスト</span></label>
                   <input className="edit-input" style={editInp} value={editForm.similar_artists} placeholder="e.g. Snarky Puppy, Nujabes, Khruangbin" onChange={e => setEditForm(f => ({ ...f, similar_artists: e.target.value }))} />
+                </div>
+
+                {/* Payment Method */}
+                <div style={{ marginBottom: 20, padding: 16, background: T.bg, borderRadius: 12, border: `1px solid ${T.border}` }}>
+                  <label style={{ ...editLbl, marginTop: 0, color: T.accent }}>💰 Payment Method / 支払い方法</label>
+                  <select className="edit-input" style={{ ...editInp, appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23999\' d=\'M6 8L1 3h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center' }} value={editForm.payment_method} onChange={e => setEditForm(f => ({ ...f, payment_method: e.target.value, payment_info: '' }))}>
+                    <option value="paypal">PayPal</option>
+                    <option value="wise">Wise</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                  </select>
+                  {editForm.payment_method === 'paypal' && (
+                    <input className="edit-input" style={{ ...editInp, marginTop: 8 }} type="email" value={editForm.payment_info} placeholder="paypal@email.com" onChange={e => setEditForm(f => ({ ...f, payment_info: e.target.value }))} />
+                  )}
+                  {editForm.payment_method === 'wise' && (
+                    <input className="edit-input" style={{ ...editInp, marginTop: 8 }} type="text" value={editForm.payment_info} placeholder="Wise email or account ID" onChange={e => setEditForm(f => ({ ...f, payment_info: e.target.value }))} />
+                  )}
+                  {editForm.payment_method === 'bank_transfer' && (
+                    <p style={{ color: T.textMuted, fontSize: 12, marginTop: 8, lineHeight: 1.6, fontFamily: T.font }}>
+                      Bank transfer details will be collected after launch.<br />銀行振込の詳細はローンチ後に収集します。
+                    </p>
+                  )}
                 </div>
 
                 {saveError && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 14, padding: '10px 14px', background: 'rgba(239,68,68,0.1)', borderRadius: 8, fontFamily: T.font }}>{saveError}</div>}
@@ -1203,18 +1226,18 @@ export default function CuratorDashboard() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 14, color: T.textSub, fontFamily: T.font }}>支払い方法</span>
-                <span style={{ fontSize: 14, color: T.text, fontFamily: T.font }}>PayPal: {curator?.paypal_email || '未設定'}</span>
+                <span style={{ fontSize: 14, color: T.text, fontFamily: T.font }}>{(curator?.payment_method || 'paypal').toUpperCase()}: {curator?.payment_info || '未設定'}</span>
               </div>
             </div>
-            {!curator?.paypal_email && (
-              <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12, fontFamily: T.font }}>⚠️ PayPalメールアドレスが設定されていません。プロフィールから設定してください。</p>
+            {!curator?.payment_info && curator?.payment_method !== 'bank_transfer' && (
+              <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12, fontFamily: T.font }}>⚠️ 支払い情報が設定されていません。プロフィールから設定してください。 / Payment info not set. Please update from your profile.</p>
             )}
             <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 20, fontFamily: T.font }}>通常3〜5営業日以内にお支払いします。/ Payment within 3-5 business days.</p>
             {payoutError && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12, fontFamily: T.font }}>{payoutError}</p>}
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setShowPayoutModal(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid ${T.border}`, background: T.white, color: T.textSub, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: T.font }}>キャンセル</button>
-              <button onClick={handlePayoutRequest} disabled={payoutLoading || !curator?.paypal_email}
-                style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: payoutLoading || !curator?.paypal_email ? T.border : T.accent, color: '#fff', fontSize: 14, fontWeight: 700, cursor: payoutLoading ? 'not-allowed' : 'pointer', fontFamily: T.font }}>
+              <button onClick={handlePayoutRequest} disabled={payoutLoading || (!curator?.payment_info && curator?.payment_method !== 'bank_transfer')}
+                style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: payoutLoading || (!curator?.payment_info && curator?.payment_method !== 'bank_transfer') ? T.border : T.accent, color: '#fff', fontSize: 14, fontWeight: 700, cursor: payoutLoading ? 'not-allowed' : 'pointer', fontFamily: T.font }}>
                 {payoutLoading ? '送信中...' : 'リクエスト送信'}
               </button>
             </div>

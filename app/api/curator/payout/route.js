@@ -36,15 +36,16 @@ export async function POST(request) {
     // Get curator details
     const { data: curatorData } = await db
       .from('curators')
-      .select('id, name, email, paypal_email, payout_method, minimum_payout')
+      .select('id, name, email, payment_method, payment_info, payout_method, minimum_payout')
       .eq('id', curatorId)
       .single();
 
     if (!curatorData) return NextResponse.json({ error: 'Curator not found' }, { status: 404 });
 
-    const paypalEmail = curatorData.paypal_email;
-    if (!paypalEmail) {
-      return NextResponse.json({ error: 'PayPalメールアドレスが設定されていません。プロフィールから設定してください。' }, { status: 400 });
+    const paymentMethod = curatorData.payment_method || 'paypal';
+    const paymentInfo = curatorData.payment_info;
+    if (!paymentInfo && paymentMethod !== 'bank_transfer') {
+      return NextResponse.json({ error: '支払い情報が設定されていません。プロフィールから設定してください。 / Payment info not set.' }, { status: 400 });
     }
 
     // Check for existing pending payout
@@ -83,9 +84,10 @@ export async function POST(request) {
         curator_id: curatorId,
         amount: availableBalance,
         currency: 'JPY',
-        method: curatorData.payout_method || 'paypal',
+        method: paymentMethod,
         status: 'requested',
-        paypal_email: paypalEmail,
+        payment_method: paymentMethod,
+        payment_info: paymentInfo,
       })
       .select()
       .single();
@@ -114,8 +116,8 @@ export async function POST(request) {
             <table style="width:100%;border-collapse:collapse;">
               <tr><td style="padding:8px;color:#666;">キュレーター</td><td style="padding:8px;font-weight:bold;">${curatorData.name}</td></tr>
               <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;">金額</td><td style="padding:8px;font-weight:bold;">¥${availableBalance.toLocaleString()}</td></tr>
-              <tr><td style="padding:8px;color:#666;">支払い方法</td><td style="padding:8px;">PayPal</td></tr>
-              <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;">PayPalメール</td><td style="padding:8px;">${paypalEmail}</td></tr>
+              <tr><td style="padding:8px;color:#666;">支払い方法</td><td style="padding:8px;">${paymentMethod.toUpperCase()}</td></tr>
+              <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;">支払い情報</td><td style="padding:8px;">${paymentInfo || '（銀行振込 — 詳細は別途確認）'}</td></tr>
               <tr><td style="padding:8px;color:#666;">件数</td><td style="padding:8px;">${earningIds.length}件</td></tr>
             </table>
             <p style="margin-top:24px;color:#888;font-size:13px;">
@@ -123,7 +125,7 @@ export async function POST(request) {
             </p>
           </div>
         `,
-        text: `支払いリクエスト\n\nキュレーター: ${curatorData.name}\n金額: ¥${availableBalance.toLocaleString()}\nPayPal: ${paypalEmail}\n件数: ${earningIds.length}件`,
+        text: `支払いリクエスト\n\nキュレーター: ${curatorData.name}\n金額: ¥${availableBalance.toLocaleString()}\n支払い方法: ${paymentMethod}\n支払い情報: ${paymentInfo || '銀行振込'}\n件数: ${earningIds.length}件`,
       });
     } catch (e) { console.error('Payout admin email failed:', e); }
 
@@ -141,17 +143,17 @@ export async function POST(request) {
             <h2 style="font-size:20px;color:#1a1a1a;">支払いリクエストを受け付けました</h2>
             <p style="color:#6b6560;font-size:15px;line-height:1.7;">
               ¥${availableBalance.toLocaleString()} の支払いリクエストを受け付けました。<br/>
-              通常3〜5営業日以内にPayPalにお支払いします。
+              通常3〜5営業日以内にお支払いします。
             </p>
             <div style="background:#f8f7f4;border-radius:12px;padding:20px;margin:24px 0;">
               <p style="font-size:14px;color:#1a1a1a;margin:0 0 8px;"><strong>金額:</strong> ¥${availableBalance.toLocaleString()}</p>
-              <p style="font-size:14px;color:#1a1a1a;margin:0;"><strong>PayPal:</strong> ${paypalEmail}</p>
+              <p style="font-size:14px;color:#1a1a1a;margin:0;"><strong>支払い方法:</strong> ${paymentMethod.toUpperCase()} — ${paymentInfo || '銀行振込'}</p>
             </div>
             <hr style="border:none;border-top:1px solid #e5e2dc;margin:32px 0;" />
-            <p style="color:#9b9590;font-size:14px;line-height:1.7;">Your payout request of ¥${availableBalance.toLocaleString()} has been received. Payment will be processed within 3-5 business days via PayPal.</p>
+            <p style="color:#9b9590;font-size:14px;line-height:1.7;">Your payout request of ¥${availableBalance.toLocaleString()} has been received. Payment will be processed within 3-5 business days.</p>
           </div>
         `,
-        text: `支払いリクエストを受け付けました\n\n金額: ¥${availableBalance.toLocaleString()}\nPayPal: ${paypalEmail}\n\n通常3〜5営業日以内にお支払いします。`,
+        text: `支払いリクエストを受け付けました\n\n金額: ¥${availableBalance.toLocaleString()}\n支払い方法: ${paymentMethod} — ${paymentInfo || '銀行振込'}\n\n通常3〜5営業日以内にお支払いします。`,
       });
     } catch (e) { console.error('Payout confirmation email failed:', e); }
 

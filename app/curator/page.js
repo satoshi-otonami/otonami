@@ -81,7 +81,7 @@ export default function CuratorRegistrationPage() {
     outletName: '', url: '', region: 'Global',
     genres: [], rejectedGenres: [], moods: [], similarArtists: [],
     playlistUrl: '',
-    bio: '', followers: '', paypalEmail: '', opportunities: [],
+    bio: '', followers: '', paymentMethod: 'paypal', paymentInfo: '', opportunities: [],
     responseTime: '', featuredTrackUrl: '',
     socialWebsite: '', socialTwitter: '', socialInstagram: '',
     submissionGuidelines: '',
@@ -949,7 +949,7 @@ export default function CuratorRegistrationPage() {
                       {form.submissionGuidelines.length > 200 && <p style={{ color: form.submissionGuidelines.length > 280 ? '#ef4444' : T.textMuted, fontSize: 11, marginTop: 4, fontFamily: T.font }}>{form.submissionGuidelines.length}/300</p>}
                     </div>
 
-                    {/* Followers + PayPal */}
+                    {/* Followers + Payment Method */}
                     <div style={{ paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
                       <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
                         Followers / Subscribers <span style={{ fontWeight: 400, fontSize: 11 }}>フォロワー・読者数</span>
@@ -957,28 +957,32 @@ export default function CuratorRegistrationPage() {
                       <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="number" value={form.followers} placeholder="e.g. 5000" onChange={e => set('followers', e.target.value)} />
                       <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginTop: 20 }}>
                         <div style={{ fontSize: 13, color: T.accent, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
-                          💰 PayPal Email <span style={{ fontWeight: 400, fontSize: 11, color: T.textMuted }}>支払い受取用PayPalメール（任意）</span>
+                          💰 Payment Method <span style={{ fontWeight: 400, fontSize: 11, color: T.textMuted }}>支払い受取方法（任意）</span>
                         </div>
-                        <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="email" value={form.paypalEmail} placeholder="paypal@email.com" onChange={e => set('paypalEmail', e.target.value)} />
+                        <select className="curator-input" style={{ ...inp, marginTop: 8, appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23999\' d=\'M6 8L1 3h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center' }} value={form.paymentMethod} onChange={e => set('paymentMethod', e.target.value)}>
+                          <option value="paypal">PayPal</option>
+                          <option value="wise">Wise</option>
+                          <option value="bank_transfer">Bank Transfer</option>
+                        </select>
+                        {form.paymentMethod === 'paypal' && (
+                          <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="email" value={form.paymentInfo} placeholder="paypal@email.com" onChange={e => set('paymentInfo', e.target.value)} />
+                        )}
+                        {form.paymentMethod === 'wise' && (
+                          <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="text" value={form.paymentInfo} placeholder="Wise email or account ID" onChange={e => set('paymentInfo', e.target.value)} />
+                        )}
+                        {form.paymentMethod === 'bank_transfer' && (
+                          <p style={{ color: T.textMuted, fontSize: 12, marginTop: 10, lineHeight: 1.6, fontFamily: T.font }}>
+                            Bank transfer details will be collected after launch. You can update this later from your dashboard.<br />
+                            銀行振込の詳細はローンチ後に収集します。ダッシュボードからいつでも更新できます。
+                          </p>
+                        )}
                         <p style={{ color: T.textMuted, fontSize: 11, marginTop: 8, lineHeight: 1.6, fontFamily: T.font }}>
-                          Payouts processed via PayPal when balance reaches ¥5,000 / $50 USD.<br />
-                          残高が5,000円/$50に達した時点でPayPal経由でお支払いします。
+                          Payouts processed when balance reaches ¥5,000 / $50 USD.<br />
+                          残高が5,000円/$50に達した時点でお支払いします。
                         </p>
-                        {/* PayPal guidance */}
-                        <div style={{ marginTop: 14, fontSize: 13, lineHeight: 1.8, fontFamily: T.font }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            <a href="https://www.paypal.com/welcome/signup" target="_blank" rel="noopener noreferrer" style={{ color: '#c4956a', textDecoration: 'underline', textUnderlineOffset: 2 }}>
-                              Don&apos;t have PayPal? Create a free account →
-                            </a>
-                          </div>
-                          <div style={{ paddingLeft: 20, color: '#a09890', fontSize: 12, marginTop: 2 }}>
-                            PayPalアカウントをお持ちでない方は<a href="https://www.paypal.com/jp/webapps/mpp/personal" target="_blank" rel="noopener noreferrer" style={{ color: '#c4956a', textDecoration: 'underline', textUnderlineOffset: 2 }}>こちら</a>から無料で作成できます。
-                          </div>
-                          <div style={{ paddingLeft: 20, color: '#a09890', fontSize: 12, marginTop: 6 }}>
-                            You can add your PayPal email later from your dashboard.<br/>
-                            PayPalメールはあとからダッシュボードでも設定できます。
-                          </div>
+                        <div style={{ paddingLeft: 0, color: '#a09890', fontSize: 12, marginTop: 6 }}>
+                          You can change your payment method later from your dashboard.<br/>
+                          支払い方法はあとからダッシュボードでも変更できます。
                         </div>
                       </div>
                     </div>

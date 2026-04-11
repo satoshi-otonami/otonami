@@ -357,6 +357,12 @@ export default function HomePage() {
         ? "We're launching in May 2026. Register now to set up your profile and tracks — you'll be ready to pitch on day one."
         : '2026年5月にローンチ予定です。今登録してプロフィールと楽曲を準備しておけば、初日からピッチできます。',
     },
+    {
+      q: lang === 'en' ? "What happens if I don't get a review?" : 'レビューがもらえなかったらどうなりますか？',
+      a: lang === 'en'
+        ? "Don't worry. If a curator doesn't respond within 7 days, your credits are fully refunded. With OTONAMI's Artist Protection Program, you only pay when a curator actually reviews your track."
+        : 'ご安心ください。7日以内にキュレーターからレビューが届かなかった場合、使用したクレジットは全額返還されます。OTONAMIのアーティスト保護プログラムにより、キュレーターが実際にレビューした場合のみ課金されます。',
+    },
   ];
 
   return (
@@ -773,6 +779,48 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ========== TRUST LOGO BAR ========== */}
+      <section style={{
+        background: '#ffffff',
+        padding: '24px 0',
+      }}>
+        <div style={{
+          maxWidth: 900,
+          margin: '0 auto',
+          padding: '0 20px',
+          textAlign: 'center',
+        }}>
+          <p style={{
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#999',
+            textTransform: 'uppercase',
+            letterSpacing: '2px',
+            marginBottom: 16,
+          }}>
+            {lang === 'en' ? 'Trusted by' : '信頼と実績'}
+          </p>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 40,
+            flexWrap: 'wrap',
+          }}>
+            <span style={{
+              fontSize: 16,
+              color: '#999',
+              opacity: 0.5,
+            }}>Music Press Asia</span>
+            <span style={{
+              fontSize: 16,
+              color: '#999',
+              opacity: 0.5,
+            }}>Bandwagon</span>
+          </div>
+        </div>
+      </section>
+
       {/* ========== SECTION 4: HOW IT WORKS ========== */}
       <section id="how-it-works" style={{ background: '#faf8f5', padding: '100px 0' }} className="section-pad">
         <div style={wrap}>
@@ -1146,6 +1194,19 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
+
+            {/* Curator guarantee text */}
+            <p style={{
+              fontSize: 14,
+              color: 'rgba(255,255,255,0.5)',
+              textAlign: 'center',
+              marginTop: 16,
+              marginBottom: 0,
+            }}>
+              {lang === 'en'
+                ? 'Curator earnings are confirmed upon review completion. We ask for responses within 7 days.'
+                : '※ キュレーターの報酬はレビュー完了時に確定します。7日以内の回答をお願いしています。'}
+            </p>
 
             {/* CTA */}
             <div style={{ textAlign: 'center' }}>
@@ -1716,6 +1777,72 @@ export default function HomePage() {
                   }}>
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     <span style={{ fontSize: 14, color: '#1a1a1a' }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Artist Protection Program */}
+            <div style={{
+              padding: 32,
+              background: 'linear-gradient(rgba(78,205,196,0.08), rgba(78,205,196,0.08)), #0f0f1a',
+              borderRadius: 16,
+              border: '1px solid rgba(78,205,196,0.15)',
+              marginBottom: 32,
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                marginBottom: 16,
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="M9 12l2 2 4-4"/>
+                </svg>
+                <h3 style={{
+                  fontSize: 22,
+                  fontWeight: 700,
+                  color: '#4ECDC4',
+                  fontFamily: D.fHead,
+                  margin: 0,
+                }}>
+                  {lang === 'en' ? 'Artist Protection Program' : 'アーティスト保護プログラム'}
+                </h3>
+              </div>
+              <p style={{
+                fontSize: 16,
+                color: 'rgba(255,255,255,0.8)',
+                marginBottom: 16,
+              }}>
+                {lang === 'en'
+                  ? 'Your investment is protected.'
+                  : 'OTONAMIでは、あなたの投資を守ります。'}
+              </p>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+              }}>
+                {(lang === 'en' ? [
+                  'No review within 7 days = full credit refund',
+                  'You only pay when a curator actually reviews your track',
+                  'All feedback is recorded and transparent',
+                ] : [
+                  '7日以内にレビューがなければ、クレジットを全額返還',
+                  'キュレーターが聴かなかった分は請求しません',
+                  'すべてのフィードバックは記録・開示されます',
+                ]).map((item, i) => (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 5" stroke="#4ECDC4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <span style={{
+                      fontSize: 16,
+                      color: 'rgba(255,255,255,0.8)',
+                    }}>{item}</span>
                   </div>
                 ))}
               </div>

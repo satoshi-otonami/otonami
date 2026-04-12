@@ -220,6 +220,24 @@ export async function POST(request) {
       const hash = await bcrypt.hash(password, 10);
       const newResult = await callCuratorAuth('create', email, hash, name);
 
+      // Admin notification (non-fatal)
+      try {
+        const { Resend: R } = await import('resend');
+        const notifier = new R(process.env.RESEND_API_KEY || 'placeholder');
+        const isTest = process.env.EMAIL_TEST_MODE === 'true';
+        const adminTo = process.env.EMAIL_TEST_REDIRECT || 'satoshiy339@gmail.com';
+        await notifier.emails.send({
+          from: `OTONAMI <${process.env.EMAIL_FROM || 'info@otonami.io'}>`,
+          to: adminTo,
+          reply_to: 'info@otonami.io',
+          subject: (isTest ? '[TEST] ' : '') + `【OTONAMI】新規キュレーター登録: ${name}`,
+          text: `新規キュレーター登録 (via login route)\n\n名前: ${name}\nメール: ${email}`,
+        });
+        console.log('Admin notification sent for (login):', name);
+      } catch (notifyErr) {
+        console.error('Admin notification failed (non-fatal):', notifyErr);
+      }
+
       const token = await signToken({ id: newResult.id, email, name: newResult.name, role: 'curator' });
       return NextResponse.json({
         message: 'Registration successful!',

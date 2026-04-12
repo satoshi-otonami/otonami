@@ -129,7 +129,8 @@ export async function POST(request) {
 
     // No JWT at registration — email verification required first
 
-    // 2. Satoshiへの通知メール
+    // 2. Satoshiへの通知メール (non-fatal)
+    try {
     const adminSubject = (testMode ? '[TEST] ' : '') + `【OTONAMI】新規キュレーター登録: ${form.name}`;
     await resend.emails.send({
       from: FROM,
@@ -183,6 +184,10 @@ export async function POST(request) {
       `,
       text: `新規キュレーター登録\n\n名前: ${form.name}\nメール: ${form.email}\n媒体名: ${form.outletName}\nタイプ: ${form.type}\nURL: ${form.url || '-'}\nフォロワー: ${form.followers || 0}\nリージョン: ${form.region}\nジャンル: ${(form.genres || []).join(', ') || '-'}\nBio: ${form.bio || '-'}`,
     });
+    console.log('Admin notification sent for:', form.name);
+    } catch (notifyErr) {
+      console.error('Admin notification failed (non-fatal):', notifyErr);
+    }
 
     // 3. Send verification email (instead of Welcome email)
     const verifyUrl = `${APP_URL}/api/verify-email?token=${verificationToken}&type=curator`;

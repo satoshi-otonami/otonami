@@ -195,6 +195,37 @@ export async function POST(request) {
     let segments = [];
     let segmentSource = '';
 
+    // mini-transcribe doesn't support word/segment timestamps. If that's
+    // what we ran, retry with whisper-1 before choosing a path — otherwise
+    // we'd fall through to even-distribution and bleed lyrics across the
+    // instrumental intro.
+    const miniHasWords = Array.isArray(data.words) && data.words.length > 0;
+    const miniHasSegments = Array.isArray(data.segments) && data.segments.length > 0;
+    if (
+      !miniHasWords &&
+      !miniHasSegments &&
+      fullText &&
+      modelUsed === 'gpt-4o-mini-transcribe'
+    ) {
+      console.warn('mini-transcribe returned text-only — retrying with whisper-1 for timing');
+      const retry = await callTranscription({
+        audioBlob,
+        fileName,
+        model: 'whisper-1',
+        responseFormat: 'verbose_json',
+        language,
+        title,
+      });
+      if (retry.ok) {
+        data = await retry.json();
+        fullText = data.text || fullText;
+        effectiveDuration = data.duration || effectiveDuration;
+        modelUsed = 'whisper-1 (timing fallback)';
+      } else {
+        console.warn('whisper-1 retry failed, degrading to even-distribution');
+      }
+    }
+
     // --- Path A: word-level timestamps available (whisper-1 with word granularity)
     if (Array.isArray(data.words) && data.words.length > 0) {
       // Drop words that fall inside segments flagged as silence/hallucinations.
@@ -221,7 +252,10 @@ export async function POST(request) {
         : liveSegs.map((s) => ({ start: s.start, end: s.end, text: (s.text || '').trim() }));
       segmentSource = `${data.segments.length} segments → ${pseudoWords.length} pseudo-words → ${segments.length} phrases`;
     }
-    // --- Path C: text-only (gpt-4o-mini-transcribe) with a known duration
+    // --- Last-resort: both models returned text without any timestamps.
+    //     Distribute lines evenly across the duration. Instrumental intros
+    //     will still bleed lyrics in this mode — there's nothing to anchor
+    //     phrase boundaries to — but it's better than producing nothing.
     else if (fullText && effectiveDuration > 0) {
       const lines = fullText
         .split(/[\n。！？.!?]+/)
@@ -234,33 +268,7 @@ export async function POST(request) {
           end: (i + 1) * perLine,
           text,
         }));
-        segmentSource = `text-only → ${lines.length} sentences over ${effectiveDuration.toFixed(1)}s`;
-      }
-    }
-    // --- Path D: text-only and no duration — retry with whisper-1 for timing
-    else if (fullText && !effectiveDuration) {
-      console.warn('mini-transcribe returned text-only and no clientDuration — retrying with whisper-1');
-      const retry = await callTranscription({
-        audioBlob,
-        fileName,
-        model: 'whisper-1',
-        responseFormat: 'verbose_json',
-        language,
-        title,
-      });
-      if (retry.ok) {
-        data = await retry.json();
-        fullText = data.text || fullText;
-        effectiveDuration = data.duration || effectiveDuration;
-        modelUsed = 'whisper-1 (duration fallback)';
-        if (Array.isArray(data.words) && data.words.length > 0) {
-          segments = buildSegmentsFromWords(data.words);
-          segmentSource = `retry: ${data.words.length} words → ${segments.length} phrases`;
-        } else if (Array.isArray(data.segments) && data.segments.length > 0) {
-          const liveSegs = filterHallucinations(data.segments);
-          segments = liveSegs.map((s) => ({ start: s.start, end: s.end, text: (s.text || '').trim() }));
-          segmentSource = `retry: ${data.segments.length} raw segments`;
-        }
+        segmentSource = `text-only fallback → ${lines.length} sentences over ${effectiveDuration.toFixed(1)}s`;
       }
     }
 

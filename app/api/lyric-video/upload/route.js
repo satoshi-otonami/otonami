@@ -30,7 +30,23 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const formData = await request.formData();
+    let formData;
+    try {
+      formData = await request.formData();
+    } catch (parseErr) {
+      console.error('FormData parse error:', {
+        message: parseErr?.message,
+        name: parseErr?.name,
+        stack: parseErr?.stack,
+      });
+      return NextResponse.json(
+        {
+          error: 'Failed to parse upload. File name may contain invalid characters — try renaming the file to ASCII (e.g. song.mp3).',
+          details: parseErr?.message,
+        },
+        { status: 400 }
+      );
+    }
     const audioFile = formData.get('audio');
     const backgroundFile = formData.get('background');
     const title = (formData.get('title') || 'Untitled').toString().slice(0, 120);

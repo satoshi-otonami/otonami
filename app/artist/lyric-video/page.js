@@ -93,17 +93,29 @@ function LyricVideoEditor() {
         setLoading(false);
         return;
       }
+      // Use ASCII-safe filenames in FormData to prevent multipart parsing
+      // errors with Japanese filenames ("The string did not match the expected pattern").
+      // The server derives the extension from MIME type, so the filename here
+      // is purely for multipart Content-Disposition compatibility.
+      const audioSafeName = `audio-${Date.now()}${extFromMime(audioFile.type) || ''}`;
       const fd = new FormData();
-      fd.append('audio', audioFile);
-      if (backgroundFile) fd.append('background', backgroundFile);
-      fd.append('title', title || audioFile.name.replace(/\.[^.]+$/, ''));
+      fd.append('audio', audioFile, audioSafeName);
+      if (backgroundFile) {
+        const bgSafeName = `background-${Date.now()}${extFromMime(backgroundFile.type) || ''}`;
+        fd.append('background', backgroundFile, bgSafeName);
+      }
+      const fallbackTitle = (audioFile.name || '').replace(/\.[^.]+$/, '') || 'Untitled';
+      fd.append('title', title || fallbackTitle);
       const res = await fetch('/api/lyric-video/upload', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: fd,
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      if (!res.ok) {
+        const detail = data.details ? `${data.error}: ${data.details}` : data.error;
+        throw new Error(detail || 'Upload failed');
+      }
       setAudioUrl(data.audioUrl);
       setBackgroundUrl(data.backgroundUrl);
       setVideoId(data.id);
@@ -638,6 +650,25 @@ function formatTime(sec) {
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60);
   return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+const MIME_EXT_MAP = {
+  'audio/mpeg': '.mp3',
+  'audio/mp3': '.mp3',
+  'audio/wav': '.wav',
+  'audio/wave': '.wav',
+  'audio/x-wav': '.wav',
+  'audio/mp4': '.m4a',
+  'audio/x-m4a': '.m4a',
+  'audio/m4a': '.m4a',
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+};
+
+function extFromMime(mime) {
+  return MIME_EXT_MAP[mime] || '';
 }
 
 export default function LyricVideoPage() {

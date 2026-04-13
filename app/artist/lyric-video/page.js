@@ -144,7 +144,7 @@ function LyricVideoEditor() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ audioUrl, videoId, language, title }),
+        body: JSON.stringify({ audioUrl, videoId, language, title, duration }),
       });
       setSegments(data.segments || []);
       setDuration(data.duration || 0);
@@ -184,6 +184,54 @@ function LyricVideoEditor() {
     } finally {
       setIsGeneratingBg(false);
     }
+  };
+
+  // === Step 2 (alternative): manual lyrics paste ===
+  const handleAssignManualLyrics = (rawText) => {
+    setError('');
+    if (!rawText || !rawText.trim()) {
+      setError('歌詞を入力してください');
+      return;
+    }
+    if (!duration || duration <= 0) {
+      setError('音声の長さがまだ読み込まれていません。プレーヤーを再生してから再試行してください。');
+      return;
+    }
+
+    const lines = rawText
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => {
+        if (!l) return false;
+        // [Verse 1], [Chorus], etc.
+        if (/^\[.+\]$/.test(l)) return false;
+        // **Chorus**, **Verse 1**
+        if (/^\*\*.+\*\*$/.test(l)) return false;
+        // All-caps section header with a recognizable keyword (VERSE 1, CHORUS,
+        // PRE-CHORUS, BRIDGE, INTRO, OUTRO, HOOK, INSTRUMENTAL, etc.). The
+        // keyword check keeps legitimately all-caps lyric lines from being
+        // dropped.
+        if (
+          /^[A-Z0-9\s\-:.]+$/.test(l) &&
+          /\b(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|HOOK|PRE|POST|INSTRUMENTAL|REFRAIN|INTERLUDE)\b/.test(l)
+        ) {
+          return false;
+        }
+        return true;
+      });
+
+    if (lines.length === 0) {
+      setError('有効な歌詞行がありません');
+      return;
+    }
+
+    const perLine = duration / lines.length;
+    const newSegments = lines.map((text, i) => ({
+      start: i * perLine,
+      end: (i + 1) * perLine,
+      text,
+    }));
+    setSegments(newSegments);
   };
 
   // Update a segment's text
@@ -375,6 +423,9 @@ function LyricVideoEditor() {
             onTranscribe={handleTranscribe} loading={loading}
             audioUrl={audioUrl}
             segments={segments}
+            duration={duration}
+            setDuration={setDuration}
+            onAssignManualLyrics={handleAssignManualLyrics}
             backgroundUrl={backgroundUrl}
             onGenerateBackground={handleGenerateBackground}
             isGeneratingBg={isGeneratingBg}
@@ -507,6 +558,9 @@ function StepTranscribe({
   onTranscribe, loading,
   audioUrl,
   segments,
+  duration,
+  setDuration,
+  onAssignManualLyrics,
   backgroundUrl,
   onGenerateBackground,
   isGeneratingBg,
@@ -514,40 +568,136 @@ function StepTranscribe({
   onNext,
 }) {
   const transcribed = segments && segments.length > 0;
+  const [mode, setMode] = useState('ai'); // 'ai' | 'manual'
+  const [manualLyrics, setManualLyrics] = useState('');
+
   return (
     <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 24 }}>
-      <h2 style={{ fontFamily: THEME.fontHead, fontSize: 20, margin: '0 0 16px 0' }}>ステップ 2: AI歌詞書き起こし</h2>
+      <h2 style={{ fontFamily: THEME.fontHead, fontSize: 20, margin: '0 0 16px 0' }}>ステップ 2: 歌詞を準備</h2>
 
       {!transcribed && (
         <>
-          <p style={{ color: THEME.textSub, fontSize: 14, marginBottom: 20 }}>
-            OpenAI Whisper APIで歌詞を自動書き起こしします（30秒〜1分程度）
-          </p>
-
-          <audio src={audioUrl} controls style={{ width: '100%', marginBottom: 20 }} />
-
-          <label style={{ display: 'block', fontSize: 13, color: THEME.textSub, marginBottom: 6 }}>言語</label>
-          <select
-            value={language} onChange={(e) => setLanguage(e.target.value)}
-            style={{ width: '100%', padding: 12, background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 8, color: THEME.text, fontSize: 14, fontFamily: THEME.font, marginBottom: 20 }}
-          >
-            <option value="ja">日本語</option>
-            <option value="en">English</option>
-            <option value="ko">한국어</option>
-            <option value="zh">中文</option>
-          </select>
-
-          <button
-            onClick={onTranscribe} disabled={loading}
-            style={{
-              width: '100%', padding: '14px 20px',
-              background: loading ? THEME.border : `linear-gradient(135deg, ${THEME.purple}, ${THEME.teal})`,
-              color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700,
-              cursor: loading ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
+          {/* Shared audio preview — also captures duration for the manual
+              lyrics flow via onLoadedMetadata. */}
+          <audio
+            src={audioUrl}
+            controls
+            onLoadedMetadata={(e) => {
+              const d = e.currentTarget.duration;
+              if (d && isFinite(d)) setDuration(d);
             }}
-          >
-            {loading ? '書き起こし中…（時間がかかります）' : '歌詞を書き起こす 🎤'}
-          </button>
+            style={{ width: '100%', marginBottom: 16 }}
+          />
+
+          {/* Mode tabs */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+            <button
+              onClick={() => setMode('ai')}
+              style={{
+                flex: 1, padding: '12px 14px', borderRadius: 10,
+                background: mode === 'ai' ? `linear-gradient(135deg, ${THEME.coral}20, ${THEME.pink}20)` : THEME.bg,
+                border: `1.5px solid ${mode === 'ai' ? THEME.coral : THEME.border}`,
+                color: mode === 'ai' ? THEME.text : THEME.textMuted,
+                fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: THEME.font,
+              }}
+            >
+              🤖 AIで自動書き起こし
+            </button>
+            <button
+              onClick={() => setMode('manual')}
+              style={{
+                flex: 1, padding: '12px 14px', borderRadius: 10,
+                background: mode === 'manual' ? `linear-gradient(135deg, ${THEME.gold}20, ${THEME.coral}20)` : THEME.bg,
+                border: `1.5px solid ${mode === 'manual' ? THEME.gold : THEME.border}`,
+                color: mode === 'manual' ? THEME.text : THEME.textMuted,
+                fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: THEME.font,
+              }}
+            >
+              📝 歌詞を貼り付け
+            </button>
+          </div>
+
+          {mode === 'ai' && (
+            <>
+              <p style={{ color: THEME.textSub, fontSize: 13, margin: '0 0 16px 0' }}>
+                OpenAI の書き起こしモデルで歌詞を自動認識します（30秒〜1分程度）
+              </p>
+
+              <label style={{ display: 'block', fontSize: 13, color: THEME.textSub, marginBottom: 6 }}>言語</label>
+              <select
+                value={language} onChange={(e) => setLanguage(e.target.value)}
+                style={{ width: '100%', padding: 12, background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 8, color: THEME.text, fontSize: 14, fontFamily: THEME.font, marginBottom: 20 }}
+              >
+                <option value="ja">日本語</option>
+                <option value="en">English</option>
+                <option value="ko">한국어</option>
+                <option value="zh">中文</option>
+              </select>
+
+              <button
+                onClick={onTranscribe} disabled={loading}
+                style={{
+                  width: '100%', padding: '14px 20px',
+                  background: loading ? THEME.border : `linear-gradient(135deg, ${THEME.purple}, ${THEME.teal})`,
+                  color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700,
+                  cursor: loading ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
+                }}
+              >
+                {loading ? '書き起こし中…（時間がかかります）' : '歌詞を書き起こす 🎤'}
+              </button>
+            </>
+          )}
+
+          {mode === 'manual' && (
+            <>
+              <p style={{ color: THEME.textSub, fontSize: 13, margin: '0 0 12px 0' }}>
+                歌詞を1行ずつ貼り付けて「タイムスタンプを自動割り当て」を押すと、音声の長さに合わせて均等にタイミングを振ります。
+              </p>
+
+              <textarea
+                value={manualLyrics}
+                onChange={(e) => setManualLyrics(e.target.value)}
+                rows={15}
+                placeholder={"歌詞を1行ずつ入力してください\n\n例:\nWe don't need to hesitate\nWon't look back and run away"}
+                style={{
+                  width: '100%',
+                  padding: 14,
+                  background: THEME.bg,
+                  border: `1px solid ${THEME.border}`,
+                  borderRadius: 10,
+                  color: THEME.text,
+                  fontSize: 14,
+                  fontFamily: THEME.font,
+                  lineHeight: 1.6,
+                  resize: 'vertical',
+                  marginBottom: 8,
+                  boxSizing: 'border-box',
+                }}
+              />
+
+              <div style={{ color: THEME.textMuted, fontSize: 11, marginBottom: 16 }}>
+                {duration > 0
+                  ? `音声の長さ: ${formatTime(duration)}`
+                  : '音声の長さを読み込み中…（オーディオプレーヤーを一度再生すると読み込まれます）'}
+              </div>
+
+              <button
+                onClick={() => onAssignManualLyrics(manualLyrics)}
+                disabled={!manualLyrics.trim() || !duration}
+                style={{
+                  width: '100%', padding: '14px 20px',
+                  background: (!manualLyrics.trim() || !duration)
+                    ? THEME.border
+                    : `linear-gradient(135deg, ${THEME.gold}, ${THEME.coral})`,
+                  color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700,
+                  cursor: (!manualLyrics.trim() || !duration) ? 'not-allowed' : 'pointer',
+                  fontFamily: THEME.font,
+                }}
+              >
+                タイムスタンプを自動割り当て →
+              </button>
+            </>
+          )}
         </>
       )}
 

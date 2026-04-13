@@ -93,32 +93,48 @@ function LyricVideoEditor() {
         setLoading(false);
         return;
       }
-      // Use ASCII-safe filenames in FormData to prevent multipart parsing
-      // errors with Japanese filenames ("The string did not match the expected pattern").
-      // The server derives the extension from MIME type, so the filename here
-      // is purely for multipart Content-Disposition compatibility.
-      const audioSafeName = `audio-${Date.now()}${extFromMime(audioFile.type) || ''}`;
-      const fd = new FormData();
-      fd.append('audio', audioFile, audioSafeName);
-      if (backgroundFile) {
-        const bgSafeName = `background-${Date.now()}${extFromMime(backgroundFile.type) || ''}`;
-        fd.append('background', backgroundFile, bgSafeName);
-      }
+      // Step 1: Ask the server for signed upload URLs (JSON in / JSON out — no file bytes).
+      // This avoids Vercel's 4.5 MB request-body limit on Functions.
       const fallbackTitle = (audioFile.name || '').replace(/\.[^.]+$/, '') || 'Untitled';
-      fd.append('title', title || fallbackTitle);
-      const res = await fetch('/api/lyric-video/upload', {
+      const initRes = await fetch('/api/lyric-video/upload', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          audioMime: audioFile.type,
+          backgroundMime: backgroundFile?.type || null,
+          title: title || fallbackTitle,
+        }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        const detail = data.details ? `${data.error}: ${data.details}` : data.error;
-        throw new Error(detail || 'Upload failed');
+      const initData = await initRes.json();
+      if (!initRes.ok) {
+        const detail = initData.details ? `${initData.error}: ${initData.details}` : initData.error;
+        throw new Error(detail || 'Upload initialization failed');
       }
-      setAudioUrl(data.audioUrl);
-      setBackgroundUrl(data.backgroundUrl);
-      setVideoId(data.id);
+
+      // Step 2: Upload audio directly to Supabase Storage via the signed URL.
+      // Rename the Blob to an ASCII-safe filename to avoid any filename-based
+      // validation at the HTTP layer.
+      await directUpload(initData.audio.uploadUrl, audioFile, `audio.${initData.audio.ext}`);
+
+      // Step 3: Upload background image (best-effort — non-fatal if it fails).
+      if (initData.background && backgroundFile) {
+        try {
+          await directUpload(
+            initData.background.uploadUrl,
+            backgroundFile,
+            `background.${initData.background.ext}`
+          );
+        } catch (bgErr) {
+          console.warn('Background upload failed, proceeding without it:', bgErr);
+        }
+      }
+
+      setAudioUrl(initData.audio.publicUrl);
+      setBackgroundUrl(initData.background?.publicUrl || null);
+      setVideoId(initData.id);
       setStep(2);
     } catch (err) {
       setError(err.message);
@@ -652,23 +668,22 @@ function formatTime(sec) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-const MIME_EXT_MAP = {
-  'audio/mpeg': '.mp3',
-  'audio/mp3': '.mp3',
-  'audio/wav': '.wav',
-  'audio/wave': '.wav',
-  'audio/x-wav': '.wav',
-  'audio/mp4': '.m4a',
-  'audio/x-m4a': '.m4a',
-  'audio/m4a': '.m4a',
-  'image/jpeg': '.jpg',
-  'image/png': '.png',
-  'image/webp': '.webp',
-  'image/gif': '.gif',
-};
-
-function extFromMime(mime) {
-  return MIME_EXT_MAP[mime] || '';
+// Direct PUT upload to a Supabase Storage signed URL.
+// Uses multipart body with cacheControl + file — matches the Supabase JS client's
+// uploadToSignedUrl protocol. safeName overrides the multipart filename with an
+// ASCII-only string to avoid Content-Disposition filename validation errors.
+async function directUpload(signedUrl, file, safeName) {
+  const form = new FormData();
+  form.append('cacheControl', '3600');
+  form.append('', file, safeName);
+  const res = await fetch(signedUrl, {
+    method: 'PUT',
+    body: form,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Storage upload failed (${res.status}): ${text.slice(0, 200)}`);
+  }
 }
 
 export default function LyricVideoPage() {

@@ -57,9 +57,16 @@ function buildSegmentsFromWords(words) {
     if (isLast || gap > 1.5 || wordCount >= 8 || endsWithPunctuation) {
       const text = currentWords.join('').replace(/\s+/g, ' ').trim();
       if (text.length > 0) {
+        // Pad the phrase with -0.3s lead-in and +0.1s tail. Lyrics feel
+        // better when they appear a beat before the vocal hits and linger
+        // briefly after the last syllable decays. Math.max(0, ...) keeps
+        // the very first phrase from going negative if the vocal starts
+        // near zero, but we do NOT clamp non-zero word starts to 0 — the
+        // whole point of using word timestamps is that the instrumental
+        // intro stays free of lyrics.
         segments.push({
-          start: segStart,
-          end: w.end,
+          start: Math.max(0, segStart - 0.3),
+          end: w.end + 0.1,
           text,
         });
       }

@@ -50,6 +50,10 @@ function LyricVideoEditor() {
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
 
+  // AI background state
+  const [isGeneratingBg, setIsGeneratingBg] = useState(false);
+  const [bgError, setBgError] = useState('');
+
   // Refs
   const canvasRef = useRef(null);
   const audioRef = useRef(null);
@@ -144,11 +148,41 @@ function LyricVideoEditor() {
       });
       setSegments(data.segments || []);
       setDuration(data.duration || 0);
-      setStep(3);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // === Step 2b: AI background generation (optional) ===
+  const handleGenerateBackground = async () => {
+    setBgError('');
+    if (!segments.length) {
+      setBgError('先に歌詞を書き起こしてください');
+      return;
+    }
+    setIsGeneratingBg(true);
+    try {
+      const token = localStorage.getItem('artist_token');
+      const data = await fetchJson('/api/lyric-video/generate-background', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          lyrics: segments.map((s) => s.text).join('\n'),
+          title,
+          videoId,
+        }),
+      });
+      setBackgroundUrl(data.backgroundUrl);
+      // The existing useEffect on backgroundUrl will load it into an HTMLImageElement.
+    } catch (err) {
+      setBgError(err.message);
+    } finally {
+      setIsGeneratingBg(false);
     }
   };
 
@@ -340,6 +374,12 @@ function LyricVideoEditor() {
             language={language} setLanguage={setLanguage}
             onTranscribe={handleTranscribe} loading={loading}
             audioUrl={audioUrl}
+            segments={segments}
+            backgroundUrl={backgroundUrl}
+            onGenerateBackground={handleGenerateBackground}
+            isGeneratingBg={isGeneratingBg}
+            bgError={bgError}
+            onNext={() => setStep(3)}
           />
         )}
 
@@ -462,38 +502,133 @@ function FileDrop({ label, accept, file, onFile, required }) {
   );
 }
 
-function StepTranscribe({ language, setLanguage, onTranscribe, loading, audioUrl }) {
+function StepTranscribe({
+  language, setLanguage,
+  onTranscribe, loading,
+  audioUrl,
+  segments,
+  backgroundUrl,
+  onGenerateBackground,
+  isGeneratingBg,
+  bgError,
+  onNext,
+}) {
+  const transcribed = segments && segments.length > 0;
   return (
     <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 14, padding: 24 }}>
       <h2 style={{ fontFamily: THEME.fontHead, fontSize: 20, margin: '0 0 16px 0' }}>ステップ 2: AI歌詞書き起こし</h2>
-      <p style={{ color: THEME.textSub, fontSize: 14, marginBottom: 20 }}>
-        OpenAI Whisper APIで歌詞を自動書き起こしします（30秒〜1分程度）
-      </p>
 
-      <audio src={audioUrl} controls style={{ width: '100%', marginBottom: 20 }} />
+      {!transcribed && (
+        <>
+          <p style={{ color: THEME.textSub, fontSize: 14, marginBottom: 20 }}>
+            OpenAI Whisper APIで歌詞を自動書き起こしします（30秒〜1分程度）
+          </p>
 
-      <label style={{ display: 'block', fontSize: 13, color: THEME.textSub, marginBottom: 6 }}>言語</label>
-      <select
-        value={language} onChange={(e) => setLanguage(e.target.value)}
-        style={{ width: '100%', padding: 12, background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 8, color: THEME.text, fontSize: 14, fontFamily: THEME.font, marginBottom: 20 }}
-      >
-        <option value="ja">日本語</option>
-        <option value="en">English</option>
-        <option value="ko">한국어</option>
-        <option value="zh">中文</option>
-      </select>
+          <audio src={audioUrl} controls style={{ width: '100%', marginBottom: 20 }} />
 
-      <button
-        onClick={onTranscribe} disabled={loading}
-        style={{
-          width: '100%', padding: '14px 20px',
-          background: loading ? THEME.border : `linear-gradient(135deg, ${THEME.purple}, ${THEME.teal})`,
-          color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700,
-          cursor: loading ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
-        }}
-      >
-        {loading ? '書き起こし中…（時間がかかります）' : '歌詞を書き起こす 🎤'}
-      </button>
+          <label style={{ display: 'block', fontSize: 13, color: THEME.textSub, marginBottom: 6 }}>言語</label>
+          <select
+            value={language} onChange={(e) => setLanguage(e.target.value)}
+            style={{ width: '100%', padding: 12, background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 8, color: THEME.text, fontSize: 14, fontFamily: THEME.font, marginBottom: 20 }}
+          >
+            <option value="ja">日本語</option>
+            <option value="en">English</option>
+            <option value="ko">한국어</option>
+            <option value="zh">中文</option>
+          </select>
+
+          <button
+            onClick={onTranscribe} disabled={loading}
+            style={{
+              width: '100%', padding: '14px 20px',
+              background: loading ? THEME.border : `linear-gradient(135deg, ${THEME.purple}, ${THEME.teal})`,
+              color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700,
+              cursor: loading ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
+            }}
+          >
+            {loading ? '書き起こし中…（時間がかかります）' : '歌詞を書き起こす 🎤'}
+          </button>
+        </>
+      )}
+
+      {transcribed && (
+        <>
+          <div style={{
+            padding: 14, marginBottom: 20,
+            background: 'rgba(78, 205, 196, 0.08)', border: `1px solid ${THEME.teal}`, borderRadius: 10,
+            color: THEME.teal, fontSize: 14, fontWeight: 600,
+          }}>
+            ✓ 書き起こし完了 — {segments.length} 行の歌詞を認識しました
+          </div>
+
+          <h3 style={{ fontFamily: THEME.fontHead, fontSize: 16, margin: '0 0 12px 0' }}>背景画像</h3>
+          <p style={{ color: THEME.textSub, fontSize: 13, margin: '0 0 12px 0' }}>
+            AIが歌詞から雰囲気を読み取り、DALL-E 3で背景画像を自動生成します。
+          </p>
+
+          {backgroundUrl ? (
+            <div style={{
+              position: 'relative', width: '100%',
+              aspectRatio: '16 / 9', maxHeight: 280,
+              borderRadius: 10, overflow: 'hidden', marginBottom: 12,
+              border: `1px solid ${THEME.border}`, background: '#000',
+            }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={backgroundUrl}
+                alt="背景画像"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
+          ) : (
+            <div style={{
+              width: '100%', aspectRatio: '16 / 9', maxHeight: 280,
+              borderRadius: 10, border: `1.5px dashed ${THEME.border}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: THEME.textMuted, fontSize: 13, marginBottom: 12,
+            }}>
+              まだ背景画像はありません
+            </div>
+          )}
+
+          {bgError && (
+            <div style={{
+              padding: 10, marginBottom: 12,
+              background: 'rgba(255, 61, 110, 0.12)', border: `1px solid ${THEME.pink}`, borderRadius: 8,
+              color: THEME.pink, fontSize: 12,
+            }}>
+              ⚠️ {bgError}
+            </div>
+          )}
+
+          <button
+            onClick={onGenerateBackground} disabled={isGeneratingBg}
+            style={{
+              width: '100%', padding: '12px 20px',
+              background: isGeneratingBg ? THEME.border : `linear-gradient(135deg, ${THEME.purple}, ${THEME.coral})`,
+              color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700,
+              cursor: isGeneratingBg ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
+              marginBottom: 20,
+            }}
+          >
+            {isGeneratingBg
+              ? '背景を生成中… (20〜30秒)'
+              : backgroundUrl ? '🔄 背景を再生成' : '🎨 AIで背景を生成'}
+          </button>
+
+          <button
+            onClick={onNext} disabled={isGeneratingBg}
+            style={{
+              width: '100%', padding: '14px 20px',
+              background: isGeneratingBg ? THEME.border : `linear-gradient(135deg, ${THEME.coral}, ${THEME.pink})`,
+              color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700,
+              cursor: isGeneratingBg ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
+            }}
+          >
+            次へ: プレビュー →
+          </button>
+        </>
+      )}
     </div>
   );
 }

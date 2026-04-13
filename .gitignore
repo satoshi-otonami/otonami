@@ -5,3 +5,9 @@ node_modules/
 .env
 .env.local
 .env*.local
+
+# Local tooling
+.vercel/
+.mcp.json
+.agents/
+.aidesigner/

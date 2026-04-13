@@ -6,7 +6,8 @@ export const maxDuration = 60;
 
 // Thin wrapper around POST /v1/audio/transcriptions so we can try multiple
 // models with the same inputs. gpt-4o-mini-transcribe supports only
-// response_format=json|text; whisper-1 supports verbose_json with segments.
+// response_format=json|text; whisper-1 supports verbose_json with segment +
+// word granularity.
 async function callTranscription({ audioBlob, fileName, model, responseFormat, language, title }) {
   const form = new FormData();
   form.append('file', audioBlob, fileName);
@@ -14,6 +15,7 @@ async function callTranscription({ audioBlob, fileName, model, responseFormat, l
   form.append('response_format', responseFormat);
   if (responseFormat === 'verbose_json') {
     form.append('timestamp_granularities[]', 'segment');
+    form.append('timestamp_granularities[]', 'word');
   }
   form.append('temperature', '0');
   if (language) form.append('language', language);
@@ -24,6 +26,90 @@ async function callTranscription({ audioBlob, fileName, model, responseFormat, l
     method: 'POST',
     headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
     body: form,
+  });
+}
+
+// Group per-word timestamps into readable lyric lines. Split rules:
+//   - >1.5s gap between consecutive words (natural breath/phrase break)
+//   - Current group already has 8 words (keeps lines scannable on screen)
+//   - Previous word ended with sentence-final punctuation
+// Joins with empty string because Whisper's English word tokens include a
+// leading space, and CJK tokens have no space at all. A final collapse of
+// whitespace + trim keeps the text readable in either case.
+function buildSegmentsFromWords(words) {
+  if (!Array.isArray(words) || words.length === 0) return [];
+
+  const segments = [];
+  let currentWords = [];
+  let segStart = words[0].start;
+
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
+    const wordText = (w.word || w.text || '').toString();
+    currentWords.push(wordText);
+
+    const isLast = i === words.length - 1;
+    const nextWord = words[i + 1];
+    const gap = nextWord ? (nextWord.start || 0) - (w.end || 0) : 0;
+    const wordCount = currentWords.length;
+    const endsWithPunctuation = /[.!?,。！？、]$/.test(wordText.trim());
+
+    if (isLast || gap > 1.5 || wordCount >= 8 || endsWithPunctuation) {
+      const text = currentWords.join('').replace(/\s+/g, ' ').trim();
+      if (text.length > 0) {
+        segments.push({
+          start: segStart,
+          end: w.end,
+          text,
+        });
+      }
+      currentWords = [];
+      if (nextWord) segStart = nextWord.start;
+    }
+  }
+
+  return segments;
+}
+
+// Fallback used when we only have segment-level timestamps. Distribute each
+// segment's time across its tokens proportionally so we can still run the
+// result through buildSegmentsFromWords to get punctuation/length-based
+// splits. For CJK with no whitespace we fall back to per-character splitting.
+function pseudoWordsFromSegments(segments) {
+  const pseudoWords = [];
+  for (const seg of segments) {
+    const text = (seg?.text || '').trim();
+    if (!text) continue;
+    const total = (seg.end || 0) - (seg.start || 0);
+    if (total <= 0) continue;
+
+    let tokens = text.split(/\s+/).filter(Boolean);
+    if (tokens.length <= 1 && text.length > 1 && !/\s/.test(text)) {
+      tokens = Array.from(text);
+    }
+    if (tokens.length === 0) continue;
+
+    const perToken = total / tokens.length;
+    for (let i = 0; i < tokens.length; i++) {
+      pseudoWords.push({
+        word: tokens[i],
+        start: seg.start + i * perToken,
+        end: seg.start + (i + 1) * perToken,
+      });
+    }
+  }
+  return pseudoWords;
+}
+
+// Conservative hallucination filter. Only drops segments Whisper itself
+// flagged as near-certain silence. no_speech_prob is only present on raw
+// whisper-1 segments.
+function filterHallucinations(segments) {
+  return segments.filter((seg) => {
+    if (typeof seg?.no_speech_prob === 'number' && seg.no_speech_prob > 0.9) return false;
+    const text = (seg?.text || '').trim();
+    if (text.length < 2) return false;
+    return true;
   });
 }
 
@@ -56,10 +142,10 @@ export async function POST(request) {
     const audioBlob = await audioResponse.blob();
     const fileName = audioUrl.split('/').pop() || 'audio.mp3';
 
-    // Try gpt-4o-mini-transcribe first — 2025's new model is significantly more
-    // robust against music/instrumental hallucinations. It doesn't support
-    // verbose_json, so we ask for plain json and synthesize segments from the
-    // client-provided duration downstream.
+    // Try gpt-4o-mini-transcribe first — the 2025 model is much more robust
+    // against music/instrumental hallucinations. It doesn't support
+    // verbose_json or word-level timestamps, so we ask for plain json and
+    // synthesize segments from the client-provided duration downstream.
     let res = await callTranscription({
       audioBlob,
       fileName,
@@ -96,71 +182,82 @@ export async function POST(request) {
       );
     }
 
-    const data = await res.json();
-    let rawSegments = Array.isArray(data.segments) ? data.segments : [];
-    const fullText = data.text || '';
+    let data = await res.json();
+    let fullText = data.text || '';
     let effectiveDuration = data.duration || clientDuration || 0;
+    let segments = [];
+    let segmentSource = '';
 
-    // gpt-4o-mini-transcribe returns text only. If we don't already have
-    // segments, synthesize them by splitting on sentence punctuation and
-    // distributing linearly over the audio duration.
-    if (rawSegments.length === 0 && fullText) {
-      if (!effectiveDuration) {
-        // Edge case: the client forgot to send duration and the model gave us
-        // none either. Fall back to whisper-1 purely to get segments+duration.
-        console.warn(
-          'mini-transcribe returned text-only and no clientDuration — retrying with whisper-1'
-        );
-        const retry = await callTranscription({
-          audioBlob,
-          fileName,
-          model: 'whisper-1',
-          responseFormat: 'verbose_json',
-          language,
-          title,
-        });
-        if (retry.ok) {
-          const retryData = await retry.json();
-          rawSegments = Array.isArray(retryData.segments) ? retryData.segments : [];
-          effectiveDuration = retryData.duration || 0;
-          modelUsed = 'whisper-1 (duration fallback)';
-        }
-      } else {
-        const lines = fullText
-          .split(/[\n。！？.!?]+/)
-          .map((l) => l.trim())
-          .filter(Boolean);
-        if (lines.length > 0) {
-          const perLine = effectiveDuration / lines.length;
-          rawSegments = lines.map((text, i) => ({
-            start: i * perLine,
-            end: (i + 1) * perLine,
-            text,
-          }));
-          modelUsed = `${modelUsed} (synthesized ${lines.length} segments)`;
+    // --- Path A: word-level timestamps available (whisper-1 with word granularity)
+    if (Array.isArray(data.words) && data.words.length > 0) {
+      // Drop words that fall inside segments flagged as silence/hallucinations.
+      const rawSegs = Array.isArray(data.segments) ? data.segments : [];
+      const liveSegs = filterHallucinations(rawSegs);
+      const liveSet = new Set(liveSegs);
+      const droppedRanges = rawSegs
+        .filter((s) => !liveSet.has(s))
+        .map((s) => ({ start: s.start, end: s.end }));
+      const liveWords = droppedRanges.length
+        ? data.words.filter((w) => !droppedRanges.some((r) => w.start >= r.start && w.end <= r.end))
+        : data.words;
+
+      segments = buildSegmentsFromWords(liveWords);
+      segmentSource = `${data.words.length} words → ${segments.length} phrases`;
+    }
+    // --- Path B: segment-level timestamps only (edge case) — pseudo-word rebuild
+    else if (Array.isArray(data.segments) && data.segments.length > 0) {
+      const liveSegs = filterHallucinations(data.segments);
+      const pseudoWords = pseudoWordsFromSegments(liveSegs);
+      const rebuilt = buildSegmentsFromWords(pseudoWords);
+      segments = rebuilt.length > 0
+        ? rebuilt
+        : liveSegs.map((s) => ({ start: s.start, end: s.end, text: (s.text || '').trim() }));
+      segmentSource = `${data.segments.length} segments → ${pseudoWords.length} pseudo-words → ${segments.length} phrases`;
+    }
+    // --- Path C: text-only (gpt-4o-mini-transcribe) with a known duration
+    else if (fullText && effectiveDuration > 0) {
+      const lines = fullText
+        .split(/[\n。！？.!?]+/)
+        .map((l) => l.trim())
+        .filter(Boolean);
+      if (lines.length > 0) {
+        const perLine = effectiveDuration / lines.length;
+        segments = lines.map((text, i) => ({
+          start: i * perLine,
+          end: (i + 1) * perLine,
+          text,
+        }));
+        segmentSource = `text-only → ${lines.length} sentences over ${effectiveDuration.toFixed(1)}s`;
+      }
+    }
+    // --- Path D: text-only and no duration — retry with whisper-1 for timing
+    else if (fullText && !effectiveDuration) {
+      console.warn('mini-transcribe returned text-only and no clientDuration — retrying with whisper-1');
+      const retry = await callTranscription({
+        audioBlob,
+        fileName,
+        model: 'whisper-1',
+        responseFormat: 'verbose_json',
+        language,
+        title,
+      });
+      if (retry.ok) {
+        data = await retry.json();
+        fullText = data.text || fullText;
+        effectiveDuration = data.duration || effectiveDuration;
+        modelUsed = 'whisper-1 (duration fallback)';
+        if (Array.isArray(data.words) && data.words.length > 0) {
+          segments = buildSegmentsFromWords(data.words);
+          segmentSource = `retry: ${data.words.length} words → ${segments.length} phrases`;
+        } else if (Array.isArray(data.segments) && data.segments.length > 0) {
+          const liveSegs = filterHallucinations(data.segments);
+          segments = liveSegs.map((s) => ({ start: s.start, end: s.end, text: (s.text || '').trim() }));
+          segmentSource = `retry: ${data.segments.length} raw segments`;
         }
       }
     }
 
-    // Conservative hallucination filter — only drop segments Whisper itself
-    // flagged as near-certain silence. Synthesized segments have no
-    // no_speech_prob, so they pass through unchanged.
-    const filteredSegments = rawSegments.filter((seg) => {
-      if (typeof seg?.no_speech_prob === 'number' && seg.no_speech_prob > 0.9) return false;
-      const text = (seg?.text || '').trim();
-      if (text.length < 2) return false;
-      return true;
-    });
-
-    console.log(
-      `Transcribe[${modelUsed}]: ${rawSegments.length} segments → ${filteredSegments.length} after filtering`
-    );
-
-    const segments = filteredSegments.map((seg) => ({
-      start: seg.start,
-      end: seg.end,
-      text: (seg.text || '').trim(),
-    }));
+    console.log(`Transcribe[${modelUsed}]: ${segmentSource || 'no segments produced'}`);
 
     if (videoId) {
       try {

@@ -856,6 +856,19 @@ export default function ArtistDashboard() {
                             onMouseEnter={e => { e.currentTarget.style.background = '#c4956a'; e.currentTarget.style.color = '#fff'; }}
                             onMouseLeave={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#c4956a'; }}
                           >🎨 プロモ</button>
+                          <a
+                            href={`/artist/lyric-video?track=${track.id}&title=${encodeURIComponent(track.title || '')}`}
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                              background: '#1a1a1a', color: '#A78BFA',
+                              border: '1.5px solid #A78BFA', borderRadius: 9999,
+                              padding: '8px 14px', fontSize: 13, fontWeight: 600,
+                              cursor: 'pointer', whiteSpace: 'nowrap', textDecoration: 'none',
+                              fontFamily: THEME.font, transition: 'all 0.2s',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = '#A78BFA'; e.currentTarget.style.color = '#fff'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#A78BFA'; }}
+                          >🎬 リリックMV</a>
                           <a href={buildPitchUrl(track)} onClick={e => e.stopPropagation()} style={{
                             padding: '6px 14px', borderRadius: 9999, background: THEME.coral, color: '#fff',
                             fontSize: 12, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap',

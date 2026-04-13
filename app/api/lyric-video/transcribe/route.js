@@ -235,20 +235,23 @@ export async function POST(request) {
     //     Distribute lines evenly across the duration. mini-transcribe is
     //     more robust against instrumental hallucinations than whisper-1,
     //     so we prefer its text here even though we lose word-level timing.
-    //     Intros may bleed lyrics in this mode; that's the accepted trade-off.
+    //     We reserve a short intro window before the first lyric since
+    //     equal-division has no vocal-onset info to anchor to.
     else if (fullText && effectiveDuration > 0) {
       const lines = fullText
         .split(/[\n。！？.!?]+/)
         .map((l) => l.trim())
         .filter(Boolean);
       if (lines.length > 0) {
-        const perLine = effectiveDuration / lines.length;
+        const introOffset = Math.min(15, Math.max(3, effectiveDuration * 0.05));
+        const usableDuration = Math.max(0, effectiveDuration - introOffset);
+        const perLine = usableDuration / lines.length;
         segments = lines.map((text, i) => ({
-          start: i * perLine,
-          end: (i + 1) * perLine,
+          start: parseFloat((introOffset + i * perLine).toFixed(2)),
+          end: parseFloat((introOffset + (i + 1) * perLine).toFixed(2)),
           text,
         }));
-        segmentSource = `text-only → ${lines.length} sentences over ${effectiveDuration.toFixed(1)}s`;
+        segmentSource = `text-only → ${lines.length} sentences over ${effectiveDuration.toFixed(1)}s (intro ${introOffset.toFixed(1)}s)`;
       }
     }
     // --- Path D: mini-transcribe text with no duration — retry whisper-1

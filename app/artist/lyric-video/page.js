@@ -144,7 +144,7 @@ function LyricVideoEditor() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ audioUrl, videoId, language }),
+        body: JSON.stringify({ audioUrl, videoId, language, title }),
       });
       setSegments(data.segments || []);
       setDuration(data.duration || 0);

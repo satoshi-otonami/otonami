@@ -33,11 +33,21 @@ async function callTranscription({ audioBlob, fileName, model, responseFormat, l
 //   - >1.5s gap between consecutive words (natural breath/phrase break)
 //   - Current group already has 8 words (keeps lines scannable on screen)
 //   - Previous word ended with sentence-final punctuation
-// Joins with empty string because Whisper's English word tokens include a
-// leading space, and CJK tokens have no space at all. A final collapse of
-// whitespace + trim keeps the text readable in either case.
-function buildSegmentsFromWords(words) {
+// Joiner is language-aware: Whisper returns bare word tokens without leading
+// spaces ("Hello", "world"), so English/Latin scripts need ' ' between them
+// or they collapse into "Helloworld". CJK has no inter-word spacing so we
+// join with ''. If language isn't given we sniff the first ~10 words for
+// CJK characters.
+function buildSegmentsFromWords(words, language) {
   if (!Array.isArray(words) || words.length === 0) return [];
+
+  const sampleText = words
+    .slice(0, 10)
+    .map((w) => (w.word || w.text || '').toString())
+    .join('');
+  const isCjkLang = typeof language === 'string' && /^(ja|zh|ko)/i.test(language);
+  const hasCjkChars = /[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff\uac00-\ud7af]/.test(sampleText);
+  const joiner = isCjkLang || hasCjkChars ? '' : ' ';
 
   const segments = [];
   let currentWords = [];
@@ -55,7 +65,7 @@ function buildSegmentsFromWords(words) {
     const endsWithPunctuation = /[.!?,。！？、]$/.test(wordText.trim());
 
     if (isLast || gap > 1.5 || wordCount >= 8 || endsWithPunctuation) {
-      const text = currentWords.join('').replace(/\s+/g, ' ').trim();
+      const text = currentWords.join(joiner).replace(/\s+/g, ' ').trim();
       if (text.length > 0) {
         // Pad the phrase with -0.3s lead-in and +0.1s tail. Lyrics feel
         // better when they appear a beat before the vocal hits and linger
@@ -239,14 +249,14 @@ export async function POST(request) {
         ? data.words.filter((w) => !droppedRanges.some((r) => w.start >= r.start && w.end <= r.end))
         : data.words;
 
-      segments = buildSegmentsFromWords(liveWords);
+      segments = buildSegmentsFromWords(liveWords, data.language || language);
       segmentSource = `${data.words.length} words → ${segments.length} phrases`;
     }
     // --- Path B: segment-level timestamps only (edge case) — pseudo-word rebuild
     else if (Array.isArray(data.segments) && data.segments.length > 0) {
       const liveSegs = filterHallucinations(data.segments);
       const pseudoWords = pseudoWordsFromSegments(liveSegs);
-      const rebuilt = buildSegmentsFromWords(pseudoWords);
+      const rebuilt = buildSegmentsFromWords(pseudoWords, data.language || language);
       segments = rebuilt.length > 0
         ? rebuilt
         : liveSegs.map((s) => ({ start: s.start, end: s.end, text: (s.text || '').trim() }));

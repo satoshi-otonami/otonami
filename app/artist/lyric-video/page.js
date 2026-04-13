@@ -93,10 +93,8 @@ function LyricVideoEditor() {
         setLoading(false);
         return;
       }
-      // Step 1: Ask the server for signed upload URLs (JSON in / JSON out — no file bytes).
-      // This avoids Vercel's 4.5 MB request-body limit on Functions.
       const fallbackTitle = (audioFile.name || '').replace(/\.[^.]+$/, '') || 'Untitled';
-      const initRes = await fetch('/api/lyric-video/upload', {
+      const initData = await fetchJson('/api/lyric-video/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,32 +106,19 @@ function LyricVideoEditor() {
           title: title || fallbackTitle,
         }),
       });
-      const initData = await initRes.json();
-      if (!initRes.ok) {
-        const detail = initData.details ? `${initData.error}: ${initData.details}` : initData.error;
-        throw new Error(detail || 'Upload initialization failed');
-      }
 
-      // Step 2: Upload audio directly to Supabase Storage via the signed URL.
-      // Rename the Blob to an ASCII-safe filename to avoid any filename-based
-      // validation at the HTTP layer.
-      await directUpload(initData.audio.uploadUrl, audioFile, `audio.${initData.audio.ext}`);
+      await directUpload(initData.audioUploadUrl, audioFile);
 
-      // Step 3: Upload background image (best-effort — non-fatal if it fails).
-      if (initData.background && backgroundFile) {
+      if (initData.backgroundUploadUrl && backgroundFile) {
         try {
-          await directUpload(
-            initData.background.uploadUrl,
-            backgroundFile,
-            `background.${initData.background.ext}`
-          );
+          await directUpload(initData.backgroundUploadUrl, backgroundFile);
         } catch (bgErr) {
           console.warn('Background upload failed, proceeding without it:', bgErr);
         }
       }
 
-      setAudioUrl(initData.audio.publicUrl);
-      setBackgroundUrl(initData.background?.publicUrl || null);
+      setAudioUrl(initData.audioPublicUrl);
+      setBackgroundUrl(initData.backgroundPublicUrl || null);
       setVideoId(initData.id);
       setStep(2);
     } catch (err) {
@@ -149,7 +134,7 @@ function LyricVideoEditor() {
     setLoading(true);
     try {
       const token = localStorage.getItem('artist_token');
-      const res = await fetch('/api/lyric-video/transcribe', {
+      const data = await fetchJson('/api/lyric-video/transcribe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -157,8 +142,6 @@ function LyricVideoEditor() {
         },
         body: JSON.stringify({ audioUrl, videoId, language }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Transcription failed');
       setSegments(data.segments || []);
       setDuration(data.duration || 0);
       setStep(3);
@@ -668,17 +651,40 @@ function formatTime(sec) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-// Direct PUT upload to a Supabase Storage signed URL.
-// Uses multipart body with cacheControl + file — matches the Supabase JS client's
-// uploadToSignedUrl protocol. safeName overrides the multipart filename with an
-// ASCII-only string to avoid Content-Disposition filename validation errors.
-async function directUpload(signedUrl, file, safeName) {
-  const form = new FormData();
-  form.append('cacheControl', '3600');
-  form.append('', file, safeName);
+// Unified fetch helper: reads the response body as text first, attempts JSON.parse,
+// and falls back to the raw text in the error message. Prevents "Unexpected token R"
+// style failures when a gateway returns a plaintext error (e.g. 413 Request Entity
+// Too Large) that we would otherwise try to JSON.parse.
+async function fetchJson(url, options) {
+  const res = await fetch(url, options);
+  const raw = await res.text();
+  let data = null;
+  try {
+    data = raw ? JSON.parse(raw) : null;
+  } catch {
+    data = null;
+  }
+  if (!res.ok) {
+    const message =
+      (data && (data.error || data.message)) ||
+      (raw && raw.slice(0, 200)) ||
+      `Request failed (${res.status})`;
+    throw new Error(message);
+  }
+  return data;
+}
+
+// Direct raw PUT upload to a Supabase Storage signed URL. No multipart, no
+// FormData — the browser sends the file bytes with Content-Type set to the
+// file's MIME type, which avoids any Content-Disposition filename parsing at
+// the HTTP layer.
+async function directUpload(signedUrl, file) {
   const res = await fetch(signedUrl, {
     method: 'PUT',
-    body: form,
+    headers: {
+      'Content-Type': file.type || 'application/octet-stream',
+    },
+    body: file,
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');

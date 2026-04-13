@@ -21,8 +21,16 @@ const IMAGE_MIME_TO_EXT = {
   'image/gif': 'gif',
 };
 
-// Returns signed upload URLs so the browser can upload directly to Supabase
-// Storage, bypassing Vercel's 4.5 MB request-body limit.
+// POST /api/lyric-video/upload
+// Accepts JSON only. Returns signed upload URLs so the browser can PUT file
+// bytes directly to Supabase Storage, bypassing Vercel's 4.5 MB body limit.
+//
+// Request body: { audioMime, backgroundMime?, title?, trackId? }
+// Response: {
+//   id, title,
+//   audioUploadUrl, audioPublicUrl,
+//   backgroundUploadUrl?, backgroundPublicUrl?
+// }
 export async function POST(request) {
   try {
     const payload = await verifyToken(request);
@@ -33,7 +41,8 @@ export async function POST(request) {
     let body;
     try {
       body = await request.json();
-    } catch {
+    } catch (parseErr) {
+      console.error('Invalid JSON body:', parseErr?.message);
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
@@ -91,7 +100,8 @@ export async function POST(request) {
       .from('avatars')
       .getPublicUrl(audioPath);
 
-    let background = null;
+    let backgroundUploadUrl = null;
+    let backgroundPublicUrl = null;
     if (bgExt) {
       const bgPath = `lyric-videos/backgrounds/${payload.artistId}/${timestamp}_${randSlug}.${bgExt}`;
       const { data: bgSigned, error: bgSignError } = await supabase.storage
@@ -103,18 +113,12 @@ export async function POST(request) {
           message: bgSignError?.message,
           path: bgPath,
         });
-        // Non-fatal — proceed without background
       } else {
         const { data: bgPublicData } = supabase.storage
           .from('avatars')
           .getPublicUrl(bgPath);
-        background = {
-          uploadUrl: bgSigned.signedUrl,
-          token: bgSigned.token,
-          path: bgPath,
-          publicUrl: bgPublicData.publicUrl,
-          ext: bgExt,
-        };
+        backgroundUploadUrl = bgSigned.signedUrl;
+        backgroundPublicUrl = bgPublicData.publicUrl;
       }
     }
 
@@ -127,8 +131,8 @@ export async function POST(request) {
           track_id: trackId || null,
           title,
           audio_url: audioPublicData.publicUrl,
-          background_url: background?.publicUrl || null,
-          status: 'draft',
+          background_url: backgroundPublicUrl,
+          status: 'uploading',
         })
         .select('id');
       if (record && record[0]) videoId = record[0].id;
@@ -139,14 +143,10 @@ export async function POST(request) {
     return NextResponse.json({
       id: videoId,
       title,
-      audio: {
-        uploadUrl: audioSigned.signedUrl,
-        token: audioSigned.token,
-        path: audioPath,
-        publicUrl: audioPublicData.publicUrl,
-        ext: audioExt,
-      },
-      background,
+      audioUploadUrl: audioSigned.signedUrl,
+      audioPublicUrl: audioPublicData.publicUrl,
+      backgroundUploadUrl,
+      backgroundPublicUrl,
     });
   } catch (err) {
     console.error('Upload init error:', {

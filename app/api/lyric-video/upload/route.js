@@ -73,10 +73,10 @@ export async function POST(request) {
     const supabase = getServiceSupabase();
     const timestamp = Date.now();
     const randSlug = Math.random().toString(36).slice(2, 10);
-    const audioPath = `lyric-videos/audio/${payload.artistId}/${timestamp}_${randSlug}.${audioExt}`;
+    const audioPath = `audio/${payload.artistId}/${timestamp}_${randSlug}.${audioExt}`;
 
     const { data: audioSigned, error: audioSignError } = await supabase.storage
-      .from('avatars')
+      .from('lyric-videos')
       .createSignedUploadUrl(audioPath);
 
     if (audioSignError || !audioSigned) {
@@ -97,15 +97,15 @@ export async function POST(request) {
     }
 
     const { data: audioPublicData } = supabase.storage
-      .from('avatars')
+      .from('lyric-videos')
       .getPublicUrl(audioPath);
 
     let backgroundUploadUrl = null;
     let backgroundPublicUrl = null;
     if (bgExt) {
-      const bgPath = `lyric-videos/backgrounds/${payload.artistId}/${timestamp}_${randSlug}.${bgExt}`;
+      const bgPath = `backgrounds/${payload.artistId}/${timestamp}_${randSlug}.${bgExt}`;
       const { data: bgSigned, error: bgSignError } = await supabase.storage
-        .from('avatars')
+        .from('lyric-videos')
         .createSignedUploadUrl(bgPath);
 
       if (bgSignError || !bgSigned) {
@@ -115,7 +115,7 @@ export async function POST(request) {
         });
       } else {
         const { data: bgPublicData } = supabase.storage
-          .from('avatars')
+          .from('lyric-videos')
           .getPublicUrl(bgPath);
         backgroundUploadUrl = bgSigned.signedUrl;
         backgroundPublicUrl = bgPublicData.publicUrl;

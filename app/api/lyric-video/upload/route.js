@@ -4,11 +4,22 @@ import { verifyToken } from '@/lib/auth';
 
 export const maxDuration = 60;
 
-const ALLOWED_AUDIO = [
-  'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/wave',
-  'audio/x-wav', 'audio/mp4', 'audio/x-m4a', 'audio/m4a',
-];
-const ALLOWED_IMAGE = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const AUDIO_MIME_TO_EXT = {
+  'audio/mpeg': 'mp3',
+  'audio/mp3': 'mp3',
+  'audio/wav': 'wav',
+  'audio/wave': 'wav',
+  'audio/x-wav': 'wav',
+  'audio/mp4': 'm4a',
+  'audio/x-m4a': 'm4a',
+  'audio/m4a': 'm4a',
+};
+const IMAGE_MIME_TO_EXT = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
 const MAX_AUDIO = 25 * 1024 * 1024;
 const MAX_IMAGE = 10 * 1024 * 1024;
 
@@ -28,7 +39,9 @@ export async function POST(request) {
     if (!audioFile || typeof audioFile === 'string') {
       return NextResponse.json({ error: 'Audio file is required' }, { status: 400 });
     }
-    if (!ALLOWED_AUDIO.includes(audioFile.type)) {
+    const audioExt = AUDIO_MIME_TO_EXT[audioFile.type];
+    if (!audioExt) {
+      console.error('Unsupported audio MIME type:', audioFile.type);
       return NextResponse.json(
         { error: 'Unsupported audio format. Use MP3, WAV, or M4A.' },
         { status: 400 }
@@ -45,7 +58,6 @@ export async function POST(request) {
     const timestamp = Date.now();
     const randSlug = Math.random().toString(36).slice(2, 10);
 
-    const audioExt = (audioFile.name.split('.').pop() || 'mp3').toLowerCase();
     const audioPath = `lyric-videos/audio/${payload.artistId}/${timestamp}_${randSlug}.${audioExt}`;
     const audioBuffer = Buffer.from(await audioFile.arrayBuffer());
 
@@ -57,8 +69,17 @@ export async function POST(request) {
       });
 
     if (audioError) {
-      console.error('Audio upload error:', audioError);
-      return NextResponse.json({ error: 'Failed to upload audio' }, { status: 500 });
+      console.error('Audio upload error:', {
+        message: audioError.message,
+        name: audioError.name,
+        statusCode: audioError.statusCode,
+        error: audioError.error,
+        path: audioPath,
+      });
+      return NextResponse.json(
+        { error: 'Failed to upload audio', details: audioError.message },
+        { status: 500 }
+      );
     }
 
     const { data: audioUrlData } = supabase.storage
@@ -67,7 +88,9 @@ export async function POST(request) {
 
     let backgroundUrl = null;
     if (backgroundFile && typeof backgroundFile !== 'string' && backgroundFile.size > 0) {
-      if (!ALLOWED_IMAGE.includes(backgroundFile.type)) {
+      const bgExt = IMAGE_MIME_TO_EXT[backgroundFile.type];
+      if (!bgExt) {
+        console.error('Unsupported background MIME type:', backgroundFile.type);
         return NextResponse.json(
           { error: 'Unsupported background format. Use JPG, PNG, WebP, or GIF.' },
           { status: 400 }
@@ -79,7 +102,6 @@ export async function POST(request) {
           { status: 400 }
         );
       }
-      const bgExt = (backgroundFile.name.split('.').pop() || 'jpg').toLowerCase();
       const bgPath = `lyric-videos/backgrounds/${payload.artistId}/${timestamp}_${randSlug}.${bgExt}`;
       const bgBuffer = Buffer.from(await backgroundFile.arrayBuffer());
       const { error: bgError } = await supabase.storage
@@ -88,7 +110,15 @@ export async function POST(request) {
           contentType: backgroundFile.type,
           upsert: false,
         });
-      if (!bgError) {
+      if (bgError) {
+        console.error('Background upload error:', {
+          message: bgError.message,
+          name: bgError.name,
+          statusCode: bgError.statusCode,
+          error: bgError.error,
+          path: bgPath,
+        });
+      } else {
         const { data: bgUrlData } = supabase.storage.from('avatars').getPublicUrl(bgPath);
         backgroundUrl = bgUrlData.publicUrl;
       }
@@ -119,7 +149,14 @@ export async function POST(request) {
       title,
     });
   } catch (err) {
-    console.error('Upload error:', err);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    console.error('Upload error:', {
+      message: err?.message,
+      stack: err?.stack,
+      name: err?.name,
+    });
+    return NextResponse.json(
+      { error: 'Upload failed', details: err?.message },
+      { status: 500 }
+    );
   }
 }

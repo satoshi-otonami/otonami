@@ -268,7 +268,7 @@ export async function GET(request) {
     const db = getServiceSupabase();
     const { data: curator } = await db
       .from('curators')
-      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, open_to_all_genres, payment_method, payment_info')
+      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, open_to_all_genres, payment_method, payment_info, tier')
       .eq('id', payload.id)
       .single();
 

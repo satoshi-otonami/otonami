@@ -76,6 +76,8 @@ export async function POST(request) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')}-${Date.now()}`;
 
+    const validTier = Math.min(5, Math.max(1, parseInt(form.tier) || 2));
+
     const { data, error } = await supabase
       .from('curators')
       .insert({
@@ -104,7 +106,7 @@ export async function POST(request) {
         featured_track_url: form.featuredTrackUrl || null,
         open_to_all_genres: form.openToAllGenres || false,
         tags: ['pending_review'],
-        tier: 3,
+        tier: validTier,
         is_seed: false,
       })
       .select()
@@ -249,7 +251,7 @@ export async function PUT(request) {
       'similar_artists', 'playlist_url', 'icon_url',
       'rejected_genres', 'response_time', 'social_links',
       'submission_guidelines', 'featured_track_url', 'open_to_all_genres',
-      'payment_method', 'payment_info',
+      'payment_method', 'payment_info', 'tier',
     ];
     const updateData = {};
     for (const key of ALLOWED) {
@@ -265,12 +267,15 @@ export async function PUT(request) {
     if (updateData.followers !== undefined) {
       updateData.followers = parseInt(updateData.followers) || 0;
     }
+    if (updateData.tier !== undefined) {
+      updateData.tier = Math.min(5, Math.max(1, parseInt(updateData.tier) || 2));
+    }
 
     const { data, error } = await supabase
       .from('curators')
       .update(updateData)
       .eq('id', payload.id)
-      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, rejected_genres, response_time, social_links, submission_guidelines, featured_track_url, open_to_all_genres, payment_method, payment_info')
+      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, rejected_genres, response_time, social_links, submission_guidelines, featured_track_url, open_to_all_genres, payment_method, payment_info, tier')
       .single();
 
     if (error) throw new Error(error.message);

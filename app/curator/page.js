@@ -85,6 +85,7 @@ export default function CuratorRegistrationPage() {
     responseTime: '', featuredTrackUrl: '',
     socialWebsite: '', socialTwitter: '', socialInstagram: '',
     submissionGuidelines: '',
+    tier: 2,
   });
   const [artistInput, setArtistInput] = useState('');
   const [avatarFile, setAvatarFile] = useState(null);
@@ -474,6 +475,7 @@ export default function CuratorRegistrationPage() {
           .avatar-upload-row { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
           .register-card { padding: 20px 16px !important; }
           .payout-notice { padding: 12px 14px !important; }
+          .tier-grid { grid-template-columns: repeat(3, 1fr) !important; }
         }
       `}</style>
 
@@ -843,6 +845,72 @@ export default function CuratorRegistrationPage() {
                     <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="url" value={form.playlistUrl} placeholder="Spotify playlist, YouTube channel, radio show URL..." onChange={e => set('playlistUrl', e.target.value)} />
                   </div>
 
+                  {/* ── Review Price Tier ── */}
+                  <div style={{ marginTop: 24, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
+                    <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
+                      Set your review price <span style={{ fontWeight: 400, fontSize: 11 }}>レビュー単価を設定</span>
+                    </div>
+                    <p style={{ fontSize: 11, color: T.textMuted, marginTop: 0, marginBottom: 12, fontFamily: T.font, lineHeight: 1.5 }}>
+                      How many credits artists spend to pitch you. You earn ¥80 per credit.
+                    </p>
+                    <div className="tier-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+                      {[1, 2, 3, 4, 5].map(t => {
+                        const sel = form.tier === t;
+                        const yen = t * 80;
+                        const usd = (yen / 150).toFixed(2);
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => set('tier', t)}
+                            style={{
+                              padding: '12px 6px',
+                              borderRadius: 12,
+                              border: sel ? '2px solid #c4956a' : `1px solid ${T.border}`,
+                              background: sel ? '#fffcf8' : '#fff',
+                              cursor: 'pointer',
+                              fontFamily: T.font,
+                              textAlign: 'center',
+                              position: 'relative',
+                              transition: 'all 0.15s',
+                            }}
+                          >
+                            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>{t} cr</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: '#c4956a', marginTop: 2 }}>¥{yen}</div>
+                            <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>~${usd}</div>
+                            {t === 2 && (
+                              <div style={{ position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)', fontSize: 9, fontWeight: 700, color: '#fff', background: '#c4956a', padding: '2px 6px', borderRadius: 8, whiteSpace: 'nowrap' }}>
+                                ⭐ 推奨
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div style={{
+                      marginTop: 14,
+                      background: '#fffcf8',
+                      border: '1px solid #e8ddd0',
+                      borderRadius: 12,
+                      padding: '14px 18px',
+                      fontSize: 13,
+                      color: '#6b6560',
+                      lineHeight: 1.6,
+                      fontFamily: T.font,
+                    }}>
+                      <div style={{ fontWeight: 600, color: '#1a1a2e', marginBottom: 4, fontSize: 14 }}>
+                        💡 How tier affects your pitches
+                      </div>
+                      <div>
+                        Higher tier = more pay per review, but artists spend more credits to pitch you,
+                        so you may receive fewer pitches. Lower tier = more pitches, lower pay per review.
+                      </div>
+                      <div style={{ marginTop: 6, color: '#998b7d', fontSize: 12 }}>
+                        ティアが高いほど1レビューあたりの報酬は増えますが、アーティストのクレジット消費も増えるため、届くピッチ数は少なくなる可能性があります。
+                      </div>
+                    </div>
+                  </div>
+
                   {fieldErrors.genres && <p className={shakeFields ? 'field-error-shake' : ''} style={{ color: '#e85d3a', fontSize: 12, marginTop: 8, fontFamily: T.font }}>{fieldErrors.genres}</p>}
 
                   <div className="step-btns-row" style={{ display: 'flex', gap: 10, marginTop: 28 }}>
@@ -947,6 +1015,56 @@ export default function CuratorRegistrationPage() {
                       </div>
                       <textarea className="curator-input" value={form.submissionGuidelines} onChange={e => { if (e.target.value.length <= 300) set('submissionGuidelines', e.target.value); }} placeholder="Any specific instructions for artists submitting to you?" rows={3} style={{ ...inp, minHeight: 80, height: 80, resize: 'vertical', marginTop: 8 }} />
                       {form.submissionGuidelines.length > 200 && <p style={{ color: form.submissionGuidelines.length > 280 ? '#ef4444' : T.textMuted, fontSize: 11, marginTop: 4, fontFamily: T.font }}>{form.submissionGuidelines.length}/300</p>}
+                    </div>
+
+                    {/* How you get paid — 報酬の仕組み */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, #fffcf8 0%, #fff5ee 100%)',
+                      border: '1px solid #e8ddd0',
+                      borderRadius: 16,
+                      padding: '20px 22px',
+                      marginBottom: 24,
+                      marginTop: 8,
+                      fontFamily: T.font,
+                    }}>
+                      <h4 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a2e', marginBottom: 12, fontFamily: T.fontDisplay }}>
+                        💰 How you earn / 報酬の仕組み
+                      </h4>
+                      <div style={{ fontSize: 14, color: '#4a4540', lineHeight: 1.7, marginBottom: 12 }}>
+                        <div style={{ marginBottom: 6 }}>
+                          <strong>You get paid for every review</strong> — accept, decline, or feedback.
+                          No obligation to add tracks to your playlist.
+                        </div>
+                        <div style={{ color: '#6b6560', fontSize: 13 }}>
+                          レビューするたびに報酬が発生します（承認・却下・フィードバックいずれでもOK）。プレイリストへの追加義務はありません。
+                        </div>
+                      </div>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: 8,
+                        textAlign: 'center',
+                        marginBottom: 12,
+                      }}>
+                        <div style={{ background: '#fff', borderRadius: 10, padding: '12px 6px', border: '1px solid #e8ddd0' }}>
+                          <div style={{ fontSize: 10, color: '#998b7d', marginBottom: 4 }}>Your tier</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: '#c4956a' }}>{form.tier} cr</div>
+                        </div>
+                        <div style={{ background: '#fff', borderRadius: 10, padding: '12px 6px', border: '1px solid #e8ddd0' }}>
+                          <div style={{ fontSize: 10, color: '#998b7d', marginBottom: 4 }}>Per review</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a2e' }}>¥{form.tier * 80}</div>
+                          <div style={{ fontSize: 10, color: '#998b7d' }}>~${(form.tier * 80 / 150).toFixed(2)}</div>
+                        </div>
+                        <div style={{ background: '#fff', borderRadius: 10, padding: '12px 6px', border: '1px solid #e8ddd0' }}>
+                          <div style={{ fontSize: 10, color: '#998b7d', marginBottom: 4 }}>Payment</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a2e' }}>Monthly</div>
+                          <div style={{ fontSize: 10, color: '#998b7d' }}>PayPal/Wise</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 12, color: '#998b7d', lineHeight: 1.5 }}>
+                        💡 You chose {form.tier} credits — you&apos;ll earn ¥{form.tier * 80} (~${(form.tier * 80 / 150).toFixed(2)}) per review.
+                        You can change this anytime from your dashboard.
+                      </div>
                     </div>
 
                     {/* Followers + Payment Method */}

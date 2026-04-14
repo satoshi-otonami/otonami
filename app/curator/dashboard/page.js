@@ -280,6 +280,7 @@ export default function CuratorDashboard() {
       playlist_url: curator.playlist_url || '',
       payment_method: curator.payment_method || 'paypal',
       payment_info: curator.payment_info || '',
+      tier: curator.tier || 2,
     });
     setEditAvatarPreview(curator.icon_url || null);
     setEditAvatarFile(null);
@@ -739,6 +740,46 @@ export default function CuratorDashboard() {
                 <div style={{ marginBottom: 20 }}>
                   <label style={editLbl}>Music Similar To... / こんな音楽が好き <span style={{ fontSize: 10, fontWeight: 400, color: T.textMuted }}>カンマ区切り・最大5アーティスト</span></label>
                   <input className="edit-input" style={editInp} value={editForm.similar_artists} placeholder="e.g. Snarky Puppy, Nujabes, Khruangbin" onChange={e => setEditForm(f => ({ ...f, similar_artists: e.target.value }))} />
+                </div>
+
+                {/* Review Price Tier */}
+                <div style={{ marginBottom: 20, padding: 16, background: T.bg, borderRadius: 12, border: `1px solid ${T.border}` }}>
+                  <label style={{ ...editLbl, marginTop: 0, color: T.accent }}>💰 Review Price / レビュー単価</label>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                    {[1, 2, 3, 4, 5].map(t => {
+                      const sel = (editForm.tier || 2) === t;
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setEditForm(f => ({ ...f, tier: t }))}
+                          style={{
+                            flex: '1 1 60px',
+                            padding: '10px 6px',
+                            borderRadius: 10,
+                            border: sel ? '2px solid #c4956a' : `1px solid ${T.border}`,
+                            background: sel ? '#fffcf8' : T.white,
+                            cursor: 'pointer',
+                            fontSize: 13,
+                            fontWeight: sel ? 700 : 500,
+                            color: '#1a1a1a',
+                            textAlign: 'center',
+                            fontFamily: T.font,
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          <div>{t} cr</div>
+                          <div style={{ fontSize: 11, color: '#998b7d', marginTop: 2, fontWeight: 500 }}>
+                            ¥{t * 80}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 8, lineHeight: 1.5, fontFamily: T.font }}>
+                    You earn ¥{(editForm.tier || 2) * 80} (~${((editForm.tier || 2) * 80 / 150).toFixed(2)}) per review.
+                    Higher tier = more pay, fewer pitches. <span style={{ color: '#998b7d' }}>高ティア = 高報酬、ピッチ数減少の可能性</span>
+                  </div>
                 </div>
 
                 {/* Payment Method */}

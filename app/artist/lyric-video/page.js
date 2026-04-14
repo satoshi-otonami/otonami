@@ -225,10 +225,12 @@ function LyricVideoEditor() {
       return;
     }
 
-    const perLine = duration / lines.length;
+    const introOffset = Math.min(15, Math.max(3, duration * 0.05));
+    const usableDuration = Math.max(0, duration - introOffset);
+    const perLine = usableDuration / lines.length;
     const newSegments = lines.map((text, i) => ({
-      start: i * perLine,
-      end: (i + 1) * perLine,
+      start: parseFloat((introOffset + i * perLine).toFixed(2)),
+      end: parseFloat((introOffset + (i + 1) * perLine).toFixed(2)),
       text,
     }));
     setSegments(newSegments);
@@ -635,15 +637,19 @@ function StepTranscribe({
               </select>
 
               <button
-                onClick={onTranscribe} disabled={loading}
+                onClick={onTranscribe} disabled={loading || !duration}
                 style={{
                   width: '100%', padding: '14px 20px',
-                  background: loading ? THEME.border : `linear-gradient(135deg, ${THEME.purple}, ${THEME.teal})`,
+                  background: (loading || !duration) ? THEME.border : `linear-gradient(135deg, ${THEME.purple}, ${THEME.teal})`,
                   color: '#fff', border: 'none', borderRadius: 10, fontSize: 15, fontWeight: 700,
-                  cursor: loading ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
+                  cursor: (loading || !duration) ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
                 }}
               >
-                {loading ? '書き起こし中…（時間がかかります）' : '歌詞を書き起こす 🎤'}
+                {loading
+                  ? '書き起こし中…（時間がかかります）'
+                  : !duration
+                    ? '音声の長さを読み込み中…'
+                    : '歌詞を書き起こす 🎤'}
               </button>
             </>
           )}

@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { D as T } from '@/lib/design-tokens';
+import { CL as T } from '@/lib/design-tokens';
 
 function renderBody(text) {
   if (!text) return null;
@@ -203,7 +203,7 @@ function PitchView({ pitchId }) {
 
   const fbInp = {
     width: '100%', background: T.white, border: `1px solid ${T.border}`,
-    borderRadius: 8, color: T.text, fontSize: 13, padding: '10px 12px',
+    borderRadius: 8, color: T.text, fontSize: 15, padding: '11px 14px',
     outline: 'none', fontFamily: T.font, boxSizing: 'border-box',
   };
 
@@ -255,14 +255,14 @@ function PitchView({ pitchId }) {
           <div style={{ width: 48, height: 48, borderRadius: 12, background: T.accentLight, border: `1px solid ${T.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🎵</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
-              <span style={{ color: T.text, fontWeight: 800, fontSize: 18, fontFamily: T.font }}>
+              <span style={{ color: T.text, fontWeight: 800, fontSize: 20, fontFamily: T.font }}>
                 {pitch.artist_name || 'Unknown Artist'}
               </span>
               {pitch.artist_genre && (
-                <span style={{ color: T.textMuted, fontSize: 13, fontFamily: T.font }}>{pitch.artist_genre}</span>
+                <span style={{ color: T.textMuted, fontSize: 14, fontFamily: T.font }}>{pitch.artist_genre}</span>
               )}
               <span style={{
-                padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700,
+                padding: '3px 12px', borderRadius: 12, fontSize: 12, fontWeight: 700,
                 color: st.color, background: st.bg, fontFamily: T.font,
               }}>{st.label}</span>
             </div>
@@ -299,10 +299,10 @@ function PitchView({ pitchId }) {
         background: T.white, border: `1px solid ${T.border}`, borderRadius: T.radiusLg,
         padding: '20px 22px', marginBottom: 14, boxShadow: T.shadow,
       }}>
-        <div style={{ color: T.textSub, fontSize: 11, fontWeight: 700, marginBottom: 12, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: T.font }}>Pitch Message</div>
+        <div style={{ color: T.textSub, fontSize: 12, fontWeight: 700, marginBottom: 14, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: T.font }}>Pitch Message</div>
         {pitch.body ? (
           <pre style={{
-            color: T.textSub, fontSize: 13, lineHeight: 1.85,
+            color: T.text, fontSize: 15, lineHeight: 1.85,
             whiteSpace: 'pre-wrap', wordBreak: 'break-word',
             fontFamily: T.font, margin: 0,
           }}>
@@ -320,7 +320,7 @@ function PitchView({ pitchId }) {
         background: T.white, border: `1px solid ${T.border}`, borderRadius: T.radiusLg,
         padding: '20px 22px', boxShadow: T.shadow,
       }}>
-        <div style={{ color: T.textSub, fontSize: 11, fontWeight: 700, marginBottom: 16, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: T.font }}>
+        <div style={{ color: T.textSub, fontSize: 12, fontWeight: 700, marginBottom: 16, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: T.font }}>
           Your Feedback / フィードバック
         </div>
 
@@ -515,7 +515,7 @@ export default function PitchRespondPage() {
       {/* ── Header ── */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(26,26,26,0.85)', backdropFilter: 'blur(12px)',
+        background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)',
         borderBottom: `1px solid ${T.border}`,
         padding: '0 24px', height: 64,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { D as T } from '@/lib/design-tokens';
+import { CL as T } from '@/lib/design-tokens';
 import { supabase } from '@/lib/supabase';
 
 const STATUS_LABELS = {
@@ -64,7 +64,7 @@ const TYPE_BADGE = {
   media:    { bg: 'rgba(96,165,250,0.15)', color: '#60a5fa', label: 'Media' },
   radio:    { bg: 'rgba(16,185,129,0.15)', color: '#34d399', label: 'Radio' },
   label:    { bg: 'rgba(236,72,153,0.15)', color: '#f472b6', label: 'Label' },
-  other:    { bg: 'rgba(255,255,255,0.06)', color: T.textSub, label: 'Other' },
+  other:    { bg: '#f3f0ea', color: T.textSub, label: 'Other' },
 };
 
 // ── ピル表示ヘルパー ──
@@ -109,7 +109,7 @@ function SubmissionWidget({ curatorId, curatorName }) {
       </p>
 
       {/* Preview */}
-      <div style={{ background: '#0d0d1a', borderRadius: 10, padding: 20, textAlign: 'center', marginBottom: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ background: T.bg, borderRadius: 10, padding: 20, textAlign: 'center', marginBottom: 16, border: `1px solid ${T.border}` }}>
         <a href={submitUrl} target="_blank" rel="noopener noreferrer" style={{
           display: 'inline-flex', alignItems: 'center', gap: 10,
           padding: '12px 28px', borderRadius: 25,
@@ -118,7 +118,7 @@ function SubmissionWidget({ curatorId, curatorName }) {
         }}>
           🎵 Submit Music to {curatorName}
         </a>
-        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.72rem', marginTop: 8, marginBottom: 0, fontFamily: T.font }}>
+        <p style={{ color: T.textMuted, fontSize: '0.72rem', marginTop: 8, marginBottom: 0, fontFamily: T.font }}>
           Powered by OTONAMI
         </p>
       </div>
@@ -483,7 +483,7 @@ export default function CuratorDashboard() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: ${T.bg}; overflow-x: hidden; }
         .pitch-card { transition: box-shadow 0.2s, transform 0.2s; }
-        .pitch-card:hover { box-shadow: 0 4px 16px rgba(196,149,106,0.12), 0 2px 8px rgba(0,0,0,0.2) !important; transform: translateY(-1px); }
+        .pitch-card:hover { box-shadow: 0 4px 16px rgba(196,149,106,0.12), 0 2px 8px rgba(0,0,0,0.04) !important; transform: translateY(-1px); }
         .dash-tab-btn { transition: all 0.2s; }
         .dash-tab-btn:hover { color: ${T.accent} !important; }
         .fb-input:focus { border-color: ${T.accent} !important; box-shadow: 0 0 0 3px rgba(196,149,106,0.15) !important; outline: none !important; }
@@ -533,7 +533,7 @@ export default function CuratorDashboard() {
       {/* ── Header ── */}
       <header className="dash-header" style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(26,26,26,0.85)', backdropFilter: 'blur(12px)',
+        background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)',
         borderBottom: `1px solid ${T.border}`,
         padding: '0 24px', height: 64,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -551,8 +551,8 @@ export default function CuratorDashboard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {curator && (
             <div className="dash-header-meta" style={{ textAlign: 'right' }}>
-              <div style={{ color: T.text, fontSize: 13, fontWeight: 700 }}>{curator.name}</div>
-              <div style={{ color: T.textMuted, fontSize: 11 }}>{curator.email}</div>
+              <div style={{ color: T.text, fontSize: 14, fontWeight: 700 }}>{curator.name}</div>
+              <div style={{ color: T.textMuted, fontSize: 12 }}>{curator.email}</div>
             </div>
           )}
           <button onClick={handleLogout} style={{
@@ -868,7 +868,7 @@ export default function CuratorDashboard() {
                           </div>
                         ) : (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <h2 style={{ color: T.text, fontWeight: 800, fontSize: 20, fontFamily: T.fontDisplay, margin: 0 }}>{curator.name}</h2>
+                            <h2 style={{ color: T.text, fontWeight: 800, fontSize: 22, fontFamily: T.fontDisplay, margin: 0 }}>{curator.name}</h2>
                             <button onClick={startNameEdit} style={{
                               background: 'none', border: 'none', color: '#c4956a',
                               fontSize: 14, cursor: 'pointer', fontFamily: T.font, padding: 0,
@@ -914,7 +914,7 @@ export default function CuratorDashboard() {
 
                 {/* Bio */}
                 {curator.bio && (
-                  <div style={{ color: T.textSub, fontSize: 13, lineHeight: 1.7, marginBottom: 16, padding: '12px 14px', background: T.bg, borderRadius: 8, border: `1px solid ${T.border}`, fontFamily: T.font }}>
+                  <div style={{ color: T.textSub, fontSize: 14, lineHeight: 1.7, marginBottom: 16, padding: '14px 16px', background: T.bg, borderRadius: 8, border: `1px solid ${T.border}`, fontFamily: T.font }}>
                     {curator.bio}
                   </div>
                 )}
@@ -1108,11 +1108,11 @@ export default function CuratorDashboard() {
                   <div style={{ width: 42, height: 42, borderRadius: 10, flexShrink: 0, background: T.accentLight, border: `1px solid ${T.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🎵</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                      <span style={{ color: T.text, fontWeight: 700, fontSize: 15, fontFamily: T.font }}>{pitch.artist_name || 'Unknown Artist'}</span>
-                      {pitch.artist_genre && <span style={{ color: T.textMuted, fontSize: 12, fontFamily: T.font }}>{pitch.artist_genre}</span>}
-                      <span style={{ padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, color: s.color, background: s.bg, fontFamily: T.font }}>{s.en} / {s.ja}</span>
+                      <span style={{ color: T.text, fontWeight: 700, fontSize: 16, fontFamily: T.font }}>{pitch.artist_name || 'Unknown Artist'}</span>
+                      {pitch.artist_genre && <span style={{ color: T.textMuted, fontSize: 13, fontFamily: T.font }}>{pitch.artist_genre}</span>}
+                      <span style={{ padding: '3px 12px', borderRadius: 12, fontSize: 12, fontWeight: 700, color: s.color, background: s.bg, fontFamily: T.font }}>{s.en} / {s.ja}</span>
                     </div>
-                    <div style={{ color: T.textSub, fontSize: 13, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: T.font }}>
+                    <div style={{ color: T.textSub, fontSize: 14, marginTop: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: T.font }}>
                       {pitch.subject || '(no subject)'}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>

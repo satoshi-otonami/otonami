@@ -1,17 +1,17 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { D as T } from '@/lib/design-tokens';
+import { CL as T } from '@/lib/design-tokens';
 
 const inp = {
-  width: '100%', padding: '12px 16px', borderRadius: 8,
+  width: '100%', padding: '13px 16px', borderRadius: 8,
   border: `1px solid ${T.border}`, background: T.white, color: T.text,
-  fontSize: 14, outline: 'none', marginTop: 6, boxSizing: 'border-box',
+  fontSize: 16, outline: 'none', marginTop: 6, boxSizing: 'border-box',
   fontFamily: T.font,
 };
 const lbl = {
-  fontSize: 13, color: T.textMuted, display: 'block', marginTop: 18,
-  fontWeight: 500, fontFamily: T.font,
+  fontSize: 14, color: T.textSub, display: 'block', marginTop: 18,
+  fontWeight: 600, fontFamily: T.font,
 };
 
 /* ── モードA: メールアドレス入力フォーム ── */
@@ -254,7 +254,7 @@ function SetPasswordContent() {
       {/* ── Header ── */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(26,26,26,0.85)', backdropFilter: 'blur(12px)',
+        background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)',
         borderBottom: `1px solid ${T.border}`,
         padding: '0 24px', height: 64,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',

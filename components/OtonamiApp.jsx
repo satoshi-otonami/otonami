@@ -1928,11 +1928,26 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     }
     if (credits < cost) { notify("クレジットが不足しています", "error"); return; }
     const lnk = {...links, songLink: getSongLink()};
+
+    // The AI is instructed to use the literal "[Curator Name]" placeholder, but old
+    // generations or model slip-ups may have hardcoded the first curator's name.
+    // Detect and rewrite it for each recipient before the pitch goes out.
+    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const firstCuratorName = targets[0]?.name?.trim() || '';
+    const personalizePitch = (rawText, curator) => {
+      let out = rawText.replace(/\[Curator Name\]/gi, curator.name);
+      if (firstCuratorName && curator.name !== firstCuratorName) {
+        const greetingRe = new RegExp(`(Hi|Hello|Hey|Dear)\\s+${escapeRegExp(firstCuratorName)}\\b`, 'gi');
+        out = out.replace(greetingRe, `$1 ${curator.name}`);
+      }
+      return out;
+    };
+
     const tempPitches = targets.map(c => ({
       id: "p_" + Date.now() + "_" + c.id,
       artistId: user.id, artistEmail: user.email, artistName: artist.name, artistNameEn: artist.nameEn||artist.name,
       songTitle: artist.songTitle, songLink: getSongLink(), genre: artist.genre, mood: artist.mood, description: artist.description, influences: artist.influences, achievements: artist.achievements, trackId: linkedTrackId || null,
-      pitchText: pitchText.replace(/\[Curator Name\]/gi, c.name), epk,
+      pitchText: personalizePitch(pitchText, c), epk,
       matchScore: effectiveTrack ? calculateMatchScore(c, effectiveTrack) : null,
       curatorId: c.id, curatorName: c.name, curatorPlatform: c.platform, curatorEmail: c.email, creditCost: c.creditCost||2,
       status: "sent", sentAt: new Date().toISOString(),
@@ -1969,7 +1984,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         if (p.curatorEmail) {
           // Pass UUID if available, null otherwise (email route will use dashboard link as fallback)
           const pitchId = p._hasUUID ? p.id : null;
-          await API.sendPitchEmail(pitchId, p.curatorEmail, p.curatorName, p.pitchText, p.epk, p.artistNameEn || p.artistName, p.songLink);
+          await API.sendPitchEmail(pitchId, p.curatorEmail, p.curatorName, p.pitchText, p.epk, p.artistNameEn || p.artistName, p.songLink, p.artistEmail);
           emailsSent++;
         }
       } catch (e) { console.log("Email send skipped:", e.message); }

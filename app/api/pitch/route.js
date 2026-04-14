@@ -13,8 +13,12 @@ export async function POST(request) {
     }
 
     // Build comprehensive prompt
+    // NOTE: We deliberately do NOT pass the curator's actual name into the prompt.
+    // The same generated pitch may be sent to multiple curators, so the AI must use
+    // the literal placeholder "[Curator Name]" everywhere a name would appear; the
+    // frontend (sendAll) substitutes the real name per recipient before sending.
     const curatorInfo = curator
-      ? `Curator: ${curator.name} | Platform: ${curator.platform} | Type: ${curator.type} | Audience: ${curator.audience?.toLocaleString() || 'unknown'} | Genres: ${(curator.genres || []).join(', ')}`
+      ? `Platform: ${curator.platform} | Type: ${curator.type} | Audience: ${curator.audience?.toLocaleString() || 'unknown'} | Genres: ${(curator.genres || []).join(', ')}`
       : 'General music industry curator';
 
     // Build social proof section
@@ -92,8 +96,8 @@ ${style === 'casual' ? 'Warm, personal tone — like messaging a fellow music fa
 
 ═══ PITCH STRUCTURE (120-180 words) ═══
 1. Subject line: Compelling, under 60 characters, include genre + "from Japan"
-2. Greeting: "Hi ${curator?.name || '[Curator Name]'},"
-3. Hook: ${style === 'storytelling' ? 'Vivid sensory description of the sound' : style === 'casual' ? 'Personal connection to curator\'s work' : 'Strongest credential or unique angle'}
+2. Greeting: "Hi [Curator Name]," — use the literal placeholder text "[Curator Name]" exactly as written. Do NOT substitute a real name. The system replaces this token per recipient before sending.
+3. Hook: ${style === 'storytelling' ? 'Vivid sensory description of the sound' : style === 'casual' ? 'Personal connection to the curator\'s work' : 'Strongest credential or unique angle'}
 4. Body: Describe the SOUND with vivid language. Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}${trackDesc.characteristics ? ` Use the track analysis data above to give specific, concrete sound descriptions (e.g. energy level, tempo feel, mood).` : ''}
 5. Listen link: Use the "Listen (Primary)" URL from the Links section below. Write it as "Listen: <url>" or "Stream: <url>". If no primary link, use the first available streaming link.
 6. CTA: Clear ask appropriate for curator type (${curator?.type || 'blog'})
@@ -104,6 +108,7 @@ ${style === 'casual' ? 'Warm, personal tone — like messaging a fellow music fa
 - NEVER write "I hope this email finds you well"
 - NEVER invent achievements, numbers, or awards not in the profile
 - NEVER use vague superlatives without evidence
+- NEVER write a real curator name. ANYWHERE you would refer to the curator personally — greeting, hook, mid-sentence — use the literal text "[Curator Name]". The frontend substitutes this token per recipient. Writing a real name will cause every recipient of a multi-curator pitch to receive the wrong salutation.
 - ALL output text must be 100% English. ZERO Japanese characters allowed in the pitch or EPK.
 - If the artist description/bio is in Japanese, translate the MEANING into natural English. NEVER include the original Japanese text, not even in parentheses like "(楽しいバンドです)".
 - Do NOT put romanized Japanese or Japanese text in quotes, parentheses, or inline translations.

@@ -16,7 +16,7 @@ function isPreLaunchLocked() {
 
 export async function POST(request) {
   try {
-    const { type, pitchId, toEmail: _toEmail, toName, subject, pitchText, epk, artistName, curatorName, trackUrl } = await request.json();
+    const { type, pitchId, toEmail: _toEmail, toName, subject, pitchText, epk, artistName, artistEmail, curatorName, trackUrl } = await request.json();
     let toEmail = _toEmail;
 
     if (!toEmail || !type) {
@@ -85,10 +85,17 @@ export async function POST(request) {
           ? `${appUrl}/curator/pitch/${pitchId}`
           : `${appUrl}/curator/dashboard`;
 
+        const replyLine = artistEmail
+          ? `<div style="margin-top:16px;padding:12px 16px;background:#f8fafc;border-left:3px solid #7c3aed;border-radius:6px;font-size:13px;color:#475569;">
+              💬 Reply directly to ${artistName || 'the artist'}: <a href="mailto:${artistEmail}" style="color:#7c3aed;font-weight:600;text-decoration:none;">${artistEmail}</a>
+            </div>`
+          : '';
+
         htmlBody = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
             ${pitchBody}
             ${trackBlock}
+            ${replyLine}
             ${epk ? `
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
               <div style="background: #f8fafc; padding: 16px; border-radius: 8px; font-size: 14px;">
@@ -139,10 +146,15 @@ export async function POST(request) {
       toEmail = safeEmail;
     }
 
+    // For pitch emails, route replies straight to the artist so curators can
+    // respond to them directly. System emails (reminders, notifications) keep
+    // info@otonami.io as the reply target.
+    const replyTo = type === 'pitch' && artistEmail ? artistEmail : 'info@otonami.io';
+
     const { data, error } = await resend.emails.send({
       from: `OTONAMI <${FROM}>`,
       to: [toEmail],
-      reply_to: 'info@otonami.io',
+      reply_to: replyTo,
       subject: emailSubject || 'OTONAMI Notification',
       html: htmlBody,
       headers: {

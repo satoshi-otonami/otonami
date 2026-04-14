@@ -20,6 +20,9 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
 
+    const VALID_AI_STATUS = ['human', 'ai_assisted', 'ai_generated'];
+    const aiStatus = VALID_AI_STATUS.includes(body.ai_status) ? body.ai_status : 'human';
+
     const track = await createArtistTrack({
       artist_id: payload.artistId,
       title: body.title,
@@ -31,6 +34,7 @@ export async function POST(request) {
       genre: body.genre || null,
       cover_image_url: body.cover_image_url || null,
       is_public: body.is_public !== undefined ? body.is_public : true,
+      ai_status: aiStatus,
     });
 
     return NextResponse.json({ success: true, track });
@@ -107,11 +111,15 @@ export async function PATCH(request) {
 
     const ALLOWED = [
       'title', 'youtube_url', 'spotify_url', 'soundcloud_url', 'bandcamp_url',
-      'release_date', 'genre', 'cover_image_url', 'is_public',
+      'release_date', 'genre', 'cover_image_url', 'is_public', 'ai_status',
     ];
+    const VALID_AI_STATUS = ['human', 'ai_assisted', 'ai_generated'];
     const updateData = {};
     for (const key of ALLOWED) {
       if (fields[key] !== undefined) updateData[key] = fields[key];
+    }
+    if (updateData.ai_status && !VALID_AI_STATUS.includes(updateData.ai_status)) {
+      return NextResponse.json({ error: 'Invalid ai_status' }, { status: 400 });
     }
 
     if (Object.keys(updateData).length === 0) {

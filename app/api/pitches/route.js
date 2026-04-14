@@ -128,6 +128,21 @@ export async function POST(request) {
     cleanRow.pitch_language = translated ? 'ja_translated' : 'en';
 
     const db = getServiceSupabase();
+
+    // Block AI-generated tracks (enforced server-side regardless of client state)
+    if (cleanRow.track_id) {
+      const { data: linkedTrack } = await db
+        .from('artist_tracks')
+        .select('ai_status')
+        .eq('id', cleanRow.track_id)
+        .maybeSingle();
+      if (linkedTrack?.ai_status === 'ai_generated') {
+        return NextResponse.json(
+          { error: 'AI-generated tracks cannot be pitched on OTONAMI. / AI生成楽曲はピッチ送信できません。' },
+          { status: 403 }
+        );
+      }
+    }
     const { data, error } = await db
       .from('pitches')
       .insert(cleanRow)

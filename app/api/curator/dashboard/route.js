@@ -67,7 +67,22 @@ export async function GET(request) {
 
     console.log(`[dashboard] curatorId=${cId} pitchCount=${data?.length ?? 0}`);
 
-    return NextResponse.json({ pitches: data || [] });
+    // Merge linked track ai_status (so curator UI can show human-made / AI-assisted badge)
+    let pitchesWithAi = data || [];
+    const trackIds = pitchesWithAi.map(p => p.track_id).filter(Boolean);
+    if (trackIds.length > 0) {
+      const { data: tracks } = await db
+        .from('artist_tracks')
+        .select('id, ai_status')
+        .in('id', trackIds);
+      const aiMap = new Map((tracks || []).map(t => [t.id, t.ai_status]));
+      pitchesWithAi = pitchesWithAi.map(p => ({
+        ...p,
+        track_ai_status: p.track_id ? (aiMap.get(p.track_id) || null) : null,
+      }));
+    }
+
+    return NextResponse.json({ pitches: pitchesWithAi });
   } catch (error) {
     console.error('[dashboard] GET error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1111,6 +1111,16 @@ export default function CuratorDashboard() {
                       <span style={{ color: T.text, fontWeight: 700, fontSize: 16, fontFamily: T.font }}>{pitch.artist_name || 'Unknown Artist'}</span>
                       {pitch.artist_genre && <span style={{ color: T.textMuted, fontSize: 13, fontFamily: T.font }}>{pitch.artist_genre}</span>}
                       <span style={{ padding: '3px 12px', borderRadius: 12, fontSize: 12, fontWeight: 700, color: s.color, background: s.bg, fontFamily: T.font }}>{s.en} / {s.ja}</span>
+                      {pitch.track_ai_status === 'human' && (
+                        <span title="Human-made — no AI used" style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, color: '#047857', background: '#d1fae5', border: '1px solid #a7f3d0', fontFamily: T.font }}>
+                          ✓ Human-made
+                        </span>
+                      )}
+                      {pitch.track_ai_status === 'ai_assisted' && (
+                        <span title="AI used as a creative tool (lyrics, mixing, etc.)" style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, color: '#c2410c', background: '#ffedd5', border: '1px solid #fed7aa', fontFamily: T.font }}>
+                          🤖 AI-assisted
+                        </span>
+                      )}
                     </div>
                     <div style={{ color: T.textSub, fontSize: 14, marginTop: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: T.font }}>
                       {pitch.subject || '(no subject)'}

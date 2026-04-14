@@ -303,6 +303,7 @@ export default function ArtistDashboard() {
     if (songLink) params.set('song_link', songLink);
     if (artist?.name) params.set('artist_name', artist.name);
     if (artist?.genres?.length) params.set('artist_genre', artist.genres.join(', '));
+    if (track.ai_status) params.set('ai_status', track.ai_status);
     params.set('auto_analyze', 'true');
     return `/studio?${params.toString()}`;
   };
@@ -1319,6 +1320,7 @@ export default function ArtistDashboard() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   {tracks.map(track => {
                     const thumb = track.cover_image_url || getYoutubeThumbnail(track.youtube_url);
+                    const isAiGenerated = track.ai_status === 'ai_generated';
                     const pitchParams = new URLSearchParams({
                       role: 'artist',
                       track_id: track.id,
@@ -1328,24 +1330,25 @@ export default function ArtistDashboard() {
                       artist_genre: (artist.genres || []).join(', '),
                       auto_analyze: 'true',
                     });
+                    if (track.ai_status) pitchParams.set('ai_status', track.ai_status);
                     if (pendingCuratorForPitch) {
                       pitchParams.set('preferred_curator', pendingCuratorForPitch.name);
                       pitchParams.set('curator_id', pendingCuratorForPitch.id);
                     }
                     const pitchUrl = `/studio?${pitchParams.toString()}`;
 
-                    return (
-                      <a key={track.id} href={pitchUrl}
-                        onClick={() => { setShowTrackSelectModal(false); setPendingCuratorForPitch(null); }}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 14,
-                          padding: '12px 16px', borderRadius: 14,
-                          border: `1px solid ${THEME.border}`, textDecoration: 'none',
-                          color: 'inherit', cursor: 'pointer', transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = THEME.gold; e.currentTarget.style.background = `${THEME.gold}08`; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = THEME.border; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.transform = 'none'; }}
-                      >
+                    const cardCommonStyle = {
+                      display: 'flex', alignItems: 'center', gap: 14,
+                      padding: '12px 16px', borderRadius: 14,
+                      border: `1px solid ${isAiGenerated ? '#fecaca' : THEME.border}`,
+                      textDecoration: 'none', color: 'inherit',
+                      cursor: isAiGenerated ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s',
+                      background: isAiGenerated ? '#fff5f3' : 'transparent',
+                      opacity: isAiGenerated ? 0.75 : 1,
+                    };
+                    const cardBody = (
+                      <>
                         {thumb ? (
                           <img src={thumb} alt={track.title} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
                             onError={e => { e.target.style.display = 'none'; }} />
@@ -1359,7 +1362,14 @@ export default function ArtistDashboard() {
                           </div>
                         )}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 15, fontWeight: 600, color: THEME.text, fontFamily: THEME.font }}>{track.title}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <div style={{ fontSize: 15, fontWeight: 600, color: THEME.text, fontFamily: THEME.font }}>{track.title}</div>
+                            {isAiGenerated && (
+                              <span style={{ fontSize: 10, fontWeight: 700, color: '#b91c1c', background: '#fee2e2', border: '1px solid #fecaca', padding: '2px 8px', borderRadius: 9999, fontFamily: THEME.font }}>
+                                🚫 AI生成 / ピッチ不可
+                              </span>
+                            )}
+                          </div>
                           {track.genre && <div style={{ fontSize: 12, color: THEME.textMuted, marginTop: 2 }}>{track.genre}</div>}
                           {track.release_date && (
                             <div style={{ fontSize: 11, color: THEME.textMuted, marginTop: 2 }}>
@@ -1367,7 +1377,26 @@ export default function ArtistDashboard() {
                             </div>
                           )}
                         </div>
-                        <div style={{ color: THEME.gold, fontSize: 18, flexShrink: 0 }}>→</div>
+                        <div style={{ color: isAiGenerated ? '#b91c1c' : THEME.gold, fontSize: 18, flexShrink: 0 }}>{isAiGenerated ? '×' : '→'}</div>
+                      </>
+                    );
+                    if (isAiGenerated) {
+                      return (
+                        <div key={track.id}
+                          onClick={() => alert('AI-generated tracks cannot be pitched on OTONAMI.\nAI生成楽曲はOTONAMIでピッチできません。')}
+                          style={cardCommonStyle}>
+                          {cardBody}
+                        </div>
+                      );
+                    }
+                    return (
+                      <a key={track.id} href={pitchUrl}
+                        onClick={() => { setShowTrackSelectModal(false); setPendingCuratorForPitch(null); }}
+                        style={cardCommonStyle}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = THEME.gold; e.currentTarget.style.background = `${THEME.gold}08`; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = THEME.border; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.transform = 'none'; }}
+                      >
+                        {cardBody}
                       </a>
                     );
                   })}
@@ -1896,6 +1925,7 @@ function TrackModal({ token, track, onClose, onSuccess }) {
     release_date: track?.release_date || '',
     cover_image_url: track?.cover_image_url || '',
     is_public: track?.is_public !== undefined ? track.is_public : true,
+    ai_status: track?.ai_status || 'human',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -2071,6 +2101,46 @@ function TrackModal({ token, track, onClose, onSuccess }) {
             <summary style={{ fontSize: 13, color: THEME.textMuted, cursor: 'pointer' }}>カバー画像URLを手動入力</summary>
             <input className="modal-input" style={{ ...inp, marginTop: 8, fontSize: 13 }} value={form.cover_image_url} onChange={e => { set('cover_image_url', e.target.value); if (!coverFile) setCoverPreview(e.target.value); }} placeholder="https://..." />
           </details>
+        </div>
+
+        {/* AI Usage Disclosure */}
+        <div style={{ marginTop: 24 }}>
+          <label style={{ fontSize: 13, color: THEME.textSub, display: 'block', marginBottom: 10, fontWeight: 600, fontFamily: THEME.font }}>
+            🤖 AI Usage / AI使用状況 <span style={{ color: THEME.coral, fontSize: 10 }}>*必須</span>
+          </label>
+          {[
+            { value: 'human',        label: 'No AI used',    labelJp: 'AIを使用していません',   desc: '作詞・作曲・演奏・録音すべて人間',         ok: true },
+            { value: 'ai_assisted',  label: 'AI-assisted',   labelJp: 'AIをツールとして使用',  desc: 'ミックス・マスタリング等の一部にAIを使用', ok: true },
+            { value: 'ai_generated', label: 'AI-generated',  labelJp: 'AIで生成された楽曲',     desc: 'Suno, Udio等で生成',                       ok: false },
+          ].map(opt => {
+            const sel = form.ai_status === opt.value;
+            return (
+              <div key={opt.value} onClick={() => set('ai_status', opt.value)}
+                style={{
+                  padding: '12px 16px', borderRadius: 12,
+                  border: sel ? `2px solid ${opt.ok ? THEME.gold : THEME.coral}` : `1px solid ${THEME.border}`,
+                  background: sel ? (opt.ok ? '#fffcf8' : '#fff5f3') : THEME.card,
+                  marginBottom: 8, cursor: 'pointer',
+                  transition: 'all 0.15s', fontFamily: THEME.font,
+                }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: sel && !opt.ok ? THEME.coral : THEME.text }}>
+                  {opt.label} <span style={{ fontSize: 12, fontWeight: 500, color: THEME.textSub }}>/ {opt.labelJp}</span>
+                </div>
+                <div style={{ fontSize: 12, color: THEME.textMuted, marginTop: 3 }}>{opt.desc}</div>
+              </div>
+            );
+          })}
+          {form.ai_status === 'ai_generated' && (
+            <div style={{
+              background: '#fff5f3', border: '1px solid #fecaca', borderRadius: 10,
+              padding: '12px 16px', fontSize: 12, color: '#dc2626',
+              lineHeight: 1.6, marginTop: 8, fontFamily: THEME.font,
+            }}>
+              <strong>AI-generated tracks cannot be pitched on OTONAMI.</strong><br />
+              OTONAMIは人間のアーティストが作った音楽のためのプラットフォームです。AI生成楽曲はキュレーターへのピッチ送信ができません。<br /><br />
+              AIをミックスやマスタリングのツールとして使用している場合は「AI-assisted」を選択してください。
+            </div>
+          )}
         </div>
 
         <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 20, cursor: 'pointer' }}>

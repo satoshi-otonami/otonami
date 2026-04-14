@@ -177,7 +177,18 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
   }
 
-  return NextResponse.json({ pitch: data });
+  // Attach linked track ai_status for curator-side badge display
+  let track_ai_status = null;
+  if (data.track_id) {
+    const { data: linkedTrack } = await db
+      .from('artist_tracks')
+      .select('ai_status')
+      .eq('id', data.track_id)
+      .maybeSingle();
+    track_ai_status = linkedTrack?.ai_status || null;
+  }
+
+  return NextResponse.json({ pitch: { ...data, track_ai_status } });
 }
 
 // PATCH /api/curator/pitch/[id] — フィードバック送信

@@ -265,6 +265,16 @@ function PitchView({ pitchId }) {
                 padding: '3px 12px', borderRadius: 12, fontSize: 12, fontWeight: 700,
                 color: st.color, background: st.bg, fontFamily: T.font,
               }}>{st.label}</span>
+              {pitch.track_ai_status === 'human' && (
+                <span title="Human-made — no AI used" style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, color: '#047857', background: '#d1fae5', border: '1px solid #a7f3d0', fontFamily: T.font }}>
+                  ✓ Human-made
+                </span>
+              )}
+              {pitch.track_ai_status === 'ai_assisted' && (
+                <span title="AI used as a creative tool (lyrics, mixing, etc.)" style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, color: '#c2410c', background: '#ffedd5', border: '1px solid #fed7aa', fontFamily: T.font }}>
+                  🤖 AI-assisted
+                </span>
+              )}
             </div>
             {pitch.song_title && (
               <div style={{ color: T.textSub, fontSize: 14, marginBottom: 6, fontFamily: T.font }}>

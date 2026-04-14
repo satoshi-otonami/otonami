@@ -709,6 +709,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
   const [followers, setFollowers] = useState(_draft?.followers || EMPTY_FOLLOWERS);
 
   const [linkedTrackId, setLinkedTrackId] = useState(null);
+  const [linkedTrackAiStatus, setLinkedTrackAiStatus] = useState(null);
 
   useEffect(() => {
     try { sessionStorage.setItem("otonami_artist_draft", JSON.stringify({artist, links, followers})); } catch {}
@@ -739,6 +740,8 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
         }));
       }
       if (trackId) setLinkedTrackId(trackId);
+      const aiStatus = params.get('ai_status');
+      if (aiStatus) setLinkedTrackAiStatus(aiStatus);
 
       // Preferred curator from dashboard modal
       const preferredCurator = params.get('preferred_curator');
@@ -856,7 +859,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     <main style={css.main}>
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify} loggedInArtist={loggedInArtist}/>}
       {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist}/>}
-      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches} linkedTrackId={linkedTrackId}/>}
+      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches} linkedTrackId={linkedTrackId} linkedTrackAiStatus={linkedTrackAiStatus}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches} refreshPitches={refreshPitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches}/>}
       {page==="shop" && <CreditShop user={user} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage}/>}
@@ -1565,7 +1568,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 }
 
 // ─── Pitch Creator (Template Engine + Social Links + Followers) ───
-function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft, refreshPitches, linkedTrackId}) {
+function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft, refreshPitches, linkedTrackId, linkedTrackAiStatus}) {
   const [pitchText, setPitchText] = useState("");
   const [pitchJa, setPitchJa] = useState("");
   const [pitchTab, setPitchTab] = useState("ja"); // "en" | "ja"
@@ -1887,6 +1890,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
 
   // ── AI Pitch generation (server-side Anthropic) ──
   const generateAIPitch = async () => {
+    if (linkedTrackAiStatus === 'ai_generated') {
+      notify('AI-generated tracks cannot be pitched. / AI生成楽曲はピッチできません。', 'error');
+      return;
+    }
     setAiLoading(true);
     try {
       const lnk = {...links, songLink: getSongLink()};
@@ -1909,6 +1916,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
 
   // ── Pitch generation ──
   const generatePitch = () => {
+    if (linkedTrackAiStatus === 'ai_generated') {
+      notify('AI-generated tracks cannot be pitched. / AI生成楽曲はピッチできません。', 'error');
+      return;
+    }
     const lnk = {...links, songLink: getSongLink()};
     const rep = targets[0] || {name:"Curator",type:"blog",platform:"Music Platform"};
     const pitchArtist = pitchSongTitle ? { ...artist, songTitle: pitchSongTitle } : artist;
@@ -1924,6 +1935,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const sendAll = async () => {
     if (isPreLaunch()) {
       notify(`ピッチ送信は${LAUNCH_DATE_LABEL_JA}のローンチ後に利用可能になります`, "error");
+      return;
+    }
+    if (linkedTrackAiStatus === 'ai_generated') {
+      notify('AI-generated tracks cannot be pitched. / AI生成楽曲はピッチ送信できません。', 'error');
       return;
     }
     if (credits < cost) { notify("クレジットが不足しています", "error"); return; }
@@ -2004,6 +2019,15 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   return <div>
     <div style={{marginBottom:"1.5rem"}}><h1 style={{fontSize:28,fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#1a1a1a"}}>AIピッチを作成</h1><p style={{color:"#6b6560",fontSize:15,margin:"8px 0 0",fontFamily:"'DM Sans',sans-serif"}}>AIがあなたの楽曲に合わせた英語の紹介文を自動作成します</p></div>
     <PreLaunchBanner variant="pitch" />
+    {linkedTrackAiStatus === 'ai_generated' && (
+      <div style={{background:"#fff5f3",border:"1px solid #fecaca",borderRadius:12,padding:"16px 20px",marginBottom:"1.2rem",fontFamily:"'DM Sans',sans-serif"}}>
+        <div style={{fontSize:14,fontWeight:700,color:"#b91c1c",marginBottom:4}}>🚫 AI-generated tracks cannot be pitched</div>
+        <div style={{fontSize:13,color:"#7f1d1d",lineHeight:1.6}}>
+          この楽曲はAI生成（Suno, Udio等）としてマークされています。OTONAMIではAI生成楽曲のピッチ送信はご利用いただけません。<br/>
+          ダッシュボードから別の楽曲を選択してください。
+        </div>
+      </div>
+    )}
     <div style={{marginBottom:"1.5rem"}}>
       <div style={{display:"flex",gap:4}}>
         {["情報入力","キュレーター","確認&編集","送信"].map((l,i) => <div key={i} style={{flex:1,height:4,borderRadius:4,background:i<=step?"linear-gradient(90deg,#c4956a,#e85d3a)":"rgba(0,0,0,0.06)"}}/>)}

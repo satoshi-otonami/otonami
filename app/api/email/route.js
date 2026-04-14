@@ -5,6 +5,15 @@ import { getServiceSupabase } from '@/lib/supabase';
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM = process.env.EMAIL_FROM || 'info@otonami.io';
 
+// Pre-launch gate (server-side enforcement)
+function isPreLaunchLocked() {
+  const launchDate = process.env.NEXT_PUBLIC_LAUNCH_DATE;
+  if (!launchDate) return false;
+  const launch = new Date(launchDate);
+  if (Number.isNaN(launch.getTime())) return false;
+  return new Date() < launch;
+}
+
 export async function POST(request) {
   try {
     const { type, pitchId, toEmail: _toEmail, toName, subject, pitchText, epk, artistName, curatorName, trackUrl } = await request.json();
@@ -12,6 +21,13 @@ export async function POST(request) {
 
     if (!toEmail || !type) {
       return NextResponse.json({ error: 'toEmail and type required' }, { status: 400 });
+    }
+
+    if (type === 'pitch' && isPreLaunchLocked()) {
+      return NextResponse.json(
+        { error: 'Pitch notifications are disabled until launch.' },
+        { status: 403 }
+      );
     }
 
     let emailSubject = subject;

@@ -10,6 +10,48 @@ import { getMatchLabel, rankCurators, calculateMatchScore } from '@/lib/match-sc
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 
+// ─── Pre-launch gate ───
+// Set NEXT_PUBLIC_LAUNCH_DATE to an ISO datetime to lock pitch sending until then.
+const LAUNCH_DATE_RAW = process.env.NEXT_PUBLIC_LAUNCH_DATE || '';
+const isPreLaunch = () => {
+  if (!LAUNCH_DATE_RAW) return false;
+  const launch = new Date(LAUNCH_DATE_RAW);
+  if (Number.isNaN(launch.getTime())) return false;
+  return new Date() < launch;
+};
+const LAUNCH_DATE_LABEL_JA = '2026年5月';
+const LAUNCH_DATE_LABEL_EN = 'May 2026';
+
+function PreLaunchBanner({ variant = 'pitch' }) {
+  if (!isPreLaunch()) return null;
+  const headline = variant === 'curators' ? 'まもなくローンチ！' : 'ピッチ送信は準備中です';
+  const detail = variant === 'curators'
+    ? `OTONAMIは${LAUNCH_DATE_LABEL_JA}に正式ローンチ予定です。今のうちにキュレーターをじっくり下調べして、お気に入りリストを作っておきましょう。ローンチ後すぐにピッチを送信できます。`
+    : `OTONAMIは${LAUNCH_DATE_LABEL_JA}に正式ローンチ予定です。プロフィール・楽曲登録・キュレーター下調べは今からできます。ピッチ送信機能はローンチ日に解放されます。`;
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(255,107,74,0.10), rgba(167,139,250,0.10))',
+      border: '1px solid #c4956a',
+      borderRadius: 14,
+      padding: '20px 24px',
+      marginBottom: 20,
+      textAlign: 'center',
+      fontFamily: "'DM Sans',sans-serif",
+    }}>
+      <div style={{ fontSize: 24, marginBottom: 8 }}>🚀</div>
+      <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a', margin: '0 0 8px' }}>
+        {headline}
+      </h3>
+      <p style={{ fontSize: 14, color: '#6b6560', lineHeight: 1.6, margin: 0 }}>
+        {detail}
+      </p>
+      <p style={{ fontSize: 12, color: '#9a958e', lineHeight: 1.5, margin: '8px 0 0' }}>
+        Launching in {LAUNCH_DATE_LABEL_EN} — pitch submissions open at launch.
+      </p>
+    </div>
+  );
+}
+
 // ─── Constants ───
 const GENRES = ["Jazz","Fusion","Funk","City Pop","Lo-Fi","Electronic","Indie Rock","Alt Rock","Pop","Math Rock","Shoegaze","J-Rock","Hip-Hop","R&B","Experimental","Noise","Metal","Post Rock","Dream Pop","Neo-Soul","Soul","Instrumental","Prog","Punk","Visual Kei","World"];
 const CURATOR_TYPES = [{id:"playlist",label:"プレイリスト",icon:"🎧"},{id:"label",label:"レコードレーベル",icon:"💿"},{id:"management",label:"マネジメント",icon:"🤝"},{id:"publisher",label:"出版社・パブリッシャー",icon:"📚"},{id:"blog",label:"ブログ・メディア",icon:"📝"},{id:"radio",label:"ラジオ・ポッドキャスト",icon:"📻"}];
@@ -889,10 +931,13 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify, loggedIn
       <div style={{background:"#c4956a",color:"#1a1a1a",fontSize:13,fontWeight:600,padding:"8px 20px",borderRadius:8,fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>+ 購入する →</div>
     </div>
 
+    {/* Pre-launch banner */}
+    <PreLaunchBanner variant="pitch" />
+
     {/* Quick Actions — always visible */}
     <div style={{display:"flex",gap:12,marginBottom:24,justifyContent:"center"}}>
       <button onClick={()=>setPage("curators")} style={{background:"linear-gradient(135deg,#c4956a,#b8845e)",color:"#1a1a1a",padding:"12px 28px",borderRadius:10,border:"none",fontWeight:600,fontSize:14,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>🎯 キュレーターを探す</button>
-      <button onClick={()=>setPage("pitch")} style={{background:"transparent",color:"#1a1a1a",padding:"12px 28px",borderRadius:10,border:"1px solid #e5e2dc",fontWeight:500,fontSize:14,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>✉️ ピッチを作成</button>
+      <button onClick={()=>setPage("pitch")} disabled={isPreLaunch()} style={{background:"transparent",color:isPreLaunch()?"#9a958e":"#1a1a1a",padding:"12px 28px",borderRadius:10,border:"1px solid #e5e2dc",fontWeight:500,fontSize:14,cursor:isPreLaunch()?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif",opacity:isPreLaunch()?0.6:1}}>{isPreLaunch() ? "🔒 ローンチ後に利用可能" : "✉️ ピッチを作成"}</button>
     </div>
 
     {/* Flow indicator */}
@@ -1127,6 +1172,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 
   return <div>
     <style>{`.curator-list-card { flex-direction: row !important; } @media (max-width: 480px) { .curator-list-card { flex-direction: column !important; } } @media (max-width: 768px) { .pitch-step-labels { display: none !important; } } @keyframes curatorModalIn { from { opacity: 0; transform: scale(0.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }`}</style>
+    <PreLaunchBanner variant="curators" />
     <div style={{marginBottom:"1.2rem"}}>
       <div style={{fontSize:11,letterSpacing:"2px",color:"#6b6560",marginBottom:6,textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif"}}>CURATORS</div>
       <h1 style={{fontSize:28,fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#1a1a1a",lineHeight:1.1}}>あなたの曲に合うメディアを探そう</h1>
@@ -1274,7 +1320,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       <select style={{...css.filterSelect,flex:"1 1 120px",fontSize:14,height:40}} value={genre} onChange={e=>setGenre(e.target.value)}><option value="">全ジャンル</option>{GENRES.map(g=><option key={g}>{g}</option>)}</select>
       <select style={{...css.filterSelect,flex:"1 1 120px",fontSize:14,height:40}} value={type} onChange={e=>setType(e.target.value)}><option value="">全タイプ</option>{CURATOR_TYPES.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>
     </div>
-    {selected.length > 0 && <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.4)",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600}}>{selected.length}人選択中 · 合計{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}クレジット (¥{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)*160})</span><div style={{display:"flex",gap:6}}><button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem"}}>🚀 ピッチ作成へ</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
+    {selected.length > 0 && <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.4)",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600}}>{selected.length}人選択中 · 合計{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}クレジット (¥{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)*160})</span><div style={{display:"flex",gap:6}}><button onClick={()=>{ if (isPreLaunch()) { notify(`ピッチ送信は${LAUNCH_DATE_LABEL_JA}のローンチ後に利用可能になります`, "error"); return; } setPage("pitch"); }} disabled={isPreLaunch()} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem",opacity:isPreLaunch()?0.5:1,cursor:isPreLaunch()?"not-allowed":"pointer"}}>{isPreLaunch() ? "🔒 ローンチ後に利用可" : "🚀 ピッチ作成へ"}</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {(() => {
         const avatarColors = [
@@ -1372,8 +1418,11 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       })()}
     </div>
     {/* Floating action bar when curators selected */}
-    {selected.length > 0 && <div style={{position:"sticky",bottom:0,left:0,right:0,background:"linear-gradient(0deg,#f8f7f4 70%,transparent)",padding:"1rem 0 0.5rem",marginTop:"0.5rem"}}>
+    {selected.length > 0 && !isPreLaunch() && <div style={{position:"sticky",bottom:0,left:0,right:0,background:"linear-gradient(0deg,#f8f7f4 70%,transparent)",padding:"1rem 0 0.5rem",marginTop:"0.5rem"}}>
       <button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,width:"100%",padding:"0.9rem",fontSize:"0.95rem"}}>🚀 {selected.length}人のキュレーターにピッチ作成 ({curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}クレジット)</button>
+    </div>}
+    {selected.length > 0 && isPreLaunch() && <div style={{position:"sticky",bottom:0,left:0,right:0,background:"linear-gradient(0deg,#f8f7f4 70%,transparent)",padding:"1rem 0 0.5rem",marginTop:"0.5rem"}}>
+      <button disabled style={{...css.btnPrimary,width:"100%",padding:"0.9rem",fontSize:"0.95rem",opacity:0.5,cursor:"not-allowed",background:"#e5e2dc",color:"#6b6560"}}>🔒 ピッチ送信は{LAUNCH_DATE_LABEL_JA}のローンチ後に利用可能</button>
     </div>}
 
     {/* Curator Detail Modal */}
@@ -1873,6 +1922,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   };
 
   const sendAll = async () => {
+    if (isPreLaunch()) {
+      notify(`ピッチ送信は${LAUNCH_DATE_LABEL_JA}のローンチ後に利用可能になります`, "error");
+      return;
+    }
     if (credits < cost) { notify("クレジットが不足しています", "error"); return; }
     const lnk = {...links, songLink: getSongLink()};
     const tempPitches = targets.map(c => ({
@@ -1935,6 +1988,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
 
   return <div>
     <div style={{marginBottom:"1.5rem"}}><h1 style={{fontSize:28,fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#1a1a1a"}}>AIピッチを作成</h1><p style={{color:"#6b6560",fontSize:15,margin:"8px 0 0",fontFamily:"'DM Sans',sans-serif"}}>AIがあなたの楽曲に合わせた英語の紹介文を自動作成します</p></div>
+    <PreLaunchBanner variant="pitch" />
     <div style={{marginBottom:"1.5rem"}}>
       <div style={{display:"flex",gap:4}}>
         {["情報入力","キュレーター","確認&編集","送信"].map((l,i) => <div key={i} style={{flex:1,height:4,borderRadius:4,background:i<=step?"linear-gradient(90deg,#c4956a,#e85d3a)":"rgba(0,0,0,0.06)"}}/>)}
@@ -2320,7 +2374,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
             <p style={{fontSize:"0.82rem",color:"#6b6560"}}>{targets.length}人に個別最適化ピッチを送信</p>
             <p style={{fontSize:14,color:"#c4956a",marginTop:8,fontWeight:600}}>💰 {cost}cr (残: {credits}→{credits-cost})</p>
           </div>
-          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem"}} onClick={sendAll}>✅ 送信 ({cost}クレジット)</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
+          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button disabled={isPreLaunch()} style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem",opacity:isPreLaunch()?0.5:1,cursor:isPreLaunch()?"not-allowed":"pointer",background:isPreLaunch()?"#e5e2dc":undefined,color:isPreLaunch()?"#6b6560":undefined}} onClick={sendAll}>{isPreLaunch() ? `🔒 ${LAUNCH_DATE_LABEL_JA}のローンチ後に送信可能` : `✅ 送信 (${cost}クレジット)`}</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
         </div>
       )}
     </div>}

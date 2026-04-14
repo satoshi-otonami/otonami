@@ -79,9 +79,25 @@ function pickKnownColumns(row) {
   return clean;
 }
 
+// Pre-launch gate (server-side enforcement)
+function isPreLaunchLocked() {
+  const launchDate = process.env.NEXT_PUBLIC_LAUNCH_DATE;
+  if (!launchDate) return false;
+  const launch = new Date(launchDate);
+  if (Number.isNaN(launch.getTime())) return false;
+  return new Date() < launch;
+}
+
 // POST /api/pitches — ピッチをDBに保存（日本語があれば英語に翻訳してから保存）
 export async function POST(request) {
   try {
+    if (isPreLaunchLocked()) {
+      return NextResponse.json(
+        { error: 'Pitch submissions are not available yet. OTONAMI launches in May 2026.' },
+        { status: 403 }
+      );
+    }
+
     const row = await request.json();
 
     if (!row.session_id) {

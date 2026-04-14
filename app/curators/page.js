@@ -194,7 +194,7 @@ function CuratorCard({ c, score, selected, onToggle, onDetail }) {
         )}
         {(c.tags || []).slice(0, 2).map((tag, i) => (
           <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11.5, color: T.textSub, fontFamily: T.font }}>
-            {tag.toLowerCase().includes('honest') ? '♡' : tag.toLowerCase().includes('sharing') || tag.toLowerCase().includes('accept') ? '👍' : tag.toLowerCase().includes('top') || tag.toLowerCase().includes('verified') ? '★' : '●'} {tag}
+            {tag.toLowerCase().includes('honest') ? '♡' : tag.toLowerCase().includes('sharing') || tag.toLowerCase().includes('accept') ? '✓' : tag.toLowerCase().includes('top') || tag.toLowerCase().includes('verified') ? '★' : '●'} {tag}
           </span>
         ))}
       </div>
@@ -221,9 +221,9 @@ function CuratorCard({ c, score, selected, onToggle, onDetail }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: 12 }}>
           {c.followers?.spotify   && <span style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>♫ {fmt(c.followers.spotify)}</span>}
-          {c.followers?.instagram && <span style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>📷 {fmt(c.followers.instagram)}</span>}
-          {c.followers?.total && !c.followers?.spotify && <span style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>👥 {fmt(c.followers.total)}</span>}
-          {!totalFollowers && <span style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>🎵 curator</span>}
+          {c.followers?.instagram && <span style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>IG {fmt(c.followers.instagram)}</span>}
+          {c.followers?.total && !c.followers?.spotify && <span style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>{fmt(c.followers.total)} followers</span>}
+          {!totalFollowers && <span style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>curator</span>}
         </div>
         <button
           onClick={e => { e.stopPropagation(); onToggle(c.id); }}
@@ -286,7 +286,7 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
             <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
               {Object.entries(c.followers || {}).map(([k, v]) => v ? (
                 <span key={k} style={{ fontSize: 12, color: T.textSub, fontFamily: T.font }}>
-                  {k === 'spotify' ? '♫' : k === 'instagram' ? '📷' : k === 'facebook' ? '👥' : k === 'total' ? '👥' : '🎬'} {fmt(v)}
+                  {k === 'spotify' ? '♫' : k === 'instagram' ? 'IG' : k === 'facebook' ? 'FB' : k === 'total' ? 'Followers' : 'YT'} {fmt(v)}
                 </span>
               ) : null)}
             </div>
@@ -329,7 +329,7 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
 
           {c.openToAllGenres && (
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'rgba(255,107,74,0.08)', borderRadius: 12, border: '1px solid rgba(255,107,74,0.2)', fontSize: 13, fontWeight: 600, color: '#FF6B4A', fontFamily: T.font }}>
-              🌍 Open to all genres
+              Open to all genres
             </div>
           )}
 
@@ -356,7 +356,7 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
                     padding: '6px 14px', background: T.bg, borderRadius: 20,
                     fontSize: 13, fontWeight: 500, color: T.text,
                     border: `1px solid ${T.border}`, fontFamily: T.font,
-                  }}>🎤 {a}</span>
+                  }}>{a}</span>
                 ))}
               </div>
             </SectionBlock>
@@ -395,7 +395,8 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
                       width: 32, height: 32, borderRadius: 8, flexShrink: 0,
                       background: T.accentLight, border: `1px solid ${T.accentBorder}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
-                    }}>🎵</div>
+                      color: '#c4956a', fontFamily: T.fontDisplay,
+                    }}>♪</div>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: T.text, fontFamily: T.font, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.n}</div>
                       <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font }}>{a.by}</div>
@@ -626,10 +627,10 @@ export default function CuratorsPage() {
           marginBottom: 36, flexWrap: 'wrap',
         }}>
           {[
-            { icon: '🌍', label: lang === 'ja' ? '14カ国以上のキュレーター' : '14+ curators worldwide' },
-            { icon: '♫',  label: lang === 'ja' ? 'Spotifyプレイリスト収録' : 'Spotify playlists included' },
-            { icon: '📰', label: lang === 'ja' ? 'メディア・ブログ多数'   : 'Media & blogs coverage'  },
-            { icon: '✓',  label: lang === 'ja' ? '審査済みのキュレーター' : 'Vetted curators only'    },
+            { icon: '○', label: lang === 'ja' ? '14カ国以上のキュレーター' : '14+ curators worldwide' },
+            { icon: '♫', label: lang === 'ja' ? 'Spotifyプレイリスト収録' : 'Spotify playlists included' },
+            { icon: '•', label: lang === 'ja' ? 'メディア・ブログ多数'   : 'Media & blogs coverage'  },
+            { icon: '✓', label: lang === 'ja' ? '審査済みのキュレーター' : 'Vetted curators only'    },
           ].map((stat, i) => (
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: 8,
@@ -713,7 +714,7 @@ export default function CuratorsPage() {
             background: T.white, borderRadius: T.radiusLg,
             border: `1px solid ${T.border}`,
           }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>🔍</div>
+            <div style={{ fontSize: 32, marginBottom: 16, color: '#c4956a' }}>⌕</div>
             <p style={{ fontSize: 16, color: T.textSub, fontFamily: T.font }}>
               {lang === 'ja' ? '条件に合うキュレーターが見つかりませんでした。' : 'No curators found matching your filters.'}
             </p>

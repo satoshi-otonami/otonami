@@ -2012,12 +2012,12 @@ export default function HomePage() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24, marginBottom: 48 }}>
             {[
-              { icon: '🎧', t: lang === 'en' ? 'Only music that matches your taste' : '厳選された楽曲だけが届く', d: lang === 'en' ? 'AI filters pitches by your genre, mood, and style preferences. No irrelevant submissions.' : 'あなたの好みに合わない楽曲は届きません。ジャンル・ムード・雰囲気でAIがフィルタリング。' },
-              { icon: '💰', t: lang === 'en' ? 'Get paid to review' : 'レビューするだけで報酬', d: lang === 'en' ? 'Listen and provide feedback. Earn rewards for every review you complete.' : '楽曲を聴いてフィードバックを返すだけ。すべてのレビューに対して報酬をお支払いします。' },
-              { icon: '🌏', t: lang === 'en' ? 'Discover music before anyone else' : 'まだ誰も知らない音楽に出会える', d: lang === 'en' ? "From SXSW veterans to underground singer-songwriters. Be the first to feature Japan's next breakout artist." : 'SXSW常連バンドから地方のシンガーソングライターまで。日本のインディーシーンの最前線をお届け。' },
+              { t: lang === 'en' ? 'Only music that matches your taste' : '厳選された楽曲だけが届く', d: lang === 'en' ? 'AI filters pitches by your genre, mood, and style preferences. No irrelevant submissions.' : 'あなたの好みに合わない楽曲は届きません。ジャンル・ムード・雰囲気でAIがフィルタリング。' },
+              { t: lang === 'en' ? 'Get paid to review' : 'レビューするだけで報酬', d: lang === 'en' ? 'Listen and provide feedback. Earn rewards for every review you complete.' : '楽曲を聴いてフィードバックを返すだけ。すべてのレビューに対して報酬をお支払いします。' },
+              { t: lang === 'en' ? 'Discover music before anyone else' : 'まだ誰も知らない音楽に出会える', d: lang === 'en' ? "From SXSW veterans to underground singer-songwriters. Be the first to feature Japan's next breakout artist." : 'SXSW常連バンドから地方のシンガーソングライターまで。日本のインディーシーンの最前線をお届け。' },
             ].map((b, i) => (
               <div key={i} style={{ background: '#2a2a2a', border: '1px solid #3a3a3a', borderRadius: 12, padding: '32px 28px' }}>
-                <div style={{ fontSize: 40, marginBottom: 16 }}>{b.icon}</div>
+                <div style={{ width: 40, height: 2, background: '#c4956a', borderRadius: 1, marginBottom: 20 }} />
                 <h3 style={{ fontSize: 17, fontWeight: 600, color: '#f0ede6', marginBottom: 12 }}>{b.t}</h3>
                 <p style={{ fontSize: 14, color: '#b8b0a3', lineHeight: 1.7 }}>{b.d}</p>
               </div>

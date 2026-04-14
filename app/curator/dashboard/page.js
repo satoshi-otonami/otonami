@@ -88,7 +88,7 @@ function SubmissionWidget({ curatorId, curatorName }) {
   const baseUrl = 'https://otonami.io';
   const submitUrl = `${baseUrl}/submit/${curatorId}`;
   const safeName = (curatorName || '').replace(/[<>"'&]/g, '');
-  const embedCode = `<a href="${submitUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:10px;padding:12px 28px;border-radius:25px;background:linear-gradient(135deg,#FF6B4A,#FF3D6E);color:#fff;font-weight:600;font-size:0.95rem;text-decoration:none;font-family:sans-serif;">🎵 Submit Music to ${safeName}</a><p style="color:#999;font-size:0.75rem;margin-top:6px;">Powered by <a href="${baseUrl}" style="color:#FF6B4A;text-decoration:none;">OTONAMI</a></p>`;
+  const embedCode = `<a href="${submitUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:10px;padding:12px 28px;border-radius:25px;background:linear-gradient(135deg,#FF6B4A,#FF3D6E);color:#fff;font-weight:600;font-size:0.95rem;text-decoration:none;font-family:sans-serif;">♪ Submit Music to ${safeName}</a><p style="color:#999;font-size:0.75rem;margin-top:6px;">Powered by <a href="${baseUrl}" style="color:#FF6B4A;text-decoration:none;">OTONAMI</a></p>`;
 
   const copyText = (text, label) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -100,8 +100,7 @@ function SubmissionWidget({ curatorId, curatorName }) {
   return (
     <div style={{ background: T.white, borderRadius: 16, border: `1px solid ${T.border}`, padding: 24, marginBottom: 24, boxShadow: T.shadow }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-        <span style={{ fontSize: 16 }}>🔗</span>
-        <h3 style={{ fontFamily: T.fontDisplay, fontSize: 15, fontWeight: 700, color: T.text, margin: 0 }}>Submission Widget</h3>
+        <h3 style={{ fontFamily: T.fontDisplay, fontSize: 15, fontWeight: 700, color: T.text, margin: 0, borderLeft: `3px solid ${T.accent}`, paddingLeft: 10 }}>Submission Widget</h3>
       </div>
       <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 18, fontFamily: T.font, lineHeight: 1.6 }}>
         Add this to your website to receive music submissions directly through OTONAMI.<br />
@@ -116,7 +115,7 @@ function SubmissionWidget({ curatorId, curatorName }) {
           background: 'linear-gradient(135deg,#FF6B4A,#FF3D6E)',
           color: '#fff', fontWeight: 600, fontSize: '0.95rem', textDecoration: 'none', fontFamily: T.font,
         }}>
-          🎵 Submit Music to {curatorName}
+          ♪ Submit Music to {curatorName}
         </a>
         <p style={{ color: T.textMuted, fontSize: '0.72rem', marginTop: 8, marginBottom: 0, fontFamily: T.font }}>
           Powered by OTONAMI
@@ -256,9 +255,9 @@ export default function CuratorDashboard() {
       if (!res.ok) throw new Error(data.error || 'Failed to save');
       setCurator(data.curator);
       setEditingName(false);
-      showToast('✅ Name updated! / 名前を更新しました');
+      showToast('✓ Name updated! / 名前を更新しました');
     } catch (e) {
-      showToast('❌ ' + e.message);
+      showToast(e.message);
     } finally { setNameSaving(false); }
   };
 
@@ -345,7 +344,7 @@ export default function CuratorDashboard() {
       if (!res.ok) throw new Error(data.error || 'Failed to save');
       setCurator(data.curator);
       setEditMode(false);
-      showToast('✅ Profile updated! / プロフィールを更新しました');
+      showToast('✓ Profile updated! / プロフィールを更新しました');
     } catch (e) {
       setSaveError(e.message);
       setSaveStatus('error');
@@ -380,7 +379,7 @@ export default function CuratorDashboard() {
         placement_platform: body.placement_platform,
       } : p));
       setFeedbackDraft(prev => { const n = {...prev}; delete n[pitchId]; return n; });
-      showToast('✅ Feedback submitted');
+      showToast('✓ Feedback submitted');
     } finally { setUpdating(null); }
   };
 
@@ -406,7 +405,7 @@ export default function CuratorDashboard() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Payout request failed');
-      showToast('✅ 支払いリクエストを送信しました');
+      showToast('✓ 支払いリクエストを送信しました');
       setShowPayoutModal(false);
       // Refresh earnings
       const er = await fetch('/api/curator/earnings', { headers: { Authorization: `Bearer ${token}` } });
@@ -432,7 +431,7 @@ export default function CuratorDashboard() {
   if (!loading && (authError === 'not_logged_in' || authError === 'invalid_token')) return (
     <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 420 }}>
-        <div style={{ fontSize: 56, marginBottom: 16 }}>🔒</div>
+        <div style={{ width: 56, height: 2, background: T.accent, borderRadius: 1, margin: '0 auto 16px' }} />
         <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 10, color: T.text, fontFamily: T.fontDisplay }}>Login Required</h1>
         <p style={{ color: T.textSub, fontSize: 14, lineHeight: 1.8, marginBottom: 28, fontFamily: T.font }}>
           Please log in to access the curator dashboard.<br />
@@ -608,14 +607,14 @@ export default function CuratorDashboard() {
                       {editAvatarPreview
                         ? <img src={editAvatarPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : <div style={{ textAlign: 'center', color: T.textMuted }}>
-                            <div style={{ fontSize: 20 }}>📷</div>
+                            <div style={{ width: 20, height: 2, background: T.accent, borderRadius: 1, margin: '0 auto 4px' }} />
                             <div style={{ fontSize: 9, fontFamily: T.font }}>Upload</div>
                           </div>
                       }
                     </div>
                     <div>
                       <button onClick={() => editAvatarRef.current?.click()} style={{ padding: '7px 14px', border: `1px solid ${T.border}`, borderRadius: 8, background: T.white, color: T.textSub, fontSize: 12, cursor: 'pointer', fontFamily: T.font }}>
-                        {editAvatarPreview ? 'Change / 変更' : '📷 Upload'}
+                        {editAvatarPreview ? 'Change / 変更' : 'Upload'}
                       </button>
                       {editAvatarPreview && (
                         <button onClick={() => { setEditAvatarFile(null); setEditAvatarPreview(null); }} style={{ marginLeft: 8, background: 'none', border: 'none', color: '#ef4444', fontSize: 12, cursor: 'pointer', fontFamily: T.font }}>Remove</button>
@@ -744,7 +743,7 @@ export default function CuratorDashboard() {
 
                 {/* Review Price Tier */}
                 <div style={{ marginBottom: 20, padding: 16, background: T.bg, borderRadius: 12, border: `1px solid ${T.border}` }}>
-                  <label style={{ ...editLbl, marginTop: 0, color: T.accent }}>💰 Review Price / レビュー単価</label>
+                  <label style={{ ...editLbl, marginTop: 0, color: T.accent }}>Review Price / レビュー単価</label>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
                     {[1, 2, 3, 4, 5].map(t => {
                       const sel = (editForm.tier || 2) === t;
@@ -784,7 +783,7 @@ export default function CuratorDashboard() {
 
                 {/* Payment Method */}
                 <div style={{ marginBottom: 20, padding: 16, background: T.bg, borderRadius: 12, border: `1px solid ${T.border}` }}>
-                  <label style={{ ...editLbl, marginTop: 0, color: T.accent }}>💰 Payment Method / 支払い方法</label>
+                  <label style={{ ...editLbl, marginTop: 0, color: T.accent }}>Payment Method / 支払い方法</label>
                   <select className="edit-input" style={{ ...editInp, appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23999\' d=\'M6 8L1 3h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center' }} value={editForm.payment_method} onChange={e => setEditForm(f => ({ ...f, payment_method: e.target.value, payment_info: '' }))}>
                     <option value="paypal">PayPal</option>
                     <option value="wise">Wise</option>
@@ -818,7 +817,7 @@ export default function CuratorDashboard() {
                       cursor: (saveStatus === 'loading' || editAvatarUploading) ? 'not-allowed' : 'pointer', fontFamily: T.font,
                     }}
                   >
-                    {editAvatarUploading ? 'Uploading image... / 画像アップロード中...' : saveStatus === 'loading' ? 'Saving... / 保存中...' : '✅ Save / 保存'}
+                    {editAvatarUploading ? 'Uploading image... / 画像アップロード中...' : saveStatus === 'loading' ? 'Saving... / 保存中...' : 'Save / 保存'}
                   </button>
                 </div>
               </div>
@@ -834,7 +833,7 @@ export default function CuratorDashboard() {
                     <img src={curator.icon_url} alt={curator.name} style={{ width: 72, height: 72, borderRadius: '50%', flexShrink: 0, objectFit: 'cover', border: `2px solid ${T.border}` }} />
                   ) : (
                     <div style={{ width: 72, height: 72, borderRadius: '50%', flexShrink: 0, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
-                      {curator.icon || '🎵'}
+                      {curator.icon || '♪'}
                     </div>
                   )}
 
@@ -878,21 +877,21 @@ export default function CuratorDashboard() {
                         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 6 }}>
                           {/* Type badge */}
                           <span style={{ padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, background: typeBadge.bg, color: typeBadge.color, fontFamily: T.font }}>{typeBadge.label}</span>
-                          {curator.region && <span style={{ color: T.textSub, fontSize: 13, fontFamily: T.font }}>📍 {curator.region}</span>}
-                          {curator.followers > 0 && <span style={{ color: T.textSub, fontSize: 13, fontFamily: T.font }}>👥 {Number(curator.followers).toLocaleString()}</span>}
+                          {curator.region && <span style={{ color: T.textSub, fontSize: 13, fontFamily: T.font }}>{curator.region}</span>}
+                          {curator.followers > 0 && <span style={{ color: T.textSub, fontSize: 13, fontFamily: T.font }}>{Number(curator.followers).toLocaleString()} followers</span>}
                         </div>
                         {/* Platform + links */}
                         <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
                           {curator.playlist && (
                             <span style={{ color: T.text, fontSize: 13, fontWeight: 600, fontFamily: T.font }}>
                               {curator.url
-                                ? <a href={curator.url} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, textDecoration: 'none' }}>{curator.playlist} ↗</a>
+                                ? <a href={curator.url} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, textDecoration: 'none' }}>{curator.playlist} →</a>
                                 : curator.playlist}
                             </span>
                           )}
                           {curator.playlist_url && (
                             <a href={curator.playlist_url} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, fontSize: 12, fontFamily: T.font, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-                              🎵 Playlist ↗
+                              Playlist →
                             </a>
                           )}
                         </div>
@@ -907,7 +906,7 @@ export default function CuratorDashboard() {
                       }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = T.accent; e.currentTarget.style.color = T.accent; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSub; }}
-                      >✏️ Edit Profile <span style={{ color: T.textMuted, fontWeight: 400 }}>/ 編集</span></button>
+                      >Edit Profile <span style={{ color: T.textMuted, fontWeight: 400 }}>/ 編集</span></button>
                     </div>
                   </div>
                 </div>
@@ -923,7 +922,6 @@ export default function CuratorDashboard() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {curator.open_to_all_genres && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'rgba(255,107,74,0.08)', borderRadius: 8, border: '1px solid rgba(255,107,74,0.2)' }}>
-                      <span style={{ fontSize: 14 }}>🌍</span>
                       <span style={{ fontSize: 12, fontWeight: 600, color: '#FF6B4A', fontFamily: T.font }}>Open to all genres / 全ジャンル受付中</span>
                     </div>
                   )}
@@ -999,17 +997,17 @@ export default function CuratorDashboard() {
           }}>
             <div className="earnings-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>💰 Total Earned / 獲得報酬合計</div>
+                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>Total Earned / 獲得報酬合計</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: T.accent, fontFamily: T.fontDisplay }}>¥{(earnings.total_earned || 0).toLocaleString()}</div>
                 <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginTop: 2 }}>{earnings.review_count || (earnings.earnings || []).length}件のレビュー</div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>🏦 Available / 支払い可能額</div>
+                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>Available / 支払い可能額</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: (earnings.available_balance || 0) >= 5000 ? '#10b981' : T.accent, fontFamily: T.fontDisplay }}>¥{(earnings.available_balance || 0).toLocaleString()}</div>
                 <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginTop: 2 }}>最低支払額: ¥5,000</div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>📤 Paid / 支払い済み</div>
+                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>Paid / 支払い済み</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: T.text, fontFamily: T.fontDisplay }}>¥{(earnings.total_paid || 0).toLocaleString()}</div>
                 <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginTop: 2 }}>{earnings.last_payout ? `最終: ${new Date(earnings.last_payout.date).toLocaleDateString('ja-JP')}` : '—'}</div>
               </div>
@@ -1030,7 +1028,7 @@ export default function CuratorDashboard() {
                 color: T.textSub, fontSize: 13, fontWeight: 500,
                 cursor: 'pointer', fontFamily: T.font,
               }}>
-                {showEarningsDetail ? '明細を閉じる' : '💰 報酬明細 / Details'}
+                {showEarningsDetail ? '明細を閉じる' : '報酬明細 / Details'}
               </button>
             </div>
 
@@ -1093,7 +1091,7 @@ export default function CuratorDashboard() {
         {/* ── ピッチ一覧 ── */}
         {pitches.length === 0 ? (
           <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: T.radiusLg, textAlign: 'center', padding: '48px 24px', boxShadow: T.shadow }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+            <div style={{ width: 48, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto 16px' }} />
             <p style={{ color: T.textMuted, fontSize: 14, fontFamily: T.font }}>No pitches yet. / まだピッチはありません。</p>
           </div>
         ) : (
@@ -1105,7 +1103,7 @@ export default function CuratorDashboard() {
               <div key={pitch.id} className="pitch-card" style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: 12, padding: '18px 20px', marginBottom: 12, boxShadow: T.shadow }}>
                 {/* ── ピッチヘッダー ── */}
                 <div className="pitch-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 10, flexShrink: 0, background: T.accentLight, border: `1px solid ${T.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🎵</div>
+                  <div style={{ width: 42, height: 42, borderRadius: 10, flexShrink: 0, background: T.accentLight, border: `1px solid ${T.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, color: '#c4956a', fontFamily: T.fontDisplay }}>♪</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                       <span style={{ color: T.text, fontWeight: 700, fontSize: 16, fontFamily: T.font }}>{pitch.artist_name || 'Unknown Artist'}</span>
@@ -1118,7 +1116,7 @@ export default function CuratorDashboard() {
                       )}
                       {pitch.track_ai_status === 'ai_assisted' && (
                         <span title="AI used as a creative tool (lyrics, mixing, etc.)" style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, color: '#c2410c', background: '#ffedd5', border: '1px solid #fed7aa', fontFamily: T.font }}>
-                          🤖 AI-assisted
+                          AI-assisted
                         </span>
                       )}
                     </div>
@@ -1138,7 +1136,7 @@ export default function CuratorDashboard() {
                         if (hoursLeft < 48) {
                           return (
                             <span style={{ color: '#FF3D6E', fontSize: 11, fontWeight: 600, fontFamily: T.font }}>
-                              ⚠️ {hoursLeft < 24 ? 'EXPIRES TODAY' : `${Math.floor(hoursLeft / 24)}d left`} — respond to keep your earnings
+                              {hoursLeft < 24 ? 'EXPIRES TODAY' : `${Math.floor(hoursLeft / 24)}d left`} — respond to keep your earnings
                             </span>
                           );
                         }
@@ -1234,9 +1232,9 @@ export default function CuratorDashboard() {
                           <div className="action-btns-row" style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
                             {(pitch.status === 'sent' || pitch.status === 'feedback') && (
                               <>
-                                <button onClick={() => handleAction(pitch.id, 'accepted')} disabled={!canAccept} style={{ padding: '9px 18px', border: 'none', borderRadius: 8, background: canAccept ? '#10b981' : T.border, color: '#fff', fontSize: 12, fontWeight: 700, cursor: canAccept ? 'pointer' : 'not-allowed', fontFamily: T.font }}>{isBusy ? '...' : '✅ Accept & Featured'}</button>
-                                <button onClick={() => handleFeedbackOnly(pitch.id)} disabled={!canOther} style={{ padding: '9px 18px', border: 'none', borderRadius: 8, background: canOther ? T.accent : T.border, color: '#fff', fontSize: 12, fontWeight: 700, cursor: canOther ? 'pointer' : 'not-allowed', fontFamily: T.font }}>{isBusy ? '...' : '💬 Feedback Only'}</button>
-                                <button onClick={() => handleAction(pitch.id, 'declined')} disabled={!canOther} style={{ padding: '9px 18px', border: `1px solid ${canOther ? '#ef4444' : T.border}`, borderRadius: 8, background: T.white, color: canOther ? '#ef4444' : T.textMuted, fontSize: 12, fontWeight: 700, cursor: canOther ? 'pointer' : 'not-allowed', fontFamily: T.font }}>{isBusy ? '...' : '❌ Decline'}</button>
+                                <button onClick={() => handleAction(pitch.id, 'accepted')} disabled={!canAccept} style={{ padding: '9px 18px', border: 'none', borderRadius: 8, background: canAccept ? '#10b981' : T.border, color: '#fff', fontSize: 12, fontWeight: 700, cursor: canAccept ? 'pointer' : 'not-allowed', fontFamily: T.font }}>{isBusy ? '...' : '✓ Accept & Featured'}</button>
+                                <button onClick={() => handleFeedbackOnly(pitch.id)} disabled={!canOther} style={{ padding: '9px 18px', border: 'none', borderRadius: 8, background: canOther ? T.accent : T.border, color: '#fff', fontSize: 12, fontWeight: 700, cursor: canOther ? 'pointer' : 'not-allowed', fontFamily: T.font }}>{isBusy ? '...' : 'Feedback Only'}</button>
+                                <button onClick={() => handleAction(pitch.id, 'declined')} disabled={!canOther} style={{ padding: '9px 18px', border: `1px solid ${canOther ? '#ef4444' : T.border}`, borderRadius: 8, background: T.white, color: canOther ? '#ef4444' : T.textMuted, fontSize: 12, fontWeight: 700, cursor: canOther ? 'pointer' : 'not-allowed', fontFamily: T.font }}>{isBusy ? '...' : 'Decline'}</button>
                               </>
                             )}
                           </div>
@@ -1281,7 +1279,7 @@ export default function CuratorDashboard() {
               </div>
             </div>
             {!curator?.payment_info && curator?.payment_method !== 'bank_transfer' && (
-              <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12, fontFamily: T.font }}>⚠️ 支払い情報が設定されていません。プロフィールから設定してください。 / Payment info not set. Please update from your profile.</p>
+              <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12, fontFamily: T.font }}>支払い情報が設定されていません。プロフィールから設定してください。 / Payment info not set. Please update from your profile.</p>
             )}
             <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 20, fontFamily: T.font }}>通常3〜5営業日以内にお支払いします。/ Payment within 3-5 business days.</p>
             {payoutError && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12, fontFamily: T.font }}>{payoutError}</p>}

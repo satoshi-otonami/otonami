@@ -42,7 +42,7 @@ function EmailForm() {
 
   if (status === 'sent') return (
     <div style={{ textAlign: 'center', padding: '20px 0' }}>
-      <div style={{ fontSize: 56, marginBottom: 16 }}>📬</div>
+      <div style={{ width: 56, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto 16px' }} />
       <h2 style={{ color: T.text, fontSize: 20, fontWeight: 800, marginBottom: 12, fontFamily: T.fontDisplay }}>
         Check your email!
       </h2>
@@ -137,7 +137,7 @@ function SetPasswordForm({ token, email: initialEmail }) {
 
   if (status === 'success') return (
     <div style={{ textAlign: 'center', padding: '20px 0' }}>
-      <div style={{ fontSize: 56, marginBottom: 16 }}>✅</div>
+      <div style={{ fontSize: 48, marginBottom: 16, color: '#10b981', fontWeight: 800 }}>✓</div>
       <h2 style={{ color: '#10b981', fontSize: 20, fontWeight: 800, marginBottom: 12, fontFamily: T.fontDisplay }}>
         Password set successfully!
       </h2>
@@ -299,7 +299,7 @@ function SetPasswordContent() {
               padding: '5px 16px', background: T.accentLight,
               borderRadius: 24, fontSize: 12, fontWeight: 600, color: T.accent,
               border: `1px solid ${T.accentBorder}`, marginBottom: 20,
-            }}>🔐 Curator Account</div>
+            }}>Curator Account</div>
             <h1 style={{ fontSize: 28, fontWeight: 700, color: T.text, margin: '0 0 8px', fontFamily: T.fontDisplay }}>
               {hasToken ? 'Set Your Password' : 'Password Setup'}
             </h1>

@@ -28,7 +28,7 @@ export default function CuratorSubmitPage() {
   if (error || !curator) {
     return (
       <div style={{ textAlign: 'center', padding: 80, color: '#fff', background: '#0d0d1a', minHeight: '100vh', fontFamily: "'DM Sans',sans-serif" }}>
-        <div style={{ fontSize: '3rem', marginBottom: 16 }}>🔍</div>
+        <div style={{ width: 48, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto 16px' }} />
         <h1 style={{ fontFamily: "'Sora',sans-serif", fontSize: '1.5rem', marginBottom: 8 }}>Curator not found</h1>
         <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 24 }}>This curator may no longer be accepting submissions.</p>
         <a href="/curators" style={{ color: '#FF6B4A', textDecoration: 'none', fontWeight: 600 }}>Browse all curators →</a>
@@ -36,7 +36,7 @@ export default function CuratorSubmitPage() {
     );
   }
 
-  const typeEmoji = curator.type === 'blog' ? '📝' : curator.type === 'playlist' ? '🎵' : curator.type === 'radio' ? '📻' : curator.type === 'label' ? '💿' : '🎧';
+  const typeLabel = curator.type === 'blog' ? 'Blog' : curator.type === 'playlist' ? 'Playlist' : curator.type === 'radio' ? 'Radio' : curator.type === 'label' ? 'Label' : 'Curator';
 
   return (
     <div style={{ background: '#0d0d1a', minHeight: '100vh', padding: '40px 20px', color: '#fff', fontFamily: "'DM Sans',sans-serif" }}>
@@ -65,13 +65,13 @@ export default function CuratorSubmitPage() {
 
         {curator.platform && (
           <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 16, fontSize: '0.95rem' }}>
-            {typeEmoji} {curator.platform}
+            {typeLabel} · {curator.platform}
           </p>
         )}
 
         {curator.region && (
           <p style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 20, fontSize: '0.85rem' }}>
-            📍 {curator.region}{curator.followers > 0 ? ` · 👥 ${Number(curator.followers).toLocaleString()} followers` : ''}
+            {curator.region}{curator.followers > 0 ? ` · ${Number(curator.followers).toLocaleString()} followers` : ''}
           </p>
         )}
 
@@ -80,7 +80,7 @@ export default function CuratorSubmitPage() {
           <div style={{ marginBottom: 24 }}>
             {curator.open_to_all_genres && (
               <div style={{ fontSize: '0.8rem', color: '#FF6B4A', fontWeight: 600, marginBottom: 8 }}>
-                🌍 Open to all genres
+                Open to all genres
               </div>
             )}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
@@ -120,7 +120,7 @@ export default function CuratorSubmitPage() {
           color: '#fff', fontWeight: 700, fontSize: '1.05rem', textDecoration: 'none',
           boxShadow: '0 4px 24px rgba(255,107,74,0.3)', transition: 'transform 0.2s, box-shadow 0.2s',
         }}>
-          🎵 Submit Your Music
+          Submit Your Music →
         </a>
 
         <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.78rem', marginTop: 48 }}>

@@ -211,7 +211,7 @@ export async function PATCH(request) {
 
     // アーティストへの通知メール（失敗してもレスポンスには影響しない）
     if (data.artist_email) {
-      const sc = { accepted: '✅ Accepted', declined: '❌ Declined', feedback: '💬 Feedback' };
+      const sc = { accepted: '✓ Accepted', declined: 'Declined', feedback: 'Feedback' };
       const statusLabel = sc[status] || status;
       resend.emails.send({
         from: `OTONAMI <${FROM}>`,
@@ -233,7 +233,7 @@ export async function PATCH(request) {
               <span style="font-size:16px;font-weight:800;">${statusLabel}</span>
             </div>
             ${data.feedback_message ? `<div style="background:#13132a;border-radius:10px;padding:14px 18px;margin-bottom:16px;color:#ccc;font-size:14px;line-height:1.7;">${data.feedback_message}</div>` : ''}
-            ${data.placement_url ? `<div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:10px;padding:14px 18px;margin-bottom:16px;"><p style="color:#38bdf8;font-weight:700;margin:0 0 6px;">🎉 Your track was featured!</p><a href="${data.placement_url}" style="color:#0ea5e9;font-size:13px;">${data.placement_url}</a></div>` : ''}
+            ${data.placement_url ? `<div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:10px;padding:14px 18px;margin-bottom:16px;"><p style="color:#38bdf8;font-weight:700;margin:0 0 6px;">Your track was featured!</p><a href="${data.placement_url}" style="color:#0ea5e9;font-size:13px;">${data.placement_url}</a></div>` : ''}
             <div style="text-align:center;margin-top:24px;">
               <a href="${APP_URL}" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#7c3aed,#2563eb);border-radius:20px;color:#fff;text-decoration:none;font-weight:700;">View Details →</a>
             </div>

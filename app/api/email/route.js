@@ -87,7 +87,7 @@ export async function POST(request) {
 
         const replyLine = artistEmail
           ? `<div style="margin-top:16px;padding:12px 16px;background:#f8fafc;border-left:3px solid #7c3aed;border-radius:6px;font-size:13px;color:#475569;">
-              💬 Reply directly to ${artistName || 'the artist'}: <a href="mailto:${artistEmail}" style="color:#7c3aed;font-weight:600;text-decoration:none;">${artistEmail}</a>
+              Reply directly to ${artistName || 'the artist'}: <a href="mailto:${artistEmail}" style="color:#7c3aed;font-weight:600;text-decoration:none;">${artistEmail}</a>
             </div>`
           : '';
 
@@ -99,14 +99,14 @@ export async function POST(request) {
             ${epk ? `
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
               <div style="background: #f8fafc; padding: 16px; border-radius: 8px; font-size: 14px;">
-                <strong style="color: #7c3aed;">📄 Electronic Press Kit</strong><br><br>
+                <strong style="color: #7c3aed;">Electronic Press Kit</strong><br><br>
                 ${epk.replace(/\n/g, '<br>')}
               </div>
             ` : ''}
             <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
               Sent via <a href="https://otonami.io" style="color: #7c3aed; text-decoration: none;">OTONAMI</a> — Connecting Japanese Artists with the World
               <br>
-              <a href="${respondUrl}" style="display:inline-block;margin-top:8px;padding:10px 22px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">📩 Respond to this pitch</a>
+              <a href="${respondUrl}" style="display:inline-block;margin-top:8px;padding:10px 22px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">Respond to this pitch →</a>
             </div>
             ${trackingPixel}
           </div>
@@ -142,7 +142,7 @@ export async function POST(request) {
     const safeEmail = process.env.EMAIL_TEST_REDIRECT || 'satoshiy339@gmail.com';
     if (testMode) {
       emailSubject = '[TEST] ' + emailSubject;
-      htmlBody = '<div style="background:#fef3c7;padding:12px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#92400e;">⚠️ TEST MODE — Original recipient: <strong>' + toEmail + '</strong></div>' + htmlBody;
+      htmlBody = '<div style="background:#fef3c7;padding:12px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#92400e;">TEST MODE — Original recipient: <strong>' + toEmail + '</strong></div>' + htmlBody;
       toEmail = safeEmail;
     }
 

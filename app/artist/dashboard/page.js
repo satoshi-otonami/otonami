@@ -332,7 +332,7 @@ export default function ArtistDashboard() {
               style={{ padding: '8px 20px', borderRadius: 9999, fontSize: 14, fontWeight: 600, color: '#fff', background: THEME.coral, border: 'none', cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s' }}
               onMouseEnter={e => e.currentTarget.style.background = THEME.coralDark}
               onMouseLeave={e => e.currentTarget.style.background = THEME.coral}
-            >🎵 ピッチを送る</button>
+            >ピッチを送る →</button>
           </nav>
         </div>
         <div style={{ position: 'relative' }} ref={headerMenuRef}>
@@ -340,9 +340,9 @@ export default function ArtistDashboard() {
             onMouseEnter={e => e.currentTarget.style.background = THEME.goldLight}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
-            <span style={{ padding: '3px 10px', borderRadius: 9999, fontSize: 12, fontWeight: 600, background: THEME.gold, color: '#fff', fontFamily: THEME.font }}>🪙 {artist.credits ?? 3}</span>
+            <span style={{ padding: '3px 10px', borderRadius: 9999, fontSize: 12, fontWeight: 600, background: THEME.gold, color: '#fff', fontFamily: THEME.font }}>{artist.credits ?? 3} credits</span>
             <div style={{ width: 32, height: 32, borderRadius: '50%', background: THEME.goldLight, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: `2px solid ${THEME.border}`, flexShrink: 0 }}>
-              {artist.avatar_url ? <img src={artist.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14 }}>🎵</span>}
+              {artist.avatar_url ? <img src={artist.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 14, color: THEME.gold }}>♪</span>}
             </div>
             <span className="header-name" style={{ fontSize: 13, fontWeight: 600, color: THEME.text, fontFamily: THEME.font }}>{artist.name}</span>
             <span style={{ fontSize: 10, color: THEME.textMuted }}>▼</span>
@@ -352,12 +352,12 @@ export default function ArtistDashboard() {
               <button onClick={() => { setHeaderMenu(false); setShowEditProfile(true); }} style={{ width: '100%', padding: '12px 16px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.text, fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 8 }}
                 onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
                 onMouseLeave={e => e.currentTarget.style.background = 'none'}
-              >✏️ プロフィール編集</button>
+              >プロフィール編集</button>
               <div style={{ height: 1, background: THEME.borderLight }} />
               <button onClick={handleLogout} style={{ width: '100%', padding: '12px 16px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.coral, fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 8 }}
                 onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
                 onMouseLeave={e => e.currentTarget.style.background = 'none'}
-              >🚪 ログアウト</button>
+              >ログアウト</button>
             </div>
           )}
         </div>
@@ -386,7 +386,7 @@ export default function ArtistDashboard() {
             border: `1px solid ${THEME.border}`, cursor: 'pointer',
             fontSize: 12, fontWeight: 600, color: THEME.text, fontFamily: THEME.font,
             display: 'flex', alignItems: 'center', gap: 6,
-          }}>✏️ プロフィール編集</button>
+          }}>プロフィール編集</button>
         </div>
 
         {/* Profile info below cover */}
@@ -409,9 +409,9 @@ export default function ArtistDashboard() {
                 <span style={{ padding: '3px 10px', borderRadius: 100, fontSize: 11, fontWeight: 600, background: THEME.goldLight, color: THEME.gold, border: `1px solid ${THEME.gold}30` }}>
                   {TYPE_LABELS[artist.artist_type] || artist.artist_type}
                 </span>
-                <span style={{ fontSize: 14 }}>{artist.region === 'Japan' || artist.region === 'JP' ? '🇯🇵' : '🌏'} {artist.region}</span>
+                <span style={{ fontSize: 14 }}>{artist.region === 'Japan' || artist.region === 'JP' ? '🇯🇵' : '○'} {artist.region}</span>
               </div>
-              {artist.label_name && <div style={{ fontSize: 13, color: THEME.textMuted, marginTop: 4 }}>🏷️ {artist.label_name}</div>}
+              {artist.label_name && <div style={{ fontSize: 13, color: THEME.textMuted, marginTop: 4 }}>{artist.label_name}</div>}
             </div>
           </div>
 
@@ -471,7 +471,7 @@ export default function ArtistDashboard() {
               {artist.website_url && (
                 <a href={artist.website_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#1a1a1a', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-                  🔗 Website
+                  Website
                 </a>
               )}
             </div>
@@ -489,13 +489,13 @@ export default function ArtistDashboard() {
                 boxShadow: '0 4px 14px rgba(232, 93, 58, 0.3)',
                 transition: 'all 0.2s', textAlign: 'center',
               }}
-            >🎵 キュレーターにピッチを送る →</button>
+            >キュレーターにピッチを送る →</button>
           ) : (
             <div style={{
               background: '#fffbf5', border: '2px dashed #c4956a', borderRadius: 16,
               padding: 32, textAlign: 'center', margin: '20px 0 0',
             }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🎵</div>
+              <div style={{ width: 48, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto 16px' }} />
               <h3 style={{ fontSize: 18, fontWeight: 700, color: THEME.text, margin: '0 0 8px', fontFamily: THEME.font }}>まず楽曲を登録しましょう</h3>
               <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.6, margin: '0 0 20px' }}>
                 楽曲を登録すると、あなたの音楽に合うキュレーターを見つけてピッチを送ることができます
@@ -513,7 +513,7 @@ export default function ArtistDashboard() {
       {/* ── Tabs ── */}
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 20px' }}>
         <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
-          {[{ key: 'profile', label: '👤 Profile' }, { key: 'tracks', label: `🎵 Tracks${tracks.length > 0 ? ` (${tracks.length})` : ''}` }].map(t => (
+          {[{ key: 'profile', label: 'Profile' }, { key: 'tracks', label: `Tracks${tracks.length > 0 ? ` (${tracks.length})` : ''}` }].map(t => (
             <button key={t.key} onClick={() => setTab(t.key)} style={{
               padding: '12px 32px', border: tab === t.key ? 'none' : `1px solid ${THEME.border}`,
               background: tab === t.key ? THEME.gold : 'transparent', cursor: 'pointer',
@@ -533,7 +533,7 @@ export default function ArtistDashboard() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {artist.hot_news && (
               <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, padding: '20px 24px' }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: THEME.text, margin: '0 0 8px', fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 6 }}>🔥 Hot news</h3>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: THEME.text, margin: '0 0 8px', fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 6, borderLeft: `3px solid ${THEME.gold}`, paddingLeft: 10 }}>Hot news</h3>
                 <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.6, margin: 0 }}>{artist.hot_news}</p>
               </div>
             )}
@@ -562,7 +562,7 @@ export default function ArtistDashboard() {
             {/* 直近のアクティビティ */}
             {recentPitches.length > 0 ? (
               <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, padding: '20px 24px' }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: THEME.text, margin: '0 0 12px', fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 6 }}>📋 直近のアクティビティ</h3>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: THEME.text, margin: '0 0 12px', fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 6, borderLeft: `3px solid ${THEME.gold}`, paddingLeft: 10 }}>直近のアクティビティ</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {recentPitches.slice(0, 5).map(p => (
                     <div key={`activity-${p.id}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 0', borderBottom: `1px solid ${THEME.borderLight}` }}>
@@ -570,7 +570,7 @@ export default function ArtistDashboard() {
                         {p.updated_at ? new Date(p.updated_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) + ' ' + new Date(p.updated_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : p.sent_at ? new Date(p.sent_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) + ' ' + new Date(p.sent_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : ''}
                       </span>
                       <span style={{ fontSize: 13, color: THEME.text, fontFamily: THEME.font, lineHeight: 1.5 }}>
-                        {p.status === 'interested' || p.status === 'accepted' ? `${p.curator_name} が "${p.song_title || '楽曲'}" を採用しました 🎉` :
+                        {p.status === 'interested' || p.status === 'accepted' ? `${p.curator_name} が "${p.song_title || '楽曲'}" を採用しました` :
                          p.status === 'feedback' ? `${p.curator_name} が "${p.song_title || '楽曲'}" にフィードバックを送信しました` :
                          p.status === 'listened' ? `${p.curator_name} が "${p.song_title || '楽曲'}" を試聴しました` :
                          p.status === 'opened' ? `${p.curator_name} が "${p.song_title || '楽曲'}" を開封しました` :
@@ -621,20 +621,20 @@ export default function ArtistDashboard() {
                                  pitch.status === 'opened' ? '#f59e0b' :
                                  THEME.textSub,
                         }}>
-                          {pitch.status === 'interested' || pitch.status === 'accepted' ? '✅ 採用' :
-                           pitch.status === 'feedback' ? '💬 FB受信' :
-                           pitch.status === 'declined' ? '❌ 不採用' :
-                           pitch.status === 'expired' ? '⏰ 期限切れ' :
-                           pitch.status === 'opened' ? '👀 開封済' :
-                           pitch.status === 'listened' ? '🎧 試聴済' :
-                           pitch.status === 'sent' ? '📤 送信済' :
+                          {pitch.status === 'interested' || pitch.status === 'accepted' ? '✓ 採用' :
+                           pitch.status === 'feedback' ? 'FB受信' :
+                           pitch.status === 'declined' ? '不採用' :
+                           pitch.status === 'expired' ? '期限切れ' :
+                           pitch.status === 'opened' ? '開封済' :
+                           pitch.status === 'listened' ? '試聴済' :
+                           pitch.status === 'sent' ? '送信済' :
                            pitch.status}
                         </span>
                       </div>
                       {/* Deadline badge */}
                       {pitch.status === 'expired' && pitch.refund_credits > 0 && (
                         <div style={{ marginTop: 6, fontSize: 12, color: '#ef4444', fontFamily: THEME.font }}>
-                          ⏰ 期限切れ — {pitch.refund_credits} credits 返還済み
+                          期限切れ — {pitch.refund_credits} credits 返還済み
                         </div>
                       )}
                       {pitch.status === 'sent' && pitch.deadline_at && (() => {
@@ -643,7 +643,7 @@ export default function ArtistDashboard() {
                         const isUrgent = hoursLeft < 48;
                         return (
                           <div style={{ marginTop: 6, fontSize: 12, color: isUrgent ? '#ef4444' : THEME.textMuted, fontFamily: THEME.font }}>
-                            ⏳ 回答期限: あと {daysLeft > 0 ? `${daysLeft}日` : `${hoursLeft}時間`}
+                            回答期限: あと {daysLeft > 0 ? `${daysLeft}日` : `${hoursLeft}時間`}
                           </div>
                         );
                       })()}
@@ -655,7 +655,7 @@ export default function ArtistDashboard() {
                       )}
                       {pitch.placement_url && (
                         <div style={{ marginTop: 8 }}>
-                          <span style={{ fontSize: 12, color: THEME.green }}>🎉 掲載済み: </span>
+                          <span style={{ fontSize: 12, color: THEME.green }}>✓ 掲載済み: </span>
                           <a href={pitch.placement_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: THEME.gold }}>{pitch.placement_url}</a>
                         </div>
                       )}
@@ -682,8 +682,8 @@ export default function ArtistDashboard() {
               if (favCurators.length === 0) return null;
               return (
                 <div style={{ marginTop: 8 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: THEME.text, marginBottom: 12, fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    ⭐ お気に入りキュレーター
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: THEME.text, marginBottom: 12, fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 8, borderLeft: `3px solid ${THEME.gold}`, paddingLeft: 10 }}>
+                    お気に入りキュレーター
                   </h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
                     {favCurators.map(c => (
@@ -705,7 +705,7 @@ export default function ArtistDashboard() {
                           <div>
                             <div style={{ fontSize: 14, fontWeight: 600, color: THEME.text, fontFamily: THEME.font }}>{c.name}</div>
                             <div style={{ fontSize: 11, color: c.status === 'interested' || c.status === 'accepted' ? THEME.green : '#3b82f6', fontWeight: 500 }}>
-                              {c.status === 'interested' || c.status === 'accepted' ? '✅ 採用' : '💬 FB済'}
+                              {c.status === 'interested' || c.status === 'accepted' ? '✓ 採用' : 'FB済'}
                             </div>
                           </div>
                         </div>
@@ -729,7 +729,7 @@ export default function ArtistDashboard() {
 
             {!artist.bio && !artist.hot_news && (artist.influences?.length || 0) === 0 && (
               <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>✏️</div>
+                <div style={{ width: 48, height: 2, background: THEME.gold, borderRadius: 1, margin: '0 auto 16px' }} />
                 <p style={{ fontSize: 15, color: THEME.textSub, marginBottom: 20 }}>プロフィールを充実させてキュレーターにアピールしましょう</p>
                 <button onClick={() => setShowEditProfile(true)} style={{ padding: '12px 28px', borderRadius: 100, background: THEME.gold, border: 'none', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: THEME.font }}>プロフィールを編集する</button>
               </div>
@@ -742,7 +742,7 @@ export default function ArtistDashboard() {
           <>
             {tracks.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-                <div style={{ fontSize: 64, marginBottom: 16 }}>🎵</div>
+                <div style={{ width: 56, height: 2, background: THEME.gold, borderRadius: 1, margin: '0 auto 16px' }} />
                 <p style={{ fontSize: 16, color: THEME.textSub, fontWeight: 600, marginBottom: 8 }}>楽曲を登録してピッチを始めましょう</p>
                 <p style={{ fontSize: 13, color: THEME.textMuted, marginBottom: 24 }}>YouTube、Spotify、SoundCloud、Bandcampのリンクを追加できます</p>
                 <button onClick={() => setShowAddTrack(true)} className="btn-gold" style={{ padding: '14px 32px', borderRadius: 100, background: THEME.gold, border: 'none', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: THEME.font }}>楽曲を追加する</button>
@@ -809,7 +809,7 @@ export default function ArtistDashboard() {
                               onError={e => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }} />
                           ) : null}
                           <div style={{ display: trackThumbnail ? 'none' : 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', background: THEME.borderLight }}>
-                            <span style={{ fontSize: 24 }}>🎵</span>
+                            <span style={{ fontSize: 24, color: THEME.gold }}>♪</span>
                           </div>
                         </div>
 
@@ -837,8 +837,8 @@ export default function ArtistDashboard() {
                         <div style={{ width: 80, textAlign: 'center' }}>
                           {sentCount > 0 ? (
                             <div>
-                              <div style={{ fontSize: 13, color: THEME.textSub }}>📤 {sentCount}件</div>
-                              {acceptedCount > 0 && <div style={{ fontSize: 13, color: THEME.green }}>✅ {acceptedCount}件</div>}
+                              <div style={{ fontSize: 13, color: THEME.textSub }}>{sentCount}件送信</div>
+                              {acceptedCount > 0 && <div style={{ fontSize: 13, color: THEME.green }}>✓ {acceptedCount}件採用</div>}
                             </div>
                           ) : (
                             <span style={{ color: '#c4c0ba', fontSize: 13 }}>—</span>
@@ -856,7 +856,7 @@ export default function ArtistDashboard() {
                           }}
                             onMouseEnter={e => { e.currentTarget.style.background = '#c4956a'; e.currentTarget.style.color = '#fff'; }}
                             onMouseLeave={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#c4956a'; }}
-                          >🎨 プロモ</button>
+                          >プロモ</button>
                           <a
                             href={`/artist/lyric-video?track=${track.id}&title=${encodeURIComponent(track.title || '')}`}
                             onClick={e => e.stopPropagation()}
@@ -869,7 +869,7 @@ export default function ArtistDashboard() {
                             }}
                             onMouseEnter={e => { e.currentTarget.style.background = '#A78BFA'; e.currentTarget.style.color = '#fff'; }}
                             onMouseLeave={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#A78BFA'; }}
-                          >🎬 リリックMV</a>
+                          >リリックMV</a>
                           <a href={buildPitchUrl(track)} onClick={e => e.stopPropagation()} style={{
                             padding: '6px 14px', borderRadius: 9999, background: THEME.coral, color: '#fff',
                             fontSize: 12, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap',
@@ -893,11 +893,11 @@ export default function ArtistDashboard() {
                                 <button onClick={(e) => { e.stopPropagation(); setTrackMenu(null); setEditTrack(track); }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.text, fontFamily: THEME.font }}
                                   onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
                                   onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                                >✏️ 編集</button>
+                                >編集</button>
                                 <button onClick={(e) => { e.stopPropagation(); setTrackMenu(null); setDeleteConfirm(track); }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.coral, fontFamily: THEME.font }}
                                   onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
                                   onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                                >🗑️ 削除</button>
+                                >削除</button>
                                 {track.cover_image_url && (
                                   <button onClick={async (e) => {
                                     e.stopPropagation(); setTrackMenu(null);
@@ -912,7 +912,7 @@ export default function ArtistDashboard() {
                                   }} style={{ width: '100%', padding: '10px 14px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.textSub, fontFamily: THEME.font }}
                                     onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
                                     onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                                  >🖼 画像をリセット</button>
+                                  >画像をリセット</button>
                                 )}
                               </div>
                             )}
@@ -932,16 +932,16 @@ export default function ArtistDashboard() {
                           {/* Track URLs */}
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
                             {track.youtube_url && (
-                              <a href={track.youtube_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#FF0000', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#FF000010', fontFamily: THEME.font }}>▶️ YouTube</a>
+                              <a href={track.youtube_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#FF0000', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#FF000010', fontFamily: THEME.font }}>YouTube</a>
                             )}
                             {track.spotify_url && (
-                              <a href={track.spotify_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#1DB954', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#1DB95410', fontFamily: THEME.font }}>🟢 Spotify</a>
+                              <a href={track.spotify_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#1DB954', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#1DB95410', fontFamily: THEME.font }}>Spotify</a>
                             )}
                             {track.soundcloud_url && (
-                              <a href={track.soundcloud_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#FF5500', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#FF550010', fontFamily: THEME.font }}>☁️ SoundCloud</a>
+                              <a href={track.soundcloud_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#FF5500', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#FF550010', fontFamily: THEME.font }}>SoundCloud</a>
                             )}
                             {track.bandcamp_url && (
-                              <a href={track.bandcamp_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#1DA0C3', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#1DA0C310', fontFamily: THEME.font }}>📀 Bandcamp</a>
+                              <a href={track.bandcamp_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#1DA0C3', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#1DA0C310', fontFamily: THEME.font }}>Bandcamp</a>
                             )}
                           </div>
 
@@ -978,7 +978,7 @@ export default function ArtistDashboard() {
                                      p.status === 'opened' ? '開封済み' :
                                      p.status === 'listened' ? '試聴済み' :
                                      p.status === 'feedback' ? 'FB受信' :
-                                     p.status === 'interested' || p.status === 'accepted' ? '✅ 採用' :
+                                     p.status === 'interested' || p.status === 'accepted' ? '✓ 採用' :
                                      p.status === 'declined' ? '不採用' : p.status}
                                   </span>
                                   <span style={{ fontSize: 11, color: THEME.textMuted, marginLeft: 'auto' }}>
@@ -992,7 +992,7 @@ export default function ArtistDashboard() {
                                   <p style={{ fontSize: 11, color: THEME.textMuted, margin: '0 0 2px', fontFamily: THEME.font }}>{p.curator_name}:</p>
                                   <p style={{ fontSize: 13, color: THEME.text, lineHeight: 1.5, margin: 0, fontFamily: THEME.font }}>{p.feedback_message}</p>
                                   {p.placement_url && (
-                                    <a href={p.placement_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: THEME.gold, display: 'block', marginTop: 4 }}>🎉 {p.placement_url}</a>
+                                    <a href={p.placement_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: THEME.gold, display: 'block', marginTop: 4 }}>✓ {p.placement_url}</a>
                                   )}
                                 </div>
                               ))}
@@ -1045,7 +1045,7 @@ export default function ArtistDashboard() {
                 boxShadow: '0 4px 14px rgba(232, 93, 58, 0.3)',
                 transition: 'all 0.2s', textAlign: 'center',
               }}
-            >🎵 ピッチを送る</button>
+            >ピッチを送る →</button>
           </div>
         </div>
       )}
@@ -1189,7 +1189,7 @@ export default function ArtistDashboard() {
                 {dc.bio && <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.7, margin: 0 }}>{dc.bio}</p>}
 
                 {/* Platform URL */}
-                {dc.url && <a href={dc.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: THEME.gold, fontSize: 13, textDecoration: 'none', wordBreak: 'break-all' }}>🔗 {dc.url}</a>}
+                {dc.url && <a href={dc.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: THEME.gold, fontSize: 13, textDecoration: 'none', wordBreak: 'break-all' }}>→ {dc.url}</a>}
 
                 {/* Genres they love */}
                 {dc.genres?.length > 0 && (
@@ -1233,7 +1233,7 @@ export default function ArtistDashboard() {
                     <div style={{ fontSize: 13, fontWeight: 500, color: THEME.textSub, marginBottom: 10 }}>They want music similar to...</div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {dc.preferredArtists.map((a, i) => (
-                        <span key={i} style={{ background: '#ffffff', border: `1px solid ${THEME.border}`, color: THEME.text, padding: '6px 14px', borderRadius: 20, fontSize: 12 }}>🎤 {a}</span>
+                        <span key={i} style={{ background: '#ffffff', border: `1px solid ${THEME.border}`, color: THEME.text, padding: '6px 14px', borderRadius: 20, fontSize: 12 }}>{a}</span>
                       ))}
                     </div>
                   </div>
@@ -1255,7 +1255,7 @@ export default function ArtistDashboard() {
                 {dc.playlistUrl && (
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 500, color: THEME.textSub, marginBottom: 10 }}>Their playlist</div>
-                    <a href={dc.playlistUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#ffffff', borderRadius: 10, padding: 14, color: THEME.gold, textDecoration: 'none', fontSize: 13, border: `1px solid ${THEME.border}`, wordBreak: 'break-all' }}>🎵 {dc.playlistUrl}</a>
+                    <a href={dc.playlistUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#ffffff', borderRadius: 10, padding: 14, color: THEME.gold, textDecoration: 'none', fontSize: 13, border: `1px solid ${THEME.border}`, wordBreak: 'break-all' }}>♪ {dc.playlistUrl}</a>
                   </div>
                 )}
 
@@ -1269,7 +1269,7 @@ export default function ArtistDashboard() {
                   setSelectedCurator(null);
                   setShowTrackSelectModal(true);
                 }} style={{ background: THEME.gold, border: 'none', color: '#fff', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: THEME.font }}>
-                  🎵 この方にピッチする →
+                  この方にピッチする →
                 </button>
               </div>
 
@@ -1298,8 +1298,8 @@ export default function ArtistDashboard() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <h2 style={{ fontSize: 20, fontWeight: 700, color: THEME.text, margin: 0, fontFamily: THEME.fontDisplay }}>
-                    🎵 ピッチする楽曲を選択
+                  <h2 style={{ fontSize: 20, fontWeight: 700, color: THEME.text, margin: 0, fontFamily: THEME.fontDisplay, borderLeft: `3px solid ${THEME.gold}`, paddingLeft: 10 }}>
+                    ピッチする楽曲を選択
                   </h2>
                   {pendingCuratorForPitch && (
                     <p style={{ fontSize: 13, color: THEME.gold, margin: '6px 0 0', fontWeight: 500 }}>
@@ -1358,7 +1358,7 @@ export default function ArtistDashboard() {
                             background: 'linear-gradient(135deg, #c4956a, #e85d3a)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                           }}>
-                            <span style={{ fontSize: 24, opacity: 0.7 }}>🎵</span>
+                            <span style={{ fontSize: 24, opacity: 0.85, color: '#fff' }}>♪</span>
                           </div>
                         )}
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -1366,7 +1366,7 @@ export default function ArtistDashboard() {
                             <div style={{ fontSize: 15, fontWeight: 600, color: THEME.text, fontFamily: THEME.font }}>{track.title}</div>
                             {isAiGenerated && (
                               <span style={{ fontSize: 10, fontWeight: 700, color: '#b91c1c', background: '#fee2e2', border: '1px solid #fecaca', padding: '2px 8px', borderRadius: 9999, fontFamily: THEME.font }}>
-                                🚫 AI生成 / ピッチ不可
+                                AI生成 / ピッチ不可
                               </span>
                             )}
                           </div>
@@ -1602,20 +1602,20 @@ function PromoToolkitModal({ track, artist, onClose }) {
   };
 
   const TEMPLATES = [
-    { value: 'player', label: 'Player', icon: '🎵', desc: 'プレーヤーUIパネル' },
-    { value: 'vinyl', label: 'Vinyl', icon: '💿', desc: 'ジャケ写 + タイポグラフィ' },
-    { value: 'live', label: 'Live', icon: '🎸', desc: 'ライブ写真 + グラスパネル' },
+    { value: 'player', label: 'Player', icon: '♪', desc: 'プレーヤーUIパネル' },
+    { value: 'vinyl', label: 'Vinyl', icon: '○', desc: 'ジャケ写 + タイポグラフィ' },
+    { value: 'live', label: 'Live', icon: '♫', desc: 'ライブ写真 + グラスパネル' },
   ];
   const FORMATS = [
-    { value: 'feed', label: '⬜ Feed (1:1)' },
-    { value: 'story', label: '📱 Story (9:16)' },
+    { value: 'feed', label: 'Feed (1:1)' },
+    { value: 'story', label: 'Story (9:16)' },
   ];
   const paletteOptions = [
-    { key: 'vivid', label: '🔥 Vivid', color: '#e85d3a', gradient: 'linear-gradient(135deg, #e85d3a, #ff8a5c, #c4956a)' },
-    { key: 'earth', label: '🌿 Earth', color: '#7a8c5e', gradient: 'linear-gradient(135deg, #4a5c3a, #7a8c5e, #c4956a)' },
-    { key: 'neon', label: '⚡ Neon', color: '#a78bfa', gradient: 'linear-gradient(135deg, #a78bfa, #4ecdc4, #06b6d4)' },
-    { key: 'moody', label: '🌙 Moody', color: '#6366f1', gradient: 'linear-gradient(135deg, #312e81, #6366f1, #818cf8)' },
-    { key: 'warm', label: '✨ Warm', color: '#c4956a', gradient: 'linear-gradient(135deg, #c4956a, #e85d3a, #c4956a)' },
+    { key: 'vivid', label: 'Vivid', color: '#e85d3a', gradient: 'linear-gradient(135deg, #e85d3a, #ff8a5c, #c4956a)' },
+    { key: 'earth', label: 'Earth', color: '#7a8c5e', gradient: 'linear-gradient(135deg, #4a5c3a, #7a8c5e, #c4956a)' },
+    { key: 'neon', label: 'Neon', color: '#a78bfa', gradient: 'linear-gradient(135deg, #a78bfa, #4ecdc4, #06b6d4)' },
+    { key: 'moody', label: 'Moody', color: '#6366f1', gradient: 'linear-gradient(135deg, #312e81, #6366f1, #818cf8)' },
+    { key: 'warm', label: 'Warm', color: '#c4956a', gradient: 'linear-gradient(135deg, #c4956a, #e85d3a, #c4956a)' },
   ];
 
   // 3c: 自動プレビュー — テンプレート/フォーマット/パレット変更時に自動生成
@@ -1654,8 +1654,8 @@ function PromoToolkitModal({ track, artist, onClose }) {
                 ← 戻る
               </button>
             )}
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: THEME.text, margin: 0, fontFamily: THEME.font }}>
-              🎨 プロモ素材
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: THEME.text, margin: 0, fontFamily: THEME.font, borderLeft: `3px solid ${THEME.gold}`, paddingLeft: 10 }}>
+              プロモ素材
             </h2>
             <p style={{ fontSize: 13, color: THEME.textSub, margin: '4px 0 0' }}>{track.title}</p>
           </div>
@@ -1699,7 +1699,7 @@ function PromoToolkitModal({ track, artist, onClose }) {
                 onMouseEnter={e => { e.currentTarget.style.borderColor = THEME.gold; e.currentTarget.style.background = '#faf9f7'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = THEME.border; e.currentTarget.style.background = THEME.card; }}
               >
-                <span style={{ fontSize: 32 }}>🖼</span>
+                <span style={{ width: 32, height: 2, background: THEME.gold, borderRadius: 1, display: 'block' }} />
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: THEME.text }}>プロモカード</div>
                   <div style={{ fontSize: 12, color: THEME.textSub, marginTop: 2 }}>SNS用の画像を生成（Feed / Story）</div>
@@ -1716,7 +1716,7 @@ function PromoToolkitModal({ track, artist, onClose }) {
                 onMouseEnter={e => { e.currentTarget.style.borderColor = THEME.gold; e.currentTarget.style.background = '#faf9f7'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = THEME.border; e.currentTarget.style.background = THEME.card; }}
               >
-                <span style={{ fontSize: 32 }}>✍️</span>
+                <span style={{ width: 32, height: 2, background: THEME.gold, borderRadius: 1, display: 'block' }} />
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: THEME.text }}>SNSキャプション</div>
                   <div style={{ fontSize: 12, color: THEME.textSub, marginTop: 2 }}>Instagram / X / Facebook 用の投稿文 + ハッシュタグ</div>
@@ -1808,18 +1808,18 @@ function PromoToolkitModal({ track, artist, onClose }) {
                   {/* ジャンル未設定の案内 */}
                   {!track.genre && !(track.audio_features?.genres?.length > 0) && (
                     <p style={{ fontSize: 12, color: THEME.textMuted, marginTop: 8, fontFamily: THEME.font }}>
-                      💡 楽曲を分析するとジャンルタグが自動追加されます
+                      楽曲を分析するとジャンルタグが自動追加されます
                     </p>
                   )}
                   <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
                     <button onClick={downloadCard} style={{
                       padding: '10px 24px', borderRadius: 9999, background: THEME.gold, color: '#fff',
                       fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: THEME.font,
-                    }}>📥 PNG をダウンロード ({format === 'feed' ? '1080×1080' : '1080×1920'})</button>
+                    }}>PNG をダウンロード ({format === 'feed' ? '1080×1080' : '1080×1920'})</button>
                     <button onClick={generateCard} style={{
                       padding: '10px 24px', borderRadius: 9999, background: THEME.card, color: THEME.textSub,
                       fontSize: 13, fontWeight: 600, border: `1.5px solid ${THEME.border}`, cursor: 'pointer', fontFamily: THEME.font,
-                    }}>🔄 再生成</button>
+                    }}>再生成</button>
                   </div>
                 </div>
               )}
@@ -1840,7 +1840,7 @@ function PromoToolkitModal({ track, artist, onClose }) {
               {captions && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                   {['instagram', 'x', 'facebook'].map(platform => {
-                    const label = platform === 'instagram' ? '📸 Instagram' : platform === 'x' ? '𝕏 X (Twitter)' : '📘 Facebook';
+                    const label = platform === 'instagram' ? 'Instagram' : platform === 'x' ? 'X (Twitter)' : 'Facebook';
                     const cap = captions[platform];
                     if (!cap) return null;
                     return (
@@ -1899,7 +1899,7 @@ function PromoToolkitModal({ track, artist, onClose }) {
                     width: '100%', padding: '12px', borderRadius: 100, background: THEME.card,
                     border: `1.5px solid ${THEME.border}`, color: THEME.textSub, fontSize: 14, fontWeight: 600,
                     cursor: 'pointer', fontFamily: THEME.font, marginTop: 8,
-                  }}>🔄 再生成</button>
+                  }}>再生成</button>
                 </div>
               )}
             </div>
@@ -2044,16 +2044,16 @@ function TrackModal({ token, track, onClose, onSuccess }) {
         <label style={lbl}>タイトル <span style={{ color: THEME.coral, fontSize: 10 }}>*必須</span></label>
         <input className="modal-input" style={inp} value={form.title} onChange={e => set('title', e.target.value)} placeholder="楽曲名" />
 
-        <label style={lbl}>▶️ YouTube リンク（任意）</label>
+        <label style={lbl}>YouTube リンク（任意）</label>
         <input className="modal-input" style={inp} value={form.youtube_url} onChange={e => handleYoutubeUrlChange(e.target.value)} placeholder="https://www.youtube.com/watch?v=... または https://youtu.be/..." />
 
-        <label style={lbl}>🟢 Spotify リンク（任意）</label>
+        <label style={lbl}>Spotify リンク（任意）</label>
         <input className="modal-input" style={inp} value={form.spotify_url} onChange={e => handleSpotifyUrlChange(e.target.value)} placeholder="https://open.spotify.com/track/..." />
 
-        <label style={lbl}>☁️ SoundCloud リンク（任意）</label>
+        <label style={lbl}>SoundCloud リンク（任意）</label>
         <input className="modal-input" style={inp} value={form.soundcloud_url} onChange={e => set('soundcloud_url', e.target.value)} placeholder="https://soundcloud.com/artist/track" />
 
-        <label style={lbl}>📀 Bandcamp リンク（任意）</label>
+        <label style={lbl}>Bandcamp リンク（任意）</label>
         <input className="modal-input" style={inp} value={form.bandcamp_url} onChange={e => set('bandcamp_url', e.target.value)} placeholder="https://artist.bandcamp.com/track/..." />
 
         <label style={lbl}>ジャンル（任意）</label>
@@ -2087,11 +2087,11 @@ function TrackModal({ token, track, onClose, onSuccess }) {
             }}>
               {coverPreview && /^(https?:\/\/|data:)/.test(coverPreview)
                 ? <img src={coverPreview} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
-                : <span style={{ fontSize: 28, color: THEME.textMuted }}>🖼️</span>}
+                : <span style={{ width: 28, height: 2, background: THEME.gold, borderRadius: 1, display: 'block' }} />}
             </div>
             <div>
               <button onClick={() => coverInputRef.current?.click()} style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${THEME.border}`, background: THEME.card, color: THEME.text, fontSize: 12, cursor: 'pointer', fontFamily: THEME.font, fontWeight: 500 }}>
-                {coverUploading ? '⏳ アップロード中...' : '画像をアップロード'}
+                {coverUploading ? 'アップロード中...' : '画像をアップロード'}
               </button>
               <p style={{ fontSize: 11, color: THEME.textMuted, marginTop: 4 }}>JPEG, PNG, WebP（5MB以下）</p>
             </div>
@@ -2106,7 +2106,7 @@ function TrackModal({ token, track, onClose, onSuccess }) {
         {/* AI Usage Disclosure */}
         <div style={{ marginTop: 24 }}>
           <label style={{ fontSize: 13, color: THEME.textSub, display: 'block', marginBottom: 10, fontWeight: 600, fontFamily: THEME.font }}>
-            🤖 AI Usage / AI使用状況 <span style={{ color: THEME.coral, fontSize: 10 }}>*必須</span>
+            AI Usage / AI使用状況 <span style={{ color: THEME.coral, fontSize: 10 }}>*必須</span>
           </label>
           {[
             { value: 'human',        label: 'No AI used',    labelJp: 'AIを使用していません',   desc: '作詞・作曲・演奏・録音すべて人間',         ok: true },
@@ -2266,7 +2266,7 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
           <div onClick={() => avatarInputRef.current?.click()} style={{ width: 72, height: 72, borderRadius: '50%', border: `2px dashed ${avatarPreview ? THEME.gold : THEME.border}`, overflow: 'hidden', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: THEME.bg, flexShrink: 0 }}>
-            {avatarPreview ? <img src={avatarPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 28 }}>🎵</span>}
+            {avatarPreview ? <img src={avatarPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 28, color: THEME.gold }}>♪</span>}
           </div>
           <div>
             <button onClick={() => avatarInputRef.current?.click()} style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${THEME.border}`, background: THEME.card, color: THEME.text, fontSize: 12, cursor: 'pointer', fontFamily: THEME.font }}>写真を変更</button>
@@ -2347,15 +2347,15 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${THEME.borderLight}` }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: THEME.text, marginBottom: 12 }}>SNSリンク</div>
           {[
-            { key: 'spotify_url', icon: '🟢', label: 'Spotify' },
-            { key: 'youtube_url', icon: '▶️', label: 'YouTube' },
-            { key: 'instagram_url', icon: '📷', label: 'Instagram' },
-            { key: 'twitter_url', icon: '𝕏', label: 'Twitter / X' },
-            { key: 'facebook_url', icon: '📘', label: 'Facebook' },
-            { key: 'website_url', icon: '🔗', label: 'Webサイト' },
+            { key: 'spotify_url', label: 'Spotify' },
+            { key: 'youtube_url', label: 'YouTube' },
+            { key: 'instagram_url', label: 'Instagram' },
+            { key: 'twitter_url', label: 'Twitter / X' },
+            { key: 'facebook_url', label: 'Facebook' },
+            { key: 'website_url', label: 'Webサイト' },
           ].map(s => (
             <div key={s.key} style={{ marginBottom: 10 }}>
-              <label style={{ fontSize: 11, color: THEME.textMuted, fontWeight: 500 }}>{s.icon} {s.label}</label>
+              <label style={{ fontSize: 11, color: THEME.textMuted, fontWeight: 500 }}>{s.label}</label>
               <input className="modal-input" style={{ ...inp, marginTop: 3 }} value={form[s.key]} onChange={e => set(s.key, e.target.value)} placeholder="https://..." />
             </div>
           ))}

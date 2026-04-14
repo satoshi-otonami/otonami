@@ -95,7 +95,7 @@ export async function GET(request) {
                 <li>AIマッチングでキュレーターを見つけてピッチを送る</li>
               </ol>
             </div>
-            <p style="text-align:center;color:#c4956a;font-weight:600;font-size:15px;">🎁 初回 <span style="color:#e85d3a;">3クレジット</span> をプレゼント中！</p>
+            <p style="text-align:center;color:#c4956a;font-weight:600;font-size:15px;">初回 <span style="color:#e85d3a;">3クレジット</span> をプレゼント中！</p>
             <div style="text-align:center;margin:28px 0;">
               <a href="${APP_URL}/artist/dashboard" style="background:#c4956a;color:#fff;padding:14px 40px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">ダッシュボードへ →</a>
             </div>
@@ -109,7 +109,7 @@ export async function GET(request) {
       });
     } else {
       const curatorSubject = (testMode ? `[TEST] (→${email}) ` : '') +
-        `Welcome to OTONAMI! Your curator profile is ready 🎵`;
+        `Welcome to OTONAMI! Your curator profile is ready`;
       await resend.emails.send({
         from: FROM,
         to: recipientEmail,
@@ -118,7 +118,7 @@ export async function GET(request) {
         html: `
           <div style="max-width:600px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif;background:#1a1a1a;color:#f0ede6;padding:0;">
             <div style="background:#232323;padding:24px 32px;border-bottom:1px solid #3a3a3a;text-align:center;">
-              <span style="font-size:28px;font-weight:700;color:#f0ede6;letter-spacing:1px;">🎵 OTONAMI</span>
+              <span style="font-size:28px;font-weight:700;color:#f0ede6;letter-spacing:1px;">OTONAMI</span>
             </div>
             <div style="padding:40px 32px;">
               <h1 style="font-size:24px;font-weight:700;color:#f0ede6;margin:0 0 8px;">Welcome, ${name}!</h1>

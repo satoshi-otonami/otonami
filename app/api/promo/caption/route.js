@@ -38,11 +38,11 @@ Generate the following in VALID JSON format (no markdown, no backticks):
 
 {
   "instagram": {
-    "en": "English Instagram caption (150-200 chars, engaging, with line breaks using \\n, include 🎵 emoji, end with CTA like 'Link in bio')",
+    "en": "English Instagram caption (150-200 chars, engaging, with line breaks using \\n, no emojis, end with CTA like 'Link in bio')",
     "ja": "Japanese Instagram caption (same style, natural Japanese, not direct translation)"
   },
   "x": {
-    "en": "English X/Twitter post (under 250 chars, punchy, include 1-2 relevant emojis)",
+    "en": "English X/Twitter post (under 250 chars, punchy, no emojis)",
     "ja": "Japanese X/Twitter post (same constraints, natural Japanese)"
   },
   "facebook": {

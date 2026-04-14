@@ -37,9 +37,9 @@ async function sendFeedbackNotification(pitch) {
   const status       = pitch.status;
 
   const statusConfig = {
-    accepted: { label: '✅ Accepted / 承認されました', color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: '#10b981' },
-    declined: { label: '❌ Declined / 見送りとなりました', color: '#ef4444', bg: 'rgba(239,68,68,0.10)', border: '#ef4444' },
-    feedback: { label: '💬 Feedback / フィードバック受信', color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: '#a78bfa' },
+    accepted: { label: '✓ Accepted / 承認されました', color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: '#10b981' },
+    declined: { label: 'Declined / 見送りとなりました', color: '#ef4444', bg: 'rgba(239,68,68,0.10)', border: '#ef4444' },
+    feedback: { label: 'Feedback / フィードバック受信', color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: '#a78bfa' },
   };
   const sc = statusConfig[status] || statusConfig.feedback;
 
@@ -82,7 +82,7 @@ async function sendFeedbackNotification(pitch) {
         <!-- Placement info -->
         <div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:10px;padding:16px 18px;margin-bottom:20px;">
           <div style="color:#38bdf8;font-size:13px;font-weight:800;margin-bottom:8px;">
-            🎉 Your track was featured! / あなたの楽曲が紹介されました！
+            Your track was featured! / あなたの楽曲が紹介されました！
           </div>
           ${pitch.placement_platform ? `<div style="color:#94a3b8;font-size:12px;margin-bottom:6px;">Platform: <strong style="color:#38bdf8;">${pitch.placement_platform}</strong></div>` : ''}
           <a href="${pitch.placement_url}" style="color:#0ea5e9;font-size:13px;word-break:break-all;">${pitch.placement_url}</a>

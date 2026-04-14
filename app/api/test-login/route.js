@@ -9,7 +9,7 @@ export async function GET(request) {
   // /api/test-login だけでアクセスした場合 → 使い方を表示
   if (action === 'info') {
     return NextResponse.json({
-      message: '🧪 Curator Login API Test Page',
+      message: 'Curator Login API Test Page',
       usage: {
         'テスト1: シードキュレーターにパスワード設定': `${baseUrl}/api/test-login?action=set_password&email=patrickstmichel@gmail.com&password=test123`,
         'テスト2: ログインテスト': `${baseUrl}/api/test-login?action=login&email=patrickstmichel@gmail.com&password=test123`,

@@ -396,7 +396,7 @@ function LyricVideoEditor() {
     <div style={{ minHeight: '100vh', background: THEME.bg, color: THEME.text, fontFamily: THEME.font, padding: '24px 16px' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         <h1 style={{ fontFamily: THEME.fontHead, fontWeight: 800, fontSize: 28, margin: '0 0 8px 0', background: `linear-gradient(135deg, ${THEME.coral}, ${THEME.pink}, ${THEME.purple})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          🎬 リリックMV ジェネレーター
+          リリックMV ジェネレーター
         </h1>
         <p style={{ color: THEME.textSub, fontSize: 14, margin: '0 0 24px 0' }}>
           楽曲をアップロード → AI歌詞書き起こし → テンプレート選択 → 動画エクスポート
@@ -406,7 +406,7 @@ function LyricVideoEditor() {
 
         {error && (
           <div style={{ padding: 14, marginBottom: 16, background: 'rgba(255, 61, 110, 0.12)', border: `1px solid ${THEME.pink}`, borderRadius: 10, color: THEME.pink, fontSize: 13 }}>
-            ⚠️ {error}
+            {error}
           </div>
         )}
 
@@ -603,7 +603,7 @@ function StepTranscribe({
                 fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: THEME.font,
               }}
             >
-              🤖 AIで自動書き起こし
+              AIで自動書き起こし
             </button>
             <button
               onClick={() => setMode('manual')}
@@ -615,7 +615,7 @@ function StepTranscribe({
                 fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: THEME.font,
               }}
             >
-              📝 歌詞を貼り付け
+              歌詞を貼り付け
             </button>
           </div>
 
@@ -649,7 +649,7 @@ function StepTranscribe({
                   ? '書き起こし中…（時間がかかります）'
                   : !duration
                     ? '音声の長さを読み込み中…'
-                    : '歌詞を書き起こす 🎤'}
+                    : '歌詞を書き起こす'}
               </button>
             </>
           )}
@@ -753,7 +753,7 @@ function StepTranscribe({
               background: 'rgba(255, 61, 110, 0.12)', border: `1px solid ${THEME.pink}`, borderRadius: 8,
               color: THEME.pink, fontSize: 12,
             }}>
-              ⚠️ {bgError}
+              {bgError}
             </div>
           )}
 
@@ -769,7 +769,7 @@ function StepTranscribe({
           >
             {isGeneratingBg
               ? '背景を生成中… (20〜30秒)'
-              : backgroundUrl ? '🔄 背景を再生成' : '🎨 AIで背景を生成'}
+              : backgroundUrl ? '背景を再生成' : 'AIで背景を生成'}
           </button>
 
           <button
@@ -889,7 +889,7 @@ function StepPreview(props) {
             cursor: isExporting ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
           }}
         >
-          {isExporting ? `エクスポート中… ${exportProgress}%` : 'WebM でエクスポート 📥'}
+          {isExporting ? `エクスポート中… ${exportProgress}%` : 'WebM でエクスポート'}
         </button>
 
         {isExporting && (

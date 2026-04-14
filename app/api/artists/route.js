@@ -137,7 +137,7 @@ export async function POST(request) {
                   <td style="padding:8px;">${(rest.genres || []).join(', ') || '-'}</td></tr>
               <tr style="background:#f9f9f9;">
                   <td style="padding:8px;color:#666;">メール認証</td>
-                  <td style="padding:8px;">⏳ 未認証</td></tr>
+                  <td style="padding:8px;">未認証</td></tr>
             </table>
             <p style="margin-top:24px;color:#888;font-size:13px;">
               Supabaseで確認:

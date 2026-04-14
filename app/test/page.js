@@ -28,7 +28,7 @@ export default function TestLoginPage() {
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'monospace', maxWidth: 800, margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>🧪 Curator Login API Test</h1>
+      <h1 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Curator Login API Test</h1>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <button
@@ -64,7 +64,7 @@ export default function TestLoginPage() {
         </button>
       </div>
 
-      {loading && <p style={{ marginTop: '1rem', color: '#666' }}>⏳ Loading...</p>}
+      {loading && <p style={{ marginTop: '1rem', color: '#666' }}>Loading...</p>}
 
       {result && (
         <div style={{
@@ -78,7 +78,7 @@ export default function TestLoginPage() {
           fontSize: '0.85rem',
         }}>
           <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            {result.ok ? '✅ Success' : '❌ Error'} — Status: {result.status}
+            {result.ok ? '✓ Success' : 'Error'} — Status: {result.status}
           </div>
           {JSON.stringify(result.data, null, 2)}
         </div>

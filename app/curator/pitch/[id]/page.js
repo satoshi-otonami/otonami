@@ -192,10 +192,10 @@ function PitchView({ pitchId }) {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
-      if (!res.ok) { showToast('❌ Failed to submit. Please try again.'); return; }
+      if (!res.ok) { showToast('Failed to submit. Please try again.'); return; }
       setPitch(prev => ({ ...prev, status, feedback_message: feedbackText.trim(), placement_url: body.placement_url, placement_platform: body.placement_platform }));
       setDone(true);
-      showToast('✅ Feedback submitted!');
+      showToast('✓ Feedback submitted!');
     } finally {
       setUpdating(false);
     }
@@ -215,7 +215,7 @@ function PitchView({ pitchId }) {
 
   if (error) return (
     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
-      <div style={{ fontSize: 40 }}>⚠️</div>
+      <div style={{ width: 48, height: 2, background: '#c4956a', borderRadius: 1 }} />
       <p style={{ color: '#ef4444', fontSize: 14, fontFamily: T.font }}>{error}</p>
       <a href="/curator/dashboard" style={{ color: T.accent, fontSize: 13, fontFamily: T.font }}>← Go to Dashboard</a>
     </div>
@@ -252,7 +252,7 @@ function PitchView({ pitchId }) {
         padding: '20px 22px', marginBottom: 14, boxShadow: T.shadow,
       }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: T.accentLight, border: `1px solid ${T.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🎵</div>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: T.accentLight, border: `1px solid ${T.accentBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0, color: '#c4956a', fontFamily: T.fontDisplay }}>♪</div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
               <span style={{ color: T.text, fontWeight: 800, fontSize: 20, fontFamily: T.font }}>
@@ -272,13 +272,13 @@ function PitchView({ pitchId }) {
               )}
               {pitch.track_ai_status === 'ai_assisted' && (
                 <span title="AI used as a creative tool (lyrics, mixing, etc.)" style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, color: '#c2410c', background: '#ffedd5', border: '1px solid #fed7aa', fontFamily: T.font }}>
-                  🤖 AI-assisted
+                  AI-assisted
                 </span>
               )}
             </div>
             {pitch.song_title && (
               <div style={{ color: T.textSub, fontSize: 14, marginBottom: 6, fontFamily: T.font }}>
-                🎵 &ldquo;{pitch.song_title}&rdquo;
+                ♪ &ldquo;{pitch.song_title}&rdquo;
               </div>
             )}
             {pitch.song_link && (
@@ -338,7 +338,7 @@ function PitchView({ pitchId }) {
           /* 送信済み */
           <div>
             <div style={{ color: T.green, fontWeight: 700, fontSize: 15, marginBottom: 12, fontFamily: T.font }}>
-              ✅ Feedback submitted! / フィードバックを送信しました
+              ✓ Feedback submitted! / フィードバックを送信しました
             </div>
             {pitch.feedback_message && (
               <div style={{ color: T.textSub, fontSize: 13, lineHeight: 1.7, background: T.bg, borderRadius: 10, padding: '12px 16px', border: `1px solid ${T.border}`, marginBottom: 10, fontFamily: T.font }}>
@@ -455,7 +455,7 @@ function PitchView({ pitchId }) {
                       fontWeight: 700, fontSize: 13, cursor: canAccept ? 'pointer' : 'not-allowed',
                       fontFamily: T.font, transition: 'background 0.15s',
                     }}
-                  >{updating ? '...' : '✅ Accept & Featured'}</button>
+                  >{updating ? '...' : '✓ Accept & Featured'}</button>
 
                   <button
                     onClick={() => submit('feedback')}
@@ -468,7 +468,7 @@ function PitchView({ pitchId }) {
                       fontWeight: 700, fontSize: 13, cursor: canSubmit ? 'pointer' : 'not-allowed',
                       fontFamily: T.font, transition: 'background 0.15s',
                     }}
-                  >{updating ? '...' : '💬 Feedback Only'}</button>
+                  >{updating ? '...' : 'Feedback Only'}</button>
 
                   <button
                     onClick={() => submit('declined')}
@@ -481,7 +481,7 @@ function PitchView({ pitchId }) {
                       fontWeight: 700, fontSize: 13, cursor: canSubmit ? 'pointer' : 'not-allowed',
                       fontFamily: T.font, transition: 'all 0.15s',
                     }}
-                  >{updating ? '...' : '❌ Decline'}</button>
+                  >{updating ? '...' : 'Decline'}</button>
                 </div>
               );
             })()}

@@ -75,7 +75,7 @@ export async function POST(request) {
       },
       html: `
         <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;color:#334155;">
-          ${testMode ? `<div style="background:#fef3c7;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:12px;color:#92400e;">⚠️ TEST MODE — Original recipient: <strong>${email}</strong></div>` : ''}
+          ${testMode ? `<div style="background:#fef3c7;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:12px;color:#92400e;">TEST MODE — Original recipient: <strong>${email}</strong></div>` : ''}
           <div style="text-align:center;margin-bottom:28px;">
             <span style="font-size:24px;font-weight:900;color:#0ea5e9;letter-spacing:2px;">OTONAMI</span>
           </div>

@@ -152,7 +152,7 @@ export default function ArtistRegistrationPage() {
       {renderHeader()}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 64px)', padding: 24 }}>
         <div style={{ textAlign: 'center', maxWidth: 480 }}>
-          <div style={{ fontSize: 64, marginBottom: 24 }}>✉️</div>
+          <div style={{ width: 56, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto 24px' }} />
           <h1 style={{ fontFamily: THEME.fontDisplay, fontSize: 24, fontWeight: 700, color: THEME.text, marginBottom: 12 }}>
             認証メールを送信しました
           </h1>
@@ -271,7 +271,7 @@ export default function ArtistRegistrationPage() {
                 >
                   {avatarPreview
                     ? <img src={avatarPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <div style={{ textAlign: 'center', color: THEME.textMuted }}><div style={{ fontSize: 24 }}>📷</div><div style={{ fontSize: 10, marginTop: 2 }}>Upload</div></div>}
+                    : <div style={{ textAlign: 'center', color: THEME.textMuted }}><div style={{ width: 24, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto' }} /><div style={{ fontSize: 10, marginTop: 4 }}>Upload</div></div>}
                 </div>
                 <div>
                   <button onClick={() => avatarInputRef.current?.click()} style={{ padding: '8px 16px', borderRadius: 8, border: `1px solid ${THEME.border}`, background: THEME.card, color: THEME.text, fontSize: 13, cursor: 'pointer', fontFamily: THEME.font, fontWeight: 500 }}>写真を選択</button>
@@ -382,16 +382,16 @@ export default function ArtistRegistrationPage() {
                 <p style={{ fontSize: 12, color: THEME.textMuted, marginBottom: 16 }}>キュレーターがあなたの活動を確認できるようになります</p>
 
                 {[
-                  { key: 'spotify_url', icon: '🎵', label: 'Spotify', ph: 'https://open.spotify.com/artist/...' },
-                  { key: 'youtube_url', icon: '▶️', label: 'YouTube', ph: 'https://youtube.com/@...' },
-                  { key: 'instagram_url', icon: '📷', label: 'Instagram', ph: 'https://instagram.com/...' },
-                  { key: 'twitter_url', icon: '𝕏', label: 'Twitter / X', ph: 'https://x.com/...' },
-                  { key: 'facebook_url', icon: '📘', label: 'Facebook', ph: 'https://facebook.com/...' },
-                  { key: 'website_url', icon: '🔗', label: 'Webサイト', ph: 'https://...' },
+                  { key: 'spotify_url', label: 'Spotify', ph: 'https://open.spotify.com/artist/...' },
+                  { key: 'youtube_url', label: 'YouTube', ph: 'https://youtube.com/@...' },
+                  { key: 'instagram_url', label: 'Instagram', ph: 'https://instagram.com/...' },
+                  { key: 'twitter_url', label: 'Twitter / X', ph: 'https://x.com/...' },
+                  { key: 'facebook_url', label: 'Facebook', ph: 'https://facebook.com/...' },
+                  { key: 'website_url', label: 'Webサイト', ph: 'https://...' },
                 ].map(s => (
                   <div key={s.key} style={{ marginBottom: 12 }}>
                     <label style={{ fontSize: 12, color: THEME.textSub, fontWeight: 500, fontFamily: THEME.font }}>
-                      <span style={{ marginRight: 6 }}>{s.icon}</span>{s.label}
+                      {s.label}
                     </label>
                     <input className="artist-input" style={{ ...inp, marginTop: 4 }} value={form[s.key]} onChange={e => set(s.key, e.target.value)} placeholder={s.ph} />
                   </div>

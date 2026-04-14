@@ -37,14 +37,14 @@ const MOOD_OPTIONS = [
 ];
 
 const OPPORTUNITY_OPTIONS = [
-  { value: 'playlist',  icon: '🎵', en: 'Playlist Add',       ja: 'プレイリストに追加' },
-  { value: 'blog',      icon: '📝', en: 'Written Review',      ja: 'ブログ記事・レビュー' },
-  { value: 'social',    icon: '📱', en: 'Social Media Share',  ja: 'SNSで紹介' },
-  { value: 'radio',     icon: '📻', en: 'Radio Play',          ja: 'ラジオで放送' },
-  { value: 'reel',      icon: '🎬', en: 'Post / Reel',         ja: 'SNS投稿・リール' },
-  { value: 'interview', icon: '🎤', en: 'Interview',           ja: 'インタビュー' },
-  { value: 'event',     icon: '🎪', en: 'Event / Festival',    ja: 'イベント・フェス' },
-  { value: 'label',     icon: '💿', en: 'Label Consideration', ja: 'レーベル検討' },
+  { value: 'playlist',  icon: '♪', en: 'Playlist Add',       ja: 'プレイリストに追加' },
+  { value: 'blog',      icon: '•', en: 'Written Review',      ja: 'ブログ記事・レビュー' },
+  { value: 'social',    icon: '•', en: 'Social Media Share',  ja: 'SNSで紹介' },
+  { value: 'radio',     icon: '♫', en: 'Radio Play',          ja: 'ラジオで放送' },
+  { value: 'reel',      icon: '•', en: 'Post / Reel',         ja: 'SNS投稿・リール' },
+  { value: 'interview', icon: '•', en: 'Interview',           ja: 'インタビュー' },
+  { value: 'event',     icon: '•', en: 'Event / Festival',    ja: 'イベント・フェス' },
+  { value: 'label',     icon: '○', en: 'Label Consideration', ja: 'レーベル検討' },
 ];
 
 const RESPONSE_TIME_OPTIONS = [
@@ -370,9 +370,9 @@ export default function CuratorRegistrationPage() {
   if (loginStatus === 'success' && loggedInCurator) return (
     <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 480 }}>
-        <div style={{ fontSize: 72, marginBottom: 20 }}>👋</div>
+        <div style={{ width: 48, height: 2, background: '#c4956a', margin: '0 auto 28px', borderRadius: 1 }} />
         <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12, color: T.text, fontFamily: T.fontDisplay }}>
-          Welcome back, {loggedInCurator.name}!
+          Welcome back, {loggedInCurator.name}
         </h1>
         <p style={{ color: T.textSub, lineHeight: 1.8, fontSize: 15, fontFamily: T.font }}>
           You are now logged in as a curator.<br />
@@ -387,7 +387,7 @@ export default function CuratorRegistrationPage() {
   if (status === 'success') return (
     <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 480 }}>
-        <div style={{ fontSize: 64, marginBottom: 24 }}>✉️</div>
+        <div style={{ width: 56, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto 24px' }} />
         <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12, color: T.text, fontFamily: T.fontDisplay }}>
           認証メールを送信しました
         </h1>
@@ -605,7 +605,7 @@ export default function CuratorRegistrationPage() {
               )}
               {loginOtpStep && (
                 <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                  <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
+                  <div style={{ width: 48, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto 16px' }} />
                   <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a', marginBottom: 8, fontFamily: T.fontDisplay }}>Enter verification code</h3>
                   <p style={{ fontSize: 13, color: '#6b6560', marginBottom: 24 }}>{loginMaskedEmail} に認証コードを送信しました</p>
                   <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
@@ -678,14 +678,14 @@ export default function CuratorRegistrationPage() {
                         {avatarPreview
                           ? <img src={avatarPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           : <div style={{ textAlign: 'center', color: avatarDragOver ? T.accent : T.textMuted }}>
-                              <div style={{ fontSize: 20 }}>📷</div>
-                              <div style={{ fontSize: 9, marginTop: 2, fontFamily: T.font }}>{avatarDragOver ? 'Drop!' : 'Upload'}</div>
+                              <div style={{ width: 20, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto' }} />
+                              <div style={{ fontSize: 9, marginTop: 4, fontFamily: T.font }}>{avatarDragOver ? 'Drop!' : 'Upload'}</div>
                             </div>
                         }
                       </div>
                       <div>
                         <button onClick={() => avatarInputRef.current?.click()} style={{ padding: '7px 14px', border: `1px solid ${T.border}`, borderRadius: 8, background: T.white, color: T.textSub, fontSize: 12, cursor: 'pointer', fontFamily: T.font }}>
-                          {avatarPreview ? 'Change / 変更' : '📷 Upload Photo'}
+                          {avatarPreview ? 'Change / 変更' : 'Upload Photo'}
                         </button>
                         {avatarPreview && (
                           <button onClick={() => { setAvatarFile(null); setAvatarPreview(null); }} style={{ marginLeft: 8, background: 'none', border: 'none', color: '#ef4444', fontSize: 12, cursor: 'pointer', fontFamily: T.font }}>Remove</button>
@@ -879,8 +879,8 @@ export default function CuratorRegistrationPage() {
                             <div style={{ fontSize: 13, fontWeight: 700, color: '#c4956a', marginTop: 2 }}>¥{yen}</div>
                             <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>~${usd}</div>
                             {t === 2 && (
-                              <div style={{ position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)', fontSize: 9, fontWeight: 700, color: '#fff', background: '#c4956a', padding: '2px 6px', borderRadius: 8, whiteSpace: 'nowrap' }}>
-                                ⭐ 推奨
+                              <div style={{ position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)', fontSize: 9, fontWeight: 700, color: '#fff', background: '#c4956a', padding: '2px 8px', borderRadius: 999, whiteSpace: 'nowrap', letterSpacing: '0.03em' }}>
+                                Recommended
                               </div>
                             )}
                           </button>
@@ -890,8 +890,8 @@ export default function CuratorRegistrationPage() {
                     <div style={{
                       marginTop: 14,
                       background: '#fffcf8',
-                      border: '1px solid #e8ddd0',
-                      borderRadius: 12,
+                      borderLeft: '3px solid #c4956a',
+                      borderRadius: 4,
                       padding: '14px 18px',
                       fontSize: 13,
                       color: '#6b6560',
@@ -899,7 +899,7 @@ export default function CuratorRegistrationPage() {
                       fontFamily: T.font,
                     }}>
                       <div style={{ fontWeight: 600, color: '#1a1a2e', marginBottom: 4, fontSize: 14 }}>
-                        💡 How tier affects your pitches
+                        How tier affects your pitches
                       </div>
                       <div>
                         Higher tier = more pay per review, but artists spend more credits to pitch you,
@@ -926,15 +926,12 @@ export default function CuratorRegistrationPage() {
               {/* ── STEP 3: Profile Details ── */}
               {registerStep === 3 && (
                 <>
-                  <div className="payout-notice" style={{ background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                    <span style={{ fontSize: 20 }}>💰</span>
-                    <div>
-                      <p style={{ color: T.accent, fontWeight: 700, margin: 0, fontSize: 14, fontFamily: T.font }}>Curator Payout Policy</p>
-                      <p style={{ color: T.textSub, fontSize: 12, margin: '4px 0 0', lineHeight: 1.6, fontFamily: T.font }}>
-                        Minimum payout: <strong style={{ color: T.text }}>¥5,000 / $50 USD</strong> via PayPal.<br />
-                        <span style={{ color: T.textMuted }}>最低支払い額：PayPal経由で5,000円 / 50ドル以上</span>
-                      </p>
-                    </div>
+                  <div className="payout-notice" style={{ background: T.accentLight, borderLeft: `3px solid ${T.accent}`, borderRadius: 4, padding: '14px 20px', marginBottom: 20 }}>
+                    <p style={{ color: T.accent, fontWeight: 700, margin: 0, fontSize: 14, fontFamily: T.font }}>Curator Payout Policy</p>
+                    <p style={{ color: T.textSub, fontSize: 12, margin: '4px 0 0', lineHeight: 1.6, fontFamily: T.font }}>
+                      Minimum payout: <strong style={{ color: T.text }}>¥5,000 / $50 USD</strong> via PayPal.<br />
+                      <span style={{ color: T.textMuted }}>最低支払い額：PayPal経由で5,000円 / 50ドル以上</span>
+                    </p>
                   </div>
 
                   <div className="register-card curator-form" style={{ background: '#fff', borderRadius: 20, padding: '40px 36px', border: `1px solid ${T.border}`, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
@@ -996,9 +993,9 @@ export default function CuratorRegistrationPage() {
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {[
-                          { icon: '🌐', key: 'socialWebsite',   ph: 'https://your-website.com' },
-                          { icon: '𝕏',  key: 'socialTwitter',   ph: 'https://x.com/yourhandle' },
-                          { icon: '📸', key: 'socialInstagram', ph: 'https://instagram.com/yourhandle' },
+                          { icon: '•', key: 'socialWebsite',   ph: 'https://your-website.com' },
+                          { icon: '𝕏', key: 'socialTwitter',   ph: 'https://x.com/yourhandle' },
+                          { icon: '•', key: 'socialInstagram', ph: 'https://instagram.com/yourhandle' },
                         ].map(({ icon, key, ph }) => (
                           <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             <span style={{ fontSize: 18, flexShrink: 0, width: 24, textAlign: 'center' }}>{icon}</span>
@@ -1020,15 +1017,15 @@ export default function CuratorRegistrationPage() {
                     {/* How you get paid — 報酬の仕組み */}
                     <div style={{
                       background: 'linear-gradient(135deg, #fffcf8 0%, #fff5ee 100%)',
-                      border: '1px solid #e8ddd0',
-                      borderRadius: 16,
-                      padding: '20px 22px',
+                      borderLeft: '3px solid #c4956a',
+                      borderRadius: 4,
+                      padding: '20px 24px',
                       marginBottom: 24,
                       marginTop: 8,
                       fontFamily: T.font,
                     }}>
                       <h4 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a2e', marginBottom: 12, fontFamily: T.fontDisplay }}>
-                        💰 How you earn / 報酬の仕組み
+                        How you earn / 報酬の仕組み
                       </h4>
                       <div style={{ fontSize: 14, color: '#4a4540', lineHeight: 1.7, marginBottom: 12 }}>
                         <div style={{ marginBottom: 6 }}>
@@ -1062,7 +1059,7 @@ export default function CuratorRegistrationPage() {
                         </div>
                       </div>
                       <div style={{ fontSize: 12, color: '#998b7d', lineHeight: 1.5 }}>
-                        💡 You chose {form.tier} credits — you&apos;ll earn ¥{form.tier * 80} (~${(form.tier * 80 / 150).toFixed(2)}) per review.
+                        You chose {form.tier} credits — you&apos;ll earn ¥{form.tier * 80} (~${(form.tier * 80 / 150).toFixed(2)}) per review.
                         You can change this anytime from your dashboard.
                       </div>
                     </div>
@@ -1075,7 +1072,7 @@ export default function CuratorRegistrationPage() {
                       <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="number" value={form.followers} placeholder="e.g. 5000" onChange={e => set('followers', e.target.value)} />
                       <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginTop: 20 }}>
                         <div style={{ fontSize: 13, color: T.accent, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
-                          💰 Payment Method <span style={{ fontWeight: 400, fontSize: 11, color: T.textMuted }}>支払い受取方法（任意）</span>
+                          Payment Method <span style={{ fontWeight: 400, fontSize: 11, color: T.textMuted }}>支払い受取方法（任意）</span>
                         </div>
                         <select className="curator-input" style={{ ...inp, marginTop: 8, appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23999\' d=\'M6 8L1 3h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center' }} value={form.paymentMethod} onChange={e => set('paymentMethod', e.target.value)}>
                           <option value="paypal">PayPal</option>
@@ -1122,7 +1119,7 @@ export default function CuratorRegistrationPage() {
                     )}
                     {error && error !== 'already_registered' && (
                       <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '12px 16px', marginTop: 16, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                        <span style={{ fontSize: 16, flexShrink: 0, lineHeight: 1.4 }}>⚠</span>
+                        <span style={{ width: 3, alignSelf: 'stretch', background: '#dc2626', borderRadius: 2, flexShrink: 0 }} />
                         <p style={{ color: '#dc2626', fontSize: 13, margin: 0, fontFamily: T.font, whiteSpace: 'pre-line', lineHeight: 1.6 }}>{error}</p>
                       </div>
                     )}

@@ -283,7 +283,7 @@ export default function ArtistLoginPage() {
             /* OTP Step */
             <>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ width: 56, height: 56, borderRadius: '50%', background: `${THEME.gold}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 28 }}>🔐</div>
+                <div style={{ width: 48, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto 20px' }} />
                 <h1 style={{ fontFamily: THEME.fontDisplay, fontSize: 20, fontWeight: 700, color: THEME.text, margin: '0 0 8px' }}>認証コードを入力</h1>
                 <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.6, margin: '0 0 28px' }}>
                   {maskedEmail} に6桁の認証コードを送信しました

@@ -62,6 +62,7 @@ export default function ArtistRegistrationPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [createdArtist, setCreatedArtist] = useState(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
   const toggleArray = (key, val, max) => {
@@ -423,15 +424,30 @@ export default function ArtistRegistrationPage() {
               )}
               {error && error !== 'already_registered' && <p style={{ color: THEME.coral, fontSize: 13, marginTop: 16, fontFamily: THEME.font }}>{error}</p>}
 
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 20, fontSize: 13, lineHeight: 1.6, fontFamily: THEME.font, color: THEME.textSub, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  style={{ marginTop: 3, accentColor: THEME.coral }}
+                />
+                <span>
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#FF6B4A', textDecoration: 'underline' }}>利用規約</a>
+                  および
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#FF6B4A', textDecoration: 'underline' }}>プライバシーポリシー</a>
+                  に同意します
+                </span>
+              </label>
+
               <div style={{ display: 'flex', gap: 12, marginTop: 28 }}>
                 <button onClick={() => goToStep(2)} style={{ flex: 1, padding: '14px', borderRadius: 100, background: THEME.card, border: `1.5px solid ${THEME.border}`, color: THEME.textSub, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: THEME.font }}>
                   ← 戻る
                 </button>
-                <button onClick={handleSubmit} disabled={loading} className="btn-coral" style={{
+                <button onClick={handleSubmit} disabled={loading || !agreedToTerms} className="btn-coral" style={{
                   flex: 1, padding: '14px', borderRadius: 100, border: 'none',
-                  background: loading ? THEME.border : THEME.coral,
+                  background: (loading || !agreedToTerms) ? THEME.border : THEME.coral,
                   color: '#fff', fontSize: 15, fontWeight: 700,
-                  cursor: loading ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
+                  cursor: (loading || !agreedToTerms) ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}>
                   {loading ? <><Spinner /> 登録中...</> : '登録する'}

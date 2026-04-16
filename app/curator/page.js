@@ -99,6 +99,7 @@ export default function CuratorRegistrationPage() {
   const [openToAllGenres, setOpenToAllGenres] = useState(false);
   const [status, setStatus] = useState(null);
   const [error, setError] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useEffect(() => {
     try {
@@ -1124,9 +1125,24 @@ export default function CuratorRegistrationPage() {
                       </div>
                     )}
 
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 20, fontSize: 13, lineHeight: 1.6, fontFamily: T.font, color: T.textSub, cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={agreedToTerms}
+                        onChange={(e) => setAgreedToTerms(e.target.checked)}
+                        style={{ marginTop: 3, accentColor: '#c4956a' }}
+                      />
+                      <span>
+                        <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: '#FF6B4A', textDecoration: 'underline' }}>利用規約</a>
+                        {' '}and{' '}
+                        <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#FF6B4A', textDecoration: 'underline' }}>プライバシーポリシー</a>
+                        {' '}に同意します / I agree to the Terms & Privacy Policy
+                      </span>
+                    </label>
+
                     <div className="step-btns-row" style={{ display: 'flex', gap: 10, marginTop: 28 }}>
                       <button onClick={() => setRegisterStep(2)} className="step-btn-back" style={{ padding: '14px 20px', height: 48, border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>
-                      <button onClick={handleSubmit} disabled={status === 'loading' || avatarUploading} style={{ flex: 1, padding: '16px', height: 48, background: (status === 'loading' || avatarUploading) ? T.border : '#c4956a', border: 'none', borderRadius: 12, color: '#fff', fontSize: 16, fontWeight: 600, cursor: (status === 'loading' || avatarUploading) ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background 0.15s', boxShadow: '0 4px 16px rgba(196,149,106,0.25)' }}>
+                      <button onClick={handleSubmit} disabled={status === 'loading' || avatarUploading || !agreedToTerms} style={{ flex: 1, padding: '16px', height: 48, background: (status === 'loading' || avatarUploading || !agreedToTerms) ? T.border : '#c4956a', border: 'none', borderRadius: 12, color: '#fff', fontSize: 16, fontWeight: 600, cursor: (status === 'loading' || avatarUploading || !agreedToTerms) ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background 0.15s', boxShadow: (status === 'loading' || avatarUploading || !agreedToTerms) ? 'none' : '0 4px 16px rgba(196,149,106,0.25)' }}>
                         {avatarUploading ? 'Uploading... / アップロード中...' : status === 'loading' ? 'Submitting... / 送信中...' : 'Complete Registration / 登録完了 →'}
                       </button>
                     </div>
@@ -1150,6 +1166,11 @@ export default function CuratorRegistrationPage() {
           <span>OTONAMI — Connecting Japanese Music to the World</span>
           <span style={{ margin: '0 8px' }}>·</span>
           <span>TYCompany LLC</span>
+        </div>
+        <div style={{ marginTop: 8, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <a href="/tokushoho" style={{ color: T.textMuted, textDecoration: 'none', fontSize: 12, transition: 'color 0.2s' }}>特定商取引法に基づく表記</a>
+          <a href="/privacy" style={{ color: T.textMuted, textDecoration: 'none', fontSize: 12, transition: 'color 0.2s' }}>プライバシーポリシー</a>
+          <a href="/terms" style={{ color: T.textMuted, textDecoration: 'none', fontSize: 12, transition: 'color 0.2s' }}>利用規約</a>
         </div>
       </footer>
     </div>

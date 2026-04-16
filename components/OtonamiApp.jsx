@@ -864,7 +864,8 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       {page==="shop" && <CreditShop user={user} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage}/>}
     </main>
     <footer style={{borderTop:"1px solid rgba(0,0,0,0.05)",padding:"1.2rem 1.5rem",textAlign:"center",background:"#f8f7f4",fontSize:"0.72rem",color:"#9a958e"}}>
-      OTONAMI — Connecting Japanese Music to the World | TYCompany LLC / ILCJ
+      <div>OTONAMI — Connecting Japanese Music to the World | TYCompany LLC / ILCJ</div>
+      <div style={{marginTop:6,display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap"}}><a href="/tokushoho" style={{color:"#9a958e",textDecoration:"none",transition:"color 0.2s"}}>特定商取引法に基づく表記</a><a href="/privacy" style={{color:"#9a958e",textDecoration:"none",transition:"color 0.2s"}}>プライバシーポリシー</a><a href="/terms" style={{color:"#9a958e",textDecoration:"none",transition:"color 0.2s"}}>利用規約</a></div>
     </footer>
   </>;
 }

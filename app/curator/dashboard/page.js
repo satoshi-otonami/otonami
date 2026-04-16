@@ -1296,9 +1296,16 @@ export default function CuratorDashboard() {
 
       {/* ── Footer ── */}
       <footer style={{ padding: '32px 24px', background: T.white, borderTop: `1px solid ${T.border}`, textAlign: 'center', fontFamily: T.font, fontSize: 13, color: T.textMuted }}>
-        <span>OTONAMI — Connecting Japanese Music to the World</span>
-        <span style={{ margin: '0 8px' }}>·</span>
-        <span>TYCompany LLC</span>
+        <div>
+          <span>OTONAMI — Connecting Japanese Music to the World</span>
+          <span style={{ margin: '0 8px' }}>·</span>
+          <span>TYCompany LLC</span>
+        </div>
+        <div style={{ marginTop: 8, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <a href="/tokushoho" style={{ color: T.textMuted, textDecoration: 'none', fontSize: 12, transition: 'color 0.2s' }}>特定商取引法に基づく表記</a>
+          <a href="/privacy" style={{ color: T.textMuted, textDecoration: 'none', fontSize: 12, transition: 'color 0.2s' }}>プライバシーポリシー</a>
+          <a href="/terms" style={{ color: T.textMuted, textDecoration: 'none', fontSize: 12, transition: 'color 0.2s' }}>利用規約</a>
+        </div>
       </footer>
     </div>
   );

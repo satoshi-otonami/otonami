@@ -220,46 +220,22 @@ export async function POST(request) {
       const hash = await bcrypt.hash(password, 10);
       const newResult = await callCuratorAuth('create', email, hash, name);
 
-      // Admin notification (non-fatal) — DEBUG INSTRUMENTED
-      console.log('[ADMIN-NOTIFY-LOGIN] reach block', JSON.stringify({
-        name,
-        email,
-        hasKey: !!process.env.RESEND_API_KEY,
-        keyPrefix: (process.env.RESEND_API_KEY || '').substring(0, 10),
-        keyLen: (process.env.RESEND_API_KEY || '').length,
-        emailFrom: process.env.EMAIL_FROM || 'info@otonami.io',
-        emailTestRedirectSet: !!process.env.EMAIL_TEST_REDIRECT,
-        emailTestMode: process.env.EMAIL_TEST_MODE === 'true',
-      }));
+      // Admin notification (non-fatal)
       try {
         const { Resend: R } = await import('resend');
         const notifier = new R(process.env.RESEND_API_KEY || 'placeholder');
         const isTest = process.env.EMAIL_TEST_MODE === 'true';
         const adminTo = process.env.EMAIL_TEST_REDIRECT || 'satoshiy339@gmail.com';
-        const adminSendResult = await notifier.emails.send({
+        await notifier.emails.send({
           from: `OTONAMI <${process.env.EMAIL_FROM || 'info@otonami.io'}>`,
           to: adminTo,
           reply_to: 'info@otonami.io',
           subject: (isTest ? '[TEST] ' : '') + `【OTONAMI】新規キュレーター登録: ${name}`,
           text: `新規キュレーター登録 (via login route)\n\n名前: ${name}\nメール: ${email}`,
         });
-        console.log('[ADMIN-NOTIFY-LOGIN] resend.send returned', JSON.stringify({
-          dataId: adminSendResult?.data?.id ?? null,
-          error: adminSendResult?.error ?? null,
-        }));
-        if (adminSendResult?.error) {
-          console.error('[ADMIN-NOTIFY-LOGIN] resend returned error field:', JSON.stringify(adminSendResult.error));
-        } else {
-          console.log('[ADMIN-NOTIFY-LOGIN] sent OK for:', name, 'id=', adminSendResult?.data?.id);
-        }
+        console.log('Admin notification sent for (login):', name);
       } catch (notifyErr) {
-        console.error('[ADMIN-NOTIFY-LOGIN] threw exception', JSON.stringify({
-          type: notifyErr?.constructor?.name,
-          name: notifyErr?.name,
-          message: notifyErr?.message,
-          statusCode: notifyErr?.statusCode,
-          stack: notifyErr?.stack,
-        }));
+        console.error('Admin notification failed (non-fatal):', notifyErr);
       }
 
       const token = await signToken({ id: newResult.id, email, name: newResult.name, role: 'curator' });

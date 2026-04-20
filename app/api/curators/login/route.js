@@ -226,14 +226,19 @@ export async function POST(request) {
         const notifier = new R(process.env.RESEND_API_KEY || 'placeholder');
         const isTest = process.env.EMAIL_TEST_MODE === 'true';
         const adminTo = process.env.EMAIL_TEST_REDIRECT || 'satoshiy339@gmail.com';
-        await notifier.emails.send({
+        const adminSendResult = await notifier.emails.send({
           from: `OTONAMI <${process.env.EMAIL_FROM || 'info@otonami.io'}>`,
           to: adminTo,
           reply_to: 'info@otonami.io',
           subject: (isTest ? '[TEST] ' : '') + `【OTONAMI】新規キュレーター登録: ${name}`,
           text: `新規キュレーター登録 (via login route)\n\n名前: ${name}\nメール: ${email}`,
         });
-        console.log('Admin notification sent for (login):', name);
+        if (adminSendResult?.error) {
+          // Resend SDK v4 returns API errors via { error } without throwing.
+          console.error('Admin notification (login): Resend returned error:', JSON.stringify(adminSendResult.error));
+        } else {
+          console.log('Admin notification sent for (login):', name, 'id=', adminSendResult?.data?.id);
+        }
       } catch (notifyErr) {
         console.error('Admin notification failed (non-fatal):', notifyErr);
       }

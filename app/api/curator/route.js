@@ -134,7 +134,7 @@ export async function POST(request) {
     // 2. Satoshiへの通知メール (non-fatal)
     try {
     const adminSubject = (testMode ? '[TEST] ' : '') + `【OTONAMI】新規キュレーター登録: ${form.name}`;
-    await resend.emails.send({
+    const adminSendResult = await resend.emails.send({
       from: FROM,
       to: safeEmail,
       reply_to: 'info@otonami.io',
@@ -186,7 +186,13 @@ export async function POST(request) {
       `,
       text: `新規キュレーター登録\n\n名前: ${form.name}\nメール: ${form.email}\n媒体名: ${form.outletName}\nタイプ: ${form.type}\nURL: ${form.url || '-'}\nフォロワー: ${form.followers || 0}\nリージョン: ${form.region}\nジャンル: ${(form.genres || []).join(', ') || '-'}\nBio: ${form.bio || '-'}`,
     });
-    console.log('Admin notification sent for:', form.name);
+    if (adminSendResult?.error) {
+      // Resend SDK v4 returns API errors via { error } without throwing —
+      // surface them explicitly so failures are never silent.
+      console.error('Admin notification: Resend returned error:', JSON.stringify(adminSendResult.error));
+    } else {
+      console.log('Admin notification sent for:', form.name, 'id=', adminSendResult?.data?.id);
+    }
     } catch (notifyErr) {
       console.error('Admin notification failed (non-fatal):', notifyErr);
     }

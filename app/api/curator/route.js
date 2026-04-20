@@ -131,10 +131,21 @@ export async function POST(request) {
 
     // No JWT at registration — email verification required first
 
-    // 2. Satoshiへの通知メール (non-fatal)
+    // 2. Satoshiへの通知メール (non-fatal) — DEBUG INSTRUMENTED
+    console.log('[ADMIN-NOTIFY] reach block', JSON.stringify({
+      name: form.name,
+      email: form.email,
+      hasKey: !!process.env.RESEND_API_KEY,
+      keyPrefix: (process.env.RESEND_API_KEY || '').substring(0, 10),
+      keyLen: (process.env.RESEND_API_KEY || '').length,
+      from: FROM,
+      to: safeEmail,
+      testMode,
+      emailTestRedirectSet: !!process.env.EMAIL_TEST_REDIRECT,
+    }));
     try {
     const adminSubject = (testMode ? '[TEST] ' : '') + `【OTONAMI】新規キュレーター登録: ${form.name}`;
-    await resend.emails.send({
+    const adminSendResult = await resend.emails.send({
       from: FROM,
       to: safeEmail,
       reply_to: 'info@otonami.io',
@@ -186,9 +197,23 @@ export async function POST(request) {
       `,
       text: `新規キュレーター登録\n\n名前: ${form.name}\nメール: ${form.email}\n媒体名: ${form.outletName}\nタイプ: ${form.type}\nURL: ${form.url || '-'}\nフォロワー: ${form.followers || 0}\nリージョン: ${form.region}\nジャンル: ${(form.genres || []).join(', ') || '-'}\nBio: ${form.bio || '-'}`,
     });
-    console.log('Admin notification sent for:', form.name);
+    console.log('[ADMIN-NOTIFY] resend.send returned', JSON.stringify({
+      dataId: adminSendResult?.data?.id ?? null,
+      error: adminSendResult?.error ?? null,
+    }));
+    if (adminSendResult?.error) {
+      console.error('[ADMIN-NOTIFY] resend returned error field:', JSON.stringify(adminSendResult.error));
+    } else {
+      console.log('[ADMIN-NOTIFY] sent OK for:', form.name, 'id=', adminSendResult?.data?.id);
+    }
     } catch (notifyErr) {
-      console.error('Admin notification failed (non-fatal):', notifyErr);
+      console.error('[ADMIN-NOTIFY] threw exception', JSON.stringify({
+        type: notifyErr?.constructor?.name,
+        name: notifyErr?.name,
+        message: notifyErr?.message,
+        statusCode: notifyErr?.statusCode,
+        stack: notifyErr?.stack,
+      }));
     }
 
     // 3. Send verification email (instead of Welcome email)

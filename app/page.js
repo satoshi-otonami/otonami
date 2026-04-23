@@ -319,6 +319,12 @@ export default function HomePage() {
   /* FAQ data */
   const curatorFaqs = [
     {
+      q: lang === 'en' ? 'What does "AI-matched" mean? Will I receive AI-generated music?' : '「AIマッチング」とは何ですか？AI生成の曲が届くのですか？',
+      a: lang === 'en'
+        ? 'No — "AI-matched" means our AI analyzes each track\'s audio features (energy, mood, genre, tempo) and matches it to curators whose taste fits best. The music itself is made by real human artists. Fully AI-generated tracks are blocked from being pitched on OTONAMI.'
+        : 'いいえ。「AIマッチング」とは、楽曲のオーディオ特徴（エネルギー、ムード、ジャンル、テンポ等）をAIが分析し、相性の良いキュレーターに自動的にマッチングする仕組みのことです。届く楽曲はすべて人間のアーティストが制作したものです。全工程をAIで生成した楽曲はOTONAMIではピッチできない仕組みになっています。',
+    },
+    {
       q: lang === 'en' ? 'How do I get paid?' : '報酬はどのように受け取れますか？',
       a: lang === 'en'
         ? 'You earn credits for every pitch you respond to — whether you accept, decline, or leave feedback. Compensation varies by tier. Payouts are processed monthly via bank transfer.'

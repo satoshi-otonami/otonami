@@ -93,7 +93,7 @@ export async function POST(request) {
   try {
     if (isPreLaunchLocked()) {
       return NextResponse.json(
-        { error: 'Pitch submissions are not available yet. OTONAMI launches in May 2026.' },
+        { error: 'Pitch submissions are not available yet. OTONAMI launches on May 19, 2026.' },
         { status: 403 }
       );
     }

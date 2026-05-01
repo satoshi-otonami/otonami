@@ -19,8 +19,8 @@ const isPreLaunch = () => {
   if (Number.isNaN(launch.getTime())) return false;
   return new Date() < launch;
 };
-const LAUNCH_DATE_LABEL_JA = '2026年5月';
-const LAUNCH_DATE_LABEL_EN = 'May 2026';
+const LAUNCH_DATE_LABEL_JA = '5月19日';
+const LAUNCH_DATE_LABEL_EN = 'May 19';
 
 function PreLaunchBanner({ variant = 'pitch' }) {
   if (!isPreLaunch()) return null;
@@ -46,7 +46,7 @@ function PreLaunchBanner({ variant = 'pitch' }) {
         {detail}
       </p>
       <p style={{ fontSize: 12, color: '#998b7d', lineHeight: 1.5, margin: '10px 0 0' }}>
-        Launching in {LAUNCH_DATE_LABEL_EN} — pitch submissions open at launch.
+        Launching on {LAUNCH_DATE_LABEL_EN} — pitch submissions open at launch.
       </p>
     </div>
   );

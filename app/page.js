@@ -366,8 +366,8 @@ export default function HomePage() {
     {
       q: lang === 'en' ? 'When does OTONAMI launch?' : 'OTONAMIはいつローンチしますか？',
       a: lang === 'en'
-        ? "We're launching in May 2026. Register now to set up your profile and tracks — you'll be ready to pitch on day one."
-        : '2026年5月にローンチ予定です。今登録してプロフィールと楽曲を準備しておけば、初日からピッチできます。',
+        ? "We're launching Tuesday, May 19. Register now to set up your profile and tracks — you'll be ready to pitch on day one."
+        : '5月19日（火）に正式ローンチします。今登録してプロフィールと楽曲を準備しておけば、初日からピッチできます。',
     },
     {
       q: lang === 'en' ? "What happens if I don't get a review?" : 'レビューがもらえなかったらどうなりますか？',
@@ -571,8 +571,8 @@ export default function HomePage() {
               letterSpacing: '0.5px',
             }}>
               {lang === 'en'
-                ? 'Launching May 2026 — Early registration now open'
-                : '2026年5月ローンチ — 先行登録受付中'}
+                ? 'Launching Tuesday, May 19 — Early access open'
+                : '5月19日（火）正式ローンチ — 先行登録受付中'}
             </span>
           </div>
 

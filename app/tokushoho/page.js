@@ -10,7 +10,7 @@ export default function TokushohoPage() {
     <LegalPageLayout
       title="特定商取引法に基づく表記"
       subtitle="本サービスは、特定商取引法第11条に基づく表記を以下のとおり記載いたします。"
-      lastUpdated="2026年4月16日"
+      lastUpdated="2026年5月1日"
     >
       <table>
         <tbody>
@@ -24,11 +24,19 @@ export default function TokushohoPage() {
           </tr>
           <tr>
             <th>所在地</th>
-            <td>請求があったら遅滞なく開示します</td>
+            <td>〒215-0005 神奈川県川崎市麻生区千代ヶ丘8-15-11 七国峠2-103</td>
           </tr>
           <tr>
             <th>電話番号</th>
-            <td>請求があったら遅滞なく開示します</td>
+            <td>080-6581-8802</td>
+          </tr>
+          <tr>
+            <th>受付時間</th>
+            <td>
+              平日 10:00〜18:00（土日祝・年末年始を除く）
+              <br />
+              お問い合わせは原則 info@otonami.io までメールでお願いいたします。
+            </td>
           </tr>
           <tr>
             <th>メールアドレス</th>

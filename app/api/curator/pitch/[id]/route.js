@@ -188,7 +188,22 @@ export async function GET(request, { params }) {
     track_ai_status = linkedTrack?.ai_status || null;
   }
 
-  return NextResponse.json({ pitch: { ...data, track_ai_status } });
+  // Attach Founding Artist info (server-side lookup; pitches table has no FK to artists)
+  let artist_is_founding = false;
+  let artist_founding_number = null;
+  if (data.artist_email) {
+    const { data: artistRow } = await db
+      .from('artists')
+      .select('is_founding, founding_number')
+      .eq('email', String(data.artist_email).toLowerCase().trim())
+      .maybeSingle();
+    artist_is_founding = artistRow?.is_founding === true;
+    artist_founding_number = artistRow?.founding_number ?? null;
+  }
+
+  return NextResponse.json({
+    pitch: { ...data, track_ai_status, artist_is_founding, artist_founding_number },
+  });
 }
 
 // PATCH /api/curator/pitch/[id] — フィードバック送信

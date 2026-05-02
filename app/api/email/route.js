@@ -35,6 +35,23 @@ export async function POST(request) {
 
     switch (type) {
       case 'pitch': {
+        // Server-side founding lookup (anti-tampering — never trust the client)
+        let foundingNumber = null;
+        if (artistEmail) {
+          try {
+            const db = getServiceSupabase();
+            const { data: foundingRow } = await db
+              .from('artists')
+              .select('founding_number')
+              .eq('email', artistEmail.toLowerCase().trim())
+              .eq('is_founding', true)
+              .maybeSingle();
+            foundingNumber = foundingRow?.founding_number ?? null;
+          } catch (e) {
+            console.warn('Founding lookup failed (non-fatal):', e?.message);
+          }
+        }
+
         // Extract subject from pitch text if not provided
         if (!emailSubject && pitchText) {
           const subMatch = pitchText.match(/^Subject:\s*(.+)/m);
@@ -91,6 +108,13 @@ export async function POST(request) {
             </div>`
           : '';
 
+        const foundingBadge = foundingNumber ? `
+            <div style="margin-top:24px;text-align:center;">
+              <span style="display:inline-block;padding:6px 16px;background:linear-gradient(135deg,#c4956a 0%,#b8845e 100%);color:#fff;border-radius:9999px;font-size:11px;font-weight:700;letter-spacing:0.05em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+                ◆ FOUNDING ARTIST #${foundingNumber} on OTONAMI
+              </span>
+            </div>` : '';
+
         htmlBody = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
             ${pitchBody}
@@ -103,6 +127,7 @@ export async function POST(request) {
                 ${epk.replace(/\n/g, '<br>')}
               </div>
             ` : ''}
+            ${foundingBadge}
             <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
               Sent via <a href="https://otonami.io" style="color: #7c3aed; text-decoration: none;">OTONAMI</a> — Connecting Japanese Artists with the World
               <br>

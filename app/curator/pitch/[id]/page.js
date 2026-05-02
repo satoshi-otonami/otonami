@@ -258,6 +258,16 @@ function PitchView({ pitchId }) {
               <span style={{ color: T.text, fontWeight: 800, fontSize: 20, fontFamily: T.font }}>
                 {pitch.artist_name || 'Unknown Artist'}
               </span>
+              {pitch.artist_is_founding && (
+                <span title={`Founding Artist #${pitch.artist_founding_number}`} style={{
+                  padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700,
+                  background: 'linear-gradient(135deg, #c4956a 0%, #b8845e 100%)',
+                  color: '#fff', letterSpacing: '0.05em', fontFamily: T.font,
+                  boxShadow: '0 1px 4px rgba(196,149,106,0.30)',
+                }}>
+                  ◆ FOUNDING #{pitch.artist_founding_number}
+                </span>
+              )}
               {pitch.artist_genre && (
                 <span style={{ color: T.textMuted, fontSize: 14, fontFamily: T.font }}>{pitch.artist_genre}</span>
               )}

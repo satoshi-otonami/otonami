@@ -30,6 +30,12 @@ const COPY = {
       h1Gold: 1,
       sub: 'Send your music to international curators and get professional feedback.',
     },
+    founding: {
+      eyebrow: '◆ FOUNDING ARTIST PROGRAM',
+      heading: 'For the first 20 artists — special treatment.',
+      body: 'To celebrate the OTONAMI launch, the first 20 artists receive over 3× the standard credits, the Founding Artist designation, and a permanent badge shown on pitch emails, profile pages, and this site.',
+      deadline: 'Deadline: first 20 artists, or June 30, 2026 (whichever comes first)',
+    },
     how: {
       label: 'FOR ARTISTS & LABELS',
       title: 'Reach international media in 3 simple steps',
@@ -65,6 +71,12 @@ const COPY = {
       h1: ['配信した音楽、ちゃんと届いていますか？', '本当のファンに届ける方法があります。'],
       h1Gold: 1,
       sub: '海外の音楽メディアに曲を届けて、プロのフィードバックをもらえるサービス。',
+    },
+    founding: {
+      eyebrow: '◆ FOUNDING ARTIST PROGRAM',
+      heading: '最初の20組限定、特別待遇。',
+      body: 'OTONAMIローンチを記念し、先着20組のアーティストには通常の3倍以上のクレジットを付与。Founding Artistの称号と専用バッジが、ピッチメール・プロフィール・このサイト上で表示されます。',
+      deadline: '締切：先着20組、または2026年6月30日まで（早い方）',
     },
     how: {
       label: 'アーティスト・レーベルの方へ',
@@ -646,6 +658,60 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ========== FOUNDING ARTIST PROGRAM (limited to first 20, no counts shown) ========== */}
+      <AnimatedSection>
+        <section style={{
+          background: 'linear-gradient(180deg, #faf6ef 0%, #ffffff 100%)',
+          padding: '80px 24px',
+          borderBottom: '1px solid #e5e2dc',
+        }}>
+          <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
+            <div style={{
+              color: '#c4956a',
+              fontSize: 12,
+              letterSpacing: '0.22em',
+              fontWeight: 700,
+              marginBottom: 18,
+              fontFamily: D.fBody,
+            }}>
+              {t.founding.eyebrow}
+            </div>
+            <h2 style={{
+              fontFamily: D.fHead,
+              fontSize: 32,
+              fontWeight: 600,
+              color: L.text,
+              margin: '0 0 20px',
+              lineHeight: 1.3,
+            }}>
+              {t.founding.heading}
+            </h2>
+            <p style={{
+              fontSize: 16,
+              lineHeight: 1.85,
+              color: L.textSec,
+              margin: '0 0 28px',
+              fontFamily: D.fBody,
+            }}>
+              {t.founding.body}
+            </p>
+            <div style={{
+              display: 'inline-block',
+              padding: '10px 20px',
+              borderRadius: 999,
+              background: 'rgba(196,149,106,0.10)',
+              color: '#8d6a48',
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: D.fBody,
+              letterSpacing: '0.02em',
+            }}>
+              {t.founding.deadline}
+            </div>
+          </div>
+        </section>
+      </AnimatedSection>
 
       {/* ========== SECTION 3: FOUNDER STRIP ========== */}
       <section id="founder" className="founder-strip" style={{

@@ -157,6 +157,31 @@ export default function ArtistRegistrationPage() {
           <h1 style={{ fontFamily: THEME.fontDisplay, fontSize: 24, fontWeight: 700, color: THEME.text, marginBottom: 12 }}>
             認証メールを送信しました
           </h1>
+          {createdArtist?.is_founding && (
+            <div style={{
+              margin: '12px auto 24px',
+              padding: '22px 18px',
+              borderRadius: 14,
+              background: `linear-gradient(135deg, ${THEME.gold} 0%, ${THEME.goldDark} 100%)`,
+              color: '#fff',
+              maxWidth: 360,
+              boxShadow: '0 6px 24px rgba(196,149,106,0.25)',
+            }}>
+              <div style={{ fontSize: 11, letterSpacing: '0.18em', opacity: 0.95, fontFamily: THEME.font, fontWeight: 700 }}>
+                ◆ FOUNDING ARTIST
+              </div>
+              <div style={{ fontSize: 40, fontWeight: 700, margin: '4px 0 6px', letterSpacing: '-1px', fontFamily: THEME.fontDisplay }}>
+                #{createdArtist.founding_number}
+              </div>
+              <div style={{ fontSize: 13, lineHeight: 1.6, opacity: 0.96, fontFamily: THEME.font }}>
+                20組限定の特別枠として認定されました。<br />
+                通常3クレジットのところ、<strong>10クレジット</strong>が付与されます。
+                <div style={{ fontSize: 11, opacity: 0.85, marginTop: 4 }}>
+                  （Tier 2のみで5人 / Tier 3のみで3人 / 混合で3〜5人にピッチ可能）
+                </div>
+              </div>
+            </div>
+          )}
           <p style={{ color: THEME.textSub, fontSize: 15, lineHeight: 1.7, marginBottom: 8 }}>
             <strong>{form.email}</strong> に認証メールを送りました。<br />
             メール内のリンクをクリックして登録を完了してください。
@@ -238,6 +263,31 @@ export default function ArtistRegistrationPage() {
           {/* ── STEP 1: Basic Info ── */}
           {step === 1 && (
             <>
+              {/* Founding Artist 限定枠の予告（先着20組 / 2026-06-30 締切） */}
+              <div style={{
+                marginBottom: 24,
+                padding: '20px 18px',
+                borderRadius: 14,
+                border: `1.5px solid ${THEME.gold}`,
+                background: 'linear-gradient(135deg, rgba(196,149,106,0.10) 0%, rgba(196,149,106,0.03) 100%)',
+              }}>
+                <div style={{
+                  color: THEME.goldDark,
+                  fontSize: 11,
+                  letterSpacing: '0.18em',
+                  fontWeight: 700,
+                  fontFamily: THEME.font,
+                  marginBottom: 10,
+                }}>
+                  ◆ FOUNDING ARTIST 限定枠
+                </div>
+                <p style={{ fontSize: 14, lineHeight: 1.7, color: THEME.text, fontFamily: THEME.font, margin: 0 }}>
+                  OTONAMIローンチ記念として、最初の<strong>20組限定</strong>で<strong>10クレジット</strong>（通常3クレジット）を付与しています。Founding Artistとして認定され、ピッチメール・プロフィール・LPに専用バッジが表示されます。
+                </p>
+                <div style={{ fontSize: 11, color: THEME.textMuted, marginTop: 10, fontFamily: THEME.font }}>
+                  ※ 締切：先着20組、または2026年6月30日（早い方）
+                </div>
+              </div>
               <h2 style={{ fontFamily: THEME.fontDisplay, fontSize: 28, fontWeight: 700, color: THEME.text, margin: '0 0 6px' }}>アーティスト登録</h2>
               <p style={{ color: THEME.textSub, fontSize: 15, margin: '0 0 28px', fontFamily: THEME.font }}>あなたの音楽を世界に届けましょう</p>
 

@@ -5,7 +5,6 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { Resend } from 'resend';
 import {
-  createArtist,
   getArtistByEmail,
   getArtistById,
   updateArtist,
@@ -53,8 +52,26 @@ export async function POST(request) {
     const verification_token = crypto.randomUUID();
     const verification_expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-    // INSERT
-    const artist = await createArtist({
+    // === Founding Artist 判定（20組限定 / 2026-06-30 締切）===
+    const FOUNDING_LIMIT = 20;
+    const FOUNDING_DEADLINE = new Date('2026-06-30T23:59:59+09:00');
+    const adminDb = getServiceSupabase();
+
+    const { count: foundingCount, error: countError } = await adminDb
+      .from('artists')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_founding', true);
+
+    if (countError) {
+      console.error('Founding count error (falling back to non-founding):', countError);
+    }
+
+    const isFoundingEligible =
+      !countError &&
+      (foundingCount ?? FOUNDING_LIMIT) < FOUNDING_LIMIT &&
+      new Date() < FOUNDING_DEADLINE;
+
+    const insertData = {
       name,
       email,
       password_hash,
@@ -77,13 +94,77 @@ export async function POST(request) {
       twitter_url: rest.twitter_url || null,
       facebook_url: rest.facebook_url || null,
       website_url: rest.website_url || null,
-    });
+      credits: isFoundingEligible ? 10 : 3,
+      is_founding: isFoundingEligible,
+      founding_number: isFoundingEligible ? (foundingCount ?? 0) + 1 : null,
+      founding_show_on_lp: true,
+    };
+
+    // Direct insert (bypassing createArtist) so we can read raw error.code and
+    // retry on the founding_number unique-violation if two signups race.
+    let { data: artist, error: insertError } = await adminDb
+      .from('artists')
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (
+      insertError &&
+      insertError.code === '23505' &&
+      typeof insertError.message === 'string' &&
+      insertError.message.includes('founding_number')
+    ) {
+      console.warn('Founding number collision, retrying with fresh count...');
+      const { count: retryCount } = await adminDb
+        .from('artists')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_founding', true);
+
+      const stillEligible =
+        (retryCount ?? FOUNDING_LIMIT) < FOUNDING_LIMIT &&
+        new Date() < FOUNDING_DEADLINE;
+      insertData.is_founding = stillEligible;
+      insertData.founding_number = stillEligible ? retryCount + 1 : null;
+      insertData.credits = stillEligible ? 10 : 3;
+
+      const retry = await adminDb
+        .from('artists')
+        .insert(insertData)
+        .select()
+        .single();
+      artist = retry.data;
+      insertError = retry.error;
+    }
+
+    if (insertError || !artist) {
+      console.error('Artist insert error:', insertError);
+      return NextResponse.json(
+        { error: insertError?.message || 'Failed to create artist' },
+        { status: 500 }
+      );
+    }
 
     // Send verification email instead of Welcome email
     const verifyUrl = `${APP_URL}/api/verify-email?token=${verification_token}&type=artist`;
     const verifyTo = testMode ? safeEmail : email;
+    const foundingTag = artist.is_founding ? `Founding Artist #${artist.founding_number} — ` : '';
     const verifySubject = (testMode ? `[TEST] (→${email}) ` : '') +
-      'OTONAMIへようこそ — メールアドレスを認証してください / Verify your email';
+      `${foundingTag}OTONAMIへようこそ — メールアドレスを認証してください / Verify your email`;
+
+    const foundingBlockHtml = artist.is_founding ? `
+            <div style="margin:20px 0 28px;padding:22px 18px;background:linear-gradient(135deg,#c4956a 0%,#b8854a 100%);border-radius:12px;text-align:center;color:#fff;">
+              <div style="font-size:11px;letter-spacing:0.18em;font-weight:600;opacity:0.92;">◆ FOUNDING ARTIST</div>
+              <div style="font-size:34px;font-weight:700;margin:6px 0;letter-spacing:-0.5px;">#${artist.founding_number}</div>
+              <div style="font-size:13px;line-height:1.6;opacity:0.96;">
+                20組限定の特別枠として認定されました。<br/>
+                通常3クレジットのところ、<strong>10クレジット</strong>が付与されます。<br/>
+                <span style="font-size:11px;opacity:0.88;">（メール認証完了後に利用できます）</span>
+              </div>
+            </div>` : '';
+    const foundingBlockText = artist.is_founding
+      ? `\n\n◆ Founding Artist #${artist.founding_number} として認定されました。\n20組限定の特別枠です。通常3クレジットのところ、10クレジットが付与されます（メール認証完了後に利用可能）。\n`
+      : '';
+
     try {
       await resend.emails.send({
         from: FROM,
@@ -93,7 +174,7 @@ export async function POST(request) {
         html: `
           <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
             <h1 style="font-size:28px;text-align:center;color:#1a1a1a;margin-bottom:32px;">OTONAMI</h1>
-            <h2 style="font-size:20px;color:#1a1a1a;margin-bottom:12px;">${name}さん、OTONAMIへの登録ありがとうございます。</h2>
+            <h2 style="font-size:20px;color:#1a1a1a;margin-bottom:12px;">${name}さん、OTONAMIへの登録ありがとうございます。</h2>${foundingBlockHtml}
             <p style="color:#6b6560;font-size:15px;line-height:1.7;margin-bottom:8px;">以下のボタンをクリックしてメールアドレスを認証してください。</p>
             <div style="text-align:center;margin:32px 0;">
               <a href="${verifyUrl}" style="background:#c4956a;color:#fff;padding:16px 48px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">メールアドレスを認証する / Verify Email</a>
@@ -104,7 +185,7 @@ export async function POST(request) {
             <p style="color:#9b9590;font-size:12px;margin-top:24px;text-align:center;">心当たりがない場合はこのメールを無視してください。<br/>If you didn't request this, please ignore this email.</p>
           </div>
         `,
-        text: `${name}さん、OTONAMIへの登録ありがとうございます。\n\n以下のリンクをクリックしてメールアドレスを認証してください:\n${verifyUrl}\n\nこのリンクは24時間有効です。\n\n---\n\nHi ${name}, thank you for signing up for OTONAMI.\nPlease verify your email: ${verifyUrl}\n\nThis link expires in 24 hours.`,
+        text: `${name}さん、OTONAMIへの登録ありがとうございます。${foundingBlockText}\n\n以下のリンクをクリックしてメールアドレスを認証してください:\n${verifyUrl}\n\nこのリンクは24時間有効です。\n\n---\n\nHi ${name}, thank you for signing up for OTONAMI.\nPlease verify your email: ${verifyUrl}\n\nThis link expires in 24 hours.`,
       });
     } catch (e) {
       console.error('Verification email failed (non-fatal):', e);
@@ -236,6 +317,9 @@ export async function PATCH(request) {
       'region', 'label_name', 'genres', 'moods', 'influences',
       'spotify_url', 'youtube_url', 'instagram_url',
       'twitter_url', 'facebook_url', 'website_url',
+      // Founding artists may toggle LP display visibility for themselves.
+      // is_founding / founding_number are intentionally NOT here (anti-tampering).
+      'founding_show_on_lp',
     ];
     const updateData = {};
     for (const key of ALLOWED) {

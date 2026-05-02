@@ -1,15 +1,45 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
 import { describeTrackCharacteristics } from '@/lib/track-description';
+import { verifyToken } from '@/lib/auth';
+import { pitchRatelimit, checkRatelimit } from '@/lib/ratelimit';
+import { INPUT_LIMITS, validateAllLengths } from '@/lib/validate-input';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder' });
 
 export async function POST(request) {
   try {
+    const payload = await verifyToken(request);
+    if (!payload || payload.role !== 'artist') {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'ログインが必要です' },
+        { status: 401 }
+      );
+    }
+
+    const rl = await checkRatelimit(pitchRatelimit, `artist:${payload.artistId}`);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: 'RateLimitExceeded', message: rl.error, retryAfter: rl.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      );
+    }
+
     const { artist, curator, style, links, followers, userName, trackFeatures } = await request.json();
 
     if (!artist?.name || !artist?.genre) {
       return NextResponse.json({ error: 'Artist name and genre required' }, { status: 400 });
+    }
+
+    const lengthError = validateAllLengths([
+      { value: artist.name, max: INPUT_LIMITS.ARTIST_NAME, name: 'アーティスト名' },
+      { value: artist.genre, max: INPUT_LIMITS.GENRE, name: 'ジャンル' },
+      { value: artist.description, max: INPUT_LIMITS.ARTIST_DESCRIPTION, name: '自己紹介' },
+      { value: artist.influences, max: INPUT_LIMITS.ARTIST_INFLUENCES, name: '影響を受けたアーティスト' },
+      { value: artist.achievements, max: INPUT_LIMITS.ARTIST_ACHIEVEMENTS, name: '実績' },
+    ]);
+    if (lengthError) {
+      return NextResponse.json({ error: 'InputTooLong', message: lengthError }, { status: 413 });
     }
 
     // Build comprehensive prompt

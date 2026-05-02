@@ -3,12 +3,37 @@ import { initSession, loadCurators, loadPitches, loadCredits,
          savePitchesToDB, saveCuratorToDB, saveCredits as saveCreditsDB,
          logEmail, insertPitchGetUUID } from '@/lib/db';
 
-import API from '@/lib/api-client';
+import API, { authFetch, ApiError } from '@/lib/api-client';
 import { analyzeTrack } from '@/lib/api-track';
 import { describeTrackCharacteristics } from '@/lib/track-description';
 import { getMatchLabel, rankCurators, calculateMatchScore } from '@/lib/match-score';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+
+// 認証付きAPI(401/413/429) を notify に変換。ApiError 以外は false を返す。
+function handleApiError(e, notify, fallbackMsg = 'エラーが発生しました') {
+  if (e instanceof ApiError) {
+    if (e.name === 'RateLimitExceeded') {
+      const minutes = e.retryAfter ? Math.ceil(e.retryAfter / 60) : null;
+      notify(minutes
+        ? `使いすぎを防ぐため一時的に制限されています。${minutes}分後にお試しください`
+        : `使いすぎを防ぐため一時的に制限されています。${e.message}`, 'error');
+      return true;
+    }
+    if (e.name === 'Unauthorized') {
+      notify('ログインが必要です。再度ログインしてください', 'error');
+      try { localStorage.removeItem('artist_token'); } catch {}
+      setTimeout(() => { window.location.href = '/artist/login'; }, 1500);
+      return true;
+    }
+    if (e.name === 'InputTooLong') {
+      notify(e.message, 'error');
+      return true;
+    }
+  }
+  notify(fallbackMsg + (e?.message ? `: ${e.message}` : ''), 'error');
+  return false;
+}
 
 // ─── Pre-launch gate ───
 // Set NEXT_PUBLIC_LAUNCH_DATE to an ISO datetime to lock pitch sending until then.
@@ -1746,6 +1771,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     } catch (e) {
       console.warn('Track analyze:', e.message);
       setTrackAnalysisStatus('error');
+      if (e instanceof ApiError) handleApiError(e, notify, '楽曲分析失敗');
     } finally {
       analyzeInFlightRef.current = false;
       setAnalyzeLoading(false);
@@ -1870,20 +1896,26 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const translateToJa = async (enText) => {
     setTranslating(true);
     try {
-      const res = await fetch('/api/pitch/translate', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ text: enText }) });
+      const res = await authFetch('/api/pitch/translate', { method: 'POST', body: JSON.stringify({ text: enText }) });
       const data = await res.json();
       if (data.translated) setPitchJa(data.translated);
-    } catch (e) { console.warn('Translate EN→JA:', e.message); }
+    } catch (e) {
+      if (e instanceof ApiError) handleApiError(e, notify, '日本語翻訳失敗');
+      else console.warn('Translate EN→JA:', e.message);
+    }
     setTranslating(false);
   };
 
   const translateToEn = async () => {
     setTranslating(true);
     try {
-      const res = await fetch('/api/pitch/translate', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ text: pitchJa, reverse: true }) });
+      const res = await authFetch('/api/pitch/translate', { method: 'POST', body: JSON.stringify({ text: pitchJa, reverse: true }) });
       const data = await res.json();
       if (data.translated) setPitchText(data.translated);
-    } catch (e) { console.warn('Translate JA→EN:', e.message); }
+    } catch (e) {
+      if (e instanceof ApiError) handleApiError(e, notify, '英語翻訳失敗');
+      else console.warn('Translate JA→EN:', e.message);
+    }
     setTranslating(false);
   };
 
@@ -1899,7 +1931,20 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       const rep = targets[0] || {name:"Curator",type:"blog",platform:"Music Platform"};
       // Use pitchSongTitle (track-specific) over artist.songTitle (representative track)
       const pitchArtist = pitchSongTitle ? { ...artist, songTitle: pitchSongTitle } : artist;
-      const result = await API.generatePitch(pitchArtist, rep, pitchStyle, lnk, followers, user.name, trackData?.audioFeatures);
+      const res = await authFetch('/api/pitch', {
+        method: 'POST',
+        body: JSON.stringify({
+          artist: pitchArtist,
+          curator: rep,
+          style: pitchStyle,
+          links: lnk,
+          followers,
+          userName: user.name,
+          trackFeatures: trackData?.audioFeatures || null,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Pitch generation failed');
       setPitchText(result.pitch);
       setEpk(result.epk);
       setPitchTab("ja");
@@ -1907,8 +1952,12 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       notify("✓ AIピッチ生成完了 — 日本語訳を生成中...");
       translateToJa(result.pitch);
     } catch (err) {
-      notify("AI生成失敗 → テンプレートで代替: " + err.message);
-      generatePitch(); // Fallback to template
+      if (err instanceof ApiError) {
+        handleApiError(err, notify, 'AIピッチ生成失敗');
+      } else {
+        notify("AI生成失敗 → テンプレートで代替: " + err.message);
+        generatePitch(); // Fallback to template
+      }
     }
     setAiLoading(false);
   };
@@ -1975,13 +2024,22 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     // Replace the temporary local id with the real UUID so email links work.
     const newPitches = [];
     for (const p of tempPitches) {
-      const result = await insertPitchGetUUID(p);
-      if (result?.id) {
-        // Use translated pitchText (if translation occurred) for the email body
-        newPitches.push({ ...p, id: result.id, pitchText: result.pitchText ?? p.pitchText, _hasUUID: true });
-      } else {
-        // Insert failed — keep custom ID for local state but mark as no UUID
-        console.warn("insertPitchGetUUID failed for curator:", p.curatorName);
+      try {
+        const result = await insertPitchGetUUID(p);
+        if (result?.id) {
+          // Use translated pitchText (if translation occurred) for the email body
+          newPitches.push({ ...p, id: result.id, pitchText: result.pitchText ?? p.pitchText, _hasUUID: true });
+        } else {
+          // Insert failed — keep custom ID for local state but mark as no UUID
+          console.warn("insertPitchGetUUID failed for curator:", p.curatorName);
+          newPitches.push({ ...p, _hasUUID: false });
+        }
+      } catch (e) {
+        if (e instanceof ApiError) {
+          handleApiError(e, notify, 'ピッチ送信失敗');
+          return; // 401/413/429 の場合は送信ループ全体を中断
+        }
+        console.warn("insertPitchGetUUID exception:", e.message);
         newPitches.push({ ...p, _hasUUID: false });
       }
     }

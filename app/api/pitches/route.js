@@ -1,6 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
+import { verifyToken } from '@/lib/auth';
+import { pitchSubmitRatelimit, checkRatelimit } from '@/lib/ratelimit';
+import { INPUT_LIMITS, validateLength } from '@/lib/validate-input';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -91,6 +94,22 @@ function isPreLaunchLocked() {
 // POST /api/pitches — ピッチをDBに保存（日本語があれば英語に翻訳してから保存）
 export async function POST(request) {
   try {
+    const payload = await verifyToken(request);
+    if (!payload || payload.role !== 'artist') {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'ピッチ送信にはログインが必要です' },
+        { status: 401 }
+      );
+    }
+
+    const rl = await checkRatelimit(pitchSubmitRatelimit, `artist:${payload.artistId}`);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: 'RateLimitExceeded', message: rl.error, retryAfter: rl.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      );
+    }
+
     if (isPreLaunchLocked()) {
       return NextResponse.json(
         { error: 'Pitch submissions are not available yet. OTONAMI launches on May 19, 2026.' },
@@ -102,6 +121,13 @@ export async function POST(request) {
 
     if (!row.session_id) {
       return NextResponse.json({ error: 'session_id required' }, { status: 400 });
+    }
+
+    if (row.body) {
+      const lengthError = validateLength(row.body, INPUT_LIMITS.PITCH_BODY, 'ピッチ本文');
+      if (lengthError) {
+        return NextResponse.json({ error: 'InputTooLong', message: lengthError }, { status: 413 });
+      }
     }
 
     const originalBody = row.body || '';

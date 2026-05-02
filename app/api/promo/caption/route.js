@@ -1,8 +1,27 @@
 // app/api/promo/caption/route.js
 import Anthropic from '@anthropic-ai/sdk';
+import { verifyToken } from '@/lib/auth';
+import { promoRatelimit, checkRatelimit } from '@/lib/ratelimit';
+import { INPUT_LIMITS, validateLength } from '@/lib/validate-input';
 
 export async function POST(request) {
   try {
+    const payload = await verifyToken(request);
+    if (!payload || payload.role !== 'artist') {
+      return Response.json(
+        { error: 'Unauthorized', message: 'ログインが必要です' },
+        { status: 401 }
+      );
+    }
+
+    const rl = await checkRatelimit(promoRatelimit, `artist:${payload.artistId}`);
+    if (!rl.success) {
+      return Response.json(
+        { error: 'RateLimitExceeded', message: rl.error, retryAfter: rl.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      );
+    }
+
     const body = await request.json();
     const {
       trackTitle,
@@ -15,6 +34,13 @@ export async function POST(request) {
       youtubeUrl,
       language = 'both'
     } = body;
+
+    if (bio) {
+      const lengthError = validateLength(bio, INPUT_LIMITS.PROMO_BIO, 'バイオ');
+      if (lengthError) {
+        return Response.json({ error: 'InputTooLong', message: lengthError }, { status: 413 });
+      }
+    }
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 

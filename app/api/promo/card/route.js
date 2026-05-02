@@ -2,6 +2,8 @@
 // Placid.app REST API 経由でプロモカード画像を生成
 
 import { selectPalette, getPaletteByName } from '@/lib/promo-palette';
+import { verifyToken } from '@/lib/auth';
+import { promoRatelimit, checkRatelimit } from '@/lib/ratelimit';
 
 // テンプレートUUID マッピング（Placidで作成後に実際のUUIDを入れる）
 const TEMPLATE_MAP = {
@@ -15,6 +17,22 @@ const TEMPLATE_MAP = {
 
 export async function POST(request) {
   try {
+    const payload = await verifyToken(request);
+    if (!payload || payload.role !== 'artist') {
+      return Response.json(
+        { error: 'Unauthorized', message: 'ログインが必要です' },
+        { status: 401 }
+      );
+    }
+
+    const rl = await checkRatelimit(promoRatelimit, `artist:${payload.artistId}`);
+    if (!rl.success) {
+      return Response.json(
+        { error: 'RateLimitExceeded', message: rl.error, retryAfter: rl.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      );
+    }
+
     const body = await request.json();
     const {
       template = 'player',

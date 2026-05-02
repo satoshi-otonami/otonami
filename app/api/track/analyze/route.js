@@ -2,6 +2,9 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { verifyToken } from '@/lib/auth';
+import { trackAnalyzeRatelimit, checkRatelimit } from '@/lib/ratelimit';
+import { INPUT_LIMITS, validateAllLengths } from '@/lib/validate-input';
 
 let _supabase;
 function getSupabase() {
@@ -274,7 +277,31 @@ async function fetchSoundNetFeatures(songName, artistName) {
 // ============================================================
 export async function POST(request) {
   try {
+    const payload = await verifyToken(request);
+    if (!payload || payload.role !== 'artist') {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: '楽曲分析にはログインが必要です' },
+        { status: 401 }
+      );
+    }
+
+    const rl = await checkRatelimit(trackAnalyzeRatelimit, `artist:${payload.artistId}`);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: 'RateLimitExceeded', message: rl.error, retryAfter: rl.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      );
+    }
+
     const { trackUrl, songName: inputSong, artistName: inputArtist } = await request.json();
+
+    const lengthError = validateAllLengths([
+      { value: inputSong, max: INPUT_LIMITS.TRACK_NAME, name: '曲名' },
+      { value: inputArtist, max: INPUT_LIMITS.ARTIST_NAME, name: 'アーティスト名' },
+    ]);
+    if (lengthError) {
+      return NextResponse.json({ error: 'InputTooLong', message: lengthError }, { status: 413 });
+    }
 
     let songName = inputSong?.trim() || '';
     let artistName = inputArtist?.trim() || '';

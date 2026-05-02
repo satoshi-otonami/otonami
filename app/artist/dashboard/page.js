@@ -1,5 +1,31 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { authFetch, ApiError } from '@/lib/api-client';
+
+// 認証付きAPIエラーをユーザー向けアラートに変換
+function showApiError(e, fallbackMsg = 'エラーが発生しました') {
+  if (e instanceof ApiError) {
+    if (e.name === 'RateLimitExceeded') {
+      const minutes = e.retryAfter ? Math.ceil(e.retryAfter / 60) : null;
+      alert(minutes
+        ? `使いすぎを防ぐため一時的に制限されています。${minutes}分後にお試しください`
+        : `使いすぎを防ぐため一時的に制限されています。${e.message}`);
+      return true;
+    }
+    if (e.name === 'Unauthorized') {
+      alert('ログインが必要です。再度ログインしてください');
+      try { localStorage.removeItem('artist_token'); } catch {}
+      window.location.href = '/artist/login';
+      return true;
+    }
+    if (e.name === 'InputTooLong') {
+      alert(e.message);
+      return true;
+    }
+  }
+  alert(fallbackMsg);
+  return false;
+}
 
 const THEME = {
   bg: '#f8f7f4', card: '#ffffff', border: '#e5e2dc', borderLight: '#f0ede8',
@@ -1519,9 +1545,8 @@ function PromoToolkitModal({ track, artist, onClose }) {
     setCardLoading(true);
     setCardUrl(null);
     try {
-      const res = await fetch('/api/promo/card', {
+      const res = await authFetch('/api/promo/card', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           template,
           format,
@@ -1542,7 +1567,7 @@ function PromoToolkitModal({ track, artist, onClose }) {
       }
     } catch (e) {
       console.error('Card generation error:', e);
-      alert('カード生成に失敗しました');
+      showApiError(e, 'カード生成に失敗しました');
     } finally {
       setCardLoading(false);
     }
@@ -1553,9 +1578,8 @@ function PromoToolkitModal({ track, artist, onClose }) {
     setCaptionLoading(true);
     setCaptions(null);
     try {
-      const res = await fetch('/api/promo/caption', {
+      const res = await authFetch('/api/promo/caption', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           trackTitle: track.title,
           artistName: artist.name,
@@ -1573,7 +1597,7 @@ function PromoToolkitModal({ track, artist, onClose }) {
       else throw new Error(data.error);
     } catch (e) {
       console.error('Caption generation error:', e);
-      alert('キャプション生成に失敗しました');
+      showApiError(e, 'キャプション生成に失敗しました');
     } finally {
       setCaptionLoading(false);
     }

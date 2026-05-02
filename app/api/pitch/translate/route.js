@@ -1,14 +1,38 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextResponse } from 'next/server';
+import { verifyToken } from '@/lib/auth';
+import { translateRatelimit, checkRatelimit } from '@/lib/ratelimit';
+import { INPUT_LIMITS, validateLength } from '@/lib/validate-input';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder' });
 
 export async function POST(request) {
   try {
+    const payload = await verifyToken(request);
+    if (!payload || payload.role !== 'artist') {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'ログインが必要です' },
+        { status: 401 }
+      );
+    }
+
+    const rl = await checkRatelimit(translateRatelimit, `artist:${payload.artistId}`);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: 'RateLimitExceeded', message: rl.error, retryAfter: rl.retryAfter },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      );
+    }
+
     const { text, reverse } = await request.json();
 
     if (!text?.trim()) {
       return NextResponse.json({ error: 'text required' }, { status: 400 });
+    }
+
+    const lengthError = validateLength(text, INPUT_LIMITS.TRANSLATE_TEXT, '翻訳テキスト');
+    if (lengthError) {
+      return NextResponse.json({ error: 'InputTooLong', message: lengthError }, { status: 413 });
     }
 
     const prompt = reverse

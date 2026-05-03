@@ -97,7 +97,7 @@ export async function POST(request) {
       credits: isFoundingEligible ? 10 : 3,
       is_founding: isFoundingEligible,
       founding_number: isFoundingEligible ? (foundingCount ?? 0) + 1 : null,
-      founding_show_on_lp: true,
+      founding_show_on_lp: false,
     };
 
     // Direct insert (bypassing createArtist) so we can read raw error.code and
@@ -317,9 +317,6 @@ export async function PATCH(request) {
       'region', 'label_name', 'genres', 'moods', 'influences',
       'spotify_url', 'youtube_url', 'instagram_url',
       'twitter_url', 'facebook_url', 'website_url',
-      // Founding artists may toggle LP display visibility for themselves.
-      // is_founding / founding_number are intentionally NOT here (anti-tampering).
-      'founding_show_on_lp',
     ];
     const updateData = {};
     for (const key of ALLOWED) {

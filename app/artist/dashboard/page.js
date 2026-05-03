@@ -2231,7 +2231,6 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
     facebook_url: artist.facebook_url || '',
     website_url: artist.website_url || '',
     cover_url: artist.cover_url || '',
-    founding_show_on_lp: artist.founding_show_on_lp ?? true,
   });
   const [influenceInput, setInfluenceInput] = useState('');
   const [avatarFile, setAvatarFile] = useState(null);
@@ -2410,28 +2409,6 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
         {form.cover_url && /^https?:\/\/.+/.test(form.cover_url) && (
           <div style={{ marginTop: 8, borderRadius: 10, overflow: 'hidden', border: `1px solid ${THEME.border}`, maxHeight: 100 }}>
             <img src={form.cover_url} alt="preview" style={{ width: '100%', height: 100, objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
-          </div>
-        )}
-
-        {artist.is_founding && (
-          <div style={{ marginTop: 24, padding: '14px 16px', borderRadius: 12, border: `1px solid ${THEME.gold}40`, background: 'rgba(196,149,106,0.05)' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: THEME.goldDark, letterSpacing: '0.12em', marginBottom: 10, fontFamily: THEME.font }}>
-              ◆ FOUNDING ARTIST #{artist.founding_number}
-            </div>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', fontFamily: THEME.font }}>
-              <input
-                type="checkbox"
-                checked={form.founding_show_on_lp}
-                onChange={(e) => set('founding_show_on_lp', e.target.checked)}
-                style={{ marginTop: 3, accentColor: THEME.gold, width: 16, height: 16, flexShrink: 0 }}
-              />
-              <span style={{ fontSize: 13, color: THEME.text, lineHeight: 1.5 }}>
-                Founding ArtistとしてOTONAMIのトップページに掲載する
-                <div style={{ fontSize: 11, color: THEME.textMuted, marginTop: 4 }}>
-                  チェックを外すとLPには掲載されません。バッジは引き続き表示されます。
-                </div>
-              </span>
-            </label>
           </div>
         )}
 

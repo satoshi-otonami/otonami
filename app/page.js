@@ -33,7 +33,7 @@ const COPY = {
     founding: {
       eyebrow: '◆ FOUNDING ARTIST PROGRAM',
       heading: 'For the first 20 artists — special treatment.',
-      body: 'To celebrate the OTONAMI launch, the first 20 artists receive over 3× the standard credits, the Founding Artist designation, and a permanent badge shown on pitch emails, profile pages, and this site.',
+      body: 'To celebrate the OTONAMI launch, the first 20 artists receive over 3× the standard credits, the Founding Artist designation, and a permanent badge shown on pitch emails and your dashboard.',
       deadline: 'Deadline: first 20 artists, or June 30, 2026 (whichever comes first)',
     },
     how: {
@@ -75,7 +75,7 @@ const COPY = {
     founding: {
       eyebrow: '◆ FOUNDING ARTIST PROGRAM',
       heading: '最初の20組限定、特別待遇。',
-      body: 'OTONAMIローンチを記念し、先着20組のアーティストには通常の3倍以上のクレジットを付与。Founding Artistの称号と専用バッジが、ピッチメール・プロフィール・このサイト上で表示されます。',
+      body: 'OTONAMIローンチを記念し、先着20組のアーティストには通常の3倍以上のクレジットを付与。Founding Artistの称号と専用バッジが、ピッチメール・ダッシュボード上で表示されます。',
       deadline: '締切：先着20組、または2026年6月30日まで（早い方）',
     },
     how: {

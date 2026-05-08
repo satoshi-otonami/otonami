@@ -10,6 +10,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('curators')
       .select('id, name, type, playlist, url, genres, bio, followers, region, icon_url, accepts, preferred_moods, opportunities, similar_artists, tags, tier, open_to_all_genres')
+      .or('is_seed.is.null,is_seed.eq.false')
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);

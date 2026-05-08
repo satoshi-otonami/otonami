@@ -11,3 +11,4 @@ node_modules/
 .mcp.json
 .agents/
 .aidesigner/
+supabase/.temp/

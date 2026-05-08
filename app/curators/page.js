@@ -514,9 +514,7 @@ export default function CuratorsPage() {
 
   /* ── Nav links ── */
   const navLinks = [
-    { href: '/',         label: lang === 'ja' ? '使い方'              : 'How It Works'   },
     { href: '/curators', label: lang === 'ja' ? 'キュレーターを探す'  : 'Find Curators'  },
-    { href: '/studio',   label: lang === 'ja' ? 'アーティストの方'    : 'For Artists'    },
   ];
 
   /* ════════════════════════════════════════════════

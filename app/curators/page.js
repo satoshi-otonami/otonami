@@ -627,10 +627,10 @@ export default function CuratorsPage() {
           marginBottom: 36, flexWrap: 'wrap',
         }}>
           {[
-            { icon: '○', label: lang === 'ja' ? '14カ国以上のキュレーター' : '14+ curators worldwide' },
+            { icon: '○', label: lang === 'ja' ? '世界各国のキュレーター' : 'Curators from around the world' },
             { icon: '♫', label: lang === 'ja' ? 'Spotifyプレイリスト収録' : 'Spotify playlists included' },
             { icon: '•', label: lang === 'ja' ? 'メディア・ブログ多数'   : 'Media & blogs coverage'  },
-            { icon: '✓', label: lang === 'ja' ? '審査済みのキュレーター' : 'Vetted curators only'    },
+            { icon: '✓', label: lang === 'ja' ? '招待制で参加' : 'Invitation-based participation' },
           ].map((stat, i) => (
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: 8,

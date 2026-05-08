@@ -948,6 +948,118 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ========== CURATOR TRUST BAR ========== */}
+      <section style={{
+        padding: '64px 20px',
+        background: '#f8fafc',
+        textAlign: 'center',
+      }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <h2 style={{
+            fontFamily: "'Sora', sans-serif",
+            fontSize: 26,
+            fontWeight: 600,
+            color: '#1e293b',
+            marginBottom: 12,
+            letterSpacing: '-0.02em',
+          }}>
+            {lang === 'en' ? 'Trusted by curators worldwide' : '世界のキュレーターが参加しています'}
+          </h2>
+          <p style={{
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 15,
+            color: '#64748b',
+            marginBottom: 40,
+            maxWidth: 520,
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            lineHeight: 1.6,
+          }}>
+            {lang === 'en'
+              ? 'Playlist curators, music journalists, and radio hosts from around the world review tracks on OTONAMI.'
+              : 'プレイリスター、音楽ジャーナリスト、ラジオホストが世界各地からOTONAMIに参加。'}
+          </p>
+
+          <div className="trust-stats-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 32,
+            marginBottom: 36,
+            maxWidth: 700,
+            marginLeft: 'auto',
+            marginRight: 'auto',
+          }}>
+            {[
+              { num: '20+', labelEn: 'Curators', labelJp: 'キュレーター' },
+              { num: '5+', labelEn: 'Countries', labelJp: 'カ国以上' },
+              { num: '200K+', labelEn: 'Combined Reach', labelJp: '合計リーチ' },
+            ].map((item, i) => (
+              <div key={i} style={{ textAlign: 'center' }}>
+                <div style={{
+                  fontFamily: "'Sora', sans-serif",
+                  fontSize: 40,
+                  fontWeight: 700,
+                  color: '#c4956a',
+                  lineHeight: 1.1,
+                  marginBottom: 6,
+                }}>
+                  {item.num}
+                </div>
+                <div style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 14,
+                  color: '#64748b',
+                  fontWeight: 500,
+                }}>
+                  {lang === 'en' ? item.labelEn : item.labelJp}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            gap: 12,
+            marginBottom: 32,
+          }}>
+            {[
+              { en: 'Playlist Curators', jp: 'プレイリスター' },
+              { en: 'Media & Journalists', jp: 'メディア・ジャーナリスト' },
+              { en: 'Radio & Podcast', jp: 'ラジオ・ポッドキャスト' },
+            ].map((type, i) => (
+              <span key={i} style={{
+                border: '1px solid #e2e8f0',
+                borderRadius: 20,
+                padding: '8px 18px',
+                fontFamily: "'DM Sans', sans-serif",
+                fontSize: 13,
+                color: '#475569',
+                background: 'white',
+                fontWeight: 500,
+              }}>
+                {lang === 'en' ? type.en : type.jp}
+              </span>
+            ))}
+          </div>
+
+          <a
+            href="/curators"
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 14,
+              color: '#c4956a',
+              textDecoration: 'none',
+              fontWeight: 600,
+              transition: 'opacity 0.2s',
+            }}
+          >
+            {lang === 'en' ? 'Browse all curators →' : 'キュレーター一覧を見る →'}
+          </a>
+        </div>
+      </section>
+
       {/* ========== AUDIENCE SELECTOR BANNER ========== */}
       <div style={{
         padding: '40px 20px',

@@ -321,6 +321,11 @@ section {
     padding: 24px 16px !important;
     border-radius: 16px !important;
   }
+  .trust-stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+    max-width: 280px !important;
+  }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {

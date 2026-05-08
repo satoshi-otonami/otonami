@@ -860,10 +860,10 @@ export default function HomePage() {
       {/* ========== TRUST LOGO BAR ========== */}
       <section style={{
         background: '#ffffff',
-        padding: '24px 0',
+        padding: '48px 0 32px',
       }}>
         <div style={{
-          maxWidth: 900,
+          maxWidth: 1000,
           margin: '0 auto',
           padding: '0 20px',
           textAlign: 'center',
@@ -874,10 +874,114 @@ export default function HomePage() {
             color: '#999',
             textTransform: 'uppercase',
             letterSpacing: '2px',
-            marginBottom: 16,
+            marginBottom: 20,
           }}>
             {lang === 'en' ? 'Trusted by' : '信頼と実績'}
           </p>
+
+          {/* Stat row */}
+          <p style={{
+            fontSize: 16,
+            color: '#64748b',
+            marginBottom: 28,
+            fontFamily: "'DM Sans', sans-serif",
+            textAlign: 'center',
+          }}>
+            <strong style={{ color: '#c4956a', fontWeight: 700 }}>20+</strong> {lang === 'en' ? 'Curators' : 'キュレーター'}
+            &nbsp;&nbsp;·&nbsp;&nbsp;
+            <strong style={{ color: '#c4956a', fontWeight: 700 }}>5+</strong> {lang === 'en' ? 'Countries' : 'カ国以上'}
+            &nbsp;&nbsp;·&nbsp;&nbsp;
+            <strong style={{ color: '#c4956a', fontWeight: 700 }}>200K+</strong> {lang === 'en' ? 'Combined Reach' : '合計リーチ'}
+          </p>
+
+          {/* Curator name marquee */}
+          <div className="curator-marquee-container" style={{
+            position: 'relative',
+            overflow: 'hidden',
+            padding: '8px 0',
+            marginBottom: 24,
+            WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, white 8%, white 92%, transparent 100%)',
+            maskImage: 'linear-gradient(90deg, transparent 0%, white 8%, white 92%, transparent 100%)',
+          }}>
+            <div className="curator-marquee-track" style={{
+              display: 'flex',
+              gap: 12,
+              width: 'max-content',
+              animation: 'curator-marquee-scroll 50s linear infinite',
+            }}>
+              {[
+                'EREN AKSOY',
+                'Isaac Tan',
+                'This Light',
+                'Jusu',
+                'Van Paugam',
+                'City Pulse',
+                'Claudio Todesco',
+                'playlistd',
+                'Polychroma',
+                'AndrésXnothing',
+                'Pierre RENAUD',
+                'STR Playlists',
+                'Leap',
+                'Victor Bendo Selections',
+                'Matheus Luzi',
+                'Monica Tong',
+                'Akuma Records',
+                'othniel tomtania',
+                'Tinnitist',
+                'Pyaar Music',
+                'EREN AKSOY',
+                'Isaac Tan',
+                'This Light',
+                'Jusu',
+                'Van Paugam',
+                'City Pulse',
+                'Claudio Todesco',
+                'playlistd',
+                'Polychroma',
+                'AndrésXnothing',
+                'Pierre RENAUD',
+                'STR Playlists',
+                'Leap',
+                'Victor Bendo Selections',
+                'Matheus Luzi',
+                'Monica Tong',
+                'Akuma Records',
+                'othniel tomtania',
+                'Tinnitist',
+                'Pyaar Music',
+              ].map((name, i) => (
+                <span key={i} style={{
+                  border: '1px solid #e2e8f0',
+                  borderRadius: 20,
+                  padding: '8px 18px',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 14,
+                  color: '#1e293b',
+                  background: 'white',
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}>
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Browse all curators link */}
+          <p style={{
+            textAlign: 'center',
+            fontSize: 13,
+            color: '#94a3b8',
+            marginBottom: 28,
+            fontFamily: "'DM Sans', sans-serif",
+          }}>
+            <a href="/curators" style={{ color: '#c4956a', textDecoration: 'none', fontWeight: 600 }}>
+              {lang === 'en' ? 'Browse all curators →' : 'キュレーター一覧を見る →'}
+            </a>
+          </p>
+
           <div style={{
             display: 'flex',
             justifyContent: 'center',
@@ -945,118 +1049,6 @@ export default function HomePage() {
               <a href="/artist" className="cta-coral cta-button" style={{ fontSize: 16, padding: '15px 36px' }}>{t.how.cta}</a>
             </div>
           </AnimatedSection>
-        </div>
-      </section>
-
-      {/* ========== CURATOR TRUST BAR ========== */}
-      <section style={{
-        padding: '64px 20px',
-        background: '#f8fafc',
-        textAlign: 'center',
-      }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <h2 style={{
-            fontFamily: "'Sora', sans-serif",
-            fontSize: 26,
-            fontWeight: 600,
-            color: '#1e293b',
-            marginBottom: 12,
-            letterSpacing: '-0.02em',
-          }}>
-            {lang === 'en' ? 'Trusted by curators worldwide' : '世界のキュレーターが参加しています'}
-          </h2>
-          <p style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: 15,
-            color: '#64748b',
-            marginBottom: 40,
-            maxWidth: 520,
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            lineHeight: 1.6,
-          }}>
-            {lang === 'en'
-              ? 'Playlist curators, music journalists, and radio hosts from around the world review tracks on OTONAMI.'
-              : 'プレイリスター、音楽ジャーナリスト、ラジオホストが世界各地からOTONAMIに参加。'}
-          </p>
-
-          <div className="trust-stats-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 32,
-            marginBottom: 36,
-            maxWidth: 700,
-            marginLeft: 'auto',
-            marginRight: 'auto',
-          }}>
-            {[
-              { num: '20+', labelEn: 'Curators', labelJp: 'キュレーター' },
-              { num: '5+', labelEn: 'Countries', labelJp: 'カ国以上' },
-              { num: '200K+', labelEn: 'Combined Reach', labelJp: '合計リーチ' },
-            ].map((item, i) => (
-              <div key={i} style={{ textAlign: 'center' }}>
-                <div style={{
-                  fontFamily: "'Sora', sans-serif",
-                  fontSize: 40,
-                  fontWeight: 700,
-                  color: '#c4956a',
-                  lineHeight: 1.1,
-                  marginBottom: 6,
-                }}>
-                  {item.num}
-                </div>
-                <div style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 14,
-                  color: '#64748b',
-                  fontWeight: 500,
-                }}>
-                  {lang === 'en' ? item.labelEn : item.labelJp}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-            gap: 12,
-            marginBottom: 32,
-          }}>
-            {[
-              { en: 'Playlist Curators', jp: 'プレイリスター' },
-              { en: 'Media & Journalists', jp: 'メディア・ジャーナリスト' },
-              { en: 'Radio & Podcast', jp: 'ラジオ・ポッドキャスト' },
-            ].map((type, i) => (
-              <span key={i} style={{
-                border: '1px solid #e2e8f0',
-                borderRadius: 20,
-                padding: '8px 18px',
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: 13,
-                color: '#475569',
-                background: 'white',
-                fontWeight: 500,
-              }}>
-                {lang === 'en' ? type.en : type.jp}
-              </span>
-            ))}
-          </div>
-
-          <a
-            href="/curators"
-            style={{
-              fontFamily: "'DM Sans', sans-serif",
-              fontSize: 14,
-              color: '#c4956a',
-              textDecoration: 'none',
-              fontWeight: 600,
-              transition: 'opacity 0.2s',
-            }}
-          >
-            {lang === 'en' ? 'Browse all curators →' : 'キュレーター一覧を見る →'}
-          </a>
         </div>
       </section>
 

@@ -487,7 +487,7 @@ export default function HomePage() {
                 transition: 'all 0.2s ease',
               }}>JP</button>
             </div>
-            {[{ href: '#how-it-works', label: t.nav.how }, { href: '#for-curators', label: t.nav.curators }, { href: '#for-artists', label: t.nav.artists }].map(item => (
+            {[{ href: '#how-it-works', label: t.nav.how }].map(item => (
               <a key={item.href + item.label} href={item.href} onClick={() => setMenuOpen(false)}
                 style={{ color: D.textSec, textDecoration: 'none', fontSize: 20, fontWeight: 400, padding: '14px 0', borderBottom: `1px solid ${D.border}`, transition: 'color 0.2s' }}
                 onMouseEnter={e => e.target.style.color = D.text}
@@ -512,10 +512,6 @@ export default function HomePage() {
             <svg width="36" height="36" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="20" cy="20" r="16" fill="none" stroke="#FF6B4A" strokeWidth="5"/><g style={{clipPath:'circle(32.5% at 50% 50%)'}} fill="#FF6B4A"><rect x="8" y="17" width="2" height="6" rx="1"/><rect x="12" y="14" width="2" height="12" rx="1"/><rect x="16" y="11" width="2" height="18" rx="1"/><rect x="20" y="8" width="2" height="24" rx="1"/><rect x="24" y="11" width="2" height="18" rx="1"/><rect x="28" y="14" width="2" height="12" rx="1"/><rect x="32" y="17" width="2" height="6" rx="1"/></g></svg>
             <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '3px', color: '#ffffff' }}>OTONAMI</span>
           </a>
-          <nav className="nav-desktop-links nav-links liquid-glass" style={{ display: 'flex', alignItems: 'center', gap: 4, borderRadius: 9999, padding: '4px 4px' }}>
-            <a href="#for-curators" className="nav-link">{t.nav.curators}</a>
-            <a href="#for-artists"  className="nav-link">{t.nav.artists}</a>
-          </nav>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div className="lang-toggle" style={{ display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: 9999, padding: 3, gap: 2 }}>
               <button onClick={() => switchLang('en')} style={{

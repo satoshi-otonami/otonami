@@ -506,16 +506,13 @@ export default function CuratorsPage() {
 
   const hasFilters = genreFilter || typeFilter || searchQ;
 
-  /* ── Start Campaign handler ── */
+  /* ── Start Campaign handler (pre-launch: disabled until 2026-05-19) ── */
   const handleStartCampaign = useCallback(() => {
-    sessionStorage.setItem('otonami_selected_curators', JSON.stringify([...selected]));
-    window.location.href = '/studio';
-  }, [selected]);
-
-  /* ── Nav links ── */
-  const navLinks = [
-    { href: '/curators', label: lang === 'ja' ? 'キュレーターを探す'  : 'Find Curators'  },
-  ];
+    const msg = lang === 'ja'
+      ? 'OTONAMIは5月19日にローンチ予定です。もう少々お待ちください！'
+      : 'OTONAMI launches on May 19th. Stay tuned!';
+    alert(msg);
+  }, [lang]);
 
   /* ════════════════════════════════════════════════
      RENDER
@@ -570,19 +567,6 @@ export default function CuratorsPage() {
             <svg width="36" height="36" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="20" cy="20" r="16" fill="none" stroke="#FF6B4A" strokeWidth="5"/><g style={{clipPath:'circle(32.5% at 50% 50%)'}} fill="#FF6B4A"><rect x="8" y="17" width="2" height="6" rx="1"/><rect x="12" y="14" width="2" height="12" rx="1"/><rect x="16" y="11" width="2" height="18" rx="1"/><rect x="20" y="8" width="2" height="24" rx="1"/><rect x="24" y="11" width="2" height="18" rx="1"/><rect x="28" y="14" width="2" height="12" rx="1"/><rect x="32" y="17" width="2" height="6" rx="1"/></g></svg>
             <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '3px', color: '#1a1a1a' }}>OTONAMI</span>
           </a>
-          <nav className="nav-center" style={{ display: 'flex', gap: 4 }}>
-            {navLinks.map((item) => {
-              const isActive = item.href === '/curators';
-              return (
-                <a key={item.href} href={item.href} style={{
-                  padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: isActive ? 600 : 500,
-                  textDecoration: 'none', fontFamily: T.font,
-                  background: isActive ? T.accentLight : 'transparent',
-                  color: isActive ? T.accent : T.textSub,
-                }}>{item.label}</a>
-              );
-            })}
-          </nav>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', border: `1px solid ${T.border}` }}>

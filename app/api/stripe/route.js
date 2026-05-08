@@ -4,21 +4,37 @@ import { getServiceSupabase } from '@/lib/supabase';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_placeholder');
 
-// Credit packages (mirror frontend)
+// Credit packages — flat ¥160 base with volume discount (mirror frontend CREDIT_PACKAGES).
 const PACKAGES = {
   trial:    { credits: 5,   price: 800,   label: 'Trial' },
-  starter:  { credits: 15,  price: 2000,  label: 'Starter' },
-  standard: { credits: 30,  price: 3800,  label: 'Standard' },
-  pro:      { credits: 60,  price: 7000,  label: 'Pro' },
-  label:    { credits: 120, price: 12000, label: 'Label' },
+  light:    { credits: 10,  price: 1500,  label: 'Light' },
+  standard: { credits: 20,  price: 2800,  label: 'Standard' },
+  pro:      { credits: 40,  price: 5200,  label: 'Pro' },
+  business: { credits: 100, price: 12000, label: 'Business' },
 };
+const CREDIT_PRICE = 160; // JPY per credit (custom packages)
 
 // Create Stripe Checkout Session
 export async function POST(request) {
   try {
-    const { packageId, userId, userEmail } = await request.json();
-    const pkg = PACKAGES[packageId];
-    if (!pkg) return NextResponse.json({ error: 'Invalid package' }, { status: 400 });
+    const { packageId, credits: customCredits, userId, userEmail } = await request.json();
+
+    let credits, price, label;
+    if (packageId === 'custom') {
+      const n = parseInt(customCredits, 10);
+      if (!Number.isInteger(n) || n < 1 || n > 500) {
+        return NextResponse.json({ error: 'Custom credits must be between 1 and 500' }, { status: 400 });
+      }
+      credits = n;
+      price = n * CREDIT_PRICE;
+      label = `Custom (${n} credits)`;
+    } else {
+      const pkg = PACKAGES[packageId];
+      if (!pkg) return NextResponse.json({ error: 'Invalid package' }, { status: 400 });
+      credits = pkg.credits;
+      price = pkg.price;
+      label = pkg.label;
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -26,10 +42,10 @@ export async function POST(request) {
         price_data: {
           currency: 'jpy',
           product_data: {
-            name: `OTONAMI ${pkg.label} — ${pkg.credits} Credits`,
-            description: `${pkg.credits}クレジット（キュレーターへのピッチ送信用）`,
+            name: `OTONAMI ${label} — ${credits} Credits`,
+            description: `${credits}クレジット（キュレーターへのピッチ送信用）`,
           },
-          unit_amount: pkg.price,
+          unit_amount: price,
         },
         quantity: 1,
       }],
@@ -39,7 +55,7 @@ export async function POST(request) {
       metadata: {
         userId,
         packageId,
-        credits: String(pkg.credits),
+        credits: String(credits),
       },
       customer_email: userEmail,
     });
@@ -92,7 +108,7 @@ export async function PUT(request) {
       user_id: userId,
       amount: creditAmount,
       type: 'purchase',
-      description: `${PACKAGES[packageId]?.label} package — ${creditAmount} credits`,
+      description: `${PACKAGES[packageId]?.label || (packageId === 'custom' ? 'Custom' : packageId)} package — ${creditAmount} credits`,
       stripe_payment_id: session.payment_intent,
     });
 

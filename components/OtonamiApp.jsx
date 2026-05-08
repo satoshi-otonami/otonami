@@ -953,7 +953,7 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify, loggedIn
       onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(196,149,106,0.45)"} onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(196,149,106,0.25)"}>
       <div>
         <div style={{fontWeight:500,fontSize:15,color:"#1a1a1a",fontFamily:"'DM Sans',sans-serif"}}>クレジット残高: <span style={{color:"#c4956a",fontWeight:700}}>{credits}</span></div>
-        <div style={{fontSize:12,color:"#6b6560",marginTop:2,fontFamily:"'DM Sans',sans-serif"}}>1クレジット = ¥160 · キュレーターにより1〜4クレジット</div>
+        <div style={{fontSize:12,color:"#6b6560",marginTop:2,fontFamily:"'DM Sans',sans-serif"}}>1クレジット = ¥160 · キュレーターにより1〜5クレジット</div>
       </div>
       <div style={{background:"#c4956a",color:"#1a1a1a",fontSize:13,fontWeight:600,padding:"8px 20px",borderRadius:8,fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>+ 購入する →</div>
     </div>
@@ -2476,304 +2476,228 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     </div>}
   </div>;
 }
+// Credit packages — flat pricing with volume discount. ¥160 base, up to 25% off at 100cr.
 const CREDIT_PACKAGES = [
-  {id:"trial",credits:5,price:800,unit:160,label:"Trial",desc:"お試し",icon:"♪",color:"#9a958e"},
-  {id:"starter",credits:15,price:2000,unit:133,label:"Starter",desc:"17%お得",icon:"♪",color:"#3b82f6"},
-  {id:"standard",credits:30,price:3800,unit:127,label:"Standard",desc:"21%お得",icon:"♫",color:"#7c3aed",pop:true},
-  {id:"pro",credits:60,price:7000,unit:117,label:"Pro",desc:"27%お得",icon:"♫",color:"#ea580c"},
-  {id:"label",credits:120,price:12000,unit:100,label:"Label",desc:"38%お得・レーベル向け",icon:"♪♫",color:"#f59e0b"},
+  { id: "trial",    credits: 5,   price: 800,   unit: 160, label: { ja: "お試し",       en: "Trial" } },
+  { id: "light",    credits: 10,  price: 1500,  unit: 150, label: { ja: "ライト",       en: "Light" },                                                                  badge: { ja: "6%お得",  en: "6% off" } },
+  { id: "standard", credits: 20,  price: 2800,  unit: 140, label: { ja: "スタンダード", en: "Standard" }, popular: true,                                                  badge: { ja: "人気",     en: "Popular" } },
+  { id: "pro",      credits: 40,  price: 5200,  unit: 130, label: { ja: "プロ",         en: "Pro" },                                                                    badge: { ja: "お得",     en: "Great Value" } },
+  { id: "business", credits: 100, price: 12000, unit: 120, label: { ja: "ビジネス",     en: "Business" },                                                                badge: { ja: "最もお得", en: "Best Price" } },
 ];
-const SUBSCRIPTION = {id:"monthly",credits:40,price:4980,unit:125,label:"月額 Artist",desc:"毎月40クレジット + 優先サポート"};
-// Revenue split: 50:50 base (¥80/cr), 70:30 on acceptance (¥112/cr). Per-credit ¥160.
 const CREDIT_PRICE = 160;
 const CURATOR_PAY = {
   calc: (creditCost, accepted) => Math.round(creditCost * CREDIT_PRICE * (accepted ? 0.7 : 0.5)),
 };
+const LAUNCH_DATE_PURCHASE_JA = "OTONAMIは5月19日にローンチ予定です。クレジット購入はローンチ後に開始されます。";
+const LAUNCH_DATE_PURCHASE_EN = "OTONAMI launches on May 19th. Credit purchases will be available after launch.";
 
-function CreditShop({user, credits, saveCredits, notify, setPage}) {
+function CreditShop({ user, credits, saveCredits, notify, setPage }) {
   const [selectedPkg, setSelectedPkg] = useState(null);
-  const [payMethod, setPayMethod] = useState("card"); // card, applepay, paypay
-  const [payStep, setPayStep] = useState("select"); // select, payment, processing, complete
-  const [cardNum, setCardNum] = useState("");
-  const [cardExp, setCardExp] = useState("");
-  const [cardCvc, setCardCvc] = useState("");
-  const [cardName, setCardName] = useState("");
+  const [customCredits, setCustomCredits] = useState("");
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [locale, setLocale] = useState("ja");
 
-  // Load purchase history
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("otonami_locale");
+      if (saved === "ja" || saved === "en") setLocale(saved);
+    } catch {}
     (async () => {
       const h = await S.get("otonami-purchase-history");
       if (h) setHistory(h);
     })();
   }, []);
 
-  const formatCard = (v) => {
-    const n = v.replace(/\D/g, "").substring(0, 16);
-    return n.replace(/(.{4})/g, "$1 ").trim();
-  };
-  const formatExp = (v) => {
-    const n = v.replace(/\D/g, "").substring(0, 4);
-    if (n.length > 2) return n.substring(0, 2) + "/" + n.substring(2);
-    return n;
-  };
+  const isJa = locale === "ja";
+  const isCustom = selectedPkg?.id === "custom";
+  const customN = Math.max(0, Math.min(500, parseInt(customCredits, 10) || 0));
+  const activeCredits = isCustom ? customN : (selectedPkg?.credits || 0);
+  const activePrice = isCustom ? customN * CREDIT_PRICE : (selectedPkg?.price || 0);
 
-  const handlePurchase = async () => {
-    if (!selectedPkg) return;
-    // Validate card if card payment
-    if (payMethod === "card") {
-      const numClean = cardNum.replace(/\s/g, "");
-      if (numClean.length < 13) { notify("カード番号を入力してください", "error"); return; }
-      if (cardExp.length < 5) { notify("有効期限を入力してください", "error"); return; }
-      if (cardCvc.length < 3) { notify("CVCを入力してください", "error"); return; }
-      if (!cardName.trim()) { notify("カード名義を入力してください", "error"); return; }
-    }
-    setPayStep("processing");
-
-    await new Promise(r => setTimeout(r, 2000));
-
-    const pkg = selectedPkg;
-    const amount = pkg.id === "monthly" ? SUBSCRIPTION.credits : pkg.credits;
-    const price = pkg.id === "monthly" ? SUBSCRIPTION.price : pkg.price;
-
-    // Add credits
-    await saveCredits(credits + amount);
-
-    // Save purchase history
-    const record = {
-      id: "pur_" + Date.now(),
-      packageId: pkg.id,
-      label: pkg.label,
-      credits: amount,
-      price,
-      method: payMethod === "card" ? "クレジットカード" : payMethod === "applepay" ? "Apple Pay" : "PayPay",
-      cardLast4: payMethod === "card" ? cardNum.replace(/\s/g, "").slice(-4) : null,
-      date: new Date().toISOString(),
+  // Tier breakdown for the explanation block
+  const tierBreakdown = (n) => {
+    if (!n) return null;
+    return {
+      t1: n,
+      t2: Math.floor(n / 2),
+      t3: Math.floor(n / 3),
+      mixedLow: Math.floor(n / 5),
+      mixedHigh: n,
     };
-    const newHistory = [record, ...history].slice(0, 50);
-    setHistory(newHistory);
-    await S.set("otonami-purchase-history", newHistory);
+  };
+  const tb = tierBreakdown(activeCredits);
 
-    setPayStep("complete");
-    notify(`✓ ${amount}クレジットを追加しました`);
+  const handlePurchase = () => {
+    if (!selectedPkg) {
+      notify(isJa ? "パッケージを選択してください" : "Please select a package", "error");
+      return;
+    }
+    if (isCustom && (customN < 1 || customN > 500)) {
+      notify(isJa ? "1〜500クレジットの範囲で入力してください" : "Enter between 1 and 500 credits", "error");
+      return;
+    }
+    // Pre-launch: block actual checkout — show launch notice instead.
+    // Post-launch (5/19): replace the alert with the commented fetch below.
+    alert(isJa ? LAUNCH_DATE_PURCHASE_JA : LAUNCH_DATE_PURCHASE_EN);
+    /* POST-LAUNCH WIRING:
+    try {
+      const res = await fetch("/api/stripe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          packageId: isCustom ? "custom" : selectedPkg.id,
+          credits: isCustom ? customN : undefined,
+          userId: user?.id,
+          userEmail: user?.email,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else notify(data.error || (isJa ? "購入処理に失敗しました" : "Purchase failed"), "error");
+    } catch (err) {
+      notify(isJa ? "ネットワークエラーが発生しました" : "Network error", "error");
+    }
+    */
   };
 
-  const reset = () => {
-    setSelectedPkg(null); setPayStep("select"); setPayMethod("card");
-    setCardNum(""); setCardExp(""); setCardCvc(""); setCardName("");
+  // Card style helpers
+  const cardBase = {
+    padding: "1.1rem 0.9rem", borderRadius: 12, cursor: "pointer", fontFamily: "inherit",
+    textAlign: "center", position: "relative", transition: "all 0.15s",
+    background: "#ffffff", border: "1px solid #e5e2dc",
   };
+  const cardActive = { border: "2px solid #c4956a", background: "#fef9ee" };
 
-  // ── Complete Screen ──
-  if (payStep === "complete" && selectedPkg) {
-    const amt = selectedPkg.id === "monthly" ? SUBSCRIPTION.credits : selectedPkg.credits;
-    const price = selectedPkg.id === "monthly" ? SUBSCRIPTION.price : selectedPkg.price;
-    return <div>
-      <div style={{textAlign:"center",padding:"2rem 0"}}>
-        <div style={{width:80,height:80,borderRadius:"50%",background:"linear-gradient(135deg,rgba(196,149,106,0.15),rgba(196,149,106,0.35))",display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:"2.5rem",marginBottom:"1.2rem"}}>✓</div>
-        <h1 style={{fontSize:"1.5rem",fontWeight:800,marginBottom:"0.5rem"}}>購入完了</h1>
-        <p style={{color:"#6b6560",marginBottom:"2rem"}}>ありがとうございます！</p>
-      </div>
-      {/* Receipt */}
-      <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"1.5rem",marginBottom:"1.5rem"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem"}}>
-          <div style={{fontWeight:800,fontSize:"0.95rem",color:"#1a1a1a"}}>OTONAMI 領収書</div>
-          <div style={{fontSize:"0.72rem",color:"#9a958e"}}>{new Date().toLocaleString("ja-JP")}</div>
-        </div>
-        <div style={{borderTop:"1px solid rgba(0,0,0,0.05)",paddingTop:"1rem"}}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:8,fontSize:"0.85rem",color:"#1a1a1a"}}><span>{selectedPkg.label} ({amt}クレジット)</span><span style={{fontWeight:700}}>¥{price.toLocaleString()}</span></div>
-          {selectedPkg.id !== "starter" && <div style={{display:"flex",justifyContent:"space-between",marginBottom:8,fontSize:"0.78rem",color:"#10b981"}}><span>割引</span><span>-¥{(amt * 100 - price).toLocaleString()}</span></div>}
-          <div style={{borderTop:"1px solid rgba(0,0,0,0.05)",paddingTop:8,display:"flex",justifyContent:"space-between",fontWeight:800,fontSize:"0.95rem",color:"#1a1a1a"}}><span>合計（税込）</span><span>¥{price.toLocaleString()}</span></div>
-        </div>
-        <div style={{background:"#f0ede6",borderRadius:10,padding:"0.8rem",marginTop:"1rem",fontSize:"0.78rem",color:"#6b6560"}}>
-          <div>お支払い方法: {payMethod === "card" ? "クレジットカード" : payMethod === "applepay" ? "Apple Pay" : "PayPay"}</div>
-          {payMethod === "card" && cardNum && <div>カード末尾: **** {cardNum.replace(/\s/g, "").slice(-4)}</div>}
-          <div>注文ID: pur_{Date.now()}</div>
-        </div>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-        <button onClick={()=>{reset();setPage("dashboard");}} style={css.btnPrimary}>ホームへ →</button>
-        <button onClick={()=>{reset();setPage("curators");}} style={{...css.btnPrimary,background:"linear-gradient(135deg,#06b6d4,#3b82f6)"}}>◎ キュレーター選択へ</button>
-      </div>
-    </div>;
-  }
-
-  // ── Processing Screen ──
-  if (payStep === "processing") {
-    return <div style={{textAlign:"center",padding:"4rem 1rem"}}>
-      <div style={{width:60,height:60,border:"3px solid rgba(0,0,0,0.06)",borderTopColor:"#c4956a",borderRadius:"50%",animation:"spin 0.8s linear infinite",margin:"0 auto 1.5rem"}}/>
-      <h2 style={{fontSize:"1.2rem",fontWeight:700,marginBottom:4,color:"#1a1a1a"}}>決済処理中...</h2>
-      <p style={{fontSize:"0.82rem",color:"#6b6560"}}>{payMethod === "card" ? "カード情報を確認しています" : payMethod === "applepay" ? "Apple Payで認証中" : "PayPay決済を処理中"}</p>
-    </div>;
-  }
-
-  // ── Payment Form ──
-  if (payStep === "payment" && selectedPkg) {
-    const pkg = selectedPkg;
-    const amt = pkg.id === "monthly" ? SUBSCRIPTION.credits : pkg.credits;
-    const price = pkg.id === "monthly" ? SUBSCRIPTION.price : pkg.price;
-    return <div>
-      <button onClick={()=>setPayStep("select")} style={{...css.btnGhost,marginBottom:"1.2rem",fontSize:"0.78rem"}}>← パッケージ選択に戻る</button>
-      {/* Order Summary */}
-      <div style={{background:"linear-gradient(135deg,#f5f3ff,#ecfeff)",border:"1px solid #ddd6fe",borderRadius:16,padding:"1.2rem",marginBottom:"1.5rem"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div><div style={{fontWeight:800,fontSize:"1rem"}}>{pkg.label}</div><div style={{fontSize:"0.78rem",color:"#7c3aed"}}>{amt}クレジット</div></div>
-          <div style={{fontSize:"1.3rem",fontWeight:800}}>¥{price.toLocaleString()}</div>
-        </div>
-      </div>
-
-      {/* Payment Method Tabs */}
-      <div style={{display:"flex",gap:6,marginBottom:"1.2rem"}}>
-        {[
-          {id:"card",label:"カード",desc:"Visa / Master / AMEX"},
-          {id:"applepay",label:" Apple Pay",desc:"Touch ID / Face ID"},
-          {id:"paypay",label:"₱ PayPay",desc:"QRコード決済"},
-        ].map(m => (
-          <button key={m.id} onClick={()=>setPayMethod(m.id)} style={{flex:1,padding:"0.7rem 0.5rem",borderRadius:12,border:payMethod===m.id?"2px solid #c4956a":"1px solid rgba(0,0,0,0.06)",background:payMethod===m.id?"rgba(196,149,106,0.08)":"#ffffff",cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
-            <div style={{fontWeight:payMethod===m.id?700:500,fontSize:"0.82rem",color:payMethod===m.id?"#c4956a":"#1a1a1a"}}>{m.label}</div>
-            <div style={{fontSize:"0.62rem",color:"#9a958e"}}>{m.desc}</div>
-          </button>
-        ))}
-      </div>
-
-      {/* Card Form */}
-      {payMethod === "card" && <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"1.5rem"}}>
-        <div style={{display:"flex",gap:8,marginBottom:"0.5rem",alignItems:"center"}}>
-          <span style={{fontWeight:700,fontSize:"0.88rem",borderLeft:"3px solid #c4956a",paddingLeft:10}}>カード情報</span>
-          <div style={{marginLeft:"auto",display:"flex",gap:4}}>
-            {["VISA","Master","AMEX","JCB"].map(b => <span key={b} style={{fontSize:"0.55rem",padding:"0.15rem 0.35rem",borderRadius:4,background:"#f0ede6",color:"#6b6560",fontWeight:600}}>{b}</span>)}
-          </div>
-        </div>
-        <div style={{marginBottom:8}}>
-          <label style={{fontSize:"0.72rem",color:"#6b6560",fontWeight:600}}>カード番号</label>
-          <input value={cardNum} onChange={e=>setCardNum(formatCard(e.target.value))} placeholder="4242 4242 4242 4242" style={{...css.input,fontVariantNumeric:"tabular-nums",letterSpacing:"0.05em",fontSize:"1rem"}} maxLength={19}/>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-          <div><label style={{fontSize:"0.72rem",color:"#6b6560",fontWeight:600}}>有効期限</label><input value={cardExp} onChange={e=>setCardExp(formatExp(e.target.value))} placeholder="MM/YY" style={{...css.input,fontSize:"1rem"}} maxLength={5}/></div>
-          <div><label style={{fontSize:"0.72rem",color:"#6b6560",fontWeight:600}}>CVC</label><input value={cardCvc} onChange={e=>setCardCvc(e.target.value.replace(/\D/g,"").substring(0,4))} placeholder="123" type="password" style={{...css.input,fontSize:"1rem"}} maxLength={4}/></div>
-        </div>
-        <div><label style={{fontSize:"0.72rem",color:"#6b6560",fontWeight:600}}>カード名義</label><input value={cardName} onChange={e=>setCardName(e.target.value.toUpperCase())} placeholder="TARO YAMADA" style={{...css.input,textTransform:"uppercase",fontSize:"0.95rem"}}/></div>
-        <div style={{fontSize:"0.65rem",color:"#9a958e",marginTop:4,display:"flex",alignItems:"center",gap:4}}>SSL暗号化通信 · カード情報はStripeが安全に管理します</div>
-      </div>}
-
-      {/* Apple Pay */}
-      {payMethod === "applepay" && <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"2rem",textAlign:"center"}}>
-        <div style={{fontSize:"3rem",marginBottom:"0.8rem"}}></div>
-        <div style={{fontWeight:700,marginBottom:4}}>Apple Pay で支払う</div>
-        <div style={{fontSize:"0.78rem",color:"#6b6560",marginBottom:"1rem"}}>Touch ID または Face ID で認証</div>
-        <div style={{background:"#000",color:"#fff",borderRadius:12,padding:"0.8rem",fontWeight:600,fontSize:"0.95rem",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}> Pay ¥{price.toLocaleString()}</div>
-        <div style={{fontSize:"0.65rem",color:"#9a958e",marginTop:8}}>※ デモモード: 実際の決済は行われません</div>
-      </div>}
-
-      {/* PayPay */}
-      {payMethod === "paypay" && <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"2rem",textAlign:"center"}}>
-        <div style={{width:80,height:80,borderRadius:16,background:"#ff0033",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:"1rem"}}>
-          <span style={{color:"#fff",fontWeight:800,fontSize:"1.1rem"}}>Pay<br/>Pay</span>
-        </div>
-        <div style={{fontWeight:700,marginBottom:4}}>PayPay で支払う</div>
-        <div style={{fontSize:"0.78rem",color:"#6b6560",marginBottom:"1rem"}}>アプリでQRコードをスキャン</div>
-        {/* QR Code placeholder */}
-        <div style={{width:160,height:160,margin:"0 auto",background:"#ffffff",border:"2px solid rgba(0,0,0,0.06)",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <div style={{textAlign:"center"}}>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:1,width:80,margin:"0 auto"}}>
-              {Array.from({length:64}).map((_,i) => <div key={i} style={{width:8,height:8,background:Math.random()>0.5?"#1a1a1a":"#ffffff",borderRadius:1}}/>)}
-            </div>
-            <div style={{fontSize:"0.6rem",color:"#9a958e",marginTop:6}}>DEMO QR</div>
-          </div>
-        </div>
-        <div style={{fontSize:"0.65rem",color:"#9a958e",marginTop:8}}>※ デモモード: 実際の決済は行われません</div>
-      </div>}
-
-      {/* Purchase Button */}
-      <button onClick={handlePurchase} style={{...css.btnPrimary,width:"100%",marginTop:"1.2rem",padding:"0.9rem",fontSize:"1rem",background:"linear-gradient(135deg,#f59e0b,#ea580c)"}}>
-        {payMethod === "applepay" ? " Pay で " : payMethod === "paypay" ? "PayPay で " : ""}¥{price.toLocaleString()} を支払う
-      </button>
-      <div style={{textAlign:"center",marginTop:8,fontSize:"0.68rem",color:"#9a958e"}}>Stripe社のセキュリティ基準で保護 · PCI DSS準拠 · いつでもキャンセル可能</div>
-    </div>;
-  }
-
-  // ── Package Selection Screen ──
   return <div>
-    <div style={{marginBottom:"1.5rem"}}>
-      <h1 style={{fontSize:"1.4rem",fontWeight:800,margin:0}}>クレジット購入</h1>
-      <p style={{color:"#6b6560",fontSize:"0.85rem",margin:"0.3rem 0 0"}}>残高: <span style={{color:"#f59e0b",fontWeight:700}}>{credits}クレジット</span> · 1クレジット = ¥160基本単価 · キュレーターにより1〜4クレジット</p>
+    {/* Header */}
+    <div style={{ marginBottom: "1.2rem" }}>
+      <h1 style={{ fontSize: "1.4rem", fontWeight: 800, margin: 0, fontFamily: "'Sora', sans-serif" }}>
+        {isJa ? "クレジットを購入" : "Buy Credits"}
+      </h1>
+      <p style={{ color: "#6b6560", fontSize: "0.85rem", margin: "0.3rem 0 0", fontFamily: "'DM Sans', sans-serif" }}>
+        {isJa ? "現在の残高: " : "Current balance: "}
+        <span style={{ color: "#c4956a", fontWeight: 700 }}>{credits}</span>
+        {isJa ? " クレジット" : " credits"}
+      </p>
     </div>
 
     {/* Package Cards */}
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:"1.5rem"}}>
-      {CREDIT_PACKAGES.map(pkg => {
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 12 }}>
+      {CREDIT_PACKAGES.slice(0, 3).map(pkg => {
         const selected = selectedPkg?.id === pkg.id;
-        const savings = pkg.credits * 100 - pkg.price;
-        return <button key={pkg.id} onClick={()=>setSelectedPkg(pkg)} style={{padding:"1.2rem",borderRadius:16,border:selected?"2px solid "+pkg.color:pkg.pop?"2px solid rgba(0,0,0,0.1)":"1px solid rgba(0,0,0,0.06)",background:selected?"rgba(196,149,106,0.08)":pkg.pop?"#ffffff":"#ffffff",cursor:"pointer",fontFamily:"inherit",textAlign:"center",position:"relative",transition:"all 0.15s"}}>
-          {pkg.pop && <div style={{position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",background:"linear-gradient(135deg,#3b82f6,#06b6d4)",color:"#fff",fontSize:"0.6rem",fontWeight:700,padding:"0.15rem 0.5rem",borderRadius:6}}>人気 No.1</div>}
-          <div style={{fontSize:"1.5rem",marginBottom:4}}>{pkg.icon}</div>
-          <div style={{fontWeight:800,fontSize:"1rem",color:pkg.color}}>{pkg.credits}</div>
-          <div style={{fontSize:"0.72rem",color:"#6b6560"}}>クレジット</div>
-          <div style={{fontSize:"1.1rem",fontWeight:800,color:"#1a1a1a",marginTop:6}}>¥{pkg.price.toLocaleString()}</div>
-          <div style={{fontSize:"0.68rem",color:savings>0?"#10b981":"#9a958e",fontWeight:savings>0?600:400}}>{savings>0?"¥"+savings.toLocaleString()+"お得！":"¥"+pkg.unit+"/credit"}</div>
-          <div style={{fontSize:"0.65rem",color:"#9a958e",marginTop:2}}>{pkg.desc}</div>
-          {selected && <div style={{position:"absolute",top:8,right:8,width:20,height:20,borderRadius:"50%",background:pkg.color,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.65rem",fontWeight:700}}>✓</div>}
+        return <button key={pkg.id} onClick={() => setSelectedPkg(pkg)}
+          style={{ ...cardBase, ...(selected ? cardActive : {}) }}>
+          {pkg.badge && <div style={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", background: "#c4956a", color: "#fff", fontSize: "0.62rem", fontWeight: 700, padding: "2px 10px", borderRadius: 9999, whiteSpace: "nowrap" }}>{isJa ? pkg.badge.ja : pkg.badge.en}</div>}
+          <div style={{ fontWeight: 800, fontSize: "1.4rem", color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>{pkg.credits}</div>
+          <div style={{ fontSize: "0.7rem", color: "#6b6560", marginBottom: 4 }}>{isJa ? "クレジット" : "credits"}</div>
+          <div style={{ fontSize: "1.05rem", fontWeight: 700, color: "#c4956a" }}>¥{pkg.price.toLocaleString()}</div>
+          <div style={{ fontSize: "0.65rem", color: "#9a958e", marginTop: 2 }}>¥{pkg.unit}/cr</div>
         </button>;
       })}
     </div>
 
-    {/* Subscription Option */}
-    <div onClick={()=>setSelectedPkg(SUBSCRIPTION)} style={{background:selectedPkg?.id==="monthly"?"rgba(196,149,106,0.08)":"#ffffff",border:selectedPkg?.id==="monthly"?"2px solid #c4956a":"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"1.2rem",marginBottom:"1.5rem",cursor:"pointer",transition:"all 0.15s"}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:44,height:44,borderRadius:12,background:"linear-gradient(135deg,#c4956a,#e85d3a)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1.2rem"}}>♾️</div>
-          <div>
-            <div style={{fontWeight:800,fontSize:"0.95rem",color:"#1a1a1a"}}>月額プラン</div>
-            <div style={{fontSize:"0.75rem",color:"#c4956a"}}>{SUBSCRIPTION.desc}</div>
-          </div>
-        </div>
-        <div style={{textAlign:"right"}}>
-          <div style={{fontWeight:800,fontSize:"1.1rem",color:"#1a1a1a"}}>¥{SUBSCRIPTION.price.toLocaleString()}<span style={{fontSize:"0.72rem",fontWeight:400,color:"#6b6560"}}>/月</span></div>
-          <div style={{fontSize:"0.65rem",color:"#10b981",fontWeight:600}}>35%お得</div>
-        </div>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: "1.2rem" }}>
+      {CREDIT_PACKAGES.slice(3).map(pkg => {
+        const selected = selectedPkg?.id === pkg.id;
+        return <button key={pkg.id} onClick={() => setSelectedPkg(pkg)}
+          style={{ ...cardBase, ...(selected ? cardActive : {}) }}>
+          {pkg.badge && <div style={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", background: "#c4956a", color: "#fff", fontSize: "0.62rem", fontWeight: 700, padding: "2px 10px", borderRadius: 9999, whiteSpace: "nowrap" }}>{isJa ? pkg.badge.ja : pkg.badge.en}</div>}
+          <div style={{ fontWeight: 800, fontSize: "1.4rem", color: "#1a1a1a", fontFamily: "'Sora', sans-serif" }}>{pkg.credits}</div>
+          <div style={{ fontSize: "0.7rem", color: "#6b6560", marginBottom: 4 }}>{isJa ? "クレジット" : "credits"}</div>
+          <div style={{ fontSize: "1.05rem", fontWeight: 700, color: "#c4956a" }}>¥{pkg.price.toLocaleString()}</div>
+          <div style={{ fontSize: "0.65rem", color: "#9a958e", marginTop: 2 }}>¥{pkg.unit}/cr</div>
+        </button>;
+      })}
+
+      {/* Custom card */}
+      <button onClick={() => setSelectedPkg({ id: "custom", credits: customN, price: customN * CREDIT_PRICE, label: { ja: "カスタム", en: "Custom" } })}
+        style={{ ...cardBase, ...(isCustom ? cardActive : {}) }}>
+        <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#1a1a1a", marginBottom: 6, fontFamily: "'Sora', sans-serif" }}>{isJa ? "カスタム" : "Custom"}</div>
+        <input
+          type="number"
+          min={1}
+          max={500}
+          value={customCredits}
+          onChange={(e) => {
+            const v = e.target.value;
+            setCustomCredits(v);
+            const n = parseInt(v, 10) || 0;
+            setSelectedPkg({ id: "custom", credits: n, price: n * CREDIT_PRICE, label: { ja: "カスタム", en: "Custom" } });
+          }}
+          onClick={(e) => e.stopPropagation()}
+          placeholder={isJa ? "1〜500" : "1-500"}
+          style={{
+            width: "100%", padding: "6px 8px", borderRadius: 6,
+            border: "1px solid #e5e2dc", textAlign: "center",
+            fontSize: "0.9rem", fontWeight: 700, fontFamily: "'Sora', sans-serif",
+          }}
+        />
+        <div style={{ fontSize: "0.65rem", color: "#9a958e", marginTop: 4 }}>¥{CREDIT_PRICE}/cr</div>
+      </button>
+    </div>
+
+    {/* Tier Explanation */}
+    <div style={{ background: "#fef9ee", border: "1px solid rgba(196,149,106,0.25)", borderRadius: 12, padding: "0.9rem 1rem", marginBottom: "1.2rem", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ fontSize: "0.78rem", color: "#1a1a1a", lineHeight: 1.55 }}>
+        <strong style={{ color: "#c4956a" }}>{isJa ? "1クレジット = ¥160" : "1 credit = ¥160"}</strong>
+        <span style={{ color: "#6b6560" }}> · {isJa ? "キュレーター1名あたり1〜5クレジット" : "1-5 credits per curator"}</span>
+        {tb && tb.t1 > 0 && <div style={{ marginTop: 6, color: "#6b6560", fontSize: "0.74rem" }}>
+          <span style={{ fontWeight: 600, color: "#1a1a1a" }}>{activeCredits}{isJa ? "クレジット" : " credits"}</span>
+          {" = "}
+          {isJa
+            ? `Tier1: ${tb.t1}名 / Tier2: ${tb.t2}名 / Tier3: ${tb.t3}名 / 混合: ${tb.mixedLow}〜${tb.mixedHigh}名`
+            : `Tier 1: ${tb.t1} / Tier 2: ${tb.t2} / Tier 3: ${tb.t3} / Mixed: ${tb.mixedLow}-${tb.mixedHigh}`}
+        </div>}
       </div>
     </div>
 
-    {/* Purchase CTA */}
-    <button onClick={()=>{if(selectedPkg)setPayStep("payment");else notify("パッケージを選択してください","error");}} disabled={!selectedPkg} style={{...css.btnPrimary,width:"100%",padding:"0.9rem",fontSize:"1rem",background:selectedPkg?"linear-gradient(135deg,#f59e0b,#ea580c)":"rgba(0,0,0,0.06)",color:selectedPkg?"#fff":"#9a958e",cursor:selectedPkg?"pointer":"default",marginBottom:"1rem"}}>
-      {selectedPkg ? "決済へ進む — ¥" + (selectedPkg.id==="monthly"?SUBSCRIPTION.price:selectedPkg.price).toLocaleString() : "パッケージを選択してください"}
+    {/* Purchase Button */}
+    <button onClick={handlePurchase} disabled={!selectedPkg || (isCustom && customN < 1)}
+      style={{
+        width: "100%", padding: "14px", border: "none", borderRadius: 10,
+        fontSize: "1rem", fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
+        background: (selectedPkg && (!isCustom || customN >= 1)) ? "#c4956a" : "#e5e2dc",
+        color: (selectedPkg && (!isCustom || customN >= 1)) ? "#ffffff" : "#9a958e",
+        cursor: (selectedPkg && (!isCustom || customN >= 1)) ? "pointer" : "not-allowed",
+        marginBottom: 8,
+      }}>
+      {selectedPkg && (!isCustom || customN >= 1)
+        ? (isJa ? `購入する — ¥${activePrice.toLocaleString()} →` : `Buy — ¥${activePrice.toLocaleString()} →`)
+        : (isJa ? "パッケージを選択してください" : "Please select a package")}
     </button>
 
-    {/* Payment Methods */}
-    <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginBottom:"1.5rem"}}>
-      <span style={{fontSize:"0.68rem",color:"#9a958e"}}>対応決済:</span>
-      {["VISA","Master","AMEX","JCB","Apple Pay","Google Pay","PayPay"].map(m => <span key={m} style={{fontSize:"0.58rem",padding:"0.15rem 0.35rem",borderRadius:4,background:"#f0ede6",color:"#6b6560",fontWeight:500}}>{m}</span>)}
+    {/* Trust + Payment Methods */}
+    <div style={{ textAlign: "center", marginBottom: "1.5rem", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ fontSize: "0.7rem", color: "#6b6560", marginBottom: 6 }}>
+        {isJa ? "Stripeで安全に決済されます" : "Secure checkout powered by Stripe"}
+      </div>
+      <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 4 }}>
+        {["VISA", "Master", "AMEX", "JCB", "Apple Pay", "Google Pay"].map(m => (
+          <span key={m} style={{ fontSize: "0.6rem", padding: "2px 8px", borderRadius: 4, background: "#f0ede6", color: "#6b6560", fontWeight: 500 }}>{m}</span>
+        ))}
+      </div>
     </div>
 
     {/* Purchase History */}
-    <div style={{borderTop:"1px solid rgba(0,0,0,0.05)",paddingTop:"1rem"}}>
-      <button onClick={()=>setShowHistory(!showHistory)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",width:"100%",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit",padding:"0.5rem 0"}}>
-        <span style={{fontWeight:700,fontSize:"0.85rem",color:"#1a1a1a",borderLeft:"3px solid #c4956a",paddingLeft:10}}>購入履歴</span>
-        <span style={{fontSize:"0.75rem",color:"#9a958e"}}>{showHistory?"▲":"▼"}</span>
+    <div style={{ borderTop: "1px solid rgba(0,0,0,0.05)", paddingTop: "1rem" }}>
+      <button onClick={() => setShowHistory(!showHistory)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "0.5rem 0" }}>
+        <span style={{ fontWeight: 700, fontSize: "0.85rem", color: "#1a1a1a", borderLeft: "3px solid #c4956a", paddingLeft: 10 }}>{isJa ? "購入履歴" : "Purchase history"}</span>
+        <span style={{ fontSize: "0.75rem", color: "#9a958e" }}>{showHistory ? "▲" : "▼"}</span>
       </button>
       {showHistory && <div>
-        {history.length === 0 && <div style={{textAlign:"center",padding:"1.5rem",color:"#9a958e",fontSize:"0.82rem"}}>まだ購入履歴はありません</div>}
+        {history.length === 0 && <div style={{ textAlign: "center", padding: "1.5rem", color: "#9a958e", fontSize: "0.82rem" }}>{isJa ? "まだ購入履歴はありません" : "No purchases yet"}</div>}
         {history.map(h => (
-          <div key={h.id} style={{display:"flex",alignItems:"center",gap:10,padding:"0.7rem 0",borderBottom:"1px solid rgba(0,0,0,0.05)"}}>
-            <div style={{width:36,height:36,borderRadius:10,background:"#f0ede6",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.75rem",color:"#c4956a",fontWeight:700}}>¥</div>
-            <div style={{flex:1}}>
-              <div style={{fontSize:"0.82rem",fontWeight:600}}>{h.label} — {h.credits}クレジット</div>
-              <div style={{fontSize:"0.68rem",color:"#9a958e"}}>{h.method}{h.cardLast4?" (****"+h.cardLast4+")":""} · {new Date(h.date).toLocaleString("ja-JP")}</div>
+          <div key={h.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "0.7rem 0", borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "#f0ede6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", color: "#c4956a", fontWeight: 700 }}>¥</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "0.82rem", fontWeight: 600 }}>{h.label} — {h.credits}{isJa ? "クレジット" : " credits"}</div>
+              <div style={{ fontSize: "0.68rem", color: "#9a958e" }}>{h.method}{h.cardLast4 ? " (****" + h.cardLast4 + ")" : ""} · {new Date(h.date).toLocaleString(isJa ? "ja-JP" : "en-US")}</div>
             </div>
-            <div style={{fontWeight:700,fontSize:"0.82rem"}}>¥{h.price.toLocaleString()}</div>
+            <div style={{ fontWeight: 700, fontSize: "0.82rem" }}>¥{h.price.toLocaleString()}</div>
           </div>
         ))}
       </div>}
-    </div>
-
-    {/* Trust Badges */}
-    <div style={{background:"#ffffff",borderRadius:12,padding:"1rem",marginTop:"1rem"}}>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center"}}>
-        {[{l:"SSL暗号化"},{l:"PCI DSS準拠"},{l:"返金保証"}].map((t,i) => <div key={i}>
-          <div style={{width:24,height:2,background:"#c4956a",borderRadius:1,margin:"0 auto 6px"}}/>
-          <div style={{fontSize:"0.65rem",color:"#6b6560",marginTop:2}}>{t.l}</div>
-        </div>)}
-      </div>
     </div>
   </div>;
 }

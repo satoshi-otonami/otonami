@@ -325,6 +325,49 @@ export default function HomePage() {
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
+  /* Handle Stripe redirect: ?payment=success&session_id=... or ?payment=cancel */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment');
+    const sessionId = params.get('session_id');
+    if (!paymentStatus) return;
+
+    const cleanUrl = () => window.history.replaceState({}, '', window.location.pathname);
+
+    if (paymentStatus === 'cancel') {
+      alert('決済をキャンセルしました / Payment cancelled');
+      cleanUrl();
+      return;
+    }
+    if (paymentStatus !== 'success' || !sessionId) return;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/stripe', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          cleanUrl();
+          const msg = data.already_processed
+            ? `すでに処理済みです / Already processed.\n現在の残高: ${data.credits} クレジット`
+            : `決済完了！${data.added} クレジットを付与しました。\nPayment successful! Added ${data.added} credits.\n新しい残高 / New balance: ${data.credits}`;
+          alert(msg);
+          window.location.href = '/studio';
+        } else {
+          alert(`決済確認エラー / Payment verification error:\n${data.error || 'unknown'}\n\nお問い合わせください: info@otonami.io`);
+          cleanUrl();
+        }
+      } catch (err) {
+        alert('ネットワークエラー / Network error\n\nお問い合わせください: info@otonami.io');
+        cleanUrl();
+      }
+    })();
+  }, []);
+
   const switchLang = (l) => { setLang(l); try { localStorage.setItem('otonami_locale', l); } catch {} };
   const t = COPY[lang];
 

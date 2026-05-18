@@ -2667,9 +2667,6 @@ const CREDIT_PRICE = 160;
 const CURATOR_PAY = {
   calc: (creditCost, accepted) => Math.round(creditCost * CREDIT_PRICE * (accepted ? 0.7 : 0.5)),
 };
-const LAUNCH_DATE_PURCHASE_JA = "OTONAMIは5月19日にローンチ予定です。クレジット購入はローンチ後に開始されます。";
-const LAUNCH_DATE_PURCHASE_EN = "OTONAMI launches on May 19th. Credit purchases will be available after launch.";
-
 function CreditShop({ user, credits, saveCredits, notify, setPage }) {
   const [selectedPkg, setSelectedPkg] = useState(null);
   const [customCredits, setCustomCredits] = useState("");
@@ -2707,7 +2704,7 @@ function CreditShop({ user, credits, saveCredits, notify, setPage }) {
   };
   const tb = tierBreakdown(activeCredits);
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (!selectedPkg) {
       notify(isJa ? "パッケージを選択してください" : "Please select a package", "error");
       return;
@@ -2716,19 +2713,22 @@ function CreditShop({ user, credits, saveCredits, notify, setPage }) {
       notify(isJa ? "1〜500クレジットの範囲で入力してください" : "Enter between 1 and 500 credits", "error");
       return;
     }
-    // Pre-launch: block actual checkout — show launch notice instead.
-    // Post-launch (5/19): replace the alert with the commented fetch below.
-    alert(isJa ? LAUNCH_DATE_PURCHASE_JA : LAUNCH_DATE_PURCHASE_EN);
-    /* POST-LAUNCH WIRING:
+    let token = null;
+    try { token = localStorage.getItem("artist_token"); } catch {}
+    if (!token) {
+      notify(isJa ? "ログインが必要です" : "Login required", "error");
+      return;
+    }
     try {
       const res = await fetch("/api/stripe", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           packageId: isCustom ? "custom" : selectedPkg.id,
           credits: isCustom ? customN : undefined,
-          userId: user?.id,
-          userEmail: user?.email,
         }),
       });
       const data = await res.json();
@@ -2737,7 +2737,6 @@ function CreditShop({ user, credits, saveCredits, notify, setPage }) {
     } catch (err) {
       notify(isJa ? "ネットワークエラーが発生しました" : "Network error", "error");
     }
-    */
   };
 
   // Card style helpers

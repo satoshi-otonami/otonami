@@ -4,6 +4,7 @@ import { describeTrackCharacteristics } from '@/lib/track-description';
 import { verifyToken } from '@/lib/auth';
 import { pitchRatelimit, checkRatelimit } from '@/lib/ratelimit';
 import { INPUT_LIMITS, validateAllLengths } from '@/lib/validate-input';
+import { getServiceSupabase } from '@/lib/supabase';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder' });
 
@@ -29,6 +30,33 @@ export async function POST(request) {
 
     if (!artist?.name || !artist?.genre) {
       return NextResponse.json({ error: 'Artist name and genre required' }, { status: 400 });
+    }
+
+    // The pitch creation form stores a per-pitch description in localStorage,
+    // but the canonical artist profile bio lives in `artists.bio` (written via
+    // the artist profile page). These are NOT synced on the frontend, so we
+    // fetch the DB bio here and merge it into the prompt — without this, a
+    // user with a rich SXSW/Ghibli-grade bio in their profile sees a generic
+    // pitch because only the empty pitch-form description reaches Claude.
+    let artistDbBio = null;
+    let artistDbHotNews = null;
+    let artistDbInfluences = null;
+    try {
+      const sb = getServiceSupabase();
+      const { data: artistRow } = await sb
+        .from('artists')
+        .select('bio, hot_news, influences')
+        .eq('id', payload.artistId)
+        .maybeSingle();
+      if (artistRow) {
+        artistDbBio = artistRow.bio?.trim() || null;
+        artistDbHotNews = artistRow.hot_news?.trim() || null;
+        artistDbInfluences = Array.isArray(artistRow.influences) && artistRow.influences.length
+          ? artistRow.influences.join(', ')
+          : null;
+      }
+    } catch (e) {
+      console.warn('Pitch: artist bio fetch failed:', e.message);
     }
 
     const lengthError = validateAllLengths([
@@ -130,10 +158,11 @@ Name: ${artist.nameEn || artist.name}
 Japanese Name: ${artist.name}
 Genre: ${artist.genre}
 Mood/Sound: ${artist.mood || 'N/A'}
-Description (may be in Japanese — extract meaning, NEVER quote raw Japanese): ${artist.description || 'N/A'}
+${artistDbBio ? `Artist Bio — canonical self-introduction from the artist's profile (may be in Japanese — extract meaning, NEVER quote raw Japanese):\n${artistDbBio}\n` : ''}${artist.description ? `Description — pitch-specific notes from the artist (may be in Japanese): ${artist.description}` : (artistDbBio ? '' : 'Description: N/A')}
 Key Track: ${artist.songTitle || 'N/A'}
-Influences/Similar: ${artist.influences || 'N/A'}
+Influences/Similar: ${artist.influences || artistDbInfluences || 'N/A'}
 Achievements: ${artist.achievements || 'None listed'}
+${artistDbHotNews ? `Latest Activity: ${artistDbHotNews}` : ''}
 ${socialLines.length > 0 ? `Social Proof: ${socialLines.join(', ')}` : ''}
 ${linkLines.length > 0 ? `Links:\n${linkLines.join('\n')}` : ''}
 ${audioSection}
@@ -143,9 +172,9 @@ ${curatorInfo}
 
 ═══ STYLE: ${style?.toUpperCase() || 'PROFESSIONAL'} ═══
 ${style === 'casual' ? 'Warm, personal tone — like messaging a fellow music fan who happens to have influence. Genuine, not corporate. Use contractions.' : style === 'storytelling' ? 'Open with a vivid, sensory description of the music — what it sounds like, what it evokes. Paint a picture before the pitch. Make the curator feel the music through words.' : 'Polished, industry-standard tone. Concise. Lead with strongest credential. Respect the curator\'s time.'}
-${artist.description ? `
+${(artist.description || artistDbBio) ? `
 ═══ ARTIST NARRATIVE (MANDATORY — DO NOT SKIP) ═══
-The "Description" field above is the artist's own self-introduction. You MUST extract and incorporate AT LEAST TWO concrete specifics from it into the Hook or Body — anything the artist deliberately said about themselves: geography (city/country/scene), formation story, instrumentation/lineup, philosophy or theme of their work, defining experience, signature sound element. A generic line like "their music is emotive" does NOT satisfy this rule — pull SPECIFIC nouns and facts from the Description. If the Description is in Japanese, translate the meaning into natural English and use it; never quote the raw Japanese.
+The "Artist Bio" and "Description" fields above are the artist's own self-introduction (in their words). You MUST extract and incorporate AT LEAST TWO concrete specifics from those fields into the Hook or Body — pull SPECIFIC nouns and facts the artist deliberately wrote: formation year, founders/members and their roles, city/region/scene, signature sound concept, named festivals/venues/collaborators, named releases, philosophy, defining experience. A generic line like "their music is emotive" does NOT satisfy this rule. Prefer the longer "Artist Bio" when both are present — it is the canonical source. If the text is in Japanese, translate the meaning into natural English and use it; never quote the raw Japanese.
 ` : ''}${hasCuratorPersonality ? `
 ═══ PERSONALIZATION (MANDATORY — DO NOT SKIP) ═══
 The TARGET CURATOR section above contains real data about this specific curator. You MUST anchor the pitch to that data so it reads as researched, not templated. In the Hook OR Body, include AT LEAST ONE concrete reference drawn from:

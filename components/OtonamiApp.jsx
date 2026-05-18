@@ -949,10 +949,20 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify, loggedIn
       .dash-cta-primary:hover{background:#2a2a2a !important}
       .dash-cta-secondary:hover{background:#1a1a1a !important;color:#fff !important}
       .dash-buy-credits:hover{background:#b08456 !important}
+      .dash-home-cta-primary{transition:all 0.2s ease}
+      .dash-home-cta-primary:hover{box-shadow:0 8px 22px rgba(255,107,74,0.32) !important;transform:translateY(-1px)}
+      .dash-home-cta-primary:active{transform:translateY(0)}
+      .dash-home-cta-primary:hover .dash-home-cta-arrow{transform:translateX(3px)}
+      .dash-home-cta-secondary{transition:all 0.2s ease}
+      .dash-home-cta-secondary:hover{border-color:rgba(26,26,26,0.35) !important;background:rgba(255,255,255,0.6) !important}
+      .dash-home-cta-secondary:active{transform:translateY(0)}
+      .dash-home-cta-secondary:hover .dash-home-cta-arrow{transform:translateX(3px)}
+      .dash-home-cta-arrow{transition:transform 0.2s ease;display:inline-block}
       @media(max-width:768px){
         .dash-stats-grid{grid-template-columns:repeat(2,1fr) !important}
         .dash-cta-content{flex-direction:column !important;align-items:flex-start !important}
         .dash-credit-row{flex-direction:column !important;align-items:flex-start !important;gap:14px !important}
+        .dash-home-cta-grid{grid-template-columns:1fr !important}
       }
     `}</style>
 
@@ -981,6 +991,57 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify, loggedIn
           : "Bring Japanese music to curators around the world. Which track today?"}
       </p>
     </section>
+
+    {/* Home hero CTAs — primary (start a pitch) + secondary (stock a track).
+        Logged-in artists only; always shown so returning users with history
+        still have a visible next-step affordance. */}
+    {loggedInArtist && (
+      <section className="dash-home-cta-grid" style={{
+        display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:36,
+      }}>
+        <button
+          onClick={() => setPage("curators")}
+          className="dash-home-cta-primary"
+          style={{
+            background:"#FF6B4A",color:"#fff",border:"none",borderRadius:16,
+            padding:"22px 24px",textAlign:"left",cursor:"pointer",
+            display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,
+            fontFamily:"'Sora',sans-serif",
+            boxShadow:"0 4px 14px rgba(255,107,74,0.25)",
+          }}
+        >
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:18,fontWeight:600,letterSpacing:"-0.01em"}}>
+              {isJa ? "+ 新しいピッチを作成" : "+ Create a new pitch"}
+            </div>
+            <div style={{fontSize:13,fontWeight:400,marginTop:6,color:"rgba(255,255,255,0.85)",fontFamily:"'DM Sans',sans-serif"}}>
+              {isJa ? "楽曲URLを入力して、キュレーターに届ける" : "Paste a track URL and reach curators"}
+            </div>
+          </div>
+          <span className="dash-home-cta-arrow" style={{fontSize:24,lineHeight:1,flexShrink:0}}>→</span>
+        </button>
+        <a
+          href="/artist/dashboard"
+          className="dash-home-cta-secondary"
+          style={{
+            background:"transparent",color:"#1a1a1a",border:"1px solid rgba(26,26,26,0.15)",
+            borderRadius:16,padding:"22px 24px",textAlign:"left",cursor:"pointer",
+            display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,
+            fontFamily:"'Sora',sans-serif",textDecoration:"none",
+          }}
+        >
+          <div style={{minWidth:0}}>
+            <div style={{fontSize:18,fontWeight:500,letterSpacing:"-0.01em"}}>
+              {isJa ? "♪ 楽曲をストックする" : "♪ Stock a track"}
+            </div>
+            <div style={{fontSize:13,fontWeight:400,marginTop:6,color:"rgba(26,26,26,0.6)",fontFamily:"'DM Sans',sans-serif"}}>
+              {isJa ? "ライブラリに事前登録して、後でピッチ" : "Save to your library, pitch later"}
+            </div>
+          </div>
+          <span className="dash-home-cta-arrow" style={{fontSize:24,lineHeight:1,flexShrink:0}}>→</span>
+        </a>
+      </section>
+    )}
 
     {/* Primary CTA — gradient + waveform. Shown only when the artist has
         sent no pitches AND has no tracks in their library, so returning

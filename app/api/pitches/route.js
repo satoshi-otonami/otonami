@@ -166,6 +166,53 @@ export async function POST(request) {
 
     const db = getServiceSupabase();
 
+    // Auto-create artist_tracks row when the studio pitch flow did not supply
+    // a track_id but did supply a song_link. Without this, songs entered only
+    // through the studio (not via the dashboard's Tracks tab) never appear in
+    // the dashboard library — the dashboard reads from artist_tracks.
+    if (!cleanRow.track_id && cleanRow.song_link) {
+      const url = cleanRow.song_link.trim();
+      let urlColumn = null;
+      if (/(?:youtube\.com|youtu\.be)/i.test(url)) urlColumn = 'youtube_url';
+      else if (/spotify\.com/i.test(url)) urlColumn = 'spotify_url';
+      else if (/soundcloud\.com/i.test(url)) urlColumn = 'soundcloud_url';
+      else if (/bandcamp\.com/i.test(url)) urlColumn = 'bandcamp_url';
+
+      if (urlColumn) {
+        try {
+          const { data: existing } = await db
+            .from('artist_tracks')
+            .select('id')
+            .eq('artist_id', payload.artistId)
+            .eq(urlColumn, url)
+            .maybeSingle();
+          if (existing?.id) {
+            cleanRow.track_id = existing.id;
+          } else {
+            const { data: newTrack, error: createErr } = await db
+              .from('artist_tracks')
+              .insert({
+                artist_id: payload.artistId,
+                title: row.song_title || cleanRow.subject || 'Untitled',
+                [urlColumn]: url,
+                genre: row.artist_genre || null,
+                is_public: true,
+                ai_status: 'human',
+              })
+              .select('id')
+              .single();
+            if (createErr) {
+              console.warn('[pitches] artist_tracks auto-create failed (non-fatal):', createErr.message);
+            } else if (newTrack?.id) {
+              cleanRow.track_id = newTrack.id;
+            }
+          }
+        } catch (e) {
+          console.warn('[pitches] artist_tracks auto-create exception (non-fatal):', e.message);
+        }
+      }
+    }
+
     // Block AI-generated tracks (enforced server-side regardless of client state)
     if (cleanRow.track_id) {
       const { data: linkedTrack } = await db

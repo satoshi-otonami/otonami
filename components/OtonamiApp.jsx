@@ -876,13 +876,37 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
 // ─── Artist Dashboard ───
 function ArtistDash({user, pitches, curators, credits, setPage, notify, loggedInArtist}) {
   const [lang, setLang] = useState("ja");
+  // tracksCount: null = unknown (still loading or no auth); ≥0 = known.
+  // Used to gate the "send your first track" CTA so it hides once the user
+  // has any track in artist_tracks.
+  const [tracksCount, setTracksCount] = useState(null);
   useEffect(() => {
     try {
       const saved = localStorage.getItem("otonami_locale");
       if (saved === "ja" || saved === "en") setLang(saved);
     } catch {}
   }, []);
+  useEffect(() => {
+    if (!loggedInArtist) { setTracksCount(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = localStorage.getItem('artist_token');
+        if (!token) return;
+        const res = await fetch('/api/artists/tracks', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setTracksCount(Array.isArray(data.tracks) ? data.tracks.length : 0);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [loggedInArtist]);
   const isJa = lang === "ja";
+  // CTA: show only when the artist has no history at all. For demo users
+  // tracksCount stays null, so we only require pitches.length === 0.
+  const showFirstTrackCta = loggedInArtist
+    ? (pitches.length === 0 && tracksCount === 0)
+    : (pitches.length === 0);
 
   const acc = pitches.filter(p=>p.status==="accepted").length;
   const fb = pitches.filter(p=>["feedback","accepted","declined"].includes(p.status)).length;
@@ -946,8 +970,10 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify, loggedIn
       </p>
     </section>
 
-    {/* Primary CTA — gradient + waveform */}
-    <section style={{
+    {/* Primary CTA — gradient + waveform. Shown only when the artist has
+        sent no pitches AND has no tracks in their library, so returning
+        users with activity see a cleaner dashboard. */}
+    {showFirstTrackCta && <section style={{
       background:"linear-gradient(135deg,#fef9ee 0%,#fdf3e0 100%)",
       borderRadius:16,padding:"28px 32px",marginBottom:36,
       border:"1px solid rgba(196,149,106,0.18)",
@@ -998,7 +1024,7 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify, loggedIn
           </div>
         </div>
       </div>
-    </section>
+    </section>}
 
     {/* Stats Grid */}
     <section style={{marginBottom:36}}>

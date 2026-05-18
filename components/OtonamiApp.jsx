@@ -902,10 +902,22 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify, loggedIn
     return () => { cancelled = true; };
   }, [loggedInArtist]);
   const isJa = lang === "ja";
-  // CTA: show only when the artist has no history at all. For demo users
-  // tracksCount stays null, so we only require pitches.length === 0.
+  // A token in storage means the user is logged in (or auth is still loading
+  // on this render). Use it to gate the demo-mode fallback so returning
+  // users don't see the CTA flash before `/api/artists` resolves and sets
+  // loggedInArtist + pitches.
+  const hasArtistToken = (() => {
+    if (typeof window === 'undefined') return false;
+    try { return !!localStorage.getItem('artist_token'); } catch { return false; }
+  })();
+  // CTA: show only when the artist has no history at all. For logged-in
+  // artists, both pitches and tracks must be zero (tracksCount===0 also
+  // implicitly waits until the fetch resolves, since it starts as null).
+  // For unauthenticated demo users we keep the pitches-only check.
   const showFirstTrackCta = loggedInArtist
     ? (pitches.length === 0 && tracksCount === 0)
+    : hasArtistToken
+    ? false
     : (pitches.length === 0);
 
   const acc = pitches.filter(p=>p.status==="accepted").length;
@@ -1306,9 +1318,11 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
     setAnalyzeLoading(true);
     const currentUrl = analyzeUrlRef.current.trim() || null;
     const fallback = resolveGenreMood(artistName);
+    let analyzedGenre = fallback.genre;
     try {
       const result = await analyzeTrack({ trackUrl: currentUrl || undefined, songName: song, artistName });
-      setTrackData({ ...result, songName: song, artistName, notInDb: false, listeningUrl: currentUrl, genre: result.genre || fallback.genre, mood: result.mood || fallback.mood });
+      analyzedGenre = result.genre || fallback.genre;
+      setTrackData({ ...result, songName: song, artistName, notInDb: false, listeningUrl: currentUrl, genre: analyzedGenre, mood: result.mood || fallback.mood });
       setSortByMatch(true);
     } catch (e) {
       // Not in SoundNet DB — fall back to genre+mood scoring
@@ -1316,6 +1330,30 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       setSortByMatch(true);
     }
     setAnalyzeLoading(false);
+    // Auto-register the track in artist_tracks so the dashboard library
+    // shows songs entered via the studio. Logged-in artists only; the API
+    // dedupes by (artist_id, url) so re-analyzing the same song is a no-op.
+    persistTrackForArtist({ song, url: currentUrl, genre: analyzedGenre });
+  };
+
+  const persistTrackForArtist = async ({ song, url, genre }) => {
+    if (!song || !url) return;
+    let token = null;
+    try { token = localStorage.getItem('artist_token'); } catch {}
+    if (!token) return;
+    const body = { title: song, genre: genre || null };
+    if (/(?:youtube\.com|youtu\.be)/i.test(url))      body.youtube_url    = url;
+    else if (/spotify\.com/i.test(url))               body.spotify_url    = url;
+    else if (/soundcloud\.com/i.test(url))            body.soundcloud_url = url;
+    else if (/bandcamp\.com/i.test(url))              body.bandcamp_url   = url;
+    else return; // unknown platform — skip rather than guess a column
+    try {
+      await fetch('/api/artists/tracks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      });
+    } catch {} // non-fatal: failure must not block the analysis flow
   };
 
   const doAnalyze = () => {

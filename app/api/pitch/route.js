@@ -200,6 +200,30 @@ ${isPositive && (curatorWantsSomber || !curatorWantsPositive) ? 'NOTE: The artis
 ` : '';
 
     const prompt = `You are an expert music publicist who has successfully pitched hundreds of Japanese artists to international curators, playlist editors, bloggers, and radio hosts. You understand what makes curators open emails, click play, and add tracks.
+
+═══ CRITICAL ANTI-HALLUCINATION RULES (HIGHEST PRIORITY — OVERRIDES ALL OTHER INSTRUCTIONS) ═══
+
+The single biggest failure mode of music-pitch AI is inventing curator credentials. This is forbidden.
+
+1. NEVER invent, infer, guess, or assume any information about the curator that is not EXPLICITLY listed in the TARGET CURATOR section below. The TARGET CURATOR section is the ONLY source of truth about the curator.
+
+2. The following are STRICTLY FORBIDDEN unless the exact words appear verbatim in the curator's bio (the lines labeled "Curator bio:" inside TARGET CURATOR):
+   • Claiming the curator works/worked at any specific company (Sony, Universal, Warner, Spotify, Apple, etc.)
+   • Claiming the curator leads, runs, founded, or is secretary of any organization (ILCJ, label, agency, council, association, etc.)
+   • Claiming the curator has any specific job title or role beyond what's in their profile
+   • Attributing any past achievements, awards, credentials, or career milestones to the curator
+   • Naming any specific artists, albums, releases, or projects the curator has personally worked on
+   • Implying the curator has industry connections, international experience, or expertise not stated in their bio
+   • Phrases like "Your work with X", "your role at Y", "your experience leading Z" are FORBIDDEN unless X/Y/Z are verbatim in the curator's bio
+
+3. ARTIST CREDENTIALS BELONG TO THE ARTIST, NOT THE CURATOR. The ARTIST PROFILE section below lists the artist's bio, achievements, label, influences. NEVER attribute any of those to the curator. If you see "ROUTE14band's bio mentions Sony Music" — that belongs to the BAND, not to the person you're emailing. The curator is a stranger receiving an email; assume they have only the credentials in TARGET CURATOR and nothing more.
+
+4. WHEN THE CURATOR BIO IS EMPTY OR THIN: Personalize by genre alignment or playlist focus ONLY ("a fit for your [genre listed] rotation", "the kind of [mood listed] you tend to feature"). Do NOT invent background to fill the gap. A pitch with no curator-specific reference is better than a pitch with a fabricated reference.
+
+5. SELF-CHECK BEFORE OUTPUT: For every claim you make about the curator, ask "Is this in the TARGET CURATOR section verbatim?" If NO → delete the claim. Paraphrasing curator background = inventing it. Only use what's explicitly stated.
+
+A pitch that fabricates "Your work with Sony Music" / "your role at ILCJ" / "leading X labels" is a CRITICAL FAILURE that damages the platform's credibility. Better to write a pitch with zero curator-specific lines than to invent one.
+
 ${toneOverride}
 ═══ TASK ═══
 Write a pitch email + EPK bio for the artist below. Every claim MUST come from the provided profile. NEVER invent stats, awards, or achievements not listed.
@@ -274,9 +298,11 @@ The Description reflects the artist's actual voice and ambition. When incorporat
 ═══ CURATOR PERSONALIZATION (MANDATORY — DO NOT SKIP) ═══
 The TARGET CURATOR section above contains real data about this specific curator. You MUST anchor the pitch to that data so it reads as researched, not templated. In the Hook OR Body, include AT LEAST ONE concrete reference drawn from:
   • an artist in "Artists they have featured" (e.g. "fans of [ArtistX] in your rotation will find a familiar texture here")
-  • a specific detail from the "Curator bio" (their stated focus, format, label, geography, philosophy)
+  • a specific detail from the "Curator bio" (their stated focus, format, label, geography, philosophy) — QUOTE OR DIRECTLY PARAPHRASE the bio's actual words; do NOT extrapolate to credentials/companies/roles not mentioned
   • a mood listed in "Moods they prefer" — BUT ONLY IF that mood is genuinely compatible with the song character described in the Description. If there is a mood mismatch, choose one of the other two anchors instead.
 A generic statement like "fits your playlist's vibe" does NOT satisfy this rule. NEVER name the curator personally (use [Curator Name] in the greeting only). NEVER quote raw Japanese from the bio.
+
+REMINDER: The ANTI-HALLUCINATION rules at the top of this prompt take precedence. If the curator profile is too thin for a researched reference, fall back to genre-alignment language ("a natural fit for your [genre] rotation") — do NOT invent a fabricated background to satisfy this personalization requirement. Personalization with FABRICATED detail is worse than no personalization.
 ` : ''}
 ═══ PITCH STRUCTURE (120-180 words) ═══
 1. Subject line: Compelling, under 60 characters, include genre + "from Japan"
@@ -284,7 +310,11 @@ A generic statement like "fits your playlist's vibe" does NOT satisfy this rule.
 3. Hook: ${style === 'storytelling' ? 'Vivid sensory description of the sound' : style === 'casual' ? 'Personal connection to the curator\'s work' : 'Strongest credential or unique angle'}
 4. Body: FIRST sentence should echo the Description's personal voice/opener if it has one (see ARTIST NARRATIVE rule 3). Then weave in EVERY specific fact, number, award, and ambition from the Description (see ARTIST NARRATIVE rule 1) — these are non-negotiable. Describe the SOUND in vivid language that MATCHES the Description's stated tone. Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}${trackDesc.characteristics ? ` Use the track analysis data above to give specific sound descriptions (e.g. energy level, tempo feel) — but defer to the Description's stated mood if the analysis appears to contradict it.` : ''}
 5. Listen link: Use the "Listen (Primary)" URL from the Links section below. Write it as "Listen: <url>" or "Stream: <url>". If no primary link, use the first available streaming link.
-6. CTA: Clear ask appropriate for curator type (${curator?.type || 'blog'})
+6. CTA — MANDATORY CLOSING INVITATION: The pitch body MUST end with a direct, warm invitation to the curator to actually listen. This is NOT optional. Choose phrasing that matches the artist's Description tone:
+   • If the Description contains "ぜひ聞いてください" / "ぜひ聞いてみてください" / "please listen" / "I'd love for you to hear" → end with "Would love for you to give it a listen." / "I'd really love for you to hear it." / "Please give it a listen — it would mean a lot."
+   • If the Description points at specific listening cues (e.g. "ぜひメンバーのソロを聞いてください") → echo it: "Would love for you to hear each member's solo."
+   • If no specific invitation language in Description → still close with "Would love to hear what you think." / "Hope you enjoy it." / "Would love for you to give it a listen."
+   FORBIDDEN endings: ending the pitch on a sound-description sentence with no ask; ending on "Looking forward to hearing back" alone with no listen-invite; ending on a "consider for your playlist" line that omits the personal listen-invite.
 7. Links section: List all available platform links with follower counts
 8. Sign-off: "${userName || 'OTONAMI Team'}" via OTONAMI
 
@@ -305,6 +335,29 @@ Write a 100-120 word professional bio in third person. Lead with strongest crede
 
 ═══ OUTPUT FORMAT ═══
 Start with "Subject: " line. Then the pitch. Then "---EPK---" separator. Then the EPK bio. Nothing else.`;
+
+    // TEMPORARY DIAGNOSTIC — verify whether curator hallucination is caused
+    // by data leak (founder bio in curator fields) or pure LLM invention.
+    // Remove after verification.
+    try {
+      console.log('[PITCH_CURATOR_DEBUG]', JSON.stringify({
+        curatorName: curator?.name,
+        curatorBio: curator?.bio || '(empty)',
+        curatorBioLength: curator?.bio?.length || 0,
+        curatorGenres: curator?.genres || [],
+        curatorPreferredMoods: curator?.preferredMoods || [],
+        curatorPreferredArtists: curator?.similarArtists?.length
+          ? curator.similarArtists
+          : (curator?.preferredArtists || []),
+        curatorType: curator?.type,
+        curatorPlatform: curator?.platform,
+        curatorRawKeys: curator ? Object.keys(curator) : [],
+        artistDbBioPreview: artistDbBio ? artistDbBio.slice(0, 200) : null,
+        artistDescriptionPreview: artist.description ? artist.description.slice(0, 200) : null,
+      }));
+      console.log('[PITCH_FULL_PROMPT_HEAD]', prompt.substring(0, 5000));
+      console.log('[PITCH_FULL_PROMPT_TAIL]', prompt.substring(Math.max(0, prompt.length - 2000)));
+    } catch (e) { /* never let logging crash the request */ }
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-20250514',

@@ -60,7 +60,17 @@ VOICE PRESERVATION（重要・トーンを婉曲化しないこと）:
 3. 直接的な誘いは直接的なまま訳す:
    • "would love for you to give it a listen" / "please give it a listen" / "I'd love for you to hear it" → 「ぜひ聞いてみてください」「ぜひ一度聴いてみてください」（✗ NOT「お聴きいただければ幸いです」「ご検討いただけますと幸いです」）
 
-4. アーティストの声 ≠ PR担当者の声: 訳文はアーティスト本人が語っているように読めること。形式的・他人事のトーンに寄せないこと。プロフェッショナルさは堅苦しさではなく、具体性と誠実さで作るものです。`;
+4. アーティストの声 ≠ PR担当者の声: 訳文はアーティスト本人が語っているように読めること。形式的・他人事のトーンに寄せないこと。プロフェッショナルさは堅苦しさではなく、具体性と誠実さで作るものです。
+
+5. 末尾の「聞いてください」の誘いは温かいまま訳す:
+   • "Would love for you to give it a listen" → 「ぜひ聞いてみてください」
+   • "I'd love for you to hear it" → 「ぜひ聞いていただきたいです」「ぜひ聞いてみてほしいです」
+   • "Please give it a listen" → 「ぜひ聞いてみてください」
+   • "Would love to hear what you think" → 「ぜひ感想を聞かせてください」
+   ✗ NOT「お聴きいただければ幸いです」（堅すぎる）
+   ✗ NOT「ご視聴をお勧めします」（コーポレート）
+   ✗ NOT「ご検討いただけますと幸いです」（婉曲）
+   アーティスト本人が「聞いてほしい！」と直接呼びかけているトーンを保ってください。`;
 
     // JA→EN voice preservation: same principle in reverse. Bold Japanese stays
     // bold in English; casual greetings/invitations stay casual.
@@ -81,7 +91,15 @@ When translating the Japanese pitch to English, preserve the artist's actual voi
    • 「ぜひ聞いてみてください」 / 「ぜひ一度聴いてください」 → "would love for you to give it a listen" / "please give it a listen" / "I'd really love for you to hear it"
      ✗ NOT "please consider for your playlist" / "we hope you'll find time to listen"
 
-4. The pitch is the artist's voice through a translator, not a PR rewrite. The artist's first-person ambition and warmth must survive into English. "Professional" means specific and authentic, not formal-corporate.`;
+4. The pitch is the artist's voice through a translator, not a PR rewrite. The artist's first-person ambition and warmth must survive into English. "Professional" means specific and authentic, not formal-corporate.
+
+5. Closing invitations stay warm and direct:
+   • 「ぜひ聞いてみてください」 / 「ぜひ一度聴いてください」 / 「聞いてください」 → "Would love for you to give it a listen" / "Please give it a listen" / "I'd really love for you to hear it"
+   • 「ぜひメンバーのソロを聞いてください」 → "Would love for you to hear each member's solo"
+   • 「感想を聞かせてください」 → "Would love to hear what you think"
+   ✗ NOT "please consider for your playlist" (replaces the personal invite with a transactional ask)
+   ✗ NOT "we hope you find time to listen" (passive, removes warmth)
+   The pitch's last line should feel like the artist personally asking the curator to hit play.`;
 
     const prompt = reverse
       ? `以下の日本語の音楽ピッチメールを、プロフェッショナルで自然な英語に翻訳してください。音楽業界の慣例に沿った表現を使い、カジュアルすぎず堅すぎないトーンにしてください。ただし、アーティスト本人の声・野心・カジュアルな挨拶は保ってください（詳細は下記 VOICE PRESERVATION 参照）。Subject行がある場合はそのまま英語で出力してください。翻訳のみ出力し、説明は不要です。${placeholderRule}${enVoiceRule}\n\n${text}`

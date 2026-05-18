@@ -35,9 +35,13 @@ export async function POST(request) {
       return NextResponse.json({ error: 'InputTooLong', message: lengthError }, { status: 413 });
     }
 
+    // IMPORTANT: `[Curator Name]` is a substitution placeholder. Translating it
+    // (e.g. to `[キュレーター名]`) breaks the frontend's per-recipient name
+    // substitution at send time. Keep it verbatim in both directions.
+    const placeholderRule = '\n\n重要: 文中に登場する `[Curator Name]` というプレースホルダー（角括弧含む）は絶対に翻訳・変更せず、英語のまま `[Curator Name]` として出力してください。日本語版で既に `[キュレーター名]` などに翻訳されている場合も、必ず `[Curator Name]` に統一してください。';
     const prompt = reverse
-      ? `以下の日本語の音楽ピッチメールを、プロフェッショナルで自然な英語に翻訳してください。音楽業界の慣例に沿った表現を使い、カジュアルすぎず堅すぎないトーンにしてください。Subject行がある場合はそのまま英語で出力してください。翻訳のみ出力し、説明は不要です。\n\n${text}`
-      : `以下の英語の音楽ピッチメールを自然な日本語に翻訳してください。音楽業界の用語は適切に訳し、メールとしての丁寧さを保ってください。Subject行がある場合は「件名:」として日本語で出力してください。翻訳のみ出力し、説明は不要です。\n\n${text}`;
+      ? `以下の日本語の音楽ピッチメールを、プロフェッショナルで自然な英語に翻訳してください。音楽業界の慣例に沿った表現を使い、カジュアルすぎず堅すぎないトーンにしてください。Subject行がある場合はそのまま英語で出力してください。翻訳のみ出力し、説明は不要です。${placeholderRule}\n\n${text}`
+      : `以下の英語の音楽ピッチメールを自然な日本語に翻訳してください。音楽業界の用語は適切に訳し、メールとしての丁寧さを保ってください。Subject行がある場合は「件名:」として日本語で出力してください。翻訳のみ出力し、説明は不要です。${placeholderRule}\n\n${text}`;
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-20250514',

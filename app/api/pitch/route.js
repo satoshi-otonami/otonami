@@ -47,9 +47,25 @@ export async function POST(request) {
     // The same generated pitch may be sent to multiple curators, so the AI must use
     // the literal placeholder "[Curator Name]" everywhere a name would appear; the
     // frontend (sendAll) substitutes the real name per recipient before sending.
-    const curatorInfo = curator
-      ? `Platform: ${curator.platform} | Type: ${curator.type} | Audience: ${curator.audience?.toLocaleString() || 'unknown'} | Genres: ${(curator.genres || []).join(', ')}`
-      : 'General music industry curator';
+    const curatorLines = [];
+    if (curator) {
+      curatorLines.push(`Platform: ${curator.platform || 'unknown'}`);
+      curatorLines.push(`Type: ${curator.type || 'unknown'}`);
+      if (curator.audience || curator.followers) {
+        curatorLines.push(`Audience: ${(curator.audience ?? curator.followers).toLocaleString()}`);
+      }
+      if (curator.region) curatorLines.push(`Region: ${curator.region}`);
+      if (curator.genres?.length) curatorLines.push(`Genres they champion: ${curator.genres.join(', ')}`);
+      if (curator.similarArtists?.length) curatorLines.push(`Artists they have featured: ${curator.similarArtists.join(', ')}`);
+      if (curator.preferredMoods?.length) curatorLines.push(`Moods they prefer: ${curator.preferredMoods.join(', ')}`);
+      if (curator.opportunities?.length) curatorLines.push(`Opportunities they offer: ${curator.opportunities.join(', ')}`);
+      if (curator.bio) {
+        const bioTrimmed = curator.bio.trim().slice(0, 400);
+        curatorLines.push(`Curator bio (may be in Japanese — extract meaning, NEVER quote raw Japanese):\n${bioTrimmed}`);
+      }
+    }
+    const curatorInfo = curatorLines.length > 0 ? curatorLines.join('\n') : 'General music industry curator';
+    const hasCuratorPersonality = !!(curator?.bio || curator?.similarArtists?.length || curator?.preferredMoods?.length);
 
     // Build social proof section
     const socialLines = [];
@@ -128,7 +144,7 @@ ${style === 'casual' ? 'Warm, personal tone — like messaging a fellow music fa
 1. Subject line: Compelling, under 60 characters, include genre + "from Japan"
 2. Greeting: "Hi [Curator Name]," — use the literal placeholder text "[Curator Name]" exactly as written. Do NOT substitute a real name. The system replaces this token per recipient before sending.
 3. Hook: ${style === 'storytelling' ? 'Vivid sensory description of the sound' : style === 'casual' ? 'Personal connection to the curator\'s work' : 'Strongest credential or unique angle'}
-4. Body: Describe the SOUND with vivid language. Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}${trackDesc.characteristics ? ` Use the track analysis data above to give specific, concrete sound descriptions (e.g. energy level, tempo feel, mood).` : ''}
+4. Body: Describe the SOUND with vivid language. ${hasCuratorPersonality ? 'Weave in ONE specific reference to the curator profile above (a preferred mood, a similar artist they have featured, or a concrete detail from their bio) — this proves you researched them. Reference profile details abstractly, never name the curator. ' : ''}Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}${trackDesc.characteristics ? ` Use the track analysis data above to give specific, concrete sound descriptions (e.g. energy level, tempo feel, mood).` : ''}
 5. Listen link: Use the "Listen (Primary)" URL from the Links section below. Write it as "Listen: <url>" or "Stream: <url>". If no primary link, use the first available streaming link.
 6. CTA: Clear ask appropriate for curator type (${curator?.type || 'blog'})
 7. Links section: List all available platform links with follower counts

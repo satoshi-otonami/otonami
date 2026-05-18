@@ -150,15 +150,11 @@ export async function POST(request) {
       tasks.push(fetchSoundCloudFollowers(links.soundcloud).then(v => { results.soundcloud = v; }).catch(e => { errors.soundcloud = e.message; }));
     }
     if (links.spotify) {
-      tasks.push(fetchSpotifyData(links.spotify).then(v => {
-        if (v) {
-          results.spotify = v.followers;
-          if (v.genres?.length) results.spotifyGenres = v.genres;
-          if (v.popularity) results.spotifyPopularity = v.popularity;
-          if (v.name) results.spotifyName = v.name;
-          results.spotifyMethod = v.method;
-        }
-      }).catch(e => { errors.spotify = e.message; }));
+      // Spotify deprecated `followers`, `popularity`, and `genres` from the
+      // Client Credentials flow of /v1/artists/{id} (Nov 2024). The anonymous
+      // get_access_token endpoint now returns 403, and the embed page no longer
+      // includes follower data. No public path remains — manual entry only.
+      errors.spotify = 'Spotify公式APIがフォロワー取得を廃止したため、手動で入力してください';
     }
 
     await Promise.all(tasks);

@@ -2003,9 +2003,12 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   }, [trackData?.songName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Auto-fetch followers from API ──
+  // Spotify is intentionally excluded: their Client Credentials API no longer
+  // returns follower counts (deprecated 2024-11), and embed/anon-token routes
+  // are also closed. Spotify followers must be entered manually.
   const autoFetchFollowers = async () => {
-    if (!links.youtube && !links.spotify && !links.soundcloud) {
-      notify("YouTube、Spotify、またはSoundCloudのURLを先に入力してください");
+    if (!links.youtube && !links.soundcloud) {
+      notify("YouTube または SoundCloud のURLを先に入力してください");
       return;
     }
     setFetchingFollowers(true);
@@ -2014,18 +2017,16 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       if (result.followers) {
         const f = result.followers;
         const updates = {};
-        if (f.youtube) updates.youtube = f.youtube;
-        if (f.spotify) updates.spotify = f.spotify;
-        if (f.soundcloud) updates.soundcloud = f.soundcloud;
+        if (f.youtube != null) updates.youtube = f.youtube;
+        if (f.soundcloud != null) updates.soundcloud = f.soundcloud;
         if (Object.keys(updates).length > 0) {
           setFollowers(prev => ({...prev, ...updates}));
         }
         // Build detailed status message
         const succeeded = [];
         const failed = [];
-        if (links.youtube) { f.youtube ? succeeded.push("YouTube: " + f.youtube) : failed.push("YouTube"); }
-        if (links.spotify) { f.spotify ? succeeded.push("Spotify: " + f.spotify) : failed.push("Spotify"); }
-        if (links.soundcloud) { f.soundcloud ? succeeded.push("SoundCloud: " + f.soundcloud) : failed.push("SoundCloud"); }
+        if (links.youtube) { f.youtube != null ? succeeded.push("YouTube: " + f.youtube) : failed.push("YouTube"); }
+        if (links.soundcloud) { f.soundcloud != null ? succeeded.push("SoundCloud: " + f.soundcloud) : failed.push("SoundCloud"); }
         let msg = "";
         if (succeeded.length > 0) msg += "✓ 取得: " + succeeded.join(", ");
         if (failed.length > 0) {
@@ -2150,7 +2151,15 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const firstCuratorName = targets[0]?.name?.trim() || '';
     const personalizePitch = (rawText, curator) => {
+      // Primary AI-intended placeholder
       let out = rawText.replace(/\[Curator Name\]/gi, curator.name);
+      // Defensive: Japanese-translator slips may emit these variants. Replace
+      // before the pitch reaches the curator so substitution still works even
+      // if the translator did not preserve the English token.
+      out = out.replace(/\[キュレーター名\]/g, curator.name);
+      out = out.replace(/\[キュレータ名\]/g, curator.name);
+      out = out.replace(/\[キュレーター\]/g, curator.name);
+      out = out.replace(/\[Curator\](?!\s*Name)/g, curator.name);
       if (firstCuratorName && curator.name !== firstCuratorName) {
         const greetingRe = new RegExp(`(Hi|Hello|Hey|Dear)\\s+${escapeRegExp(firstCuratorName)}\\b`, 'gi');
         out = out.replace(greetingRe, `$1 ${curator.name}`);
@@ -2522,10 +2531,11 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           </div>
 
           {/* Follower summary → pitch preview */}
-          {(links.youtube || links.spotify || links.soundcloud) && <div style={{marginTop:8}}>
+          {(links.youtube || links.soundcloud) && <div style={{marginTop:8}}>
             <button onClick={autoFetchFollowers} disabled={fetchingFollowers} style={{width:"100%",padding:"0.4rem",background:fetchingFollowers?"#1a1a1a":"#c4956a",color:fetchingFollowers?"#9a958e":"#fff",border:"none",borderRadius:8,fontSize:"0.72rem",fontWeight:600,cursor:fetchingFollowers?"wait":"pointer",fontFamily:"inherit"}}>
-              {fetchingFollowers ? "フォロワー数を取得中..." : "フォロワー数を自動取得（YouTube / Spotify / SoundCloud）"}
+              {fetchingFollowers ? "フォロワー数を取得中..." : "フォロワー数を自動取得（YouTube / SoundCloud）"}
             </button>
+            {links.spotify && <div style={{marginTop:6,fontSize:"0.62rem",color:"#9a958e",lineHeight:1.5}}>※Spotify公式APIがフォロワー取得を廃止したため、Spotifyのフォロワー数は手動で入力してください</div>}
           </div>}
           {folCount > 0 && <div style={{marginTop:8,padding:"0.4rem 0.6rem",background:"rgba(196,149,106,0.1)",borderRadius:8,fontSize:"0.68rem",color:"#c4956a"}}>
             <strong>ピッチに反映:</strong> {[

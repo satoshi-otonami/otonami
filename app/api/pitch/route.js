@@ -56,16 +56,20 @@ export async function POST(request) {
       }
       if (curator.region) curatorLines.push(`Region: ${curator.region}`);
       if (curator.genres?.length) curatorLines.push(`Genres they champion: ${curator.genres.join(', ')}`);
-      if (curator.similarArtists?.length) curatorLines.push(`Artists they have featured: ${curator.similarArtists.join(', ')}`);
+      // similarArtists is canonical; preferredArtists is the legacy alias for
+      // older curator records. Read both defensively.
+      const similar = curator.similarArtists?.length ? curator.similarArtists : (curator.preferredArtists || []);
+      if (similar.length) curatorLines.push(`Artists they have featured: ${similar.join(', ')}`);
       if (curator.preferredMoods?.length) curatorLines.push(`Moods they prefer: ${curator.preferredMoods.join(', ')}`);
       if (curator.opportunities?.length) curatorLines.push(`Opportunities they offer: ${curator.opportunities.join(', ')}`);
       if (curator.bio) {
-        const bioTrimmed = curator.bio.trim().slice(0, 400);
+        const bioTrimmed = curator.bio.trim().slice(0, 500);
         curatorLines.push(`Curator bio (may be in Japanese — extract meaning, NEVER quote raw Japanese):\n${bioTrimmed}`);
       }
     }
     const curatorInfo = curatorLines.length > 0 ? curatorLines.join('\n') : 'General music industry curator';
-    const hasCuratorPersonality = !!(curator?.bio || curator?.similarArtists?.length || curator?.preferredMoods?.length);
+    const similarForCheck = curator?.similarArtists?.length ? curator.similarArtists : (curator?.preferredArtists || []);
+    const hasCuratorPersonality = !!(curator?.bio || similarForCheck.length || curator?.preferredMoods?.length);
 
     // Build social proof section
     const socialLines = [];
@@ -139,7 +143,14 @@ ${curatorInfo}
 
 ═══ STYLE: ${style?.toUpperCase() || 'PROFESSIONAL'} ═══
 ${style === 'casual' ? 'Warm, personal tone — like messaging a fellow music fan who happens to have influence. Genuine, not corporate. Use contractions.' : style === 'storytelling' ? 'Open with a vivid, sensory description of the music — what it sounds like, what it evokes. Paint a picture before the pitch. Make the curator feel the music through words.' : 'Polished, industry-standard tone. Concise. Lead with strongest credential. Respect the curator\'s time.'}
-
+${hasCuratorPersonality ? `
+═══ PERSONALIZATION (MANDATORY — DO NOT SKIP) ═══
+The TARGET CURATOR section above contains real data about this specific curator. You MUST anchor the pitch to that data so it reads as researched, not templated. In the Hook OR Body, include AT LEAST ONE concrete reference drawn from:
+  • a mood listed in "Moods they prefer" (e.g. "this leans into the kind of late-night warmth you tend to favor")
+  • an artist in "Artists they have featured" (e.g. "fans of [ArtistX] in your rotation will find a familiar texture here")
+  • a specific detail from the "Curator bio" (their stated focus, format, label, geography, philosophy)
+A generic statement like "fits your playlist's vibe" does NOT satisfy this rule — the reference must point to a SPECIFIC item from the curator profile. NEVER name the curator personally (use [Curator Name] in the greeting only). NEVER quote raw Japanese from the bio.
+` : ''}
 ═══ PITCH STRUCTURE (120-180 words) ═══
 1. Subject line: Compelling, under 60 characters, include genre + "from Japan"
 2. Greeting: "Hi [Curator Name]," — use the literal placeholder text "[Curator Name]" exactly as written. Do NOT substitute a real name. The system replaces this token per recipient before sending.

@@ -2046,12 +2046,26 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   };
 
   // ── Translate helpers ──
+  // The JA preview shows the first target's name in place of [Curator Name]
+  // so the artist sees a realistic salutation. Non-first recipients get
+  // their own names substituted at send time via personalizePitch.
+  const substitutePreviewName = (text) => {
+    const name = targets[0]?.name?.trim();
+    if (!name || !text) return text;
+    return text
+      .replace(/\[Curator Name\]/gi, name)
+      .replace(/\[キュレーター名\]/g, name)
+      .replace(/\[キュレータ名\]/g, name)
+      .replace(/\[キュレーター\]/g, name)
+      .replace(/\[Curator\](?!\s*Name)/g, name);
+  };
+
   const translateToJa = async (enText) => {
     setTranslating(true);
     try {
       const res = await authFetch('/api/pitch/translate', { method: 'POST', body: JSON.stringify({ text: enText }) });
       const data = await res.json();
-      if (data.translated) setPitchJa(data.translated);
+      if (data.translated) setPitchJa(substitutePreviewName(data.translated));
     } catch (e) {
       if (e instanceof ApiError) handleApiError(e, notify, '日本語翻訳失敗');
       else console.warn('Translate EN→JA:', e.message);
@@ -2064,6 +2078,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     try {
       const res = await authFetch('/api/pitch/translate', { method: 'POST', body: JSON.stringify({ text: pitchJa, reverse: true }) });
       const data = await res.json();
+      // If the user back-translates after we substituted the first curator's
+      // name into the JA preview, the EN result will contain that name
+      // baked in instead of [Curator Name]. personalizePitch handles the
+      // per-recipient swap at send time using firstCuratorName detection.
       if (data.translated) setPitchText(data.translated);
     } catch (e) {
       if (e instanceof ApiError) handleApiError(e, notify, '英語翻訳失敗');
@@ -2161,8 +2179,11 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       out = out.replace(/\[キュレーター\]/g, curator.name);
       out = out.replace(/\[Curator\](?!\s*Name)/g, curator.name);
       if (firstCuratorName && curator.name !== firstCuratorName) {
-        const greetingRe = new RegExp(`(Hi|Hello|Hey|Dear)\\s+${escapeRegExp(firstCuratorName)}\\b`, 'gi');
-        out = out.replace(greetingRe, `$1 ${curator.name}`);
+        const enGreetingRe = new RegExp(`(Hi|Hello|Hey|Dear)\\s+${escapeRegExp(firstCuratorName)}\\b`, 'gi');
+        out = out.replace(enGreetingRe, `$1 ${curator.name}`);
+        // Japanese greeting: "田中 様、" / "田中様、" / "田中さん" / "田中先生"
+        const jaGreetingRe = new RegExp(`${escapeRegExp(firstCuratorName)}(\\s*)(様|さん|先生)`, 'g');
+        out = out.replace(jaGreetingRe, `${curator.name}$1$2`);
       }
       return out;
     };
@@ -2607,6 +2628,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       {/* Japanese tab */}
       {pitchTab === "ja" && <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderTop:"none",borderRadius:"0 0 12px 12px",padding:"0.8rem",marginBottom:"0.8rem"}}>
         <div style={{fontSize:"0.68rem",color:"#9a958e",fontWeight:600,marginBottom:6}}>確認用の日本語訳です（送信されません）</div>
+        {targets.length > 1 && targets[0]?.name && <div style={{fontSize:"0.62rem",color:"#c4956a",background:"rgba(196,149,106,0.06)",padding:"0.35rem 0.5rem",borderRadius:6,marginBottom:6,lineHeight:1.5}}>※ プレビューは「{targets[0].name}」様への送信例です。実際は各キュレーターの名前で個別に置換されて送信されます。</div>}
         {translating && !pitchJa ? (
           <div style={{minHeight:120,display:"flex",alignItems:"center",justifyContent:"center",color:"#9a958e",fontSize:"0.8rem"}}>日本語訳を生成中...</div>
         ) : (

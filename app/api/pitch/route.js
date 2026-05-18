@@ -143,7 +143,10 @@ ${curatorInfo}
 
 ═══ STYLE: ${style?.toUpperCase() || 'PROFESSIONAL'} ═══
 ${style === 'casual' ? 'Warm, personal tone — like messaging a fellow music fan who happens to have influence. Genuine, not corporate. Use contractions.' : style === 'storytelling' ? 'Open with a vivid, sensory description of the music — what it sounds like, what it evokes. Paint a picture before the pitch. Make the curator feel the music through words.' : 'Polished, industry-standard tone. Concise. Lead with strongest credential. Respect the curator\'s time.'}
-${hasCuratorPersonality ? `
+${artist.description ? `
+═══ ARTIST NARRATIVE (MANDATORY — DO NOT SKIP) ═══
+The "Description" field above is the artist's own self-introduction. You MUST extract and incorporate AT LEAST TWO concrete specifics from it into the Hook or Body — anything the artist deliberately said about themselves: geography (city/country/scene), formation story, instrumentation/lineup, philosophy or theme of their work, defining experience, signature sound element. A generic line like "their music is emotive" does NOT satisfy this rule — pull SPECIFIC nouns and facts from the Description. If the Description is in Japanese, translate the meaning into natural English and use it; never quote the raw Japanese.
+` : ''}${hasCuratorPersonality ? `
 ═══ PERSONALIZATION (MANDATORY — DO NOT SKIP) ═══
 The TARGET CURATOR section above contains real data about this specific curator. You MUST anchor the pitch to that data so it reads as researched, not templated. In the Hook OR Body, include AT LEAST ONE concrete reference drawn from:
   • a mood listed in "Moods they prefer" (e.g. "this leans into the kind of late-night warmth you tend to favor")

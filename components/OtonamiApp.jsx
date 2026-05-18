@@ -1596,13 +1596,26 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
         </>);
       })()}
     </div>
-    {/* Floating action bar when curators selected */}
-    {selected.length > 0 && !isPreLaunch() && <div style={{position:"sticky",bottom:0,left:0,right:0,background:"linear-gradient(0deg,#f8f7f4 70%,transparent)",padding:"1rem 0 0.5rem",marginTop:"0.5rem"}}>
-      <button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,width:"100%",padding:"0.9rem",fontSize:"0.95rem"}}>{selected.length}人のキュレーターにピッチ作成 ({curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}クレジット) →</button>
-    </div>}
-    {selected.length > 0 && isPreLaunch() && <div style={{position:"sticky",bottom:0,left:0,right:0,background:"linear-gradient(0deg,#f8f7f4 70%,transparent)",padding:"1rem 0 0.5rem",marginTop:"0.5rem"}}>
-      <button disabled style={{...css.btnPrimary,width:"100%",padding:"0.9rem",fontSize:"0.95rem",opacity:0.5,cursor:"not-allowed",background:"#e5e2dc",color:"#6b6560"}}>ピッチ送信は{LAUNCH_DATE_LABEL_JA}のローンチ後に利用可能</button>
-    </div>}
+    {/* Viewport-fixed floating action bar — visible regardless of scroll
+        position. Padding-bottom on the list container prevents the last
+        card from being obscured. */}
+    {selected.length > 0 && <>
+      <div style={{height:"6rem"}} aria-hidden="true" />
+      <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(248,247,244,0.96)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",borderTop:"1px solid rgba(196,149,106,0.25)",boxShadow:"0 -4px 20px rgba(0,0,0,0.06)",padding:"0.75rem 1rem",zIndex:50}}>
+        <div style={{maxWidth:680,margin:"0 auto",display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:"0.78rem",fontWeight:700,color:"#c4956a",lineHeight:1.3}}>{selected.length}人選択中 · {curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}クレジット</div>
+            <div style={{fontSize:"0.62rem",color:"#9a958e",lineHeight:1.3}}>¥{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)*160}相当</div>
+          </div>
+          {isPreLaunch() ? (
+            <button disabled style={{...css.btnPrimary,padding:"0.7rem 1.1rem",fontSize:"0.82rem",opacity:0.5,cursor:"not-allowed",background:"#e5e2dc",color:"#6b6560",whiteSpace:"nowrap"}}>{LAUNCH_DATE_LABEL_JA}ローンチ後</button>
+          ) : (
+            <button onClick={()=>setPage("pitch")} style={{...css.btnPrimary,padding:"0.7rem 1.1rem",fontSize:"0.82rem",whiteSpace:"nowrap"}}>ピッチ作成へ →</button>
+          )}
+          <button onClick={()=>setSelected([])} aria-label="選択クリア" style={{background:"transparent",border:"1px solid rgba(0,0,0,0.1)",borderRadius:8,padding:"0.6rem 0.7rem",cursor:"pointer",color:"#9a958e",fontSize:"0.7rem",fontFamily:"inherit"}}>クリア</button>
+        </div>
+      </div>
+    </>}
 
     {/* Curator Detail Modal */}
     {detailCurator && (() => {
@@ -1759,6 +1772,12 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const [quickUrl, setQuickUrl] = useState("");
   const [validationError, setValidationError] = useState(false);
   const [pitchSent, setPitchSent] = useState(false);
+  // Scroll to top when entering the pitch flow or moving between steps so
+  // the user starts each step at the form header, not wherever the curator
+  // list was scrolled to.
+  useEffect(() => {
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [step]);
   const targets = curators.filter(c => selected.includes(c.id));
   const cost = targets.reduce((sum, c) => sum + (c.creditCost || 2), 0);
   // Build effective track for match scoring (same logic as CuratorBrowser)

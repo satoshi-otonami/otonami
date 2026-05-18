@@ -1021,7 +1021,7 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify, loggedIn
           <span className="dash-home-cta-arrow" style={{fontSize:24,lineHeight:1,flexShrink:0}}>→</span>
         </button>
         <a
-          href="/artist/dashboard"
+          href="/artist/dashboard?tab=tracks"
           className="dash-home-cta-secondary"
           style={{
             background:"transparent",color:"#1a1a1a",border:"1px solid rgba(26,26,26,0.15)",

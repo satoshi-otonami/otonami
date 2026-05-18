@@ -181,7 +181,20 @@ export default function ArtistDashboard() {
   const [artist, setArtist] = useState(null);
   const [tracks, setTracks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('profile');
+  // Initialize tab from ?tab= so /studio's "♪ 楽曲をストック" CTA can deep
+  // link straight into the Tracks tab. Reading in useState (not useEffect)
+  // avoids a one-frame flash of the default Profile tab.
+  const [tab, setTab] = useState(() => {
+    if (typeof window === 'undefined') return 'profile';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const requested = params.get('tab');
+      if (requested === 'tracks' || requested === 'profile') {
+        return requested;
+      }
+    } catch {}
+    return 'profile';
+  });
   const [token, setToken] = useState('');
   const [pitchStats, setPitchStats] = useState(null);
   const [recentPitches, setRecentPitches] = useState([]);
@@ -215,12 +228,6 @@ export default function ArtistDashboard() {
   // Header dropdown
   const [headerMenu, setHeaderMenu] = useState(false);
   const headerMenuRef = useRef(null);
-
-  // Read ?tab= param
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('tab') === 'tracks') setTab('tracks');
-  }, []);
 
   // Auth + load profile
   useEffect(() => {
@@ -358,7 +365,11 @@ export default function ArtistDashboard() {
             <span className="logo-text" style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '3px', color: '#1a1a1a' }}>OTONAMI</span>
           </a>
           <nav className="nav-links" style={{ display: 'flex', gap: 4 }}>
-            <span style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 700, color: THEME.text, fontFamily: THEME.font }}>ダッシュボード</span>
+            {/* Use a plain anchor (not next/link) so /studio's OtonamiApp
+                fully remounts and re-runs its artist_token auto-login —
+                otherwise client-side nav reuses the cached instance and
+                logged-in users see the Demo state until a hard refresh. */}
+            <a href="/studio" style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 700, color: THEME.text, fontFamily: THEME.font, textDecoration: 'none', cursor: 'pointer' }}>ダッシュボード</a>
             <button onClick={() => { setPendingCuratorForPitch(null); setShowTrackSelectModal(true); }}
               className="nav-pitch-btn"
               style={{ padding: '8px 20px', borderRadius: 9999, fontSize: 14, fontWeight: 600, color: '#fff', background: THEME.coral, border: 'none', cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s' }}

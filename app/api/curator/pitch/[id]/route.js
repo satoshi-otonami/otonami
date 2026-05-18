@@ -297,9 +297,11 @@ export async function PATCH(request, { params }) {
           .maybeSingle();
 
         const credits = curatorInfo?.tier || 2;
-        // Revenue: tier × ¥160 × 0.7 (accepted) or 0.5 (declined/feedback)
+        // Revenue: tier × ¥160 × 0.5 — flat rate across all review outcomes
+        // (accepted / declined / feedback). Curators are paid for reviewing,
+        // not for the decision.
         const creditPrice = 160;
-        const rate = status === 'accepted' ? 0.7 : 0.5;
+        const rate = 0.5;
         const totalAmount = Math.round(credits * creditPrice * rate);
 
         const { error: earningError } = await db.from('curator_earnings').insert({

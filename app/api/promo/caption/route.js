@@ -90,7 +90,7 @@ RULES:
 - Do NOT include the JSON backticks or markdown formatting`;
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }]
     });

@@ -360,7 +360,7 @@ Start with "Subject: " line. Then the pitch. Then "---EPK---" separator. Then th
     } catch (e) { /* never let logging crash the request */ }
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1200,
       // Lower temperature so rule-following is consistent across runs.
       // Default 1.0 caused the AI to occasionally pull mood words from the

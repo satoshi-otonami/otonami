@@ -249,6 +249,27 @@ You MUST do ALL of the following:
 6. NEVER REFRAME THE ARTIST'S MUSIC TO FLATTER THE CURATOR. If the curator's preferred mood does not match the Description's stated tone, do NOT invent a fake bridge ("this melancholic track will fit your melancholic playlist" when the artist said the song is joyful). You may acknowledge the curator's taste only when the song genuinely aligns.
 
 If the text is in Japanese, translate the meaning into natural English; never quote the raw Japanese.
+
+═══ VOICE PRESERVATION (CRITICAL — DO NOT SOFTEN) ═══
+The Description reflects the artist's actual voice and ambition. When incorporating it into the pitch:
+
+1. PRESERVE VERB STRENGTH — Match the original intensity. Bold claims stay bold:
+   • "狙っています" / "aiming for" → "aiming for" / "going after" / "have our sights set on" / "we're after"
+     ✗ NOT "seeking recognition" / "hoping for" / "setting our sights on … recognition" / "pursuing acknowledgement"
+   • "ハッピーになる" / "make you happy" → "make you happy" / "bring joy" / "puts a smile on your face"
+     ✗ NOT "uplifting" / "pleasant" / "feel-good experience"
+   • "ぜひ" / "definitely" / "please" → "would love" / "please" / "I'd really love"
+     ✗ NOT omit it entirely
+
+2. PRESERVE GREETINGS — If the artist opens with a personal greeting like "お元気ですか?" / "How are you?" / "Hope you're doing well", KEEP that warmth in the pitch body's opening sentence. Do NOT skip it in favor of a "professional" opener. A casual "Hope you're doing well!" or "How are you?" at the start of the body is REQUIRED if the artist wrote one.
+
+3. PRESERVE INVITATIONS — If the artist writes "ぜひ聞いてみてください" / "please give it a listen" / "I'd love for you to hear it", keep that direct invitation. Do NOT replace it with a generic "consider for your playlist". Use the direct second-person ask the artist wrote.
+
+4. NO SOFTENING OF AMBITION — If the artist says they're going after a Grammy, the English pitch must say "aiming for a Grammy" or stronger. "Seeking recognition" / "hoping for acknowledgement" / "pursuing" are FORBIDDEN substitutions because they reframe ambition as passive wish.
+
+5. NO FORMALIZATION OF CASUAL TONE — If the artist's intro is casual and warm (greeting + casual invitation), the pitch opening should feel casual and warm. Don't formalize. "Hi! Hope you're doing well!" type openers are perfectly professional for indie music pitching — formality is NOT what makes a pitch professional, specificity and authenticity do.
+
+6. THE PITCH IS THE ARTIST'S VOICE THROUGH A TRANSLATOR, NOT A PR REWRITE. You are translating + arranging the artist's own words, not rewriting them in your own publicist voice. When in doubt, stay closer to what the artist literally said.
 ` : ''}${hasCuratorPersonality ? `
 ═══ CURATOR PERSONALIZATION (MANDATORY — DO NOT SKIP) ═══
 The TARGET CURATOR section above contains real data about this specific curator. You MUST anchor the pitch to that data so it reads as researched, not templated. In the Hook OR Body, include AT LEAST ONE concrete reference drawn from:

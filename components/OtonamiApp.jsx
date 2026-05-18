@@ -2649,7 +2649,9 @@ const CREDIT_PACKAGES = [
 ];
 const CREDIT_PRICE = 160;
 const CURATOR_PAY = {
-  calc: (creditCost, accepted) => Math.round(creditCost * CREDIT_PRICE * (accepted ? 0.7 : 0.5)),
+  // Flat 50% across all review outcomes. The `accepted` arg is kept for
+  // backwards compatibility with existing call sites but is ignored.
+  calc: (creditCost, _accepted) => Math.round(creditCost * CREDIT_PRICE * 0.5),
 };
 function CreditShop({ user, credits, setCredits, notify, setPage }) {
   const [selectedPkg, setSelectedPkg] = useState(null);
@@ -3514,7 +3516,7 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
                 <div className="curator-earnings-row" style={{display:"flex",gap:12}}>
                   <div style={{flex:1,textAlign:"center",padding:"0.5rem",borderRadius:8,background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.25)"}}>
                     <div style={{fontWeight:800,color:"#10b981",fontSize:"1.1rem"}}>¥{CURATOR_PAY.calc(curatorData?.creditCost||2,true)}</div>
-                    <div style={{fontSize:"0.68rem",color:"#16a34a"}}>採用時（70%）</div>
+                    <div style={{fontSize:"0.68rem",color:"#16a34a"}}>採用時（50%）</div>
                   </div>
                   <div style={{flex:1,textAlign:"center",padding:"0.5rem",borderRadius:8,background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.2)"}}>
                     <div style={{fontWeight:800,color:"#c0bdb5",fontSize:"1.1rem"}}>¥{CURATOR_PAY.calc(curatorData?.creditCost||2,false)}</div>
@@ -3642,7 +3644,7 @@ function CuratorProfile({user, curators, saveCurators, notify, stats}) {
     <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:16,padding:"1.2rem",marginBottom:"1rem"}}>
       <div style={{fontWeight:700,fontSize:"0.85rem",color:"#92400e",marginBottom:6,borderLeft:"3px solid #c4956a",paddingLeft:10}}>報酬体系</div>
       <div style={{display:"flex",gap:12,fontSize:"0.78rem"}}>
-        <div><span style={{fontWeight:700,color:"#10b981"}}>¥{CURATOR_PAY.calc(curatorData?.creditCost||2,true)}</span> / 採用時（70%）</div>
+        <div><span style={{fontWeight:700,color:"#10b981"}}>¥{CURATOR_PAY.calc(curatorData?.creditCost||2,true)}</span> / 採用時（50%）</div>
         <div><span style={{fontWeight:700,color:"#c0bdb5"}}>¥{CURATOR_PAY.calc(curatorData?.creditCost||2,false)}</span> / 不採用時（50%）</div>
       </div>
       <div style={{fontSize:"0.72rem",color:"#a16207",marginTop:6}}>7日以内にフィードバックがない場合、報酬は発生しません</div>

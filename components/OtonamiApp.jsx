@@ -1,6 +1,6 @@
 'use client';
-import { initSession, loadCurators, loadPitches, loadCredits,
-         savePitchesToDB, saveCuratorToDB, saveCredits as saveCreditsDB,
+import { initSession, loadCurators, loadPitches,
+         savePitchesToDB, saveCuratorToDB,
          logEmail, insertPitchGetUUID } from '@/lib/db';
 
 import API, { authFetch, ApiError } from '@/lib/api-client';
@@ -372,7 +372,7 @@ export default function App() {
   });
   const [curators, setCurators] = useState([]);
   const [pitches, setPitches] = useState([]);
-  const [credits, setCredits] = useState(20);
+  const [credits, setCredits] = useState(0);
   const [notif, setNotif] = useState(null);
   const [loggedInArtist, setLoggedInArtist] = useState(null);
   const [page, setPage] = useState(() => {
@@ -427,6 +427,7 @@ export default function App() {
         .then(data => {
           if (data?.artist) {
             setLoggedInArtist(data.artist);
+            setCredits(data.artist.credits ?? 0);
             // Auto-set user if not already logged in
             if (!user) {
               const u = { id: data.artist.id, name: data.artist.name, email: data.artist.email, type: 'artist' };
@@ -461,8 +462,7 @@ export default function App() {
 const dbCurators = await loadCurators();
 setCurators(dbCurators && dbCurators.length > 0 ? dbCurators : []);
 await initSession();
-const savedCredits = await loadCredits();
-setCredits(savedCredits ?? 20);
+// Credits are loaded by the auto-login useEffect from artists.credits.
 const userEmail = user?.email || null;
 const savedPitches = await loadPitches(userEmail);
 if (savedPitches?.length) setPitches(savedPitches);
@@ -501,34 +501,9 @@ const saveCurators = async (c) => {
     if (!curator.isSeed) await saveCuratorToDB(curator);
   }
 };
-const saveCredits = async (c) => {
-  setCredits(c);
-  await saveCreditsDB(c);
-};
-  // Check for expired pitches (7-day deadline) and refund credits
-  useEffect(() => {
-    if (pitches.length === 0) return;
-    const now = Date.now();
-    const alreadyRefunded = new Set(JSON.parse(localStorage.getItem('refundedPitchIds') || '[]'));
-    let refundTotal = 0;
-    const newlyRefundedIds = [];
-    const updated = pitches.map(p => {
-      const dl = p.deadline ? new Date(p.deadline) : (p.sentAt ? new Date(new Date(p.sentAt).getTime() + 7*24*60*60*1000) : null);
-      if (p.status === "sent" && dl && dl.getFullYear() > 2000 && dl.getTime() < now && !p.refunded && !alreadyRefunded.has(p.id)) {
-        refundTotal += (p.creditCost || 2);
-        newlyRefundedIds.push(p.id);
-        return {...p, status: "expired", refunded: true};
-      }
-      return p;
-    });
-    if (refundTotal > 0) {
-      savePitches(updated);
-      saveCredits(credits + refundTotal);
-      const stored = JSON.parse(localStorage.getItem('refundedPitchIds') || '[]');
-      localStorage.setItem('refundedPitchIds', JSON.stringify([...stored, ...newlyRefundedIds]));
-      notify(`期限切れピッチに対し${refundTotal}クレジットを返還しました`);
-    }
-  }, [pitches.length]); // eslint-disable-line
+  // Expired-pitch refunds are handled server-side by the daily cron job
+  // (app/api/cron/check-expired-pitches/route.js). The client no longer
+  // optimistically refunds; the refreshed credits arrive on next /api/artists fetch.
 
   const updatePitch = async (id, updates) => {
     setPitches(prev => {
@@ -548,7 +523,7 @@ const saveCredits = async (c) => {
     <div style={css.shell}>
       {notif && <div style={{...css.toast, background: notif.type==="success" ? "linear-gradient(135deg,#c4956a,#e85d3a)" : "linear-gradient(135deg,#dc2626,#ea580c)"}}>{notif.type==="success"?"✓":"!"} {notif.msg}</div>}
       {mode === "artist" ? (
-        <ArtistApp user={user} curators={curators} pitches={pitches} credits={credits} page={page} setPage={setPage} savePitches={savePitches} saveCredits={saveCredits} notify={notify} updatePitch={updatePitch} refreshPitches={refreshPitches} loggedInArtist={loggedInArtist} />
+        <ArtistApp user={user} curators={curators} pitches={pitches} credits={credits} page={page} setPage={setPage} savePitches={savePitches} setCredits={setCredits} notify={notify} updatePitch={updatePitch} refreshPitches={refreshPitches} loggedInArtist={loggedInArtist} />
       ) : (
         <CuratorApp user={user} pitches={pitches} page={page} setPage={setPage} savePitches={savePitches} notify={notify} updatePitch={updatePitch} curators={curators} saveCurators={saveCurators} />
       )}
@@ -727,7 +702,7 @@ function loadArtistDraft() {
   try { const r = sessionStorage.getItem("otonami_artist_draft"); return r ? JSON.parse(r) : null; } catch { return null; }
 }
 
-function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, saveCredits, notify, updatePitch, refreshPitches, loggedInArtist}) {
+function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, setCredits, notify, updatePitch, refreshPitches, loggedInArtist}) {
   const [selected, setSelected] = useState([]);
   const [trackData, setTrackData] = useState(null);
 
@@ -860,9 +835,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       localStorage.removeItem('artist_token');
       window.location.href = '/artist/login';
     } else {
-      localStorage.removeItem('otonami_token');
       localStorage.removeItem('otonami_artist');
-      localStorage.removeItem('otonami_credits');
       window.location.href = '/';
     }
   };
@@ -888,10 +861,10 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     <main style={css.main}>
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify} loggedInArtist={loggedInArtist}/>}
       {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist}/>}
-      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches} linkedTrackId={linkedTrackId} linkedTrackAiStatus={linkedTrackAiStatus}/>}
+      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches} linkedTrackId={linkedTrackId} linkedTrackAiStatus={linkedTrackAiStatus}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches} refreshPitches={refreshPitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches}/>}
-      {page==="shop" && <CreditShop user={user} credits={credits} saveCredits={saveCredits} notify={notify} setPage={setPage}/>}
+      {page==="shop" && <CreditShop user={user} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage}/>}
     </main>
     <footer style={{borderTop:"1px solid rgba(0,0,0,0.05)",padding:"1.2rem 1.5rem",textAlign:"center",background:"#f8f7f4",fontSize:"0.72rem",color:"#9a958e"}}>
       <div>OTONAMI — Connecting Japanese Music to the World | TYCompany LLC / ILCJ</div>
@@ -1771,7 +1744,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 }
 
 // ─── Pitch Creator (Template Engine + Social Links + Followers) ───
-function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, saveCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft, refreshPitches, linkedTrackId, linkedTrackAiStatus}) {
+function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, setCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft, refreshPitches, linkedTrackId, linkedTrackAiStatus}) {
   const [pitchText, setPitchText] = useState("");
   const [pitchJa, setPitchJa] = useState("");
   const [pitchTab, setPitchTab] = useState("ja"); // "en" | "ja"
@@ -2202,12 +2175,16 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     // insertPitchGetUUID also auto-translates Japanese content to English.
     // Replace the temporary local id with the real UUID so email links work.
     const newPitches = [];
+    let latestCredits = credits;
+    let insufficientCreditsHit = false;
     for (const p of tempPitches) {
       try {
         const result = await insertPitchGetUUID(p);
         if (result?.id) {
           // Use translated pitchText (if translation occurred) for the email body
           newPitches.push({ ...p, id: result.id, pitchText: result.pitchText ?? p.pitchText, _hasUUID: true });
+          // Authoritative balance comes from the server
+          if (typeof result.new_credits === 'number') latestCredits = result.new_credits;
         } else {
           // Insert failed — keep custom ID for local state but mark as no UUID
           console.warn("insertPitchGetUUID failed for curator:", p.curatorName);
@@ -2218,13 +2195,20 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           handleApiError(e, notify, 'ピッチ送信失敗');
           return; // 401/413/429 の場合は送信ループ全体を中断
         }
+        // 402 Payment Required: server-side balance check failed mid-loop
+        if (e?.status === 402) {
+          insufficientCreditsHit = true;
+          notify('クレジットが不足しています', 'error');
+          break;
+        }
         console.warn("insertPitchGetUUID exception:", e.message);
         newPitches.push({ ...p, _hasUUID: false });
       }
     }
 
     await savePitches([...newPitches, ...pitches]);
-    await saveCredits(credits - cost);
+    setCredits(latestCredits);
+    if (insufficientCreditsHit && newPitches.length === 0) return;
     saveToStorage(artist, links, followers);
     setStep(3);
     setPitchSent(true);
@@ -2667,7 +2651,7 @@ const CREDIT_PRICE = 160;
 const CURATOR_PAY = {
   calc: (creditCost, accepted) => Math.round(creditCost * CREDIT_PRICE * (accepted ? 0.7 : 0.5)),
 };
-function CreditShop({ user, credits, saveCredits, notify, setPage }) {
+function CreditShop({ user, credits, setCredits, notify, setPage }) {
   const [selectedPkg, setSelectedPkg] = useState(null);
   const [customCredits, setCustomCredits] = useState("");
   const [history, setHistory] = useState([]);

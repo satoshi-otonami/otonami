@@ -148,10 +148,13 @@ export async function POST(request) {
       console.log(`[pitches] Original (first 200 chars): ${originalBody.slice(0, 200)}`);
     }
 
-    // Strip unknown columns to prevent Supabase insert errors
+    // Strip unknown columns to prevent Supabase insert errors.
+    // artist_id is intentionally NOT in PITCHES_COLUMNS so any client-supplied
+    // value is dropped here; we inject the trusted JWT-derived value below.
     const cleanRow = pickKnownColumns(row);
     cleanRow.body = englishBody;
     cleanRow.pitch_language = translated ? 'ja_translated' : 'en';
+    cleanRow.artist_id = payload.artistId;
 
     const db = getServiceSupabase();
 
@@ -169,33 +172,96 @@ export async function POST(request) {
         );
       }
     }
-    const { data, error } = await db
+
+    // --- Credit deduction (artists.credits via atomic RPC) ---
+    if (!cleanRow.curator_id) {
+      return NextResponse.json({ error: 'curator_id required' }, { status: 400 });
+    }
+
+    // Server-side trusted credit cost: curators.tier is the source of truth
+    // (per CLAUDE.md). Ignore any client-supplied credits_charged value.
+    const { data: curator } = await db
+      .from('curators')
+      .select('tier')
+      .eq('id', cleanRow.curator_id)
+      .maybeSingle();
+    const creditsRequired = curator?.tier || 2;
+    cleanRow.credits_charged = creditsRequired;
+
+    const { data: newCredits, error: rpcError } = await db.rpc(
+      'increment_artist_credits',
+      { p_artist_id: payload.artistId, p_amount: -creditsRequired }
+    );
+
+    if (rpcError) {
+      if (rpcError.code === 'P0001' || rpcError.message?.includes('Insufficient credits')) {
+        return NextResponse.json(
+          { error: 'Insufficient credits', required: creditsRequired, message: 'クレジットが不足しています' },
+          { status: 402 }
+        );
+      }
+      console.error('[pitches] Credit deduction RPC error:', rpcError);
+      return NextResponse.json(
+        { error: 'Credit processing failed', detail: rpcError.message },
+        { status: 500 }
+      );
+    }
+
+    // --- Insert pitch (with pitch_language retry fallback) ---
+    let { data, error } = await db
       .from('pitches')
       .insert(cleanRow)
       .select('id')
       .single();
 
+    if (error && error.message?.includes('pitch_language')) {
+      console.warn('[pitches] pitch_language column missing, inserting without it');
+      delete cleanRow.pitch_language;
+      ({ data, error } = await db
+        .from('pitches')
+        .insert(cleanRow)
+        .select('id')
+        .single());
+    }
+
     if (error) {
-      // pitch_language カラムが未作成の場合はそのカラムを除いてリトライ
-      if (error.message?.includes('pitch_language')) {
-        console.warn('[pitches] pitch_language column missing, inserting without it');
-        delete cleanRow.pitch_language;
-        const { data: data2, error: error2 } = await db
-          .from('pitches')
-          .insert(cleanRow)
-          .select('id')
-          .single();
-        if (error2) {
-          console.error('[pitches] Insert error (retry):', error2);
-          return NextResponse.json({ error: error2.message }, { status: 500 });
-        }
-        return NextResponse.json({ id: data2.id, pitchText: englishBody });
+      // Rollback credit deduction since the pitch was not persisted.
+      const { error: rollbackErr } = await db.rpc('increment_artist_credits', {
+        p_artist_id: payload.artistId,
+        p_amount: creditsRequired,
+      });
+      if (rollbackErr) {
+        console.error('[pitches] CRITICAL: Credit rollback failed:', rollbackErr);
+      } else {
+        await db.from('credit_transactions').insert({
+          artist_id: payload.artistId,
+          amount: creditsRequired,
+          type: 'pitch_spend_rollback',
+          description: 'Pitch insert failed, credits restored',
+          metadata: { curator_id: cleanRow.curator_id, error: error.message },
+        }).catch(() => {});
       }
       console.error('[pitches] Insert error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ id: data.id, pitchText: englishBody });
+    // Log the spend (non-fatal if it fails — the balance is already correct).
+    await db.from('credit_transactions').insert({
+      artist_id: payload.artistId,
+      amount: -creditsRequired,
+      type: 'pitch_spend',
+      description: 'Pitch to curator',
+      metadata: { pitch_id: data.id, curator_id: cleanRow.curator_id },
+    }).catch(txErr => {
+      console.warn('[pitches] credit_transactions log failed (non-fatal):', txErr.message);
+    });
+
+    return NextResponse.json({
+      id: data.id,
+      pitchText: englishBody,
+      new_credits: newCredits,
+      credits_charged: creditsRequired,
+    });
   } catch (e) {
     console.error('[pitches] Unexpected error:', e);
     return NextResponse.json({ error: e.message }, { status: 500 });

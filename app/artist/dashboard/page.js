@@ -27,6 +27,12 @@ function showApiError(e, fallbackMsg = 'エラーが発生しました') {
   return false;
 }
 
+// === Feature Flags ===
+// Promo and Lyric Video are postponed to Phase 2 (post-launch).
+// To re-enable after launch, change to `true` — no other code changes needed.
+const FEATURE_PROMO_ENABLED = false;
+const FEATURE_LYRIC_VIDEO_ENABLED = false;
+
 const THEME = {
   bg: '#f8f7f4', card: '#ffffff', border: '#e5e2dc', borderLight: '#f0ede8',
   text: '#1a1a1a', textSub: '#6b6560', textMuted: '#9b9590',
@@ -892,29 +898,33 @@ export default function ArtistDashboard() {
 
                         {/* Action area */}
                         <div style={{ width: 180, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-                          <button onClick={(e) => { e.stopPropagation(); setPromoTrack(track); setShowPromoModal(true); }} style={{
-                            background: '#1a1a1a', color: '#c4956a',
-                            border: '1.5px solid #c4956a', borderRadius: 9999,
-                            padding: '8px 18px', fontSize: 13, fontWeight: 600,
-                            cursor: 'pointer', whiteSpace: 'nowrap',
-                            fontFamily: THEME.font, transition: 'all 0.2s',
-                          }}
-                            onMouseEnter={e => { e.currentTarget.style.background = '#c4956a'; e.currentTarget.style.color = '#fff'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#c4956a'; }}
-                          >プロモ</button>
-                          <a
-                            href={`/artist/lyric-video?track=${track.id}&title=${encodeURIComponent(track.title || '')}`}
-                            onClick={e => e.stopPropagation()}
-                            style={{
-                              background: '#1a1a1a', color: '#A78BFA',
-                              border: '1.5px solid #A78BFA', borderRadius: 9999,
-                              padding: '8px 14px', fontSize: 13, fontWeight: 600,
-                              cursor: 'pointer', whiteSpace: 'nowrap', textDecoration: 'none',
+                          {FEATURE_PROMO_ENABLED && (
+                            <button onClick={(e) => { e.stopPropagation(); setPromoTrack(track); setShowPromoModal(true); }} style={{
+                              background: '#1a1a1a', color: '#c4956a',
+                              border: '1.5px solid #c4956a', borderRadius: 9999,
+                              padding: '8px 18px', fontSize: 13, fontWeight: 600,
+                              cursor: 'pointer', whiteSpace: 'nowrap',
                               fontFamily: THEME.font, transition: 'all 0.2s',
                             }}
-                            onMouseEnter={e => { e.currentTarget.style.background = '#A78BFA'; e.currentTarget.style.color = '#fff'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#A78BFA'; }}
-                          >リリックMV</a>
+                              onMouseEnter={e => { e.currentTarget.style.background = '#c4956a'; e.currentTarget.style.color = '#fff'; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#c4956a'; }}
+                            >プロモ</button>
+                          )}
+                          {FEATURE_LYRIC_VIDEO_ENABLED && (
+                            <a
+                              href={`/artist/lyric-video?track=${track.id}&title=${encodeURIComponent(track.title || '')}`}
+                              onClick={e => e.stopPropagation()}
+                              style={{
+                                background: '#1a1a1a', color: '#A78BFA',
+                                border: '1.5px solid #A78BFA', borderRadius: 9999,
+                                padding: '8px 14px', fontSize: 13, fontWeight: 600,
+                                cursor: 'pointer', whiteSpace: 'nowrap', textDecoration: 'none',
+                                fontFamily: THEME.font, transition: 'all 0.2s',
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.background = '#A78BFA'; e.currentTarget.style.color = '#fff'; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#A78BFA'; }}
+                            >リリックMV</a>
+                          )}
                           <a href={buildPitchUrl(track)} onClick={e => e.stopPropagation()} style={{
                             padding: '6px 14px', borderRadius: 9999, background: THEME.coral, color: '#fff',
                             fontSize: 12, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap',

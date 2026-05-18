@@ -149,12 +149,20 @@ export async function POST(request) {
     }
 
     // Strip unknown columns to prevent Supabase insert errors.
-    // artist_id is intentionally NOT in PITCHES_COLUMNS so any client-supplied
-    // value is dropped here; we inject the trusted JWT-derived value below.
+    // artist_id and status are intentionally NOT in PITCHES_COLUMNS so any
+    // client-supplied value is dropped here; we inject trusted values below.
     const cleanRow = pickKnownColumns(row);
     cleanRow.body = englishBody;
     cleanRow.pitch_language = translated ? 'ja_translated' : 'en';
     cleanRow.artist_id = payload.artistId;
+    // pitches.status DB default is 'draft'; force 'sent' for new submissions
+    // so cron expiry checks (.eq('status','sent')) and curator dashboard
+    // (.neq('status','draft')) see the pitch.
+    cleanRow.status = 'sent';
+    cleanRow.sent_at = new Date().toISOString();
+    if (!cleanRow.deadline_at) {
+      cleanRow.deadline_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    }
 
     const db = getServiceSupabase();
 

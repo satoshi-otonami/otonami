@@ -209,7 +209,7 @@ Name: ${artist.nameEn || artist.name}
 Japanese Name: ${artist.name}
 Genre: ${artist.genre}
 Mood/Sound: ${artist.mood || 'N/A'}
-${artistDbBio ? `Artist Bio — canonical self-introduction from the artist's profile (may be in Japanese — extract meaning, NEVER quote raw Japanese):\n${artistDbBio}\n` : ''}${artist.description ? `Description — pitch-specific notes from the artist (may be in Japanese): ${artist.description}` : (artistDbBio ? '' : 'Description: N/A')}
+${artist.description ? `Description — THE ARTIST'S OWN PITCH MESSAGE FOR THIS SUBMISSION (PRIMARY SOURCE — every concrete fact, number, award, ambition, and personal tone here MUST appear in the pitch body. This supersedes Bio when in conflict. May be in Japanese — extract meaning, NEVER quote raw Japanese):\n${artist.description}\n` : (artistDbBio ? '' : 'Description: N/A')}${artistDbBio ? `Artist Bio — supporting context from the artist's profile (use for additional credibility ONLY when it doesn't crowd out the Description above. May be in Japanese — extract meaning, NEVER quote raw Japanese):\n${artistDbBio}\n` : ''}
 Key Track: ${artist.songTitle || 'N/A'}
 Influences/Similar: ${artist.influences || artistDbInfluences || 'N/A'}
 Achievements: ${artist.achievements || 'None listed'}
@@ -226,18 +226,27 @@ ${style === 'casual' ? 'Warm, personal tone — like messaging a fellow music fa
 ${(artist.description || artistDbBio) ? `
 ═══ ARTIST NARRATIVE (MANDATORY — DO NOT SKIP) ═══
 The artist has provided two sources of self-introduction:
-  • "Description" — the artist's voice and intent for THIS specific pitch (their tone, the song's character, any personal note they wanted included)
-  • "Artist Bio" — their canonical profile (credentials, formation, named events/collaborators)
+  • "Description" — THE ARTIST'S ACTUAL PITCH MESSAGE for this submission. This is what they personally chose to say to the curator. IT IS THE PRIMARY SOURCE for both tone and facts.
+  • "Artist Bio" — supporting profile context, used only as backup for additional credibility.
 
 You MUST do ALL of the following:
 
-1. THE DESCRIPTION IS AUTHORITATIVE FOR TONE AND SONG CHARACTER. If the artist wrote that the song is "happy", "joyful", "uplifting", or "makes people feel good", the pitch body MUST convey that emotional truth. You are FORBIDDEN from describing the song with contradicting adjectives (do NOT call a "happy" song "melancholic", "dark", "brooding", or "introspective" just because the curator's preferred moods include those words). The artist's stated intent for the song wins over the curator's mood preferences. Period.
+1. THE DESCRIPTION IS AUTHORITATIVE FOR BOTH TONE AND FACTS. Every concrete fact, number, award, ambition, festival/venue name, or personal claim in the Description MUST appear in the pitch body. Examples — if the Description says any of these, they MUST be in the pitch body, naturally phrased in English:
+   • "グラミー賞も狙っています" / "aiming for the Grammy" → MUST appear (e.g. "with Grammy ambitions" / "currently aiming for the Grammys")
+   • "SXSW 10回出演" / "10 SXSW appearances" → MUST appear as a specific number
+   • "日本を代表するインストバンド" / "leading Japanese instrumental band" → MUST appear as a positioning claim
+   • "月間50万再生" / "500K monthly streams" → MUST appear verbatim as a number
+   You are FORBIDDEN from omitting any specific fact the artist wrote in the Description. Generic phrasing that "covers" the fact without naming it does NOT satisfy this rule — if they said "Grammy", the pitch must say "Grammy"; if they said "10 times", the pitch must say "10 times" (or "ten times").
 
-2. ECHO THE DESCRIPTION'S PERSONAL VOICE. If the Description contains a personal greeting or message from the artist (e.g. "hi, I'm X from band Y, I think you'll enjoy this"), reflect that warmth in the body's voice — do NOT write a sterile credentials dump. The artist's name/identity belongs in the sign-off, not the greeting (the [Curator Name] greeting placeholder is reserved for substitution).
+2. THE DESCRIPTION IS AUTHORITATIVE FOR TONE AND SONG CHARACTER. If the artist wrote that the song is "happy", "joyful", "uplifting", or "makes people feel good", the pitch body MUST convey that emotional truth. You are FORBIDDEN from describing the song with contradicting adjectives (do NOT call a "happy" song "melancholic", "dark", "brooding", or "introspective" just because the curator's preferred moods include those words). The artist's stated intent for the song wins over the curator's mood preferences. Period.
 
-3. EXTRACT AT LEAST TWO CONCRETE FACTS FROM THE BIO. Use the Bio for credibility — pull SPECIFIC nouns: formation year, member names/roles, named festivals/venues, named releases/collaborators, signature concept. Generic phrases like "they have toured internationally" do NOT satisfy this. If both Description and Bio are present, USE BOTH — Description shapes the tone, Bio supplies the facts.
+3. ECHO THE DESCRIPTION'S PERSONAL VOICE AND OPENING. If the Description contains a personal greeting or warm opener from the artist (e.g. "お元気ですか？" / "how are you?" / "hi, I think you'll enjoy this"), reflect that warmth in the BODY's opening sentence (NOT the greeting line — the "Hi [Curator Name]," line stays as the literal placeholder). The first sentence of the body should feel like the artist is personally addressing the curator, not a publicist's third-person dump. The artist's name/identity belongs in the sign-off.
 
-4. NEVER REFRAME THE ARTIST'S MUSIC TO FLATTER THE CURATOR. If the curator's preferred mood does not match the Description's stated tone, do NOT invent a fake bridge ("this melancholic track will fit your melancholic playlist" when the artist said the song is joyful). You may acknowledge the curator's taste only when the song genuinely aligns.
+4. WHEN DESCRIPTION AND BIO OVERLAP, FOLLOW THE DESCRIPTION. If the Description says "SXSW 10 appearances" and the Bio says "SXSW 8 appearances since 2013", use the Description's number (10) and you may add the Bio's year (2013) as supporting detail — but never override a Description fact with a Bio fact.
+
+5. USE THE BIO FOR SUPPORTING DETAIL ONLY. The Bio supplies extra context (formation year, member names, signature concept) when the Description doesn't already cover it. Do NOT let the Bio's narrative voice dominate when the Description has its own message. If the Description carries the lead, the Bio is a supporting paragraph at most.
+
+6. NEVER REFRAME THE ARTIST'S MUSIC TO FLATTER THE CURATOR. If the curator's preferred mood does not match the Description's stated tone, do NOT invent a fake bridge ("this melancholic track will fit your melancholic playlist" when the artist said the song is joyful). You may acknowledge the curator's taste only when the song genuinely aligns.
 
 If the text is in Japanese, translate the meaning into natural English; never quote the raw Japanese.
 ` : ''}${hasCuratorPersonality ? `
@@ -252,7 +261,7 @@ A generic statement like "fits your playlist's vibe" does NOT satisfy this rule.
 1. Subject line: Compelling, under 60 characters, include genre + "from Japan"
 2. Greeting: "Hi [Curator Name]," — use the literal placeholder text "[Curator Name]" exactly as written. Do NOT substitute a real name. The system replaces this token per recipient before sending.
 3. Hook: ${style === 'storytelling' ? 'Vivid sensory description of the sound' : style === 'casual' ? 'Personal connection to the curator\'s work' : 'Strongest credential or unique angle'}
-4. Body: Describe the SOUND in vivid language that MATCHES the Description's stated tone (see ARTIST NARRATIVE rule). Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}${trackDesc.characteristics ? ` Use the track analysis data above to give specific sound descriptions (e.g. energy level, tempo feel) — but defer to the Description's stated mood if the analysis appears to contradict it.` : ''}
+4. Body: FIRST sentence should echo the Description's personal voice/opener if it has one (see ARTIST NARRATIVE rule 3). Then weave in EVERY specific fact, number, award, and ambition from the Description (see ARTIST NARRATIVE rule 1) — these are non-negotiable. Describe the SOUND in vivid language that MATCHES the Description's stated tone. Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}${trackDesc.characteristics ? ` Use the track analysis data above to give specific sound descriptions (e.g. energy level, tempo feel) — but defer to the Description's stated mood if the analysis appears to contradict it.` : ''}
 5. Listen link: Use the "Listen (Primary)" URL from the Links section below. Write it as "Listen: <url>" or "Stream: <url>". If no primary link, use the first available streaming link.
 6. CTA: Clear ask appropriate for curator type (${curator?.type || 'blog'})
 7. Links section: List all available platform links with follower counts
@@ -261,6 +270,7 @@ A generic statement like "fits your playlist's vibe" does NOT satisfy this rule.
 ═══ ABSOLUTE RULES ═══
 - NEVER write "I hope this email finds you well"
 - NEVER invent achievements, numbers, or awards not in the profile
+- NEVER OMIT a specific fact, number, award, or ambition that the artist wrote in the Description. If the Description mentions a specific thing (Grammy, SXSW count, monthly streams, signed to label X), it MUST appear in the pitch body with the same specificity. Silently dropping a Description fact is a failure.
 - NEVER use vague superlatives without evidence
 - NEVER write a real curator name. ANYWHERE you would refer to the curator personally — greeting, hook, mid-sentence — use the literal text "[Curator Name]". The frontend substitutes this token per recipient. Writing a real name will cause every recipient of a multi-curator pitch to receive the wrong salutation.
 - ALL output text must be 100% English. ZERO Japanese characters allowed in the pitch or EPK.

@@ -437,7 +437,7 @@ export default function CuratorDashboard() {
           Please log in to access the curator dashboard.<br />
           <span style={{ color: T.textMuted, fontSize: 12 }}>ダッシュボードにアクセスするにはログインしてください。</span>
         </p>
-        <a href="/curator" style={{ display: 'inline-block', padding: '13px 32px', background: T.accentGrad, borderRadius: 24, color: '#fff', textDecoration: 'none', fontWeight: 700, fontFamily: T.font }}>Go to Login →</a>
+        <a href="/curator?tab=login" style={{ display: 'inline-block', padding: '13px 32px', background: T.accentGrad, borderRadius: 24, color: '#fff', textDecoration: 'none', fontWeight: 700, fontFamily: T.font }}>Go to Login →</a>
       </div>
     </div>
   );

@@ -111,6 +111,13 @@ export default function CuratorRegistrationPage() {
   }, []);
 
   useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'login') setTab('login');
+    } catch {}
+  }, []);
+
+  useEffect(() => {
     if (!menuOpen) return;
     const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
     document.addEventListener('mousedown', handler);

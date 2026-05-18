@@ -124,7 +124,7 @@ export async function GET(request) {
               <h1 style="font-size:24px;font-weight:700;color:#f0ede6;margin:0 0 8px;">Welcome, ${name}!</h1>
               <p style="color:#b8b0a3;font-size:15px;margin:0 0 28px;">Your email has been verified. Thank you for joining OTONAMI's curator network.</p>
               <div style="text-align:center;margin:32px 0;">
-                <a href="${APP_URL}/curator" style="display:inline-block;background-color:#c4956a;color:#1a1a1a;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">
+                <a href="${APP_URL}/curator?tab=login" style="display:inline-block;background-color:#c4956a;color:#1a1a1a;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;">
                   Go to Your Dashboard →
                 </a>
               </div>
@@ -134,7 +134,7 @@ export async function GET(request) {
             </div>
           </div>
         `,
-        text: `Welcome to OTONAMI, ${name}!\n\nYour email has been verified. Thank you for joining our curator network.\n\nLog in: ${APP_URL}/curator`,
+        text: `Welcome to OTONAMI, ${name}!\n\nYour email has been verified. Thank you for joining our curator network.\n\nLog in: ${APP_URL}/curator?tab=login`,
       });
     }
   } catch (e) {

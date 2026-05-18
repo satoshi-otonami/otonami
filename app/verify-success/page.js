@@ -17,7 +17,7 @@ export default function VerifySuccessPage() {
     if (params.get('type') === 'curator') setType('curator');
   }, []);
 
-  const loginUrl = type === 'artist' ? '/artist/login' : '/curator';
+  const loginUrl = type === 'artist' ? '/artist/login' : '/curator?tab=login';
 
   return (
     <div style={{ minHeight: '100vh', background: THEME.bg, fontFamily: THEME.font, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>

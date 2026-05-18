@@ -174,20 +174,34 @@ ${curatorInfo}
 ${style === 'casual' ? 'Warm, personal tone — like messaging a fellow music fan who happens to have influence. Genuine, not corporate. Use contractions.' : style === 'storytelling' ? 'Open with a vivid, sensory description of the music — what it sounds like, what it evokes. Paint a picture before the pitch. Make the curator feel the music through words.' : 'Polished, industry-standard tone. Concise. Lead with strongest credential. Respect the curator\'s time.'}
 ${(artist.description || artistDbBio) ? `
 ═══ ARTIST NARRATIVE (MANDATORY — DO NOT SKIP) ═══
-The "Artist Bio" and "Description" fields above are the artist's own self-introduction (in their words). You MUST extract and incorporate AT LEAST TWO concrete specifics from those fields into the Hook or Body — pull SPECIFIC nouns and facts the artist deliberately wrote: formation year, founders/members and their roles, city/region/scene, signature sound concept, named festivals/venues/collaborators, named releases, philosophy, defining experience. A generic line like "their music is emotive" does NOT satisfy this rule. Prefer the longer "Artist Bio" when both are present — it is the canonical source. If the text is in Japanese, translate the meaning into natural English and use it; never quote the raw Japanese.
+The artist has provided two sources of self-introduction:
+  • "Description" — the artist's voice and intent for THIS specific pitch (their tone, the song's character, any personal note they wanted included)
+  • "Artist Bio" — their canonical profile (credentials, formation, named events/collaborators)
+
+You MUST do ALL of the following:
+
+1. THE DESCRIPTION IS AUTHORITATIVE FOR TONE AND SONG CHARACTER. If the artist wrote that the song is "happy", "joyful", "uplifting", or "makes people feel good", the pitch body MUST convey that emotional truth. You are FORBIDDEN from describing the song with contradicting adjectives (do NOT call a "happy" song "melancholic", "dark", "brooding", or "introspective" just because the curator's preferred moods include those words). The artist's stated intent for the song wins over the curator's mood preferences. Period.
+
+2. ECHO THE DESCRIPTION'S PERSONAL VOICE. If the Description contains a personal greeting or message from the artist (e.g. "hi, I'm X from band Y, I think you'll enjoy this"), reflect that warmth in the body's voice — do NOT write a sterile credentials dump. The artist's name/identity belongs in the sign-off, not the greeting (the [Curator Name] greeting placeholder is reserved for substitution).
+
+3. EXTRACT AT LEAST TWO CONCRETE FACTS FROM THE BIO. Use the Bio for credibility — pull SPECIFIC nouns: formation year, member names/roles, named festivals/venues, named releases/collaborators, signature concept. Generic phrases like "they have toured internationally" do NOT satisfy this. If both Description and Bio are present, USE BOTH — Description shapes the tone, Bio supplies the facts.
+
+4. NEVER REFRAME THE ARTIST'S MUSIC TO FLATTER THE CURATOR. If the curator's preferred mood does not match the Description's stated tone, do NOT invent a fake bridge ("this melancholic track will fit your melancholic playlist" when the artist said the song is joyful). You may acknowledge the curator's taste only when the song genuinely aligns.
+
+If the text is in Japanese, translate the meaning into natural English; never quote the raw Japanese.
 ` : ''}${hasCuratorPersonality ? `
-═══ PERSONALIZATION (MANDATORY — DO NOT SKIP) ═══
+═══ CURATOR PERSONALIZATION (MANDATORY — DO NOT SKIP) ═══
 The TARGET CURATOR section above contains real data about this specific curator. You MUST anchor the pitch to that data so it reads as researched, not templated. In the Hook OR Body, include AT LEAST ONE concrete reference drawn from:
-  • a mood listed in "Moods they prefer" (e.g. "this leans into the kind of late-night warmth you tend to favor")
   • an artist in "Artists they have featured" (e.g. "fans of [ArtistX] in your rotation will find a familiar texture here")
   • a specific detail from the "Curator bio" (their stated focus, format, label, geography, philosophy)
-A generic statement like "fits your playlist's vibe" does NOT satisfy this rule — the reference must point to a SPECIFIC item from the curator profile. NEVER name the curator personally (use [Curator Name] in the greeting only). NEVER quote raw Japanese from the bio.
+  • a mood listed in "Moods they prefer" — BUT ONLY IF that mood is genuinely compatible with the song character described in the Description. If there is a mood mismatch, choose one of the other two anchors instead.
+A generic statement like "fits your playlist's vibe" does NOT satisfy this rule. NEVER name the curator personally (use [Curator Name] in the greeting only). NEVER quote raw Japanese from the bio.
 ` : ''}
 ═══ PITCH STRUCTURE (120-180 words) ═══
 1. Subject line: Compelling, under 60 characters, include genre + "from Japan"
 2. Greeting: "Hi [Curator Name]," — use the literal placeholder text "[Curator Name]" exactly as written. Do NOT substitute a real name. The system replaces this token per recipient before sending.
 3. Hook: ${style === 'storytelling' ? 'Vivid sensory description of the sound' : style === 'casual' ? 'Personal connection to the curator\'s work' : 'Strongest credential or unique angle'}
-4. Body: Describe the SOUND with vivid language. ${hasCuratorPersonality ? 'Weave in ONE specific reference to the curator profile above (a preferred mood, a similar artist they have featured, or a concrete detail from their bio) — this proves you researched them. Reference profile details abstractly, never name the curator. ' : ''}Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}${trackDesc.characteristics ? ` Use the track analysis data above to give specific, concrete sound descriptions (e.g. energy level, tempo feel, mood).` : ''}
+4. Body: Describe the SOUND in vivid language that MATCHES the Description's stated tone (see ARTIST NARRATIVE rule). Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}${trackDesc.characteristics ? ` Use the track analysis data above to give specific sound descriptions (e.g. energy level, tempo feel) — but defer to the Description's stated mood if the analysis appears to contradict it.` : ''}
 5. Listen link: Use the "Listen (Primary)" URL from the Links section below. Write it as "Listen: <url>" or "Stream: <url>". If no primary link, use the first available streaming link.
 6. CTA: Clear ask appropriate for curator type (${curator?.type || 'blog'})
 7. Links section: List all available platform links with follower counts

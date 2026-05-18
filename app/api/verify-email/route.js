@@ -95,7 +95,6 @@ export async function GET(request) {
                 <li>AIマッチングでキュレーターを見つけてピッチを送る</li>
               </ol>
             </div>
-            <p style="text-align:center;color:#c4956a;font-weight:600;font-size:15px;">初回 <span style="color:#e85d3a;">3クレジット</span> をプレゼント中！</p>
             <div style="text-align:center;margin:28px 0;">
               <a href="${APP_URL}/artist/dashboard" style="background:#c4956a;color:#fff;padding:14px 40px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">ダッシュボードへ →</a>
             </div>

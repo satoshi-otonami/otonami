@@ -358,6 +358,28 @@ const timeAgo = (dateStr) => {
   return d + "日前";
 };
 
+// ─── Auth Loading ───
+// Rendered while /api/artists is resolving on a token-bearing visitor.
+// Inlines the spin keyframe so it works before App's useEffect injects
+// the shared `spin` keyframe into <head>.
+function AuthLoadingScreen() {
+  return (
+    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#f8f7f4",fontFamily:"'DM Sans',sans-serif"}}>
+      <style>{`@keyframes otonami-auth-spin{to{transform:rotate(360deg)}}`}</style>
+      <div style={{textAlign:"center"}}>
+        <div style={{
+          display:"inline-block",width:42,height:42,borderRadius:"50%",
+          border:"3px solid rgba(255,107,74,0.18)",borderTopColor:"#FF6B4A",
+          animation:"otonami-auth-spin 0.8s linear infinite",
+        }}/>
+        <div style={{marginTop:14,color:"rgba(26,26,26,0.5)",fontSize:13,letterSpacing:0.2}}>
+          読み込み中…
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── App ───
 export default function App() {
   const [mode, setMode] = useState(() => {
@@ -375,6 +397,14 @@ export default function App() {
   const [credits, setCredits] = useState(0);
   const [notif, setNotif] = useState(null);
   const [loggedInArtist, setLoggedInArtist] = useState(null);
+  // True on first render whenever an artist_token is present in storage,
+  // so we can suppress the Demo/empty UI until /api/artists resolves with
+  // the real artist. Synchronous so the initial paint never shows Demo
+  // for users whose otonami-user localStorage is a stale demo entry.
+  const [isAuthLoading, setIsAuthLoading] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try { return !!localStorage.getItem('artist_token'); } catch { return false; }
+  });
   const [page, setPage] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -419,41 +449,48 @@ export default function App() {
 
   // ── Auto-login from artist_token (works with or without ?role=artist) ──
   useEffect(() => {
-    try {
-      const token = localStorage.getItem('artist_token');
-      if (!token) return;
-      fetch('/api/artists', { headers: { Authorization: `Bearer ${token}` } })
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          if (data?.artist) {
-            setLoggedInArtist(data.artist);
-            setCredits(data.artist.credits ?? 0);
-            // Auto-set user if not already logged in
-            if (!user) {
-              const u = { id: data.artist.id, name: data.artist.name, email: data.artist.email, type: 'artist' };
-              setUser(u);
-              try { localStorage.setItem('otonami-user', JSON.stringify(u)); } catch {}
-            }
-            // Load real pitch data from API for studio stats
-            if (data.recentPitches?.length) {
-              setPitches(prev => {
-                if (prev.length > 0) return prev; // don't overwrite if already loaded
-                return data.recentPitches.map(p => ({
-                  id: p.id,
-                  status: p.status || 'sent',
-                  curatorName: p.curator_name,
-                  songTitle: p.song_title,
-                  songLink: p.song_link,
-                  feedbackMessage: p.feedback_message,
-                  placementUrl: p.placement_url,
-                  sentAt: p.sent_at,
-                }));
-              });
-            }
+    let token = null;
+    try { token = localStorage.getItem('artist_token'); } catch {}
+    if (!token) { setIsAuthLoading(false); return; }
+    fetch('/api/artists', { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.artist) {
+          setLoggedInArtist(data.artist);
+          setCredits(data.artist.credits ?? 0);
+          // Always overwrite otonami-user with the authoritative artist
+          // record so a stale "Satoshi (Demo)" entry can't survive into the
+          // next paint and re-introduce the Demo flash.
+          const u = { id: data.artist.id, name: data.artist.name, email: data.artist.email, type: 'artist' };
+          setUser(u);
+          try { localStorage.setItem('otonami-user', JSON.stringify(u)); } catch {}
+          // Load real pitch data from API for studio stats
+          if (data.recentPitches?.length) {
+            setPitches(prev => {
+              if (prev.length > 0) return prev; // don't overwrite if already loaded
+              return data.recentPitches.map(p => ({
+                id: p.id,
+                status: p.status || 'sent',
+                curatorName: p.curator_name,
+                songTitle: p.song_title,
+                songLink: p.song_link,
+                feedbackMessage: p.feedback_message,
+                placementUrl: p.placement_url,
+                sentAt: p.sent_at,
+              }));
+            });
           }
-        })
-        .catch(err => console.error('Failed to load artist profile:', err));
-    } catch {}
+        } else {
+          // Token rejected (expired/invalid) — drop it so we don't loop
+          // through the loading screen on every navigation.
+          try { localStorage.removeItem('artist_token'); } catch {}
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load artist profile:', err);
+        try { localStorage.removeItem('artist_token'); } catch {}
+      })
+      .finally(() => { setIsAuthLoading(false); });
   }, []); // eslint-disable-line
 
   // Load data from storage
@@ -512,6 +549,12 @@ const saveCurators = async (c) => {
       return np;
     });
   };
+
+  // ─── Auth-loading gate ───
+  // Renders before the landing/auth/main branches so that for any user
+  // who arrived with an artist_token in storage, we never paint a frame
+  // of the Demo state while /api/artists is in flight.
+  if (isAuthLoading) return <AuthLoadingScreen />;
 
   // ─── Landing ───
   if (page === "landing" && !user) return <Landing onArtist={() => { setMode("artist"); try { localStorage.setItem('otonami-mode', 'artist'); } catch {} setPage("auth"); }} onCurator={() => { window.location.href = '/curator'; }} />;

@@ -2161,7 +2161,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Pitch generation failed');
-      setPitchText(result.pitch);
+      // Substitute the first target's name in BOTH the EN and JA previews so
+      // the artist sees a realistic salutation. personalizePitch still swaps
+      // the name per-recipient at send time using the firstCuratorName regex.
+      setPitchText(substitutePreviewName(result.pitch));
       setEpk(result.epk);
       setPitchTab("ja");
       setStep(2);

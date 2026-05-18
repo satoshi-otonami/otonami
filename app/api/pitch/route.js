@@ -32,6 +32,43 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Artist name and genre required' }, { status: 400 });
     }
 
+    // ── Description tone detection ──
+    // Soft prompt rules ("authoritative for tone") were getting overridden by
+    // curator preferred-mood matching at temperature 1.0. Detect the dominant
+    // emotional vector in the artist's own description and BOTH bio sources
+    // server-side, then emit a hard FORBIDDEN/REQUIRED adjective list so the
+    // AI cannot rationalize a contradicting tone.
+    const toneSource = ((artist.description || '') + '\n' + (artist.mood || '')).toLowerCase();
+    const POSITIVE_PATTERNS = /happy|happiness|joy|joyful|joyous|uplift|cheerful|fun|smile|bright|warm|feel.?good|optimis|sunny|playful|嬉し|うれし|楽し|たのし|ハッピー|幸せ|しあわせ|笑顔|明る|喜び|よろこび|元気|げんき|わくわく|ワクワク|ポジティブ|前向き/;
+    const SOMBER_PATTERNS = /melanchol|sad|sorrow|grief|brooding|somber|mournful|dark|gloom|寂し|さみし|悲し|かなし|暗い|くらい|憂鬱|ゆううつ|内省|メランコリ|シリアス/;
+    const isPositive = POSITIVE_PATTERNS.test(toneSource);
+    const isSomber = SOMBER_PATTERNS.test(toneSource);
+    // Only enforce when the artist's tone is unambiguous AND the curator's
+    // preferred mood would push the AI in the opposite direction.
+    const curatorMoodsLower = (curator?.preferredMoods || []).join(' ').toLowerCase();
+    const curatorWantsSomber = /melanchol|sad|dark|brooding|introspective|reflective|contemplative/.test(curatorMoodsLower);
+    const curatorWantsPositive = /happy|joy|upbeat|cheerful|uplifting|energetic|bright/.test(curatorMoodsLower);
+    let toneOverride = '';
+    if (isPositive && (curatorWantsSomber || !curatorWantsPositive)) {
+      toneOverride = `
+═══ TONE LOCK (HIGHEST PRIORITY — OVERRIDES ALL OTHER RULES) ═══
+The artist's Description explicitly states the song is positive/joyful/happy. The pitch tone is locked to that emotion.
+
+FORBIDDEN — these words MUST NOT appear anywhere in the pitch or EPK (not even as "balanced with X" or "undertones of X"):
+  melancholic, melancholy, melancholia, brooding, somber, sad, sorrowful, mournful, dark, gloomy, introspective, introspection, contemplative, contemplation, reflective, reflection, pensive, wistful, bittersweet
+
+REQUIRED — use words like these to carry the song's character (pick what fits naturally):
+  joyful, uplifting, warm, bright, cheerful, sunny, playful, optimistic, feel-good, life-affirming, radiant, buoyant, exuberant
+
+If the curator's profile says they prefer "Melancholic" or similar, that preference is IGNORED for tone. The artist's truth wins. You may still use the curator's similar-artists or bio focus as your personalization anchor, but NEVER reframe the song as melancholic/reflective/contemplative to flatter the curator.
+`;
+    } else if (isSomber && curatorWantsPositive) {
+      toneOverride = `
+═══ TONE LOCK (HIGHEST PRIORITY — OVERRIDES ALL OTHER RULES) ═══
+The artist's Description states the song is somber/melancholic/reflective. Do NOT describe it as "uplifting", "happy", "cheerful", or "feel-good" just because the curator's profile prefers those moods. The artist's truth wins.
+`;
+    }
+
     // The pitch creation form stores a per-pitch description in localStorage,
     // but the canonical artist profile bio lives in `artists.bio` (written via
     // the artist profile page). These are NOT synced on the frontend, so we
@@ -135,21 +172,35 @@ export async function POST(request) {
       trackFeatures.genres?.length > 0 ? `Detected Genres: ${trackFeatures.genres.join(', ')}` : null,
       trackFeatures.note && trackFeatures.mode ? `Key: ${trackFeatures.note} ${trackFeatures.mode}` : null,
     ].filter(Boolean).join('\n') : '';
+    // Strip valence-driven mood phrases that would directly contradict the
+    // artist's stated tone. lib/track-description.js emits literal phrases
+    // like "introspective and melancholic" for mid-range valence; when
+    // TONE LOCK is active (artist says happy) these leak straight into
+    // the AI prompt as "facts" and override our forbidden-word rule.
+    const scrubTone = (s) => {
+      if (!s || !(isPositive && (curatorWantsSomber || !curatorWantsPositive))) return s;
+      return s
+        .replace(/introspective and melancholic/gi, 'melodically rich')
+        .replace(/dark and moody/gi, 'expressive and dynamic')
+        .replace(/balanced between light and dark tones/gi, 'with broad emotional range')
+        .replace(/\b(melancholic|melancholy|brooding|somber|introspective|contemplative|reflective|pensive|wistful)\b/gi, 'expressive');
+    };
     const audioSection = trackDesc.characteristics ? `
 ═══ TRACK ANALYSIS DATA ═══
-Musical characteristics: ${trackDesc.characteristics}
+Musical characteristics: ${scrubTone(trackDesc.characteristics)}
 ${trackDesc.genreText ? trackDesc.genreText : ''}
-${trackDesc.moodText ? trackDesc.moodText : ''}
+${scrubTone(trackDesc.moodText || '')}
 ${rawScores ? `\nRaw scores:\n${rawScores}` : ''}
 
 IMPORTANT: Use these audio characteristics to write vivid, specific descriptions of the track's sound.
 Translate the numbers into evocative musical language — do NOT list them as data points.
 For example: Energy 65 + Groove 61 → "moderately energetic groove"; Acousticness 68 → "rich acoustic textures".
 If Detected Genres are available, weave them naturally into the pitch.
+${isPositive && (curatorWantsSomber || !curatorWantsPositive) ? 'NOTE: The artist\'s Description states the song is positive/joyful. Even if the raw valence score is moderate, you MUST describe the sound in positive terms (warm, uplifting, bright, joyful). Do NOT translate raw scores into melancholic/introspective/contemplative wording.' : ''}
 ` : '';
 
     const prompt = `You are an expert music publicist who has successfully pitched hundreds of Japanese artists to international curators, playlist editors, bloggers, and radio hosts. You understand what makes curators open emails, click play, and add tracks.
-
+${toneOverride}
 ═══ TASK ═══
 Write a pitch email + EPK bio for the artist below. Every claim MUST come from the provided profile. NEVER invent stats, awards, or achievements not listed.
 
@@ -227,6 +278,10 @@ Start with "Subject: " line. Then the pitch. Then "---EPK---" separator. Then th
     const message = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1200,
+      // Lower temperature so rule-following is consistent across runs.
+      // Default 1.0 caused the AI to occasionally pull mood words from the
+      // curator's preferredMoods despite explicit forbiddens.
+      temperature: 0.3,
       messages: [{ role: 'user', content: prompt }],
     });
 

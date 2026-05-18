@@ -2666,8 +2666,14 @@ function CreditShop({ user, credits, setCredits, notify, setPage }) {
       if (saved === "ja" || saved === "en") setLocale(saved);
     } catch {}
     (async () => {
-      const h = await S.get("otonami-purchase-history");
-      if (h) setHistory(h);
+      try {
+        const res = await authFetch('/api/artists/transactions');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data.history)) setHistory(data.history);
+      } catch (err) {
+        console.warn('Failed to load purchase history:', err?.message);
+      }
     })();
   }, []);
 

@@ -241,28 +241,37 @@ export async function POST(request) {
       if (rollbackErr) {
         console.error('[pitches] CRITICAL: Credit rollback failed:', rollbackErr);
       } else {
-        await db.from('credit_transactions').insert({
+        // Note: Supabase .insert() does NOT throw on DB errors — it returns
+        // { error }. Always destructure and check; .catch() would silently
+        // swallow column/RLS/FK failures.
+        const { error: rollbackLogErr } = await db.from('credit_transactions').insert({
           artist_id: payload.artistId,
           amount: creditsRequired,
           type: 'pitch_spend_rollback',
           description: 'Pitch insert failed, credits restored',
           metadata: { curator_id: cleanRow.curator_id, error: error.message },
-        }).catch(() => {});
+        });
+        if (rollbackLogErr) {
+          console.error('[pitches] credit_transactions rollback log failed:', rollbackLogErr);
+        }
       }
       console.error('[pitches] Insert error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     // Log the spend (non-fatal if it fails — the balance is already correct).
-    await db.from('credit_transactions').insert({
+    // Destructure error; .catch() would silently swallow DB errors since
+    // Supabase resolves the Promise even on RLS/FK/column failures.
+    const { error: txErr } = await db.from('credit_transactions').insert({
       artist_id: payload.artistId,
       amount: -creditsRequired,
       type: 'pitch_spend',
       description: 'Pitch to curator',
       metadata: { pitch_id: data.id, curator_id: cleanRow.curator_id },
-    }).catch(txErr => {
-      console.warn('[pitches] credit_transactions log failed (non-fatal):', txErr.message);
     });
+    if (txErr) {
+      console.error('[pitches] credit_transactions log failed (non-fatal):', txErr);
+    }
 
     return NextResponse.json({
       id: data.id,

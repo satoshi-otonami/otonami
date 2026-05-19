@@ -222,9 +222,11 @@ function FAQItem({ question, answer, isOpen, onClick, theme = 'light' }) {
 export default function HomePage() {
   const [lang, setLang] = useState('ja');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loginMenuOpen, setLoginMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
   const menuRef = useRef(null);
+  const loginMenuRef = useRef(null);
   const canvasRef = useRef(null);
 
   /* ── Canvas waveform animation ── */
@@ -324,6 +326,20 @@ export default function HomePage() {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (!loginMenuOpen) return;
+    const onClick = (e) => {
+      if (loginMenuRef.current && !loginMenuRef.current.contains(e.target)) setLoginMenuOpen(false);
+    };
+    const onEscape = (e) => { if (e.key === 'Escape') setLoginMenuOpen(false); };
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onEscape);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+      document.removeEventListener('keydown', onEscape);
+    };
+  }, [loginMenuOpen]);
 
   /* Handle Stripe redirect: ?payment=success&session_id=... or ?payment=cancel */
   useEffect(() => {
@@ -540,7 +556,12 @@ export default function HomePage() {
           </nav>
           <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <a href="/curator" className="cta-coral" style={{ width: '100%', textAlign: 'center', display: 'block' }}>{t.nav.cta}</a>
-            <a href="/curator/login" onClick={() => setMenuOpen(false)} style={{ textAlign: 'center', color: '#c4956a', fontSize: 15, fontWeight: 600, textDecoration: 'none', fontFamily: D.fBody, padding: '10px 0' }}>{t.nav.login}</a>
+            <a href="/artist/login" onClick={() => setMenuOpen(false)} style={{ textAlign: 'center', color: '#c4956a', fontSize: 15, fontWeight: 600, textDecoration: 'none', fontFamily: D.fBody, padding: '10px 0' }}>
+              {lang === 'en' ? 'Artist Login' : 'アーティストログイン'}
+            </a>
+            <a href="/curator/login" onClick={() => setMenuOpen(false)} style={{ textAlign: 'center', color: '#c4956a', fontSize: 15, fontWeight: 600, textDecoration: 'none', fontFamily: D.fBody, padding: '10px 0' }}>
+              {lang === 'en' ? 'Curator Login' : 'キュレーターログイン'}
+            </a>
           </div>
         </div>
       )}
@@ -577,7 +598,92 @@ export default function HomePage() {
               }}>JP</button>
             </div>
             <div className="nav-auth-buttons" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <a href="/curator/login" style={{ color: '#c4956a', fontSize: 14, fontWeight: 600, textDecoration: 'none', fontFamily: D.fBody, whiteSpace: 'nowrap' }}>{t.nav.login}</a>
+              <div ref={loginMenuRef} style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => setLoginMenuOpen(v => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={loginMenuOpen}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#c4956a',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    fontFamily: D.fBody,
+                    cursor: 'pointer',
+                    padding: '6px 4px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {t.nav.login}
+                  <span style={{
+                    fontSize: 10,
+                    display: 'inline-block',
+                    transform: loginMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.15s ease',
+                  }}>▾</span>
+                </button>
+
+                {loginMenuOpen && (
+                  <div
+                    role="menu"
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      right: 0,
+                      background: '#ffffff',
+                      border: '1px solid #e5e2dc',
+                      borderRadius: 12,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                      minWidth: 200,
+                      overflow: 'hidden',
+                      zIndex: 1000,
+                    }}
+                  >
+                    <a
+                      href="/artist/login"
+                      role="menuitem"
+                      onClick={() => setLoginMenuOpen(false)}
+                      style={{
+                        display: 'block',
+                        padding: '12px 16px',
+                        color: '#1a1a1a',
+                        textDecoration: 'none',
+                        fontSize: 14,
+                        fontFamily: D.fBody,
+                        borderBottom: '1px solid #f0ede8',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#faf8f4'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      {lang === 'en' ? 'Artist Login' : 'アーティストログイン'}
+                    </a>
+                    <a
+                      href="/curator/login"
+                      role="menuitem"
+                      onClick={() => setLoginMenuOpen(false)}
+                      style={{
+                        display: 'block',
+                        padding: '12px 16px',
+                        color: '#1a1a1a',
+                        textDecoration: 'none',
+                        fontSize: 14,
+                        fontFamily: D.fBody,
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#faf8f4'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      {lang === 'en' ? 'Curator Login' : 'キュレーターログイン'}
+                    </a>
+                  </div>
+                )}
+              </div>
               <a href="/curator" className="cta-coral" style={{ padding: '8px 20px', fontSize: 13 }}>{t.nav.cta}</a>
             </div>
             <button className="hamburger-btn" onClick={() => setMenuOpen(true)} style={{

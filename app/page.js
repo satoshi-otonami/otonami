@@ -419,10 +419,10 @@ export default function HomePage() {
         : '1クレジット¥160〜。ピッチ送信にはキュレーターにより1〜5クレジットが必要です。登録は無料。',
     },
     {
-      q: lang === 'en' ? 'When does OTONAMI launch?' : 'OTONAMIはいつローンチしますか？',
+      q: lang === 'en' ? 'When can I start pitching?' : 'いつからピッチを送れますか？',
       a: lang === 'en'
-        ? "We're launching Tuesday, May 19. Register now to set up your profile and tracks — you'll be ready to pitch on day one."
-        : '5月19日（火）に正式ローンチします。今登録してプロフィールと楽曲を準備しておけば、初日からピッチできます。',
+        ? 'Right now. Register, add your tracks, and send your first pitch in minutes.'
+        : '今すぐ送れます。登録して楽曲を追加すれば、数分で最初のピッチを送信できます。',
     },
     {
       q: lang === 'en' ? "What happens if I don't get a review?" : 'レビューがもらえなかったらどうなりますか？',
@@ -626,8 +626,8 @@ export default function HomePage() {
               letterSpacing: '0.5px',
             }}>
               {lang === 'en'
-                ? 'Launching Tuesday, May 19 — Early access open'
-                : '5月19日（火）正式ローンチ — 先行登録受付中'}
+                ? 'Now accepting pitches — Founding Artist program open'
+                : '本日サービス開始 — Founding Artist 募集中'}
             </span>
           </div>
 
@@ -1387,8 +1387,8 @@ export default function HomePage() {
                   color: '#c4956a',
                 }}>
                   {lang === 'en'
-                    ? 'Register now, be ready at launch'
-                    : '今登録すれば、ローンチ初日からスタート'}
+                    ? 'Register now, start pitching today'
+                    : '今登録して、すぐにピッチ開始'}
                 </span>
               </div>
               <div style={{
@@ -1977,8 +1977,8 @@ export default function HomePage() {
                   color: '#c4956a',
                 }}>
                   {lang === 'en'
-                    ? 'Get set up now — pitch on day one'
-                    : '今すぐ準備、ローンチ日にすぐピッチ'}
+                    ? 'Get set up now — pitch in minutes'
+                    : '今すぐ準備、すぐにピッチ送信'}
                 </span>
               </div>
               <div style={{
@@ -1988,12 +1988,12 @@ export default function HomePage() {
               }}>
                 {(lang === 'en' ? [
                   'Add your tracks and build your artist profile',
-                  'AI will pre-generate pitch drafts before launch',
-                  'Be first to reach curators when we go live',
+                  'AI generates pitch drafts in seconds',
+                  'Reach curators starting today',
                 ] : [
-                  '楽曲登録とプロフィール設定を先に完了できる',
-                  'AIピッチ文がローンチ前に事前生成される',
-                  'ローンチ初日にキュレーターへ即アプローチ',
+                  '楽曲登録とプロフィール設定がすぐに完了できる',
+                  'AIピッチ文が数秒で生成される',
+                  '本日からキュレーターへ即アプローチ',
                 ]).map((item, i) => (
                   <div key={i} style={{
                     display: 'flex',

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { T } from '@/lib/design-tokens';
 
 /* ── Country flags ── */
@@ -454,6 +455,7 @@ const selStyle = {
    MAIN PAGE
 ═══════════════════════════════════════════════════ */
 export default function CuratorsPage() {
+  const router = useRouter();
   /* ── State ── */
   const [selected, setSelected] = useState(new Set());
   const [modal, setModal] = useState(null);
@@ -506,13 +508,10 @@ export default function CuratorsPage() {
 
   const hasFilters = genreFilter || typeFilter || searchQ;
 
-  /* ── Start Campaign handler (pre-launch: disabled until 2026-05-19) ── */
+  /* ── Start Campaign handler — sends visitor to artist signup ── */
   const handleStartCampaign = useCallback(() => {
-    const msg = lang === 'ja'
-      ? 'OTONAMIは5月19日にローンチ予定です。もう少々お待ちください！'
-      : 'OTONAMI launches on May 19th. Stay tuned!';
-    alert(msg);
-  }, [lang]);
+    router.push('/artist');
+  }, [router]);
 
   /* ════════════════════════════════════════════════
      RENDER

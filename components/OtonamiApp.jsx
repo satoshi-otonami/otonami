@@ -9,6 +9,7 @@ import { describeTrackCharacteristics } from '@/lib/track-description';
 import { getMatchLabel, rankCurators, calculateMatchScore } from '@/lib/match-score';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useSearchParams } from 'next/navigation';
 import {
   Music, Send, Headphones, MessageCircle, Award,
   Search, Plus, ChevronRight, Sparkles,
@@ -752,6 +753,12 @@ function loadArtistDraft() {
 }
 
 function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, setCredits, notify, updatePitch, refreshPitches, loggedInArtist}) {
+  // Tracks the live querystring so readUrlParams re-fires whenever the
+  // dashboard hands off a new track. Plain `<a>` clicks usually do a full
+  // page reload, but browser back/forward + bfcache can land us back on a
+  // mounted ArtistApp with a new URL — without this we kept rendering the
+  // previously analyzed track.
+  const searchParams = useSearchParams();
   const [selected, setSelected] = useState([]);
   const [trackData, setTrackData] = useState(null);
 
@@ -824,7 +831,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
 
   useEffect(() => {
     readUrlParams();
-  }, []); // eslint-disable-line
+  }, [searchParams, readUrlParams]); // re-run when URL querystring changes
 
   // ── Handle bfcache restoration (browser back/forward) ──
   useEffect(() => {
@@ -1412,20 +1419,22 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   const analyzeUrlRef = useRef(analyzeUrl);
   useEffect(() => { analyzeUrlRef.current = analyzeUrl; }, [analyzeUrl]);
 
-  // Sync from artist props when they arrive after initial mount (dashboard → studio handoff)
-  const didSyncFromArtistRef = useRef(false);
+  // Sync from artist props whenever the dashboard hands off a new track.
+  // Previously gated by a one-shot ref so the first sync wouldn't overwrite
+  // user typing — but that left CuratorBrowser stuck on the prior song
+  // when the user navigated dashboard → studio → dashboard → studio with a
+  // different track. The parent only mutates artist.songTitle/songLink via
+  // URL handoff (typing here goes to local state only), so re-syncing on
+  // every artist change is safe: it can never clobber an in-progress edit
+  // that the parent doesn't know about.
   useEffect(() => {
-    if (didSyncFromArtistRef.current) return;
     const song = artist?.songTitle?.trim();
     const name = artist?.name?.trim();
     const link = artist?.songLink?.trim();
-    if (song || name || link) {
-      if (song && !detectedSong) setDetectedSong(song);
-      if (name && !detectedArtist) setDetectedArtist(name);
-      if (link && !analyzeUrl) setAnalyzeUrl(link);
-      didSyncFromArtistRef.current = true;
-    }
-  }, [artist?.songTitle, artist?.name, artist?.songLink]); // eslint-disable-line
+    if (song) setDetectedSong(song);
+    if (name) setDetectedArtist(name);
+    if (link) setAnalyzeUrl(link);
+  }, [artist?.songTitle, artist?.name, artist?.songLink]);
 
   const resolveGenreMood = (artistName) => {
     if (artist?.genre) return { genre: artist.genre, mood: artist.mood || '' };

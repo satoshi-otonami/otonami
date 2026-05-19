@@ -428,6 +428,12 @@ export default function App() {
   // ── Browser history: sync artist tabs with pushState ──
   const ARTIST_TABS = ["dashboard","curators","pitch","tracking","analytics","shop"];
   useEffect(() => {
+    // Skip while auth is resolving. Without this guard the first-fire
+    // replaceState wipes dashboard→studio handoff params (track_title,
+    // song_link, etc.) *before* ArtistApp mounts and consumes them —
+    // because ArtistApp no longer mounts until isAuthLoading flips to
+    // false, and the parent effect would otherwise win the race.
+    if (isAuthLoading) return;
     if (!ARTIST_TABS.includes(page)) return;
     const url = `/studio?tab=${page}`;
     if (!historyTabRef.current) {
@@ -436,7 +442,7 @@ export default function App() {
     } else {
       window.history.pushState({ tab: page }, '', url);
     }
-  }, [page]); // eslint-disable-line
+  }, [page, isAuthLoading]); // eslint-disable-line
 
   useEffect(() => {
     const onPop = (e) => {
@@ -774,6 +780,12 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       const artistName = params.get('artist_name');
       const artistGenre = params.get('artist_genre');
       const trackId    = params.get('track_id');
+      const aiStatus = params.get('ai_status');
+      const preferredCurator = params.get('preferred_curator');
+      const curatorId = params.get('curator_id');
+      const hadHandoff = trackTitle || songLink || artistName || artistGenre ||
+                         trackId || aiStatus || preferredCurator || curatorId ||
+                         params.get('auto_analyze') || params.get('role');
       if (trackTitle || songLink || artistName || artistGenre) {
         // Clear stale data from previous track
         setTrackData(null);
@@ -787,18 +799,25 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
         }));
       }
       if (trackId) setLinkedTrackId(trackId);
-      const aiStatus = params.get('ai_status');
       if (aiStatus) setLinkedTrackAiStatus(aiStatus);
 
       // Preferred curator from dashboard modal
-      const preferredCurator = params.get('preferred_curator');
-      const curatorId = params.get('curator_id');
       if (curatorId) {
         setPendingCuratorId(curatorId);
         setPage('curators');
       } else if (preferredCurator) {
         setPendingCuratorName(preferredCurator);
         setPage('curators');
+      }
+
+      // Strip handoff params from the URL after consuming them so a page
+      // reload doesn't re-trigger the auto-analyze flow with the same
+      // track. Preserve `tab=` if present so the active-tab address-bar
+      // sync still has a value to work with.
+      if (hadHandoff) {
+        const tab = params.get('tab');
+        const cleanUrl = tab ? `/studio?tab=${tab}` : '/studio';
+        window.history.replaceState({ tab: tab || null }, '', cleanUrl);
       }
     } catch {}
   }, []); // eslint-disable-line

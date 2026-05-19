@@ -570,6 +570,7 @@ export default function HomePage() {
       <header className="liquid-glass" style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
         transition: 'background 0.3s',
+        overflow: 'visible',
       }}>
         <div style={{ ...wrap, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -620,12 +621,19 @@ export default function HomePage() {
                   }}
                 >
                   {t.nav.login}
-                  <span style={{
-                    fontSize: 10,
-                    display: 'inline-block',
-                    transform: loginMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.15s ease',
-                  }}>▾</span>
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 10 10"
+                    aria-hidden="true"
+                    style={{
+                      display: 'inline-block',
+                      transform: loginMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.15s ease',
+                    }}
+                  >
+                    <path d="M2 4 L5 7 L8 4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </button>
 
                 {loginMenuOpen && (
@@ -641,7 +649,7 @@ export default function HomePage() {
                       boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                       minWidth: 200,
                       overflow: 'hidden',
-                      zIndex: 1000,
+                      zIndex: 9999,
                     }}
                   >
                     <a

@@ -2307,13 +2307,18 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
     setLoading(true); setError('');
     try {
       if (avatarFile) {
-        try {
-          const fd = new FormData();
-          fd.append('file', avatarFile);
-          await fetch('/api/artists/avatar', {
-            method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd,
-          });
-        } catch {}
+        const fd = new FormData();
+        fd.append('file', avatarFile);
+        const uploadRes = await fetch('/api/artists/avatar', {
+          method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd,
+        });
+        const uploadData = await uploadRes.json().catch(() => ({}));
+        if (!uploadRes.ok) {
+          throw new Error(uploadData.error || `アバター画像のアップロードに失敗しました (HTTP ${uploadRes.status})`);
+        }
+        if (uploadData.avatar_url) {
+          setAvatarPreview(uploadData.avatar_url);
+        }
       }
       const res = await fetch('/api/artists', {
         method: 'PATCH',

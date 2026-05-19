@@ -47,12 +47,12 @@ export async function POST(request) {
 
     if (uploadError) throw new Error(uploadError.message);
 
-    // 公開URLを取得
+    // 公開URLを取得（ファイルパスは固定上書きなので、URL に cache-busting を付与してブラウザ/CDN キャッシュを回避）
     const { data: urlData } = supabase.storage
       .from('avatars')
       .getPublicUrl(filePath);
 
-    const avatarUrl = urlData.publicUrl;
+    const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
     // artists テーブルの avatar_url を更新
     await updateArtist(payload.artistId, { avatar_url: avatarUrl });

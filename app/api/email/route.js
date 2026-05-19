@@ -14,6 +14,175 @@ function isPreLaunchLocked() {
   return new Date() < launch;
 }
 
+// AI prompt forbids URLs in the pitch body, but models occasionally
+// regress. Layer-B safety net: strip "Stream:/Spotify:/YouTube: <url>"
+// lines and bare URL-only lines so the body never duplicates the CTA.
+export function stripUrlsFromPitchBody(body) {
+  if (!body) return body;
+  return body
+    .replace(/^(Stream|Listen|Spotify|YouTube|Apple Music|Apple|SoundCloud|Bandcamp|Instagram|X|Twitter|Website)(\s*\(.*?\))?\s*:\s*https?:\/\/\S+\s*$/gim, '')
+    .replace(/^\s*https?:\/\/\S+\s*$/gim, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+// Minimal HTML escape for interpolated user-supplied strings used in
+// attributes or inside <p> bodies. Pitch body line breaks are converted
+// after escaping.
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+export function pitchEmailHtml({
+  artistName,
+  trackTitle,
+  foundingNumber,
+  curatorName,
+  pitchBody,
+  artistBio,
+  artistSocials,
+  artistEmail,
+  respondUrl,
+  trackingPixel = '',
+}) {
+  const safeArtistName = escapeHtml(artistName);
+  const safeTrackTitle = escapeHtml(trackTitle);
+  const safeCuratorName = escapeHtml(curatorName);
+  const safeArtistBio = escapeHtml(artistBio);
+  const safeArtistEmail = escapeHtml(artistEmail);
+
+  const bodyParagraphs = (pitchBody || '')
+    .split(/\n\n+/)
+    .filter(p => p.trim())
+    .map(p => `<p style="margin: 0 0 14px;">${escapeHtml(p).replace(/\n/g, '<br>')}</p>`)
+    .join('');
+
+  const foundingBadge = foundingNumber ? `
+            <div style="display: inline-block; padding: 5px 12px; background-color: #f5e9d3; border-radius: 999px; margin-bottom: 20px;">
+              <span style="color: #c4956a; font-size: 11px; vertical-align: middle;">◆</span>
+              <span style="font-size: 12px; color: #6b4a1a; font-weight: 600; vertical-align: middle; margin-left: 4px;">Founding artist #${foundingNumber}</span>
+            </div>` : '';
+
+  const socialBtnStyle = "display: inline-block; padding: 8px 14px; background-color: #f9f7f2; border: 1px solid #e8e6e0; border-radius: 6px; text-decoration: none; font-size: 13px; color: #1a1612; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;";
+  const socialCell = (url, label) => url
+    ? `<td style="padding-right: 8px; padding-bottom: 8px;"><a href="${escapeHtml(url)}" style="${socialBtnStyle}">${label}</a></td>`
+    : '';
+  const socialCells = [
+    socialCell(artistSocials?.spotify, 'Spotify'),
+    socialCell(artistSocials?.youtube, 'YouTube'),
+    socialCell(artistSocials?.instagram, 'Instagram'),
+    socialCell(artistSocials?.x, 'X'),
+  ].join('');
+  const hasSocials = !!socialCells;
+  const hasAboutSection = !!(safeArtistBio || hasSocials);
+
+  const ctaButton = `
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 4px 0 8px;">
+              <tr>
+                <td style="background-color: #FF6B4A; border-radius: 8px;">
+                  <a href="${escapeHtml(respondUrl)}" style="display: inline-block; padding: 14px 28px; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;">
+                    ▶ Listen &amp; respond
+                  </a>
+                </td>
+              </tr>
+            </table>`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A pitch from ${safeArtistName} via OTONAMI</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f0ede6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+
+<div style="display: none; max-height: 0; overflow: hidden;">
+A new pitch from ${safeArtistName}${safeTrackTitle ? ` — &ldquo;${safeTrackTitle}&rdquo;` : ''}. Listen and respond on OTONAMI.
+</div>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f0ede6; padding: 24px 16px;">
+  <tr>
+    <td align="center">
+
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e8e6e0;">
+
+        <tr>
+          <td style="padding: 16px 28px; border-bottom: 1px solid #e8e6e0;">
+            <span style="color: #c4956a; font-size: 14px; vertical-align: middle;">◆</span>
+            <span style="font-size: 12px; letter-spacing: 0.15em; color: #1a1612; font-weight: 600; vertical-align: middle; margin-left: 6px;">OTONAMI</span>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding: 28px; background-color: #f9f7f2;">
+            <p style="font-size: 11px; letter-spacing: 0.12em; color: #6b665d; margin: 0 0 8px; text-transform: uppercase;">A pitch from</p>
+            <p style="font-size: 22px; font-weight: 600; color: #1a1612; margin: 0 0 6px; line-height: 1.3;">${safeArtistName}</p>
+            ${safeTrackTitle ? `<p style="font-size: 15px; color: #4a4640; margin: 0 0 16px;">Track: &ldquo;${safeTrackTitle}&rdquo;</p>` : ''}
+${foundingBadge}
+${ctaButton}
+            <p style="font-size: 12px; color: #6b665d; margin: 4px 0 0;">Stream the track and reply in one place.</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding: 28px;">
+            <p style="font-size: 11px; letter-spacing: 0.12em; color: #6b665d; margin: 0 0 14px; text-transform: uppercase;">The pitch</p>
+            <p style="font-size: 15px; color: #1a1612; line-height: 1.7; margin: 0 0 12px;">Hi ${safeCuratorName || 'there'},</p>
+            <div style="font-size: 15px; color: #1a1612; line-height: 1.7;">
+              ${bodyParagraphs}
+            </div>
+            <p style="font-size: 14px; color: #6b665d; margin: 18px 0 0;">&mdash; ${safeArtistName}</p>
+          </td>
+        </tr>
+
+        ${hasAboutSection ? `
+        <tr><td style="padding: 0 28px;"><div style="height: 1px; background-color: #e8e6e0;"></div></td></tr>
+
+        <tr>
+          <td style="padding: 28px;">
+            <p style="font-size: 11px; letter-spacing: 0.12em; color: #6b665d; margin: 0 0 14px; text-transform: uppercase;">About the artist</p>
+            ${safeArtistBio ? `<p style="font-size: 14px; color: #4a4640; line-height: 1.7; margin: 0 0 20px;">${safeArtistBio.replace(/\n/g, '<br>')}</p>` : ''}
+            ${hasSocials ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>${socialCells}</tr></table>` : ''}
+          </td>
+        </tr>
+        ` : ''}
+
+        <tr><td style="padding: 0 28px;"><div style="height: 1px; background-color: #e8e6e0;"></div></td></tr>
+
+        <tr>
+          <td style="padding: 28px; background-color: #f9f7f2;">
+            ${safeArtistEmail ? `<p style="font-size: 11px; letter-spacing: 0.12em; color: #6b665d; margin: 0 0 6px; text-transform: uppercase;">Reply directly</p>
+            <p style="font-size: 14px; color: #1a1612; margin: 0 0 20px;">
+              <a href="mailto:${safeArtistEmail}" style="color: #1a1612; text-decoration: underline;">${safeArtistEmail}</a>
+            </p>` : ''}
+${ctaButton}
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding: 16px 28px; border-top: 1px solid #e8e6e0; background-color: #fafaf7;">
+            <p style="font-size: 11px; color: #6b665d; margin: 0; line-height: 1.5;">
+              Sent via <a href="https://otonami.io" style="color: #c4956a; text-decoration: none; font-weight: 600;">OTONAMI</a> &middot; Connecting Japanese artists with the world
+            </p>
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
+</table>
+${trackingPixel}
+</body>
+</html>`;
+}
+
 export async function POST(request) {
   try {
     const { type, pitchId, toEmail: _toEmail, toName, subject, pitchText, epk, artistName, artistEmail, curatorName, trackUrl } = await request.json();
@@ -35,107 +204,91 @@ export async function POST(request) {
 
     switch (type) {
       case 'pitch': {
-        // Server-side founding lookup (anti-tampering — never trust the client)
+        // Single artists-table lookup: bio + socials + founding_number.
+        // is_founding is no longer a filter — we want the bio/socials for
+        // every pitching artist; founding_number is only rendered when set.
         let foundingNumber = null;
+        let artistBio = null;
+        const artistSocials = { spotify: null, youtube: null, instagram: null, x: null };
         if (artistEmail) {
           try {
             const db = getServiceSupabase();
-            const { data: foundingRow } = await db
+            const { data: artistRow } = await db
               .from('artists')
-              .select('founding_number')
+              .select('bio, founding_number, is_founding, spotify_url, youtube_url, instagram_url, twitter_url')
               .eq('email', artistEmail.toLowerCase().trim())
-              .eq('is_founding', true)
               .maybeSingle();
-            foundingNumber = foundingRow?.founding_number ?? null;
+            if (artistRow) {
+              if (artistRow.is_founding) foundingNumber = artistRow.founding_number ?? null;
+              artistBio = artistRow.bio?.trim() || null;
+              artistSocials.spotify = artistRow.spotify_url || null;
+              artistSocials.youtube = artistRow.youtube_url || null;
+              artistSocials.instagram = artistRow.instagram_url || null;
+              artistSocials.x = artistRow.twitter_url || null;
+            }
           } catch (e) {
-            console.warn('Founding lookup failed (non-fatal):', e?.message);
+            console.warn('Artist lookup failed (non-fatal):', e?.message);
           }
         }
 
-        // Extract subject from pitch text if not provided
+        // Track title from pitches.subject — distinct from the AI-generated
+        // email Subject line. Falls back to null (template hides the row).
+        let trackTitle = null;
+        if (pitchId) {
+          try {
+            const db = getServiceSupabase();
+            const { data: pitchRow } = await db
+              .from('pitches')
+              .select('subject')
+              .eq('id', pitchId)
+              .maybeSingle();
+            trackTitle = pitchRow?.subject?.trim() || null;
+          } catch (e) {
+            console.warn('Pitch subject lookup failed (non-fatal):', e?.message);
+          }
+        }
+
+        // Extract email Subject line from AI output if caller didn't provide one
         if (!emailSubject && pitchText) {
           const subMatch = pitchText.match(/^Subject:\s*(.+)/m);
           emailSubject = subMatch ? subMatch[1].trim() : `Music Pitch: ${artistName}`;
         }
-        // Strip the "Subject: ..." line, then wrap each non-empty line in a <p> tag
-        const bodyText = pitchText
-          .replace(/^Subject:[^\n]*\n*/m, '') // Remove subject line
-          .trimStart();
-        const pitchBody = bodyText
-          .split('\n')
-          .filter(line => line.trim())
-          .map(line => `<p style="margin:0 0 12px 0;line-height:1.6;color:#334155;">${line}</p>`)
-          .join('');
 
-        // Email-safe track block: no iframes — thumbnail image (YouTube) or button (Spotify)
-        const trackBlock = (() => {
-          if (!trackUrl) return '';
-          const ytMatch = trackUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-          if (ytMatch) {
-            const vid = ytMatch[1];
-            return `
-              <div style="margin:16px 0;">
-                <a href="${trackUrl}" style="display:block;text-decoration:none;">
-                  <img src="https://img.youtube.com/vi/${vid}/mqdefault.jpg" alt="Watch on YouTube" width="320" height="180" style="border-radius:12px;display:block;max-width:100%;"/>
-                  <span style="display:inline-block;margin-top:8px;color:#0ea5e9;font-size:14px;font-weight:600;">▶ Watch on YouTube</span>
-                </a>
-              </div>`;
-          }
-          const spMatch = trackUrl.match(/spotify\.com\/track\/([a-zA-Z0-9]+)/);
-          if (spMatch) {
-            return `
-              <div style="margin:16px 0;">
-                <a href="${trackUrl}" style="display:inline-block;background:#1DB954;color:#fff;padding:10px 22px;border-radius:20px;text-decoration:none;font-size:14px;font-weight:700;">
-                  ▶ Listen on Spotify
-                </a>
-              </div>`;
-          }
-          return `<p style="margin:8px 0;"><a href="${trackUrl}" style="color:#0ea5e9;font-size:14px;">▶ Listen to Track</a></p>`;
-        })();
+        // Strip the "Subject: ..." prefix and any leading "Hi [Curator Name],"
+        // line — the template renders its own greeting from curatorName.
+        const rawBody = (pitchText || '')
+          .replace(/^Subject:[^\n]*\n*/m, '')
+          .replace(/^\s*Hi\s+\[?Curator Name\]?[^\n]*\n+/i, '')
+          .replace(/^\s*Hi\s+[^,\n]+,\s*\n+/i, '')
+          .trimStart();
+        const cleanBody = stripUrlsFromPitchBody(rawBody);
 
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.vercel.app';
         const trackingPixel = pitchId
           ? `<img src="${appUrl}/api/track/open?pid=${pitchId}" width="1" height="1" alt="" style="display:none;border:0;"/>`
           : '';
-        // Use direct pitch link if UUID available, otherwise fallback to dashboard
         const respondUrl = pitchId
           ? `${appUrl}/curator/pitch/${pitchId}`
           : `${appUrl}/curator/dashboard`;
 
-        const replyLine = artistEmail
-          ? `<div style="margin-top:16px;padding:12px 16px;background:#f8fafc;border-left:3px solid #7c3aed;border-radius:6px;font-size:13px;color:#475569;">
-              Reply directly to ${artistName || 'the artist'}: <a href="mailto:${artistEmail}" style="color:#7c3aed;font-weight:600;text-decoration:none;">${artistEmail}</a>
-            </div>`
-          : '';
+        // EPK from the request is intentionally not rendered as a separate
+        // block — the redesigned About-the-artist section uses artists.bio
+        // (richer and curator-facing) instead of the per-pitch AI EPK.
+        void epk;
+        void trackUrl;
 
-        const foundingBadge = foundingNumber ? `
-            <div style="margin-top:24px;text-align:center;">
-              <span style="display:inline-block;padding:6px 16px;background:linear-gradient(135deg,#c4956a 0%,#b8845e 100%);color:#fff;border-radius:9999px;font-size:11px;font-weight:700;letter-spacing:0.05em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-                ◆ FOUNDING ARTIST #${foundingNumber} on OTONAMI
-              </span>
-            </div>` : '';
-
-        htmlBody = `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; color: #334155;">
-            ${pitchBody}
-            ${trackBlock}
-            ${replyLine}
-            ${epk ? `
-              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
-              <div style="background: #f8fafc; padding: 16px; border-radius: 8px; font-size: 14px;">
-                <strong style="color: #7c3aed;">Electronic Press Kit</strong><br><br>
-                ${epk.replace(/\n/g, '<br>')}
-              </div>
-            ` : ''}
-            ${foundingBadge}
-            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
-              Sent via <a href="https://otonami.io" style="color: #7c3aed; text-decoration: none;">OTONAMI</a> — Connecting Japanese Artists with the World
-              <br>
-              <a href="${respondUrl}" style="display:inline-block;margin-top:8px;padding:10px 22px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:14px;">Respond to this pitch →</a>
-            </div>
-            ${trackingPixel}
-          </div>
-        `;
+        htmlBody = pitchEmailHtml({
+          artistName,
+          trackTitle,
+          foundingNumber,
+          curatorName,
+          pitchBody: cleanBody,
+          artistBio,
+          artistSocials,
+          artistEmail,
+          respondUrl,
+          trackingPixel,
+        });
         break;
       }
       case 'reminder': {

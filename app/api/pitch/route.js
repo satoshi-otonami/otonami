@@ -309,14 +309,12 @@ REMINDER: The ANTI-HALLUCINATION rules at the top of this prompt take precedence
 2. Greeting: "Hi [Curator Name]," — use the literal placeholder text "[Curator Name]" exactly as written. Do NOT substitute a real name. The system replaces this token per recipient before sending.
 3. Hook: ${style === 'storytelling' ? 'Vivid sensory description of the sound' : style === 'casual' ? 'Personal connection to the curator\'s work' : 'Strongest credential or unique angle'}
 4. Body: FIRST sentence should echo the Description's personal voice/opener if it has one (see ARTIST NARRATIVE rule 3). Then weave in EVERY specific fact, number, award, and ambition from the Description (see ARTIST NARRATIVE rule 1) — these are non-negotiable. Describe the SOUND in vivid language that MATCHES the Description's stated tone. Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}${trackDesc.characteristics ? ` Use the track analysis data above to give specific sound descriptions (e.g. energy level, tempo feel) — but defer to the Description's stated mood if the analysis appears to contradict it.` : ''}
-5. Listen link: Use the "Listen (Primary)" URL from the Links section below. Write it as "Listen: <url>" or "Stream: <url>". If no primary link, use the first available streaming link.
-6. CTA — MANDATORY CLOSING INVITATION: The pitch body MUST end with a direct, warm invitation to the curator to actually listen. This is NOT optional. Choose phrasing that matches the artist's Description tone:
+5. CTA — MANDATORY CLOSING INVITATION: The pitch body MUST end with a direct, warm invitation to the curator to actually listen. This is NOT optional. Choose phrasing that matches the artist's Description tone:
    • If the Description contains "ぜひ聞いてください" / "ぜひ聞いてみてください" / "please listen" / "I'd love for you to hear" → end with "Would love for you to give it a listen." / "I'd really love for you to hear it." / "Please give it a listen — it would mean a lot."
    • If the Description points at specific listening cues (e.g. "ぜひメンバーのソロを聞いてください") → echo it: "Would love for you to hear each member's solo."
    • If no specific invitation language in Description → still close with "Would love to hear what you think." / "Hope you enjoy it." / "Would love for you to give it a listen."
    FORBIDDEN endings: ending the pitch on a sound-description sentence with no ask; ending on "Looking forward to hearing back" alone with no listen-invite; ending on a "consider for your playlist" line that omits the personal listen-invite.
-7. Links section: List all available platform links with follower counts
-8. Sign-off: "${userName || 'OTONAMI Team'}" via OTONAMI
+6. Sign-off: "${userName || 'OTONAMI Team'}" via OTONAMI
 
 ═══ ABSOLUTE RULES ═══
 - NEVER write "I hope this email finds you well"
@@ -324,6 +322,7 @@ REMINDER: The ANTI-HALLUCINATION rules at the top of this prompt take precedence
 - NEVER OMIT a specific fact, number, award, or ambition that the artist wrote in the Description. If the Description mentions a specific thing (Grammy, SXSW count, monthly streams, signed to label X), it MUST appear in the pitch body with the same specificity. Silently dropping a Description fact is a failure.
 - NEVER use vague superlatives without evidence
 - NEVER write a real curator name. ANYWHERE you would refer to the curator personally — greeting, hook, mid-sentence — use the literal text "[Curator Name]". The frontend substitutes this token per recipient. Writing a real name will cause every recipient of a multi-curator pitch to receive the wrong salutation.
+- DO NOT include any URLs, links, or labels like "Stream:", "Listen:", "Spotify:", "YouTube:", "Apple Music:", "SoundCloud:", "Website:", "Instagram:", "X:", "Twitter:" in the pitch body or EPK. The OTONAMI email template renders a dedicated "Listen & respond" CTA and the artist's social links as buttons. Including URLs in the body creates duplicate CTAs and breaks the layout. Talk about the music and the artist; do NOT paste links.
 - ALL output text must be 100% English. ZERO Japanese characters allowed in the pitch or EPK.
 - If the artist description/bio is in Japanese, translate the MEANING into natural English. NEVER include the original Japanese text, not even in parentheses like "(楽しいバンドです)".
 - Do NOT put romanized Japanese or Japanese text in quotes, parentheses, or inline translations.
@@ -331,7 +330,7 @@ REMINDER: The ANTI-HALLUCINATION rules at the top of this prompt take precedence
 - ${socialLines.length > 0 ? 'DO include follower/listener counts as social proof — curators use these numbers to evaluate potential' : 'Do NOT invent follower counts'}
 
 ═══ EPK BIO (after "---EPK---") ═══
-Write a 100-120 word professional bio in third person. Lead with strongest credential. Include all social links with follower counts.
+Write a 100-120 word professional bio in third person. Lead with strongest credential. Mention notable platforms/releases by name where relevant (e.g. "released via Sony Music", "featured on NHK"), but do NOT include URLs or labeled link lists — the email renders the artist's social links as buttons separately.
 
 ═══ OUTPUT FORMAT ═══
 Start with "Subject: " line. Then the pitch. Then "---EPK---" separator. Then the EPK bio. Nothing else.`;

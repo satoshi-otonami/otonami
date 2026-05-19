@@ -28,7 +28,7 @@ const COPY = {
     hero: {
       h1: ['Is your music actually reaching anyone?', 'Reach real fans, not just numbers.'],
       h1Gold: 1,
-      sub: 'Send your music to international curators and get professional feedback.',
+      sub: 'Get your music to international media — playlist placements, reviews, and new listeners.',
     },
     founding: {
       eyebrow: '◆ FOUNDING ARTIST PROGRAM',
@@ -70,7 +70,7 @@ const COPY = {
     hero: {
       h1: ['配信した音楽、ちゃんと届いていますか？', '本当のファンに届ける方法があります。'],
       h1Gold: 1,
-      sub: '海外の音楽メディアに曲を届けて、プロのフィードバックをもらえるサービス。',
+      sub: '海外の音楽メディアに曲を届けて、プレイリスト掲載・レビュー・新しいリスナーとの出会いを生むサービス。',
     },
     founding: {
       eyebrow: '◆ FOUNDING ARTIST PROGRAM',

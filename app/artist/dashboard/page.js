@@ -200,7 +200,14 @@ export default function ArtistDashboard() {
   const [recentPitches, setRecentPitches] = useState([]);
 
   // Modals
-  const [showAddTrack, setShowAddTrack] = useState(false);
+  // Initialize from ?add=1 so /studio's "♪ 楽曲をストック" CTA can deep-link
+  // straight into the Add Track sheet (saving a click finding the
+  // "+ 楽曲を追加" button). The param is stripped in a useEffect below so
+  // a reload doesn't reopen the modal on top of an already-added track.
+  const [showAddTrack, setShowAddTrack] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try { return new URLSearchParams(window.location.search).get('add') === '1'; } catch { return false; }
+  });
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [trackMenu, setTrackMenu] = useState(null);
@@ -228,6 +235,20 @@ export default function ArtistDashboard() {
   // Header dropdown
   const [headerMenu, setHeaderMenu] = useState(false);
   const headerMenuRef = useRef(null);
+
+  // Strip ?add=1 once the modal has opened so reloading the page does not
+  // reopen the sheet on top of a track the user already saved. The `tab=`
+  // sibling is preserved so the Tracks view stays selected.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('add') !== '1') return;
+      params.delete('add');
+      const next = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+      window.history.replaceState({}, '', next);
+    } catch {}
+  }, []);
 
   // Auth + load profile
   useEffect(() => {

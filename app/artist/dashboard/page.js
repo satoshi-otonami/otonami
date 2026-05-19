@@ -2272,14 +2272,35 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
     twitter_url: artist.twitter_url || '',
     facebook_url: artist.facebook_url || '',
     website_url: artist.website_url || '',
-    cover_url: artist.cover_url || '',
   });
   const [influenceInput, setInfluenceInput] = useState('');
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(artist.avatar_url || null);
   const avatarInputRef = useRef(null);
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(artist.cover_url || null);
+  const [coverError, setCoverError] = useState('');
+  const coverFileInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const handleCoverFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setCoverError('ファイルサイズは5MB以下にしてください');
+      return;
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+      setCoverError('JPEG / PNG / WebP / GIF のみ対応しています');
+      return;
+    }
+    setCoverError('');
+    setCoverFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setCoverPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const toggleArray = (key, val, max) => {
@@ -2318,6 +2339,20 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
         }
         if (uploadData.avatar_url) {
           setAvatarPreview(uploadData.avatar_url);
+        }
+      }
+      if (coverFile) {
+        const fd = new FormData();
+        fd.append('file', coverFile);
+        const uploadRes = await fetch('/api/artists/cover', {
+          method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd,
+        });
+        const uploadData = await uploadRes.json().catch(() => ({}));
+        if (!uploadRes.ok) {
+          throw new Error(uploadData.error || `カバー画像のアップロードに失敗しました (HTTP ${uploadRes.status})`);
+        }
+        if (uploadData.cover_url) {
+          setCoverPreview(uploadData.cover_url);
         }
       }
       const res = await fetch('/api/artists', {
@@ -2451,12 +2486,38 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
           ))}
         </div>
 
-        <label style={lbl}>カバー画像URL</label>
-        <input className="modal-input" style={inp} value={form.cover_url} onChange={e => set('cover_url', e.target.value)} placeholder="https://..." />
-        {form.cover_url && /^https?:\/\/.+/.test(form.cover_url) && (
-          <div style={{ marginTop: 8, borderRadius: 10, overflow: 'hidden', border: `1px solid ${THEME.border}`, maxHeight: 100 }}>
-            <img src={form.cover_url} alt="preview" style={{ width: '100%', height: 100, objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
-          </div>
+        <label style={lbl}>カバー画像</label>
+        <div
+          style={{
+            width: '100%',
+            height: 120,
+            borderRadius: 12,
+            border: `1px solid ${THEME.border}`,
+            marginTop: 8,
+            background: coverPreview
+              ? `url(${coverPreview}) center/cover no-repeat`
+              : 'linear-gradient(135deg, #c4956a 0%, #e85d3a 100%)',
+          }}
+        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 10 }}>
+          <input
+            ref={coverFileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={handleCoverFileChange}
+            style={{ display: 'none' }}
+          />
+          <button
+            type="button"
+            onClick={() => coverFileInputRef.current?.click()}
+            style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${THEME.border}`, background: THEME.card, color: THEME.text, fontSize: 12, cursor: 'pointer', fontFamily: THEME.font }}
+          >
+            カバー画像を変更
+          </button>
+          <p style={{ fontSize: 11, color: THEME.textMuted, margin: 0 }}>JPEG, PNG, WebP, GIF（5MB以下） / 推奨: 1920×480px</p>
+        </div>
+        {coverError && (
+          <p style={{ color: THEME.coral, fontSize: 12, marginTop: 6 }}>{coverError}</p>
         )}
 
         {error && <p style={{ color: THEME.coral, fontSize: 13, marginTop: 12 }}>{error}</p>}

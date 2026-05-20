@@ -740,8 +740,8 @@ export default function HomePage() {
               letterSpacing: '0.5px',
             }}>
               {lang === 'en'
-                ? 'Now accepting pitches — Founding Artist program open'
-                : '本日サービス開始 — Founding Artist 募集中'}
+                ? 'Now Live'
+                : 'Now Live'}
             </span>
           </div>
 
@@ -1501,7 +1501,7 @@ export default function HomePage() {
                   color: '#c4956a',
                 }}>
                   {lang === 'en'
-                    ? 'Register now, start pitching today'
+                    ? 'Register now, start pitching'
                     : '今登録して、すぐにピッチ開始'}
                 </span>
               </div>
@@ -2103,11 +2103,11 @@ export default function HomePage() {
                 {(lang === 'en' ? [
                   'Add your tracks and build your artist profile',
                   'AI generates pitch drafts in seconds',
-                  'Reach curators starting today',
+                  'Reach curators right away',
                 ] : [
                   '楽曲登録とプロフィール設定がすぐに完了できる',
                   'AIピッチ文が数秒で生成される',
-                  '本日からキュレーターへ即アプローチ',
+                  '登録後すぐキュレーターへアプローチ',
                 ]).map((item, i) => (
                   <div key={i} style={{
                     display: 'flex',

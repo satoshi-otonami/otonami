@@ -1968,6 +1968,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const [quickUrl, setQuickUrl] = useState("");
   const [validationError, setValidationError] = useState(false);
   const [pitchSent, setPitchSent] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const sendingRef = useRef(false); // synchronous double-submit guard (survives render timing)
   // Scroll to top when entering the pitch flow or moving between steps so
   // the user starts each step at the form header, not wherever the curator
   // list was scrolled to.
@@ -2379,6 +2381,12 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       return;
     }
     if (credits < cost) { notify("クレジットが不足しています", "error"); return; }
+    // Double-submit guard: a synchronous ref blocks re-entry even before React
+    // re-renders the disabled button. Fixes the 4-click / 8-credit launch bug.
+    if (sendingRef.current) return;
+    sendingRef.current = true;
+    setIsSending(true);
+    try {
     const lnk = {...links, songLink: getSongLink()};
 
     // The AI is instructed to use the literal "[Curator Name]" placeholder, but old
@@ -2480,6 +2488,12 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     }
     // 送信後にDBから最新データを取得してローカルとマージ
     if (refreshPitches) setTimeout(() => refreshPitches(), 1000);
+    } finally {
+      // Always release the guard so the button re-enables (retry on failure;
+      // on success the success screen replaces the button anyway).
+      sendingRef.current = false;
+      setIsSending(false);
+    }
   };
 
   const resetForm = () => { setSelected([]); setStep(0); setPitchText(""); setPitchJa(""); setEpk(""); setPitchSent(false); };
@@ -2888,7 +2902,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
             <p style={{fontSize:"0.82rem",color:"#6b6560"}}>{targets.length}人に個別最適化ピッチを送信</p>
             <p style={{fontSize:14,color:"#c4956a",marginTop:8,fontWeight:600}}>消費 {cost}cr（残: {credits}→{credits-cost}）</p>
           </div>
-          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button disabled={isPreLaunch()} style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem",opacity:isPreLaunch()?0.5:1,cursor:isPreLaunch()?"not-allowed":"pointer",background:isPreLaunch()?"#e5e2dc":undefined,color:isPreLaunch()?"#6b6560":undefined}} onClick={sendAll}>{isPreLaunch() ? `${LAUNCH_DATE_LABEL_JA}のローンチ後に送信可能` : `送信 (${cost}クレジット)`}</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
+          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button disabled={isPreLaunch() || isSending} style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem",opacity:(isPreLaunch()||isSending)?0.5:1,cursor:(isPreLaunch()||isSending)?"not-allowed":"pointer",background:(isPreLaunch()||isSending)?"#e5e2dc":undefined,color:(isPreLaunch()||isSending)?"#6b6560":undefined}} onClick={sendAll}>{isPreLaunch() ? `${LAUNCH_DATE_LABEL_JA}のローンチ後に送信可能` : (isSending ? "送信中…" : `送信 (${cost}クレジット)`)}</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
         </div>
       )}
     </div>}

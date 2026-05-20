@@ -2487,6 +2487,11 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   return <div>
     <div style={{marginBottom:"1.5rem"}}><h1 style={{fontSize:28,fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#1a1a1a"}}>AIピッチを作成</h1><p style={{color:"#6b6560",fontSize:15,margin:"8px 0 0",fontFamily:"'DM Sans',sans-serif"}}>AIがあなたの楽曲に合わせた英語の紹介文を自動作成します</p></div>
     <PreLaunchBanner variant="pitch" />
+    <div style={{background:"rgba(255,107,74,0.10)",borderLeft:"4px solid #FF6B4A",borderRadius:8,padding:"0.9rem 1rem",marginBottom:"1rem"}}>
+      <p style={{color:"#1a1a1a",fontWeight:700,margin:"0 0 4px",fontFamily:"'DM Sans',sans-serif",fontSize:"0.92rem"}}>🔧 ピッチ送信機能を一時停止しています</p>
+      <p style={{color:"#6b6560",fontSize:"0.8rem",margin:0,lineHeight:1.6,fontFamily:"'DM Sans',sans-serif"}}>現在、システムメンテナンスのためピッチ送信を一時停止しております。再開次第、改めてお知らせいたします。ご不便をおかけして申し訳ございません。</p>
+      <p style={{color:"#9a958e",fontSize:"0.72rem",margin:"6px 0 0",lineHeight:1.5,fontFamily:"'DM Sans',sans-serif"}}>Pitch sending is temporarily suspended for system maintenance. We will notify you when it resumes. We apologize for the inconvenience.</p>
+    </div>
     {linkedTrackAiStatus === 'ai_generated' && (
       <div style={{background:"#fff5f3",border:"1px solid #fecaca",borderRadius:12,padding:"16px 20px",marginBottom:"1.2rem",fontFamily:"'DM Sans',sans-serif"}}>
         <div style={{fontSize:14,fontWeight:700,color:"#b91c1c",marginBottom:4}}>AI-generated tracks cannot be pitched</div>
@@ -2883,7 +2888,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
             <p style={{fontSize:"0.82rem",color:"#6b6560"}}>{targets.length}人に個別最適化ピッチを送信</p>
             <p style={{fontSize:14,color:"#c4956a",marginTop:8,fontWeight:600}}>消費 {cost}cr（残: {credits}→{credits-cost}）</p>
           </div>
-          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button disabled={isPreLaunch()} style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem",opacity:isPreLaunch()?0.5:1,cursor:isPreLaunch()?"not-allowed":"pointer",background:isPreLaunch()?"#e5e2dc":undefined,color:isPreLaunch()?"#6b6560":undefined}} onClick={sendAll}>{isPreLaunch() ? `${LAUNCH_DATE_LABEL_JA}のローンチ後に送信可能` : `送信 (${cost}クレジット)`}</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
+          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button disabled={true} title="現在メンテナンス中です" style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem",opacity:0.5,cursor:"not-allowed",background:"#e5e2dc",color:"#6b6560"}} onClick={undefined}>メンテナンス中（送信は一時停止中）</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
         </div>
       )}
     </div>}

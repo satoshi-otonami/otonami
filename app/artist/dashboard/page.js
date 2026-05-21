@@ -846,7 +846,7 @@ export default function ArtistDashboard() {
                   >
                     登録日 {trackSortBy === 'date' ? (trackSortDir === 'asc' ? '↑' : '↓') : ''}
                   </div>
-                  <div style={{ width: 80, textAlign: 'center' }}>結果</div>
+                  <div className="track-col-result" style={{ width: 80, textAlign: 'center' }}>結果</div>
                   <div style={{ width: 120 }} />
                 </div>
 
@@ -917,7 +917,7 @@ export default function ArtistDashboard() {
                         </div>
 
                         {/* Pitch results summary */}
-                        <div style={{ width: 80, textAlign: 'center' }}>
+                        <div className="track-col-result" style={{ width: 80, textAlign: 'center' }}>
                           {sentCount > 0 ? (
                             <div>
                               <div style={{ fontSize: 13, color: THEME.textSub }}>{sentCount}件送信</div>
@@ -929,7 +929,7 @@ export default function ArtistDashboard() {
                         </div>
 
                         {/* Action area */}
-                        <div style={{ width: 180, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                        <div className="track-actions" style={{ width: 180, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
                           {FEATURE_PROMO_ENABLED && (
                             <button onClick={(e) => { e.stopPropagation(); setPromoTrack(track); setShowPromoModal(true); }} style={{
                               background: '#1a1a1a', color: '#c4956a',
@@ -2569,6 +2569,11 @@ const globalStyles = `
     .track-col-date { display: none !important; }
     .track-list-header .track-col-genre { display: none !important; }
     .track-list-header .track-col-date { display: none !important; }
+    /* Stop the title from being crushed to 0px: hide the stats column and let
+       the action buttons wrap to a second line so the title keeps the full row. */
+    .track-col-result { display: none !important; }
+    .track-row { flex-wrap: wrap !important; }
+    .track-actions { width: 100% !important; }
   }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   .track-row:hover { background: #faf9f7 !important; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }

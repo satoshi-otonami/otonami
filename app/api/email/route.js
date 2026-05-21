@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
+import { escapeHtml } from '@/lib/html-escape';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM = process.env.EMAIL_FROM || 'info@otonami.io';
@@ -24,19 +25,6 @@ export function stripUrlsFromPitchBody(body) {
     .replace(/^\s*https?:\/\/\S+\s*$/gim, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
-}
-
-// Minimal HTML escape for interpolated user-supplied strings used in
-// attributes or inside <p> bodies. Pitch body line breaks are converted
-// after escaping.
-function escapeHtml(s) {
-  if (s == null) return '';
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
 
 export function pitchEmailHtml({

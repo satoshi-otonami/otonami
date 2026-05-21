@@ -5,6 +5,8 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { jwtVerify } from 'jose';
 import { Resend } from 'resend';
+import { escapeHtml } from '@/lib/html-escape';
+import { normalizePlacementUrl } from '@/lib/url-normalize';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-otonami-secret-change-me'
@@ -43,6 +45,13 @@ async function sendFeedbackNotification(pitch) {
   };
   const sc = statusConfig[status] || statusConfig.feedback;
 
+  // Escape DB-stored / curator-supplied values before HTML interpolation
+  const safeCuratorName = escapeHtml(curatorName);
+  const safeSubject = escapeHtml(subject);
+  const safeFeedback = escapeHtml(pitch.feedback_message);
+  const safePlacementUrl = escapeHtml(pitch.placement_url);
+  const safePlacementPlatform = escapeHtml(pitch.placement_platform);
+
   const html = `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;color:#334155;background:#0a0a18;border-radius:16px;overflow:hidden;">
       <!-- Header -->
@@ -53,16 +62,16 @@ async function sendFeedbackNotification(pitch) {
       <!-- Body -->
       <div style="padding:32px;">
         <h2 style="color:#fff;font-size:20px;font-weight:800;margin:0 0 8px;">
-          ${curatorName} responded to your pitch!
+          ${safeCuratorName} responded to your pitch!
         </h2>
         <p style="color:#94a3b8;font-size:14px;margin:0 0 24px;">
-          ${curatorName}があなたのピッチに返信しました
+          ${safeCuratorName}があなたのピッチに返信しました
         </p>
 
         <!-- Subject -->
         <div style="background:#13132a;border:1px solid #1e1e3a;border-radius:10px;padding:12px 16px;margin-bottom:20px;">
           <div style="color:#555;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:4px;">PITCH</div>
-          <div style="color:#ccc;font-size:14px;">${subject}</div>
+          <div style="color:#ccc;font-size:14px;">${safeSubject}</div>
         </div>
 
         <!-- Status badge -->
@@ -70,22 +79,22 @@ async function sendFeedbackNotification(pitch) {
           <span style="color:${sc.color};font-size:16px;font-weight:800;">${sc.label}</span>
         </div>
 
-        ${pitch.feedback_message ? `
+        ${safeFeedback ? `
         <!-- Feedback message -->
         <div style="background:#13132a;border:1px solid #1e1e3a;border-radius:10px;padding:16px 18px;margin-bottom:20px;">
           <div style="color:#555;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:8px;">FEEDBACK / フィードバック</div>
-          <div style="color:#ccc;font-size:14px;line-height:1.7;">${pitch.feedback_message}</div>
+          <div style="color:#ccc;font-size:14px;line-height:1.7;">${safeFeedback}</div>
         </div>
         ` : ''}
 
-        ${pitch.placement_url ? `
+        ${safePlacementUrl ? `
         <!-- Placement info -->
         <div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:10px;padding:16px 18px;margin-bottom:20px;">
           <div style="color:#38bdf8;font-size:13px;font-weight:800;margin-bottom:8px;">
             Your track was featured! / あなたの楽曲が紹介されました！
           </div>
-          ${pitch.placement_platform ? `<div style="color:#94a3b8;font-size:12px;margin-bottom:6px;">Platform: <strong style="color:#38bdf8;">${pitch.placement_platform}</strong></div>` : ''}
-          <a href="${pitch.placement_url}" style="color:#0ea5e9;font-size:13px;word-break:break-all;">${pitch.placement_url}</a>
+          ${safePlacementPlatform ? `<div style="color:#94a3b8;font-size:12px;margin-bottom:6px;">Platform: <strong style="color:#38bdf8;">${safePlacementPlatform}</strong></div>` : ''}
+          <a href="${safePlacementUrl}" style="color:#0ea5e9;font-size:13px;word-break:break-all;">${safePlacementUrl}</a>
         </div>
         ` : ''}
 
@@ -222,6 +231,18 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
   }
 
+  // Normalize curator-supplied placement URL (handles iframe embed paste,
+  // rejects non-http(s) values, canonicalizes Spotify /embed/* links)
+  let normalizedPlacementUrl;
+  try {
+    normalizedPlacementUrl = normalizePlacementUrl(placement_url);
+  } catch {
+    return NextResponse.json(
+      { error: 'placement_url must be a valid http(s) URL or Spotify embed code' },
+      { status: 400 }
+    );
+  }
+
   // 1. ピッチを取得
   const { data: existingPitch } = await db
     .from('pitches')
@@ -245,8 +266,8 @@ export async function PATCH(request, { params }) {
   // 3. 認可済み — 更新
   const updates = { status };
   if (feedback_message) updates.feedback_message = feedback_message;
-  if (status === 'accepted' && placement_url) {
-    updates.placement_url = placement_url;
+  if (status === 'accepted' && normalizedPlacementUrl) {
+    updates.placement_url = normalizedPlacementUrl;
     if (placement_platform) updates.placement_platform = placement_platform;
     if (placement_date) updates.placement_date = placement_date;
   }

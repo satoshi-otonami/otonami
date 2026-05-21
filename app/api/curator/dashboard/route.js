@@ -166,16 +166,15 @@ export async function PATCH(request) {
       return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
     }
 
-    // feedback_at / responded_at を別途更新（column が存在しない場合もメイン更新は成功済み）
+    // responded_at を別途更新
     if (['accepted', 'declined', 'feedback'].includes(status)) {
-      const { error: fatError } = await db
+      const { error: respError } = await db
         .from('pitches')
-        .update({ feedback_at: now, responded_at: now })
+        .update({ responded_at: now })
         .eq('id', data.id);
-      if (fatError) {
-        console.warn(`[dashboard] feedback_at/responded_at update failed (column may not exist):`, fatError.message);
+      if (respError) {
+        console.error(`[dashboard] responded_at update failed:`, respError.message);
       } else {
-        data.feedback_at = now;
         data.responded_at = now;
       }
     }
@@ -234,7 +233,8 @@ export async function PATCH(request) {
       const safeSubject = escapeHtml(data.subject || '');
       const safeFeedback = escapeHtml(data.feedback_message);
       const safeUrl = escapeHtml(data.placement_url);
-      resend.emails.send({
+      try {
+        const { data: emailResult, error: emailError } = await resend.emails.send({
         from: `OTONAMI <${FROM}>`,
         to: [data.artist_email],
         reply_to: 'info@otonami.io',
@@ -260,7 +260,15 @@ export async function PATCH(request) {
             </div>
           </div>
         `,
-      }).catch(e => console.error('[dashboard] Notification email error:', e.message));
+        });
+        if (emailError) {
+          console.error('[dashboard] Notification email error:', emailError);
+        } else {
+          console.log(`[dashboard] Notification sent to ${data.artist_email} resend_id=${emailResult?.id}`);
+        }
+      } catch (e) {
+        console.error('[dashboard] Notification email exception:', e.message);
+      }
     }
 
     return NextResponse.json({ success: true, pitch: { id: data.id, status: data.status } });

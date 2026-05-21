@@ -43,6 +43,7 @@ const MOOD_OPTIONS = [
 export default function ArtistRegistrationPage() {
   const [step, setStep] = useState(1);
   const avatarInputRef = useRef(null);
+  const coverInputRef = useRef(null);
 
   // Form state
   const [form, setForm] = useState({
@@ -52,11 +53,12 @@ export default function ArtistRegistrationPage() {
     bio: '', hot_news: '',
     spotify_url: '', youtube_url: '', instagram_url: '',
     twitter_url: '', facebook_url: '', website_url: '',
-    cover_url: '',
   });
   const [influenceInput, setInfluenceInput] = useState('');
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(null);
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -89,6 +91,16 @@ export default function ArtistRegistrationPage() {
     setAvatarFile(file);
     const reader = new FileReader();
     reader.onload = (ev) => setAvatarPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const applyCoverFile = (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 5 * 1024 * 1024) { alert('ファイルサイズは5MB以下にしてください'); return; }
+    setCoverFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setCoverPreview(ev.target.result);
     reader.readAsDataURL(file);
   };
 
@@ -134,10 +146,33 @@ export default function ArtistRegistrationPage() {
         } catch { /* non-fatal: registration proceeds without the photo */ }
       }
 
+      // Same approach for the cover image: the cover API route also needs a JWT +
+      // artist id that don't exist pre-verification, so upload client-side to the
+      // avatars bucket (same bucket the cover route uses) and pass the public URL
+      // as cover_url, which the register route already persists.
+      let coverUrl = '';
+      if (coverFile) {
+        try {
+          const ext = coverFile.name.split('.').pop().toLowerCase();
+          const slug = form.email.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+          const fileName = `cover-${slug}-${Date.now()}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from('avatars').upload(fileName, coverFile, { contentType: coverFile.type, upsert: true });
+          if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+            coverUrl = publicUrl;
+          }
+        } catch { /* non-fatal: registration proceeds without the cover */ }
+      }
+
+      const payload = { ...form };
+      if (avatarUrl) payload.avatar_url = avatarUrl;
+      if (coverUrl) payload.cover_url = coverUrl;
+
       const res = await fetch('/api/artists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(avatarUrl ? { ...form, avatar_url: avatarUrl } : form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -469,14 +504,17 @@ export default function ArtistRegistrationPage() {
                 ))}
               </div>
 
-              {/* Cover image URL */}
-              <label style={lbl}>カバー画像URL（任意）</label>
-              <input className="artist-input" style={inp} value={form.cover_url} onChange={e => set('cover_url', e.target.value)} placeholder="https://..." />
-              {form.cover_url && /^https?:\/\/.+/.test(form.cover_url) && (
-                <div style={{ marginTop: 10, borderRadius: 10, overflow: 'hidden', border: `1px solid ${THEME.border}`, maxHeight: 160 }}>
-                  <img src={form.cover_url} alt="cover preview" style={{ width: '100%', height: 160, objectFit: 'cover' }} onError={e => { e.target.style.display = 'none'; }} />
-                </div>
-              )}
+              {/* Cover image upload */}
+              <label style={lbl}>カバー画像（任意）</label>
+              <div
+                onClick={() => coverInputRef.current?.click()}
+                style={{ marginTop: 10, borderRadius: 10, overflow: 'hidden', border: `2px dashed ${coverPreview ? THEME.gold : THEME.border}`, background: THEME.bg, cursor: 'pointer', height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+              >
+                {coverPreview
+                  ? <img src={coverPreview} alt="cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <div style={{ textAlign: 'center', color: THEME.textMuted }}><div style={{ width: 24, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto' }} /><div style={{ fontSize: 11, marginTop: 6 }}>カバー画像を選択</div><div style={{ fontSize: 10, marginTop: 2 }}>JPEG, PNG, WebP（5MB以下）</div></div>}
+              </div>
+              <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => applyCoverFile(e.target.files?.[0])} />
 
               {error && error === 'already_registered' && (
                 <div style={{ background: '#fef9ee', border: '1px solid #f5e6c8', borderRadius: 10, padding: 16, marginTop: 16, fontFamily: THEME.font }}>

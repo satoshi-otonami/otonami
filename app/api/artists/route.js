@@ -17,6 +17,32 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io';
 const testMode = process.env.EMAIL_TEST_MODE === 'true';
 const safeEmail = process.env.EMAIL_TEST_REDIRECT || 'satoshiy339@gmail.com';
 
+// Pick the smallest unused founding_number in 1..limit (gap-filling), so a slot
+// freed by a deleted founding artist is reused instead of colliding with an
+// existing higher number (count-based numbering hit idx_artists_founding_number).
+// Returns { eligible:false, foundingNumber:null } when all slots are taken, the
+// deadline has passed, or the lookup fails.
+async function pickFoundingSlot(adminDb, limit, deadline) {
+  if (new Date() >= deadline) return { eligible: false, foundingNumber: null };
+
+  const { data, error } = await adminDb
+    .from('artists')
+    .select('founding_number')
+    .eq('is_founding', true)
+    .not('founding_number', 'is', null);
+
+  if (error) {
+    console.error('Founding slot lookup error (falling back to non-founding):', error);
+    return { eligible: false, foundingNumber: null };
+  }
+
+  const used = new Set((data || []).map((r) => r.founding_number));
+  for (let n = 1; n <= limit; n++) {
+    if (!used.has(n)) return { eligible: true, foundingNumber: n };
+  }
+  return { eligible: false, foundingNumber: null };
+}
+
 // POST /api/artists — 新規登録
 export async function POST(request) {
   try {
@@ -57,19 +83,8 @@ export async function POST(request) {
     const FOUNDING_DEADLINE = new Date('2026-06-30T23:59:59+09:00');
     const adminDb = getServiceSupabase();
 
-    const { count: foundingCount, error: countError } = await adminDb
-      .from('artists')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_founding', true);
-
-    if (countError) {
-      console.error('Founding count error (falling back to non-founding):', countError);
-    }
-
-    const isFoundingEligible =
-      !countError &&
-      (foundingCount ?? FOUNDING_LIMIT) < FOUNDING_LIMIT &&
-      new Date() < FOUNDING_DEADLINE;
+    const { eligible: isFoundingEligible, foundingNumber } =
+      await pickFoundingSlot(adminDb, FOUNDING_LIMIT, FOUNDING_DEADLINE);
 
     const insertData = {
       name,
@@ -96,7 +111,7 @@ export async function POST(request) {
       website_url: rest.website_url || null,
       credits: isFoundingEligible ? 10 : 3,
       is_founding: isFoundingEligible,
-      founding_number: isFoundingEligible ? (foundingCount ?? 0) + 1 : null,
+      founding_number: foundingNumber,
       founding_show_on_lp: false,
     };
 
@@ -114,18 +129,11 @@ export async function POST(request) {
       typeof insertError.message === 'string' &&
       insertError.message.includes('founding_number')
     ) {
-      console.warn('Founding number collision, retrying with fresh count...');
-      const { count: retryCount } = await adminDb
-        .from('artists')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_founding', true);
-
-      const stillEligible =
-        (retryCount ?? FOUNDING_LIMIT) < FOUNDING_LIMIT &&
-        new Date() < FOUNDING_DEADLINE;
-      insertData.is_founding = stillEligible;
-      insertData.founding_number = stillEligible ? retryCount + 1 : null;
-      insertData.credits = stillEligible ? 10 : 3;
+      console.warn('Founding number collision, retrying with a fresh slot...');
+      const retrySlot = await pickFoundingSlot(adminDb, FOUNDING_LIMIT, FOUNDING_DEADLINE);
+      insertData.is_founding = retrySlot.eligible;
+      insertData.founding_number = retrySlot.foundingNumber;
+      insertData.credits = retrySlot.eligible ? 10 : 3;
 
       const retry = await adminDb
         .from('artists')

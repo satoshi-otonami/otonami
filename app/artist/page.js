@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
 
 const THEME = {
   bg: '#f8f7f4',
@@ -114,10 +115,29 @@ export default function ArtistRegistrationPage() {
     setError('');
 
     try {
+      // Upload the chosen profile photo to Storage and pass its public URL in the
+      // registration payload. The avatar API route needs a JWT + artist id, and
+      // neither exists before email verification, so the client uploads directly
+      // (same approach as curator signup); the register route persists avatar_url.
+      let avatarUrl = '';
+      if (avatarFile) {
+        try {
+          const ext = avatarFile.name.split('.').pop().toLowerCase();
+          const slug = form.email.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+          const fileName = `artist-${slug}-${Date.now()}.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from('avatars').upload(fileName, avatarFile, { contentType: avatarFile.type, upsert: true });
+          if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+            avatarUrl = publicUrl;
+          }
+        } catch { /* non-fatal: registration proceeds without the photo */ }
+      }
+
       const res = await fetch('/api/artists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(avatarUrl ? { ...form, avatar_url: avatarUrl } : form),
       });
       const data = await res.json();
       if (!res.ok) {

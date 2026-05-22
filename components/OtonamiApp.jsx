@@ -884,6 +884,11 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
 
   const clearArtistDraft = () => {
     setArtist(EMPTY_ARTIST); setLinks(EMPTY_LINKS); setFollowers(EMPTY_FOLLOWERS);
+    // Also clear analyzed-track state. The PitchCreator mount-once effect
+    // (deps []) re-injects trackData.songName/listeningUrl into the form on
+    // every re-entry, so without this a "クリア" followed by re-opening pitch
+    // creation re-applied the just-cleared (e.g. sample) song. (bug 2)
+    setTrackData(null); setLinkedTrackId(null); setLinkedTrackAiStatus(null);
     try { sessionStorage.removeItem("otonami_artist_draft"); } catch {}
   };
 

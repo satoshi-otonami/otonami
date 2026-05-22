@@ -1568,24 +1568,37 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
     persistTrackForArtist({ song, url: currentUrl, genre: analyzedGenre });
   };
 
+  // Guards duplicate POSTs for the same (song,url). runAnalyze fires from both
+  // the manual "分析" button and the 1.5s debounce effect, and the server dedup
+  // is a non-atomic SELECT-then-INSERT — so two near-simultaneous calls each
+  // saw "no existing row" and inserted, producing the duplicate "Crossroad"
+  // rows ~0.1s apart. The synchronous check-and-add before any await makes the
+  // second call a no-op (JS is single-threaded).
+  const persistedTrackKeysRef = useRef(new Set());
   const persistTrackForArtist = async ({ song, url, genre }) => {
     if (!song || !url) return;
+    const dedupeKey = song + '|' + url;
+    if (persistedTrackKeysRef.current.has(dedupeKey)) return;
+    persistedTrackKeysRef.current.add(dedupeKey);
     let token = null;
     try { token = localStorage.getItem('artist_token'); } catch {}
-    if (!token) return;
+    if (!token) { persistedTrackKeysRef.current.delete(dedupeKey); return; }
     const body = { title: song, genre: genre || null };
     if (/(?:youtube\.com|youtu\.be)/i.test(url))      body.youtube_url    = url;
     else if (/spotify\.com/i.test(url))               body.spotify_url    = url;
     else if (/soundcloud\.com/i.test(url))            body.soundcloud_url = url;
     else if (/bandcamp\.com/i.test(url))              body.bandcamp_url   = url;
-    else return; // unknown platform — skip rather than guess a column
+    else { persistedTrackKeysRef.current.delete(dedupeKey); return; } // unknown platform
     try {
       await fetch('/api/artists/tracks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
-    } catch {} // non-fatal: failure must not block the analysis flow
+    } catch {
+      // non-fatal: allow a later retry for this song after a network failure
+      persistedTrackKeysRef.current.delete(dedupeKey);
+    }
   };
 
   const doAnalyze = () => {

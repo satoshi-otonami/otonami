@@ -889,6 +889,21 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
 
   const myPitches = pitches;
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Mobile nav drawer: close on Escape and lock background scroll while open.
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setMobileMenuOpen(false); };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileMenuOpen]);
+
   const navItems = [
     {id:"dashboard",Icon:Music,label:"ホーム",badge:null},
     {id:"curators",Icon:Search,label:"キュレーター",badge:selected.length||null},
@@ -910,23 +925,108 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
   };
 
   return <>
-    <nav style={css.nav}>
+    <style>{`
+      /* Studio header: hamburger drawer <=767px; desktop (>=768px) unchanged */
+      .studio-nav-toggle { display: none; }
+      @media (max-width: 767px) {
+        .studio-nav { padding-left: 1rem !important; padding-right: 1rem !important; }
+        .studio-nav-desktop-only { display: none !important; }
+        .studio-nav-toggle {
+          display: flex; flex-direction: column; justify-content: center;
+          gap: 5px; width: 44px; height: 44px; padding: 10px;
+          margin-left: auto; background: transparent; border: none; cursor: pointer;
+        }
+        .studio-nav-toggle span {
+          display: block; width: 22px; height: 2px; background: #1a1a1a;
+          border-radius: 1px; transition: transform .2s ease, opacity .2s ease;
+        }
+        .studio-nav-toggle--open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .studio-nav-toggle--open span:nth-child(2) { opacity: 0; }
+        .studio-nav-toggle--open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+      }
+      .studio-nav-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+        z-index: 998; animation: studioOverlayIn .2s ease;
+      }
+      .studio-nav-mobile {
+        position: fixed; top: 0; right: 0; z-index: 999;
+        width: min(82vw, 320px); height: 100vh; height: 100dvh;
+        background: #f8f7f4; box-shadow: -2px 0 24px rgba(0,0,0,0.12);
+        padding: 76px 0 32px; display: flex; flex-direction: column;
+        overflow-y: auto; animation: studioDrawerIn .22s ease;
+      }
+      .studio-nav-mobile a, .studio-nav-mobile button {
+        display: flex; align-items: center; gap: 10px; width: 100%;
+        min-height: 48px; padding: 12px 24px; box-sizing: border-box;
+        background: none; border: none; text-align: left;
+        font-family: inherit; font-size: 16px; color: #1a1a1a;
+        text-decoration: none; cursor: pointer;
+      }
+      .studio-nav-mobile a:hover, .studio-nav-mobile button:hover,
+      .studio-nav-mobile a:focus, .studio-nav-mobile button:focus { background: #f0ede6; }
+      .studio-nav-mobile .studio-nav-mobile-active {
+        color: #c4956a; font-weight: 700; background: rgba(196,149,106,0.12);
+      }
+      .studio-nav-mobile-divider { height: 1px; background: #e5e2dc; margin: 12px 24px; flex-shrink: 0; }
+      .studio-nav-mobile-meta { padding: 10px 24px; font-size: 13px; color: #6b6560; }
+      @keyframes studioDrawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+      @keyframes studioOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+      @media (min-width: 768px) { .studio-nav-overlay, .studio-nav-mobile { display: none !important; } }
+    `}</style>
+    <nav className="studio-nav" style={css.nav}>
       <div style={{display:"flex",alignItems:"center",gap:12}}>
         <div style={css.navBrand}>OTONAMI</div>
         {loggedInArtist && (
-          <a href="/artist/dashboard" style={{display:'flex',alignItems:'center',gap:6,padding:'6px 16px',borderRadius:9999,border:'1px solid #e5e2dc',color:'#6b6560',fontSize:13,fontWeight:500,textDecoration:'none',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>← ダッシュボード</a>
+          <a href="/artist/dashboard" className="studio-nav-desktop-only" style={{display:'flex',alignItems:'center',gap:6,padding:'6px 16px',borderRadius:9999,border:'1px solid #e5e2dc',color:'#6b6560',fontSize:13,fontWeight:500,textDecoration:'none',cursor:'pointer',fontFamily:"'DM Sans',sans-serif"}}>← ダッシュボード</a>
         )}
       </div>
-      <div style={{display:"flex",gap:4,flex:1,justifyContent:"center"}}>
+      <div className="studio-nav-desktop-only" style={{display:"flex",gap:4,flex:1,justifyContent:"center"}}>
         {navItems.map(n => { const NIcon = n.Icon; return <button key={n.id} onClick={()=>setPage(n.id)} style={{...css.navBtn,...(page===n.id?css.navBtnActive:{}),display:"inline-flex",alignItems:"center",gap:6}}><NIcon size={14} strokeWidth={2}/>{n.label}{n.badge && <span style={css.navBadge}>{n.badge}</span>}</button>; })}
       </div>
-      <div style={{fontSize:"0.75rem",color:"#6b6560",display:"flex",alignItems:"center",gap:8}}>
+      <div className="studio-nav-desktop-only" style={{fontSize:"0.75rem",color:"#6b6560",display:"flex",alignItems:"center",gap:8}}>
         {loggedInArtist && <span style={{fontWeight:600,color:"#1a1a1a",fontSize:13}}>{displayName}</span>}
         <span style={{color:"#f59e0b",fontWeight:700}}>{credits}</span> クレジット
         <button onClick={()=>setPage("shop")} style={{marginLeft:4,...css.btnSm,background:"linear-gradient(135deg,rgba(245,158,11,0.15),rgba(234,88,12,0.1))",color:"#f59e0b",border:"1px solid rgba(245,158,11,0.3)",fontWeight:600}}>+ 購入</button>
         <button onClick={handleLogout} style={{marginLeft:4,fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"rgba(26,26,26,0.5)",background:"none",border:"1px solid rgba(26,26,26,0.15)",borderRadius:9999,padding:"6px 16px",cursor:"pointer"}}>ログアウト</button>
       </div>
+      <button
+        type="button"
+        className={"studio-nav-toggle" + (mobileMenuOpen ? " studio-nav-toggle--open" : "")}
+        aria-label={mobileMenuOpen ? "メニューを閉じる" : "メニューを開く"}
+        aria-expanded={mobileMenuOpen}
+        aria-controls="studio-nav-mobile"
+        onClick={() => setMobileMenuOpen(v => !v)}
+      >
+        <span /><span /><span />
+      </button>
     </nav>
+    {mobileMenuOpen && (
+      <>
+        <div className="studio-nav-overlay" onClick={() => setMobileMenuOpen(false)} aria-hidden="true" />
+        <nav id="studio-nav-mobile" className="studio-nav-mobile" aria-label="メインメニュー">
+          {loggedInArtist && (
+            <a href="/artist/dashboard" onClick={() => setMobileMenuOpen(false)}>← ダッシュボード</a>
+          )}
+          {navItems.map(n => { const NIcon = n.Icon; return (
+            <button
+              key={n.id}
+              onClick={() => { setPage(n.id); setMobileMenuOpen(false); }}
+              className={page === n.id ? "studio-nav-mobile-active" : undefined}
+            >
+              <NIcon size={18} strokeWidth={2} />{n.label}
+              {n.badge && <span style={{marginLeft:"auto",background:"#ef4444",color:"#fff",fontSize:11,minWidth:18,height:18,padding:"0 5px",borderRadius:9,display:"inline-flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>{n.badge}</span>}
+            </button>
+          ); })}
+          <div className="studio-nav-mobile-divider" />
+          <div className="studio-nav-mobile-meta">
+            {loggedInArtist && <span style={{fontWeight:600,color:"#1a1a1a"}}>{displayName} · </span>}
+            <span style={{color:"#f59e0b",fontWeight:700}}>{credits}</span> クレジット
+          </div>
+          <button onClick={() => { setPage("shop"); setMobileMenuOpen(false); }}>+ クレジット購入</button>
+          <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }}>ログアウト</button>
+        </nav>
+      </>
+    )}
     <main style={css.main}>
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify} loggedInArtist={loggedInArtist}/>}
       {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist}/>}

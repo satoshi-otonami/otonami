@@ -13,7 +13,7 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM   = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io';
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim();
 
 async function getAuthCurator(request) {
   const auth = request.headers.get('authorization');

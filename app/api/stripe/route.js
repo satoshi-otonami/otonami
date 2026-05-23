@@ -67,8 +67,8 @@ export async function POST(request) {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}?payment=cancel`,
+      success_url: `${(process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim()}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${(process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim()}?payment=cancel`,
       metadata: {
         artistId,
         credits: String(credits),
@@ -209,7 +209,7 @@ export async function PUT(request) {
                 </table>
               </div>
               <div style="text-align:center;margin:28px 0;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io'}/studio" style="background:#c4956a;color:#fff;padding:14px 40px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">スタジオを開く →</a>
+                <a href="${(process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim()}/studio" style="background:#c4956a;color:#fff;padding:14px 40px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">スタジオを開く →</a>
               </div>
               <hr style="border:none;border-top:1px solid #e5e2dc;margin:32px 0;" />
               <h2 style="font-size:16px;color:#9b9590;">Hi ${name},</h2>
@@ -217,7 +217,7 @@ export async function PUT(request) {
               <p style="color:#9b9590;font-size:12px;text-align:center;margin-top:24px;">Receipt ID: ${stripePaymentId}<br/>Questions? Reply to this email.</p>
             </div>
           `,
-          text: `${name} さん、ご購入ありがとうございます！\n\nパッケージ: ${packageLabel}\n追加クレジット: +${credits}\n現在の残高: ${newCredits}\nお支払い金額: ¥${priceJpy.toLocaleString()}\n\nスタジオ: ${process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io'}/studio\n\nReceipt ID: ${stripePaymentId}\n\n---\n\nHi ${name},\n\nThank you for your purchase. ${credits} credits added. New balance: ${newCredits}. Payment: ¥${priceJpy.toLocaleString()}.`,
+          text: `${name} さん、ご購入ありがとうございます！\n\nパッケージ: ${packageLabel}\n追加クレジット: +${credits}\n現在の残高: ${newCredits}\nお支払い金額: ¥${priceJpy.toLocaleString()}\n\nスタジオ: ${(process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim()}/studio\n\nReceipt ID: ${stripePaymentId}\n\n---\n\nHi ${name},\n\nThank you for your purchase. ${credits} credits added. New balance: ${newCredits}. Payment: ¥${priceJpy.toLocaleString()}.`,
         });
         if (mailErr) {
           console.error('[stripe] Receipt email send failed:', mailErr);

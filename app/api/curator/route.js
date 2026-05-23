@@ -39,7 +39,7 @@ async function setCuratorPasswordHash(email, hash) {
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM = `OTONAMI <${process.env.EMAIL_FROM || 'info@otonami.io'}>`;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io';
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim();
 const testMode = process.env.EMAIL_TEST_MODE === 'true';
 const safeEmail = process.env.EMAIL_TEST_REDIRECT || 'satoshiy339@gmail.com';
 

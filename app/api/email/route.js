@@ -251,7 +251,7 @@ export async function POST(request) {
           .trimStart();
         const cleanBody = stripUrlsFromPitchBody(rawBody);
 
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io';
+        const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim();
         const trackingPixel = pitchId
           ? `<img src="${appUrl}/api/track/open?pid=${pitchId}" width="1" height="1" alt="" style="display:none;border:0;"/>`
           : '';

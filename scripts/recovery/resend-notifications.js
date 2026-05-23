@@ -20,7 +20,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io';
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim();
 
 const PITCH_IDS = process.argv.slice(2);
 

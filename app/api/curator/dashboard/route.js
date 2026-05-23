@@ -10,7 +10,7 @@ import { normalizePlacementUrl } from '@/lib/url-normalize';
 
 const resend  = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM    = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io';
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim();
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-otonami-secret-change-me'

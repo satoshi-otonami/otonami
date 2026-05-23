@@ -2469,8 +2469,12 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       if (err instanceof ApiError) {
         handleApiError(err, notify, 'AIピッチ生成失敗');
       } else {
-        notify("AI生成失敗 → テンプレートで代替: " + err.message);
-        generatePitch(); // Fallback to template
+        // AI path failed (non-API error, e.g. network/parse). Fall back to the
+        // internal template generator, which still translates the JA fields via
+        // /api/translate. Surface a friendly notice; the preview still renders.
+        console.warn('[pitch] AI generation failed, falling back to template:', err.message);
+        notify('AI生成に一時的な障害がありました。簡易版を表示しています。「再生成」ボタンで再試行できます。', 'error');
+        generatePitch(); // Internal fallback to template (still English-translated)
       }
     }
     setAiLoading(false);
@@ -2495,6 +2499,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     }
   };
 
+  // TODO(2026-05-23): 内部フォールバック専用（テンプレートボタンは案Dで非表示化）。
+  // Claude API の失敗率をモニタリングのうえ、安定が確認できたら完全削除を検討。
   const generatePitch = async () => {
     if (linkedTrackAiStatus === 'ai_generated') {
       notify('AI-generated tracks cannot be pitched. / AI生成楽曲はピッチできません。', 'error');
@@ -2990,7 +2996,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         </div>
       </div>
       <div style={{fontSize:12,color:"#6b6560",textAlign:"center",marginBottom:8,fontFamily:"'DM Sans',sans-serif"}}>AIが英語のプロフェッショナルな紹介文を生成します（約30秒）</div>
-      <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(0)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} disabled={aiLoading || tplLoading} onClick={generateAIPitch}>{aiLoading ? "AI生成中..." : "AIピッチ生成"}</button><button style={css.btnGhost} disabled={aiLoading || tplLoading} onClick={generatePitch}>{tplLoading ? "翻訳中..." : "テンプレート"}</button></div>
+      {/* Hidden 2026/5/23: AI generation is now the primary UI path; generatePitch() is kept as internal fallback only (template button removed). */}
+      <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(0)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} disabled={aiLoading || tplLoading} onClick={generateAIPitch}>{aiLoading ? "AI生成中..." : "AIピッチ生成"}</button></div>
     </div>}
 
     {/* ═══ STEP 2 ═══ */}
@@ -3030,7 +3037,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       </div>}
 
       {epk && <details style={{marginBottom:"0.8rem"}}><summary style={{cursor:"pointer",fontSize:"0.78rem",fontWeight:600,color:"#c4956a"}}>EPK（英語・確認用）</summary><pre style={{whiteSpace:"pre-wrap",fontFamily:"inherit",fontSize:"0.74rem",background:"#ffffff",padding:"0.7rem",borderRadius:8,marginTop:6,color:"#6b6560"}}>{epk}</pre></details>}
-      <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(1)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} onClick={()=>setStep(3)}>送信へ →</button><button style={css.btnGhost} disabled={tplLoading} onClick={generatePitch}>{tplLoading ? "翻訳中..." : "再生成"}</button></div>
+      <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(1)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} onClick={()=>setStep(3)}>送信へ →</button><button style={css.btnGhost} disabled={aiLoading || tplLoading} onClick={generateAIPitch}>{aiLoading ? "AI生成中..." : tplLoading ? "翻訳中..." : "再生成"}</button></div>
     </div>}
 
     {/* ═══ STEP 3 ═══ */}

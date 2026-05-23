@@ -195,6 +195,10 @@ const PE = {
     const links = PE.linksBlock(lnk, fol);
     return `Subject: ${sub}\n\nHi [Curator Name],\n\n${hook}\n\n${body}\n\n${cta}${links}\n\n${close}\n\nWarm regards,\n${userName}\nvia OTONAMI — Connecting Japanese Artists with the World`;
   },
+  // TODO(2026-05): epk() は description / achievements / influences を生挿入しており、
+  // 生の日本語を渡すと日英混在になる（generate() と同じ問題）。現状 generatePitch からは
+  // 英訳済みフィールドを渡すため混在しないが、メール出力（app/api/email の `void epk`）を
+  // 再開する／別経路から生の日本語で呼ぶ場合は、呼び出し前に翻訳経路を通すこと。
   epk: (artist, lnk, fol) => {
     const fmt = (n) => { if (!n || n <= 0) return ""; if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,"") + "M"; if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,"") + "K"; return String(n); };
     const f = fol || {};
@@ -2219,6 +2223,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const folCount = Object.values(followers).filter(v => v > 0).length;
   const fmtK = (n) => { if (!n) return ""; if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,"") + "M"; if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,"") + "K"; return String(n); };
   const [aiLoading, setAiLoading] = useState(false);
+  const [tplLoading, setTplLoading] = useState(false); // テンプレート生成中（日本語フィールドの英訳）
   const [fetchingFollowers, setFetchingFollowers] = useState(false);
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [trackAnalysisStatus, setTrackAnalysisStatus] = useState(trackData?.audioFeatures ? 'done' : 'idle'); // 'idle'|'loading'|'done'|'error'
@@ -2472,21 +2477,52 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   };
 
   // ── Pitch generation ──
-  const generatePitch = () => {
+  // テンプレート生成用ヘルパー: 日本語の単一フィールドを英語化する。失敗時は原文を
+  // そのまま返すフォールバックなので、API障害時でもテンプレートは（混在のまま）動く。
+  // 送信時の ensureEnglishPitch（app/api/pitches）が本文全体の最終的な英訳の安全網。
+  const tr = async (text) => {
+    if (!text || !text.trim()) return text || "";
+    try {
+      const res = await authFetch('/api/translate', {
+        method: 'POST',
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) return text;
+      const data = await res.json();
+      return data.translated || text;
+    } catch {
+      return text;
+    }
+  };
+
+  const generatePitch = async () => {
     if (linkedTrackAiStatus === 'ai_generated') {
       notify('AI-generated tracks cannot be pitched. / AI生成楽曲はピッチできません。', 'error');
       return;
     }
-    const lnk = {...links, songLink: getSongLink()};
-    const rep = targets[0] || {name:"Curator",type:"blog",platform:"Music Platform"};
-    const pitchArtist = pitchSongTitle ? { ...artist, songTitle: pitchSongTitle } : artist;
-    const generated = PE.generate(pitchArtist, rep, pitchStyle, lnk, user.name, followers);
-    setPitchText(generated);
-    setEpk(PE.epk(pitchArtist, lnk, followers));
-    setPitchJa("");
-    setPitchTab("ja");
-    setStep(2);
-    translateToJa(generated);
+    setTplLoading(true);
+    try {
+      const lnk = {...links, songLink: getSongLink()};
+      const rep = targets[0] || {name:"Curator",type:"blog",platform:"Music Platform"};
+      const base = pitchSongTitle ? { ...artist, songTitle: pitchSongTitle } : artist;
+      // 紹介文・主な実績・influences は日本語で入力されることが多く、英語テンプレに
+      // 生挿入すると日英混在になる（顧客報告 2026/5）。差し込み前に英訳しておく。
+      const [descEn, achEn, infEn] = await Promise.all([
+        tr(base.description),
+        tr(base.achievements),
+        tr(base.influences),
+      ]);
+      const pitchArtist = { ...base, description: descEn, achievements: achEn, influences: infEn };
+      const generated = PE.generate(pitchArtist, rep, pitchStyle, lnk, user.name, followers);
+      setPitchText(generated);
+      setEpk(PE.epk(pitchArtist, lnk, followers));
+      setPitchJa("");
+      setPitchTab("ja");
+      setStep(2);
+      translateToJa(generated);
+    } finally {
+      setTplLoading(false);
+    }
   };
 
   const sendAll = async () => {
@@ -2954,7 +2990,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         </div>
       </div>
       <div style={{fontSize:12,color:"#6b6560",textAlign:"center",marginBottom:8,fontFamily:"'DM Sans',sans-serif"}}>AIが英語のプロフェッショナルな紹介文を生成します（約30秒）</div>
-      <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(0)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} disabled={aiLoading} onClick={generateAIPitch}>{aiLoading ? "AI生成中..." : "AIピッチ生成"}</button><button style={css.btnGhost} onClick={generatePitch}>テンプレート</button></div>
+      <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(0)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} disabled={aiLoading || tplLoading} onClick={generateAIPitch}>{aiLoading ? "AI生成中..." : "AIピッチ生成"}</button><button style={css.btnGhost} disabled={aiLoading || tplLoading} onClick={generatePitch}>{tplLoading ? "翻訳中..." : "テンプレート"}</button></div>
     </div>}
 
     {/* ═══ STEP 2 ═══ */}
@@ -2994,7 +3030,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       </div>}
 
       {epk && <details style={{marginBottom:"0.8rem"}}><summary style={{cursor:"pointer",fontSize:"0.78rem",fontWeight:600,color:"#c4956a"}}>EPK（英語・確認用）</summary><pre style={{whiteSpace:"pre-wrap",fontFamily:"inherit",fontSize:"0.74rem",background:"#ffffff",padding:"0.7rem",borderRadius:8,marginTop:6,color:"#6b6560"}}>{epk}</pre></details>}
-      <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(1)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} onClick={()=>setStep(3)}>送信へ →</button><button style={css.btnGhost} onClick={generatePitch}>再生成</button></div>
+      <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(1)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} onClick={()=>setStep(3)}>送信へ →</button><button style={css.btnGhost} disabled={tplLoading} onClick={generatePitch}>{tplLoading ? "翻訳中..." : "再生成"}</button></div>
     </div>}
 
     {/* ═══ STEP 3 ═══ */}

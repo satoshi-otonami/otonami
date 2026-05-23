@@ -121,7 +121,7 @@ export async function POST(request) {
               <tr><td style="padding:8px;color:#666;">件数</td><td style="padding:8px;">${earningIds.length}件</td></tr>
             </table>
             <p style="margin-top:24px;color:#888;font-size:13px;">
-              Supabaseで確認: <a href="https://supabase.com/dashboard/project/jygnerjbzjvdyyjucqbd/editor">テーブルを開く</a>
+              Supabaseで確認: <a href="https://supabase.com/dashboard/project/jroudvjksouqnmlhzhzr/editor">テーブルを開く</a>
             </p>
           </div>
         `,

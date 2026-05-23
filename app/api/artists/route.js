@@ -230,7 +230,7 @@ export async function POST(request) {
             </table>
             <p style="margin-top:24px;color:#888;font-size:13px;">
               Supabaseで確認:
-              <a href="https://supabase.com/dashboard/project/jygnerjbzjvdyyjucqbd/editor">テーブルを開く</a>
+              <a href="https://supabase.com/dashboard/project/jroudvjksouqnmlhzhzr/editor">テーブルを開く</a>
             </p>
           </div>
         `,

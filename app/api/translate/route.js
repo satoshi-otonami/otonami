@@ -64,6 +64,11 @@ export async function POST(request) {
       system:
         'Translate the Japanese text to natural English for international music curators. ' +
         'Keep proper nouns (band names, venue names, song titles, festival names) as-is. ' +
+        'The text is written by the artist about themselves. Japanese frequently omits the subject; ' +
+        'when the subject is implied, render it in the FIRST PERSON ("I", "my", "we", "our") — the artist ' +
+        'is speaking about themselves, NOT a third party. NEVER introduce a third-person subject such as ' +
+        '"he", "she", "the artist", or "they" for the speaker (e.g. 「2010年に結成しました」 → "We formed in 2010", ' +
+        'never "He formed in 2010"). Neutral/passive phrasing is acceptable when it reads naturally. ' +
         'Return ONLY the English translation, no preamble or explanation.',
       messages: [{ role: 'user', content: text }],
     });

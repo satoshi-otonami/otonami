@@ -199,7 +199,17 @@ If Detected Genres are available, weave them naturally into the pitch.
 ${isPositive && (curatorWantsSomber || !curatorWantsPositive) ? 'NOTE: The artist\'s Description states the song is positive/joyful. Even if the raw valence score is moderate, you MUST describe the sound in positive terms (warm, uplifting, bright, joyful). Do NOT translate raw scores into melancholic/introspective/contemplative wording.' : ''}
 ` : '';
 
-    const prompt = `You are an expert music publicist who has successfully pitched hundreds of Japanese artists to international curators, playlist editors, bloggers, and radio hosts. You understand what makes curators open emails, click play, and add tracks.
+    const prompt = `You are helping the artist ${artist.nameEn || artist.name} write a personal pitch email to a music curator, in the artist's own first-person voice. Write AS the artist — not as a PR agency, not as a label, not as a third-party introducer. You understand what makes curators open emails, click play, and add tracks. The output goes straight into the email body, and the artist's own signature is appended afterward.
+
+═══ MANDATORY PERSPECTIVE RULES (HIGHEST PRIORITY — OVERRIDES ALL STYLE GUIDANCE) ═══
+
+1. Write the PITCH in the FIRST PERSON, as if the artist themselves is writing to the curator.
+2. Use "I", "me", "my" for a solo artist; use "we", "our", "us" for a band/group/duo/collective (judge from the profile).
+3. NEVER refer to the artist in the third person. Do NOT use "he", "she", "his", "her", "they" (when it means the artist), "the artist", "this artist", "${artist.nameEn || artist.name}'s track/sound", or any phrasing that introduces the artist as a third party.
+4. The pitch ends with the artist's own signature, so the body MUST read as the artist speaking directly.
+5. CORRECT opening style: "Hi [Curator Name], I'm reaching out from Japan to share my new track…"
+6. INCORRECT — never write like this: "I wanted to introduce you to ${artist.nameEn || artist.name}, whose new track…" / "His track reached…" / "Their sound blends…" / "${artist.nameEn || artist.name} is a Japanese artist who…"
+7. This rule governs the PITCH body only. The EPK bio (after "---EPK---") stays in third person, as is standard for a press-kit bio.
 
 ═══ CRITICAL ANTI-HALLUCINATION RULES (HIGHEST PRIORITY — OVERRIDES ALL OTHER INSTRUCTIONS) ═══
 
@@ -334,29 +344,6 @@ Write a 100-120 word professional bio in third person. Lead with strongest crede
 
 ═══ OUTPUT FORMAT ═══
 Start with "Subject: " line. Then the pitch. Then "---EPK---" separator. Then the EPK bio. Nothing else.`;
-
-    // TEMPORARY DIAGNOSTIC — verify whether curator hallucination is caused
-    // by data leak (founder bio in curator fields) or pure LLM invention.
-    // Remove after verification.
-    try {
-      console.log('[PITCH_CURATOR_DEBUG]', JSON.stringify({
-        curatorName: curator?.name,
-        curatorBio: curator?.bio || '(empty)',
-        curatorBioLength: curator?.bio?.length || 0,
-        curatorGenres: curator?.genres || [],
-        curatorPreferredMoods: curator?.preferredMoods || [],
-        curatorPreferredArtists: curator?.similarArtists?.length
-          ? curator.similarArtists
-          : (curator?.preferredArtists || []),
-        curatorType: curator?.type,
-        curatorPlatform: curator?.platform,
-        curatorRawKeys: curator ? Object.keys(curator) : [],
-        artistDbBioPreview: artistDbBio ? artistDbBio.slice(0, 200) : null,
-        artistDescriptionPreview: artist.description ? artist.description.slice(0, 200) : null,
-      }));
-      console.log('[PITCH_FULL_PROMPT_HEAD]', prompt.substring(0, 5000));
-      console.log('[PITCH_FULL_PROMPT_TAIL]', prompt.substring(Math.max(0, prompt.length - 2000)));
-    } catch (e) { /* never let logging crash the request */ }
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',

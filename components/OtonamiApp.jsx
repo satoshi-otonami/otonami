@@ -108,22 +108,22 @@ const PE = {
   },
   hooks: {
     professional: {
-      playlist: (a,c) => `I'm reaching out on behalf of ${a.nameEn||a.name}, a ${a.genre||""} act from Japan whose sound would be a strong fit for ${c.platform||"your playlist"}.`,
-      blog: (a,c) => `I'd like to introduce ${a.nameEn||a.name} to ${c.platform||"your readers"} — a ${a.genre||""} act from Japan with a sound that's generating real momentum.`,
-      radio: (a,c) => `I'm writing to submit ${a.nameEn||a.name} for airplay consideration on ${c.platform||"your show"}. Their ${(a.genre||"").split(",")[0].trim()} sound from Japan offers something genuinely fresh.`,
-      label: (a,c) => `I'd like to bring ${a.nameEn||a.name} to your attention — a ${a.genre||""} act from Japan with a growing international profile that aligns with ${c.platform||"your roster"}'s direction.`,
-      _: (a,c) => `I'd like to introduce ${a.nameEn||a.name}, a ${a.genre||""} act from Japan that deserves a wider international audience.`,
+      playlist: (a,c) => `I'm ${a.nameEn||a.name}, a ${a.genre||""} artist from Japan, and I think my sound would be a strong fit for ${c.platform||"your playlist"}.`,
+      blog: (a,c) => `I'm ${a.nameEn||a.name}, a ${a.genre||""} artist from Japan, and I'd love to share my music with ${c.platform||"your readers"} — it's been generating real momentum.`,
+      radio: (a,c) => `I'm ${a.nameEn||a.name}, and I'd like to submit my music for airplay consideration on ${c.platform||"your show"}. My ${(a.genre||"").split(",")[0].trim()} sound from Japan offers something genuinely fresh.`,
+      label: (a,c) => `I'm ${a.nameEn||a.name}, a ${a.genre||""} artist from Japan with a growing international profile, and I think my work aligns with ${c.platform||"your roster"}'s direction.`,
+      _: (a,c) => `I'm ${a.nameEn||a.name}, a ${a.genre||""} artist from Japan, and I'd love to share my music with a wider international audience.`,
     },
     casual: {
-      playlist: (a,c) => `Hey! I've been following ${c.platform||"your playlist"} for a while and think ${a.nameEn||a.name} would fit right in — they're a ${a.genre||""} group from Japan with serious groove.`,
-      blog: (a,c) => `Hi — big fan of what you cover on ${c.platform||"your site"}. I think you'd enjoy ${a.nameEn||a.name}, doing exciting things in the ${(a.genre||"").split(",")[0].trim()} space out of Japan.`,
-      _: (a,c) => `Hey! Wanted to share ${a.nameEn||a.name} with you — a ${a.genre||""} act from Japan I think you and your audience would genuinely enjoy.`,
+      playlist: (a,c) => `Hey! I've been following ${c.platform||"your playlist"} for a while and think my music would fit right in — I'm ${a.nameEn||a.name}, making ${a.genre||""} out of Japan with serious groove.`,
+      blog: (a,c) => `Hi — big fan of what you cover on ${c.platform||"your site"}. I'm ${a.nameEn||a.name}, doing exciting things in the ${(a.genre||"").split(",")[0].trim()} space out of Japan, and I think you'd enjoy my music.`,
+      _: (a,c) => `Hey! I wanted to share my music with you — I'm ${a.nameEn||a.name}, a ${a.genre||""} artist from Japan, and I think you and your audience would genuinely enjoy it.`,
     },
     storytelling: {
       _: (a) => {
         const m = {"Energetic":"a wave of sound that hits before you can think — raw energy, precision, and soul all at once","Groovy":"a bass line that locks into your spine, horns that light up the room, and a groove so deep you forget where you are","Dreamy":"that moment late at night when the city quiets down and something beautiful floats through the air","Heavy":"a low rumble that builds into a wall of sound so thick you can almost touch it","Sophisticated":"rare music that rewards every listen — layers that reveal themselves slowly, melodies that linger","Emotional":"music that doesn't need translation — it reaches somewhere words can't","Cinematic":"a soundtrack to a film that hasn't been made yet — vivid, sweeping, unforgettable","Explosive":"controlled chaos that somehow makes perfect sense — the musical equivalent of fireworks","Technical":"the kind of playing that makes other musicians stop and stare, then start dancing"};
         const mood1 = (a.mood||"").split(",")[0].trim();
-        return "Imagine " + (m[mood1] || "a sound that transcends borders — no context needed to feel it") + `. That's ${a.nameEn||a.name}.`;
+        return "Imagine " + (m[mood1] || "a sound that transcends borders — no context needed to feel it") + `. That's the music I make as ${a.nameEn||a.name}.`;
       },
     },
   },
@@ -133,7 +133,7 @@ const PE = {
       const d = a.description.replace(/。/g, ". ").replace(/、/g, ", ").replace(/\s+/g, " ").trim();
       if (d.length > 10) p.push(d.length > 200 ? d.substring(0, 200).replace(/\.[^.]*$/, ".") : d);
     }
-    if (a.mood && a.genre) p.push(`Their sound blends ${a.genre} with ${a.mood.toLowerCase()} energy${a.influences ? ", channeling the spirit of " + a.influences : ""}.`);
+    if (a.mood && a.genre) p.push(`My sound blends ${a.genre} with ${a.mood.toLowerCase()} energy${a.influences ? ", channeling the spirit of " + a.influences : ""}.`);
     else if (a.influences) p.push(`For fans of ${a.influences}.`);
     if (a.achievements) p.push(`Credentials: ${a.achievements}.`);
     // Social proof with follower counts
@@ -153,15 +153,15 @@ const PE = {
     if (fol.facebook && lnk.facebook) parts.push(fmt(fol.facebook) + " Facebook followers");
     if (fol.soundcloud && lnk.soundcloud) parts.push(fmt(fol.soundcloud) + " SoundCloud followers");
     if (parts.length === 0) return "";
-    if (parts.length === 1) return `With ${parts[0]}, they've built a dedicated audience organically.`;
-    return `Their online presence includes ${parts.join(", ")} — a growing, engaged community.`;
+    if (parts.length === 1) return `With ${parts[0]}, I've built a dedicated audience organically.`;
+    return `My online presence includes ${parts.join(", ")} — a growing, engaged community.`;
   },
   cta: {
-    playlist: (a, lnk) => `Give "${a.songTitle||"their latest"}" a listen${lnk.songLink ? ": " + lnk.songLink : lnk.spotify ? ": " + lnk.spotify : ""}. If it fits, a playlist add would mean the world.`,
-    blog: (a, lnk) => `Would you be open to checking out "${a.songTitle||"their latest"}"${lnk.songLink || lnk.spotify ? " (" + (lnk.songLink||lnk.spotify) + ")" : ""}? Happy to arrange an interview or provide assets for a feature.`,
-    radio: (a, lnk) => `Their track "${a.songTitle||"latest release"}" is ready for airplay${lnk.songLink || lnk.spotify ? " — " + (lnk.songLink||lnk.spotify) : ""}. It would be an honor to hear it on your show.`,
-    label: (a, lnk) => `I'd welcome the chance to discuss ${a.nameEn||a.name}'s potential${lnk.songLink || lnk.spotify ? ". Start here: " + (lnk.songLink||lnk.spotify) : ""}.`,
-    _: (a, lnk) => `Give "${a.songTitle||"their latest"}" a listen${lnk.songLink || lnk.spotify ? ": " + (lnk.songLink||lnk.spotify) : ""} — I think it'll resonate.`,
+    playlist: (a, lnk) => `Give "${a.songTitle||"my latest"}" a listen${lnk.songLink ? ": " + lnk.songLink : lnk.spotify ? ": " + lnk.spotify : ""}. If it fits, a playlist add would mean the world.`,
+    blog: (a, lnk) => `Would you be open to checking out "${a.songTitle||"my latest"}"${lnk.songLink || lnk.spotify ? " (" + (lnk.songLink||lnk.spotify) + ")" : ""}? I'd be happy to arrange an interview or provide assets for a feature.`,
+    radio: (a, lnk) => `My track "${a.songTitle||"latest release"}" is ready for airplay${lnk.songLink || lnk.spotify ? " — " + (lnk.songLink||lnk.spotify) : ""}. It would be an honor to hear it on your show.`,
+    label: (a, lnk) => `I'd welcome the chance to discuss my music further${lnk.songLink || lnk.spotify ? ". Start here: " + (lnk.songLink||lnk.spotify) : ""}.`,
+    _: (a, lnk) => `Give "${a.songTitle||"my latest"}" a listen${lnk.songLink || lnk.spotify ? ": " + (lnk.songLink||lnk.spotify) : ""} — I think it'll resonate.`,
   },
   closes: {
     professional: ["Thank you for your time and consideration.", "Looking forward to hearing your thoughts.", "I appreciate you taking the time to listen."],
@@ -753,7 +753,22 @@ const EMPTY_LINKS    = {spotify:"",apple:"",youtube:"",soundcloud:"",instagram:"
 const EMPTY_FOLLOWERS = {spotify:0,youtube:0,soundcloud:0,instagram:0,twitter:0,facebook:0};
 
 function loadArtistDraft() {
-  try { const r = sessionStorage.getItem("otonami_artist_draft"); return r ? JSON.parse(r) : null; } catch { return null; }
+  try {
+    const r = sessionStorage.getItem("otonami_artist_draft");
+    if (!r) return null;
+    const draft = JSON.parse(r);
+    // 2026/5/25: discard drafts contaminated by the (now-hidden) sample picker.
+    // Users who tapped サンプル had a DEMO_ARTISTS entry written into their persisted
+    // draft with no undo; without this it re-hydrates into the form on every visit and
+    // blocks their own input (reported by chihiro sato). Match on the sample's long,
+    // distinctive description so genuine user input is never discarded by accident.
+    const desc = draft?.artist?.description;
+    if (desc && DEMO_ARTISTS.some(d => d.description && d.description === desc)) {
+      sessionStorage.removeItem("otonami_artist_draft");
+      return null;
+    }
+    return draft;
+  } catch { return null; }
 }
 
 function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, setCredits, notify, updatePitch, refreshPitches, loggedInArtist}) {
@@ -2091,6 +2106,12 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const [validationError, setValidationError] = useState(false);
   const [pitchSent, setPitchSent] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  // 2026/5/25: sample picker hidden (continuation of case D / template-button hide).
+  // Reported by chihiro sato — the DEMO_ARTISTS picker overwrote the persisted draft
+  // with no undo, so sample content stuck across navigation. useSample / DEMO_ARTISTS
+  // are kept for internal use (DEMO_ARTISTS still feeds the genre/mood resolver); flip
+  // this flag to re-expose the picker if ever needed.
+  const SHOW_SAMPLE_PICKER = false;
   const sendingRef = useRef(false); // synchronous double-submit guard (survives render timing)
   // Scroll to top when entering the pitch flow or moving between steps so
   // the user starts each step at the form header, not wherever the curator
@@ -2731,13 +2752,13 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           <span style={{fontSize:"0.62rem",color:"#10b981",fontWeight:600}}>✓ 入力内容を保持中（画面移動しても消えません）</span>
         ) : <span/>}
         <div style={{display:"flex",gap:6}}>
-          <button style={css.btnSm} onClick={()=>setShowSamples(!showSamples)}>サンプル</button>
+          {SHOW_SAMPLE_PICKER && <button style={css.btnSm} onClick={()=>setShowSamples(!showSamples)}>サンプル</button>}
           {(artist.name || artist.songLink || links.spotify || links.youtube) && (
             <button style={{...css.btnSm,color:"#ef4444",border:"1px solid #fecaca"}} onClick={()=>{if(window.confirm("入力内容をクリアしますか？"))clearArtistDraft();}}>クリア</button>
           )}
         </div>
       </div>
-      {showSamples && <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:"0.8rem"}}>
+      {SHOW_SAMPLE_PICKER && showSamples && <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:"0.8rem"}}>
         {DEMO_ARTISTS.map(a => <button key={a.id} style={{display:"flex",alignItems:"center",gap:6,padding:"0.4rem",background:"#f0ede6",border:"1px solid rgba(0,0,0,0.06)",borderRadius:8,cursor:"pointer",fontFamily:"inherit",textAlign:"left"}} onClick={()=>{useSample(a);setShowSamples(false);}}><span style={{fontSize:"1rem"}}>{a.image}</span><div><div style={{fontWeight:600,fontSize:"0.75rem",color:"#1a1a1a"}}>{a.name}</div><div style={{fontSize:"0.62rem",color:"#9a958e"}}>{a.genre}</div></div></button>)}
       </div>}
 

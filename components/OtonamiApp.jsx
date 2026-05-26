@@ -2121,6 +2121,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   }, [step]);
   const targets = curators.filter(c => selected.includes(c.id));
   const cost = targets.reduce((sum, c) => sum + (c.creditCost || 2), 0);
+  const remaining = credits - cost;
+  const insufficientCredits = credits < cost; // mirrors the server RPC floor + sendAll() guard
   // Build effective track for match scoring (same logic as CuratorBrowser)
   const effectiveTrack = useMemo(() => {
     const trackGenre = trackData?.genre || artist?.genre || '';
@@ -3011,7 +3013,11 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       </div>
       <div style={{fontSize:14,fontWeight:700,marginBottom:5,borderLeft:"3px solid #c4956a",paddingLeft:10}}>送信先 ({targets.length}人)</div>
       {targets.map(c => <div key={c.id} style={{display:"flex",alignItems:"center",gap:6,padding:"0.4rem 0",borderBottom:"1px solid rgba(0,0,0,0.05)"}}><span>{c.avatar}</span><span style={{fontWeight:500,fontSize:14,color:"#1a1a1a"}}>{c.name}</span><span style={{fontSize:13,color:"#6b6560"}}>{c.platform}</span><span style={{fontSize:13,color:"#9a958e",marginLeft:"auto",fontStyle:"italic"}}>{c.type}</span></div>)}
-      <div style={{background:"linear-gradient(135deg, rgba(196,149,106,0.12), rgba(196,149,106,0.06))",borderLeft:"3px solid #c4956a",borderRadius:4,padding:"12px 16px",marginTop:"0.6rem",fontSize:14,color:"#c4956a",fontWeight:500}}>消費 {cost}cr（残: {credits}→{credits-cost}）</div>
+      {insufficientCredits ? (
+        <div style={{background:"rgba(232,93,58,0.06)",borderLeft:"3px solid #e85d3a",borderRadius:4,padding:"12px 16px",marginTop:"0.6rem",fontSize:14,color:"#e85d3a",fontWeight:600}}>クレジット不足: あと {cost-credits}cr 必要（残 {credits}cr / 必要 {cost}cr）<div style={{fontSize:12,color:"#6b6560",fontWeight:400,marginTop:6}}><button onClick={()=>setPage("shop")} style={{background:"transparent",border:"none",color:"#c4956a",textDecoration:"underline",cursor:"pointer",padding:0,font:"inherit"}}>クレジットを追加購入</button>するか、送信先を減らしてください。</div></div>
+      ) : (
+        <div style={{background:"linear-gradient(135deg, rgba(196,149,106,0.12), rgba(196,149,106,0.06))",borderLeft:"3px solid #c4956a",borderRadius:4,padding:"12px 16px",marginTop:"0.6rem",fontSize:14,color:"#c4956a",fontWeight:500}}>消費 {cost}cr（残: {credits}→{remaining}）</div>
+      )}
       <div style={{margin:"0.8rem 0",padding:"0.7rem",background:"rgba(196,149,106,0.06)",borderRadius:10,border:"1px solid rgba(196,149,106,0.3)"}}>
         <div style={{fontSize:14,fontWeight:700,color:"#c4956a",marginBottom:6,borderLeft:"3px solid #c4956a",paddingLeft:10}}>ピッチスタイル</div>
         <div style={{display:"flex",gap:6}}>
@@ -3086,9 +3092,14 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
             <div style={{width:48,height:2,background:"#c4956a",borderRadius:1,margin:"0 auto 14px"}}/>
             <h2 style={{fontSize:"1.15rem",fontWeight:800,margin:"0 0 0.3rem",color:"#1a1a1a"}}>送信確認</h2>
             <p style={{fontSize:"0.82rem",color:"#6b6560"}}>{targets.length}人に個別最適化ピッチを送信</p>
-            <p style={{fontSize:14,color:"#c4956a",marginTop:8,fontWeight:600}}>消費 {cost}cr（残: {credits}→{credits-cost}）</p>
+            {insufficientCredits ? (
+              <p style={{fontSize:14,color:"#e85d3a",marginTop:8,fontWeight:700}}>クレジット不足: あと {cost-credits}cr 必要（残 {credits}cr / 必要 {cost}cr）</p>
+            ) : (
+              <p style={{fontSize:14,color:"#c4956a",marginTop:8,fontWeight:600}}>消費 {cost}cr（残: {credits}→{remaining}）</p>
+            )}
           </div>
-          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button disabled={isPreLaunch() || isSending} style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem",opacity:(isPreLaunch()||isSending)?0.5:1,cursor:(isPreLaunch()||isSending)?"not-allowed":"pointer",background:(isPreLaunch()||isSending)?"#e5e2dc":undefined,color:(isPreLaunch()||isSending)?"#6b6560":undefined}} onClick={sendAll}>{isPreLaunch() ? `${LAUNCH_DATE_LABEL_JA}のローンチ後に送信可能` : (isSending ? "送信中…" : `送信 (${cost}クレジット)`)}</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
+          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button disabled={isPreLaunch() || isSending || insufficientCredits} style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem",opacity:(isPreLaunch()||isSending||insufficientCredits)?0.5:1,cursor:(isPreLaunch()||isSending||insufficientCredits)?"not-allowed":"pointer",background:(isPreLaunch()||isSending||insufficientCredits)?"#e5e2dc":undefined,color:(isPreLaunch()||isSending||insufficientCredits)?"#6b6560":undefined}} onClick={sendAll}>{isPreLaunch() ? `${LAUNCH_DATE_LABEL_JA}のローンチ後に送信可能` : insufficientCredits ? `クレジット不足（あと ${cost-credits}cr）` : (isSending ? "送信中…" : `送信 (${cost}クレジット)`)}</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
+          {insufficientCredits && <p style={{fontSize:13,color:"#6b6560",marginTop:10,textAlign:"center",lineHeight:1.6}}><button onClick={()=>setPage("shop")} style={{background:"transparent",border:"none",color:"#c4956a",textDecoration:"underline",cursor:"pointer",padding:0,font:"inherit"}}>クレジットを追加購入</button>するか、送信先を減らしてください。</p>}
         </div>
       )}
     </div>}

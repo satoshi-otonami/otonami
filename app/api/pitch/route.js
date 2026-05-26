@@ -210,6 +210,7 @@ ${isPositive && (curatorWantsSomber || !curatorWantsPositive) ? 'NOTE: The artis
 5. CORRECT opening style: "Hi [Curator Name], I'm reaching out from Japan to share my new track…"
 6. INCORRECT — never write like this: "I wanted to introduce you to ${artist.nameEn || artist.name}, whose new track…" / "His track reached…" / "Their sound blends…" / "${artist.nameEn || artist.name} is a Japanese artist who…"
 7. This rule governs the PITCH body only. The EPK bio (after "---EPK---") stays in third person, as is standard for a press-kit bio.
+8. The artist's achievements (provided in the ARTIST PROFILE below) describe the ARTIST/band's overall career — past performances, awards, total streams across their catalog. Do NOT attribute these to the specific track being pitched unless the achievement explicitly names this track.
 
 ═══ CRITICAL ANTI-HALLUCINATION RULES (HIGHEST PRIORITY — OVERRIDES ALL OTHER INSTRUCTIONS) ═══
 
@@ -246,7 +247,10 @@ Mood/Sound: ${artist.mood || 'N/A'}
 ${artist.description ? `Description — THE ARTIST'S OWN PITCH MESSAGE FOR THIS SUBMISSION (PRIMARY SOURCE — every concrete fact, number, award, ambition, and personal tone here MUST appear in the pitch body. This supersedes Bio when in conflict. May be in Japanese — extract meaning, NEVER quote raw Japanese):\n${artist.description}\n` : (artistDbBio ? '' : 'Description: N/A')}${artistDbBio ? `Artist Bio — supporting context from the artist's profile (use for additional credibility ONLY when it doesn't crowd out the Description above. May be in Japanese — extract meaning, NEVER quote raw Japanese):\n${artistDbBio}\n` : ''}
 Key Track: ${artist.songTitle || 'N/A'}
 Influences/Similar: ${artist.influences || artistDbInfluences || 'N/A'}
-Achievements: ${artist.achievements || 'None listed'}
+Achievements — the ARTIST/band's own career achievements & stats. These belong to the ARTIST/band, NOT to this specific track.
+Attribute as "I/we have…", "We've performed…", "Our band has…" — NEVER as "this track has…", "the track reached…", "this song features…".
+The only exception is if the achievement explicitly names this track (e.g., "this single charted #5 in Japan"), in which case track attribution is fine.
+${artist.achievements || 'None listed'}
 ${artistDbHotNews ? `Latest Activity: ${artistDbHotNews}` : ''}
 ${socialLines.length > 0 ? `Social Proof: ${socialLines.join(', ')}` : ''}
 ${linkLines.length > 0 ? `Links:\n${linkLines.join('\n')}` : ''}

@@ -2913,8 +2913,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           return null;
         })()}
       </div>
-      <div style={{marginTop:5}}><label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>主な実績・数値</label><input style={css.input} value={artist.achievements} onChange={e=>setF("achievements",e.target.value)} placeholder="SXSW 10年連続出演, Spotify月間50万再生"/></div>
-      <div style={{marginTop:4}}><label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>紹介文 <span style={{color:"#e85d3a"}}>*</span>（日本語OK）</label><textarea style={{...css.input,minHeight:60,resize:"vertical"}} value={artist.description} onChange={e=>setF("description",e.target.value)} placeholder="音楽性、特徴、ユニークなポイント"/></div>
+      <div style={{marginTop:5}}><label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>主な実績・数値<span style={{fontSize:"0.6rem",color:"#a09c94",fontWeight:400,marginLeft:6}}>（アーティスト本人・band の活動歴）</span></label><input style={css.input} value={artist.achievements} onChange={e=>setF("achievements",e.target.value)} placeholder="SXSW 10年連続出演, Spotify月間50万再生"/>
+        <div style={{fontSize:"0.62rem",color:"#9a958e",marginTop:4,lineHeight:1.5}}>※ ここに入力した<strong>あなた自身（または band）の活動実績・数値</strong>を、AI が欧米キュレーター向けの自然な英語に意訳します。楽曲ではなく<strong>アーティストとしての実績欄</strong>です。</div></div>
+      <div style={{marginTop:4}}><label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>紹介文 <span style={{color:"#e85d3a"}}>*</span>（日本語OK）</label><textarea style={{...css.input,minHeight:60,resize:"vertical"}} value={artist.description} onChange={e=>setF("description",e.target.value)} placeholder="音楽性、特徴、ユニークなポイント"/>
+        <div style={{fontSize:"0.62rem",color:"#9a958e",marginTop:4,lineHeight:1.5}}>※ あなたの言葉を、AI が欧米キュレーター向けの自然な英語に意訳します（完全一致の直訳ではありません）。送信前のレビュー画面で直接編集できます。</div></div>
 
       {/* ── SNS & Links + Followers ── */}
       <div style={{marginTop:"0.8rem",background:"rgba(196,149,106,0.06)",borderRadius:12,padding:"0.8rem",border:"1px solid rgba(196,149,106,0.3)"}}>
@@ -3025,6 +3027,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     {step === 2 && <div>
       <h2 style={{fontSize:18,fontWeight:500,marginBottom:"0.4rem",color:"#1a1a1a",fontFamily:"'DM Sans',sans-serif"}}>ピッチレビュー</h2>
       <div style={{fontSize:13,color:"#6b6560",marginBottom:"0.7rem",fontFamily:"'DM Sans',sans-serif"}}>編集可。送信時は英語版が使われます。</div>
+
+      <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.2)",borderRadius:8,padding:"0.6rem 0.8rem",marginBottom:"0.7rem",fontSize:"0.72rem",lineHeight:1.6,color:"#6b6560"}}>💡 <strong>AI が欧米キュレーター向けに意訳しています。</strong>入力した日本語と表現が異なる場合がありますが、これは海外のキュレーターに自然に伝わる英語に最適化するための仕様です。気になる箇所は<strong>直接編集できます</strong>（編集内容がそのまま送信されます）。</div>
 
       {/* Tab bar */}
       <div style={{display:"flex",gap:0,marginBottom:0,borderRadius:"10px 10px 0 0",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)",borderBottom:"none"}}>

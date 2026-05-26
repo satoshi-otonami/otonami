@@ -1890,7 +1890,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
               </div>
             </div>
             {/* Right: match gauge + select button */}
-            <div onClick={e=>{e.stopPropagation();toggle(c.id);}} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,flexShrink:0,borderRadius:10,padding:'6px',transition:'background 0.15s',cursor:'pointer'}} title={on?'選択解除':'選択する'}>
+            <div onClick={e=>{e.stopPropagation();toggle(c.id);}} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,flexShrink:0,borderRadius:10,padding:'6px',transition:'background 0.15s',cursor:'pointer',touchAction:'manipulation'}} title={on?'選択解除':'選択する'}>
               {ms != null && mcs ? (
                 <div style={{position:'relative',width:mcs.size,height:mcs.size,display:'flex',alignItems:'center',justifyContent:'center'}}>
                   <svg width={mcs.size} height={mcs.size} style={{position:'absolute',transform:'rotate(-90deg)'}}>
@@ -1963,7 +1963,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       const matchingGenres = artistGenres.length > 0
         ? (dc.genres || []).filter(g => artistGenres.includes(g.toLowerCase()))
         : [];
-      return <div onClick={()=>setDetailCurator(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.65)',backdropFilter:'blur(8px)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}}>
+      return <div onClick={()=>setDetailCurator(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.72)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}}>
         <div onClick={e=>e.stopPropagation()} style={{background:'#ffffff',borderRadius:16,border:'1px solid rgba(0,0,0,0.06)',maxWidth:560,width:'100%',maxHeight:'90vh',overflowY:'auto',animation:'curatorModalIn 0.2s ease'}}>
 
           {/* Header */}
@@ -2078,7 +2078,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
           {/* Footer */}
           <div style={{padding:'16px 24px',borderTop:'1px solid rgba(0,0,0,0.05)',display:'flex',justifyContent:'flex-end',gap:12}}>
             <button onClick={()=>setDetailCurator(null)} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.12)',color:'#6b6560',borderRadius:8,padding:'10px 20px',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>閉じる</button>
-            <button onClick={()=>{toggle(dc.id);setDetailCurator(null);}} style={{background:dcOn?'transparent':'#c4956a',border:dcOn?'1px solid #ef4444':'none',color:dcOn?'#ef4444':'#fff',borderRadius:8,padding:'10px 20px',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>
+            <button onClick={()=>{toggle(dc.id);setDetailCurator(null);}} style={{background:dcOn?'transparent':'#c4956a',border:dcOn?'1px solid #ef4444':'none',color:dcOn?'#ef4444':'#fff',borderRadius:8,padding:'10px 20px',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',touchAction:'manipulation'}}>
               {dcOn ? '選択解除' : `選択 · ${dc.creditCost||2}クレジット`}
             </button>
           </div>

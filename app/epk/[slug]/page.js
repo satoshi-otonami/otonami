@@ -2,6 +2,13 @@ import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import { getPublicEpk } from '@/lib/epk';
 import EditorialDarkTheme from '@/components/epk/themes/EditorialDark';
+import SunsetCitypopTheme from '@/components/epk/themes/SunsetCitypop';
+
+// Theme registry, keyed by artist_epks.theme. Unknown -> editorial_dark.
+const THEMES = {
+  editorial_dark: EditorialDarkTheme,
+  sunset_citypop: SunsetCitypopTheme,
+};
 
 // Dedupe the DB fetch across generateMetadata() + the page render.
 const loadEpk = cache((slug) => getPublicEpk(slug));
@@ -43,6 +50,6 @@ export async function generateMetadata({ params }) {
 export default async function EpkPage({ params }) {
   const data = await loadEpk(params.slug);
   if (!data) notFound();
-  // Phase 1: editorial_dark only; other themes fall back to the same layout.
-  return <EditorialDarkTheme data={data} />;
+  const Theme = THEMES[data.epk?.theme] || EditorialDarkTheme;
+  return <Theme data={data} />;
 }

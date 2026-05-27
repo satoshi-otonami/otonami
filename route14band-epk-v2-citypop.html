@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROUTE14band — EPK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300..700&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #FFF6E9;
+  --peach: #FFE3D1;
+  --sunset: #FFAA8C;
+  --coral: #FF5E5E;
+  --hot-pink: #E8458F;
+  --magenta: #C9388C;
+  --royal: #2A4BC9;
+  --sky: #6FA8FF;
+  --gold: #F5B83A;
+  --ink: #1A1230;
+  --ink-soft: #2D1B4E;
+  --muted: #786C8A;
+  --line: rgba(26, 18, 48, 0.12);
+  --line-strong: rgba(26, 18, 48, 0.25);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Topbar */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 32px;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 500;
+  mix-blend-mode: difference;
+  color: var(--cream);
+}
+.topbar-left { display: flex; gap: 20px; align-items: center; }
+.topbar .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--coral);
+  display: inline-block;
+  margin-right: 8px;
+  animation: pulse 2s infinite;
+  mix-blend-mode: normal;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.topbar a { color: inherit; text-decoration: none; opacity: 0.8; }
+.topbar a:hover { opacity: 1; }
+
+.lang-toggle {
+  display: inline-flex;
+  border: 1px solid currentColor;
+  border-radius: 100px;
+  overflow: hidden;
+  opacity: 0.8;
+}
+.lang-toggle button {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  padding: 4px 12px;
+  cursor: pointer;
+  opacity: 0.5;
+}
+.lang-toggle button.active { background: currentColor; opacity: 1; }
+.lang-toggle button.active span { color: var(--ink); mix-blend-mode: difference; }
+
+/* ============ HERO ============ */
+.hero {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 80% 20%, rgba(255, 94, 94, 0.9) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 80% at 10% 90%, rgba(232, 69, 143, 0.85) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 50% 50%, rgba(245, 184, 58, 0.4) 0%, transparent 70%),
+    linear-gradient(180deg, #FFB18C 0%, #FF8FA8 40%, #C9388C 100%);
+  color: var(--cream);
+  display: grid;
+  grid-template-rows: 1fr auto;
+  padding: 100px 40px 40px;
+}
+
+/* Grain texture overlay */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.95 0 0 0 0 0.85 0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* Sun shape */
+.hero-sun {
+  position: absolute;
+  top: 20%;
+  right: -10%;
+  width: 70vh;
+  height: 70vh;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--gold) 0%, var(--coral) 50%, transparent 70%);
+  opacity: 0.6;
+  filter: blur(20px);
+}
+
+/* Horizon grid lines (citypop vibe) */
+.hero-grid {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 35%;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(26, 18, 48, 0.4) 100%),
+    repeating-linear-gradient(180deg, transparent 0, transparent 20px, rgba(255, 246, 233, 0.15) 20px, rgba(255, 246, 233, 0.15) 21px),
+    repeating-linear-gradient(90deg, transparent 0, transparent 8%, rgba(255, 246, 233, 0.15) 8%, rgba(255, 246, 233, 0.15) calc(8% + 1px));
+  transform: perspective(600px) rotateX(50deg);
+  transform-origin: top;
+  opacity: 0.7;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  align-self: center;
+}
+
+.kicker {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 18px;
+  border: 1px solid rgba(255, 246, 233, 0.5);
+  border-radius: 100px;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 246, 233, 0.1);
+  animation: fadeUp 0.8s ease 0.2s both;
+}
+.kicker::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.hero h1 {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: clamp(72px, 14vw, 220px);
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  margin-bottom: 32px;
+  animation: fadeUp 1.2s ease 0.3s both;
+}
+.hero h1 .line2 {
+  display: block;
+  font-style: italic;
+  color: var(--gold);
+  font-size: 0.85em;
+  margin-top: 8px;
+}
+
+.hero-tagline {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: clamp(22px, 2.5vw, 32px);
+  font-weight: 400;
+  line-height: 1.3;
+  max-width: 640px;
+  margin-bottom: 48px;
+  animation: fadeUp 1s ease 0.5s both;
+}
+.hero-tagline em {
+  font-style: normal;
+  color: var(--gold);
+}
+
+.hero-cta-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  animation: fadeUp 1s ease 0.7s both;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--cream);
+  color: var(--ink);
+  padding: 16px 28px;
+  border-radius: 100px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  transition: transform 0.3s ease;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-primary:hover { transform: translateY(-2px); }
+.btn-primary::after {
+  content: '→';
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+.btn-primary:hover::after { transform: translateX(4px); }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 246, 233, 0.15);
+  backdrop-filter: blur(10px);
+  color: var(--cream);
+  padding: 16px 28px;
+  border-radius: 100px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(255, 246, 233, 0.4);
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-ghost:hover { background: rgba(255, 246, 233, 0.25); }
+
+/* Hero bottom ticker */
+.hero-ticker {
+  position: relative;
+  z-index: 3;
+  border-top: 1px solid rgba(255, 246, 233, 0.3);
+  border-bottom: 1px solid rgba(255, 246, 233, 0.3);
+  padding: 18px 0;
+  margin-top: 80px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.hero-ticker-inner {
+  display: inline-block;
+  animation: scroll-x 30s linear infinite;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 18px;
+}
+.hero-ticker-inner span {
+  margin-right: 48px;
+}
+.hero-ticker-inner span::after {
+  content: '✦';
+  margin-left: 48px;
+  color: var(--gold);
+  font-style: normal;
+}
+@keyframes scroll-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ SECTIONS ============ */
+section {
+  padding: 120px 40px;
+  position: relative;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.section-num {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--coral);
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.section-label {
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink);
+  opacity: 0.6;
+  margin-bottom: 32px;
+  font-weight: 500;
+}
+
+.section-h2 {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: clamp(48px, 7vw, 96px);
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  margin-bottom: 60px;
+  color: var(--ink);
+}
+.section-h2 em {
+  font-style: italic;
+  background: linear-gradient(120deg, var(--coral), var(--hot-pink), var(--magenta));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ============ PICKUP TRACK ============ */
+.pickup { padding-top: 100px; }
+
+.pickup-card {
+  background: linear-gradient(135deg, #FFD9C7 0%, #FFB8C8 50%, #E8A8DA 100%);
+  border-radius: 24px;
+  padding: 56px;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  box-shadow: 0 30px 80px rgba(232, 69, 143, 0.2);
+}
+
+/* Decorative shapes */
+.pickup-card::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, var(--gold) 0%, transparent 70%);
+  opacity: 0.6;
+}
+.pickup-card::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: -80px;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, var(--royal) 0%, transparent 70%);
+  opacity: 0.3;
+}
+
+.pickup-meta {
+  position: relative;
+  z-index: 2;
+  color: var(--ink);
+}
+
+.pickup-tag {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding: 6px 14px;
+  background: var(--cream);
+  border-radius: 100px;
+  margin-bottom: 28px;
+  font-weight: 600;
+}
+
+.pickup-title {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: clamp(56px, 8vw, 112px);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  margin-bottom: 16px;
+  color: var(--ink);
+}
+.pickup-title em {
+  font-style: italic;
+  color: var(--magenta);
+}
+
+.pickup-feat {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 24px;
+  color: var(--ink-soft);
+  margin-bottom: 28px;
+}
+
+.pickup-desc {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin-bottom: 36px;
+  max-width: 480px;
+}
+
+.pickup-vibes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+.vibe-tag {
+  font-size: 12px;
+  padding: 8px 16px;
+  background: rgba(26, 18, 48, 0.08);
+  color: var(--ink);
+  border-radius: 100px;
+  font-weight: 500;
+}
+
+.play-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--ink);
+  color: var(--cream);
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  padding: 16px 28px;
+  border-radius: 100px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: transform 0.3s ease;
+}
+.play-button:hover { transform: scale(1.03); }
+.play-button .icon {
+  width: 22px;
+  height: 22px;
+  background: var(--coral);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.play-button .icon::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 6px solid var(--cream);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  margin-left: 2px;
+}
+
+.pickup-visual {
+  position: relative;
+  z-index: 2;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, var(--royal) 0%, var(--magenta) 50%, var(--coral) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+/* Animated cassette / album visual */
+.cassette {
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--cream) 0%, var(--cream) 18%, var(--ink) 19%, var(--ink) 24%, #2D1B4E 25%, #2D1B4E 100%);
+  position: relative;
+  animation: spin 8s linear infinite;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+.cassette::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, transparent 0, transparent 3px, rgba(255,246,233,0.05) 3px, rgba(255,246,233,0.05) 5px);
+}
+.cassette::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 8px; height: 8px;
+  background: var(--coral);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.waveform-overlay {
+  position: absolute;
+  bottom: 32px;
+  left: 32px;
+  right: 32px;
+  height: 50px;
+  display: flex;
+  align-items: end;
+  gap: 4px;
+  z-index: 2;
+}
+.waveform-overlay .bar {
+  flex: 1;
+  background: var(--cream);
+  border-radius: 2px;
+  opacity: 0.95;
+  animation: wave 1.5s ease-in-out infinite;
+}
+.waveform-overlay .bar:nth-child(odd) { background: var(--gold); }
+.waveform-overlay .bar:nth-child(3n) { background: var(--coral); }
+.waveform-overlay .bar:nth-child(1) { animation-delay: 0s; }
+.waveform-overlay .bar:nth-child(2) { animation-delay: 0.1s; }
+.waveform-overlay .bar:nth-child(3) { animation-delay: 0.2s; }
+.waveform-overlay .bar:nth-child(4) { animation-delay: 0.3s; }
+.waveform-overlay .bar:nth-child(5) { animation-delay: 0.05s; }
+.waveform-overlay .bar:nth-child(6) { animation-delay: 0.15s; }
+.waveform-overlay .bar:nth-child(7) { animation-delay: 0.25s; }
+.waveform-overlay .bar:nth-child(8) { animation-delay: 0.35s; }
+.waveform-overlay .bar:nth-child(9) { animation-delay: 0.12s; }
+.waveform-overlay .bar:nth-child(10) { animation-delay: 0.22s; }
+.waveform-overlay .bar:nth-child(11) { animation-delay: 0.32s; }
+.waveform-overlay .bar:nth-child(12) { animation-delay: 0.18s; }
+@keyframes wave {
+  0%, 100% { height: 25%; }
+  50% { height: 95%; }
+}
+
+/* ============ BIO ============ */
+.bio {
+  background: var(--peach);
+  position: relative;
+}
+
+.bio-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.bio-sidebar { position: sticky; top: 100px; }
+
+.pull-quote {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 36px;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 24px;
+  letter-spacing: -0.01em;
+}
+.pull-quote em {
+  font-style: normal;
+  background: linear-gradient(120deg, var(--coral), var(--magenta));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.pull-quote-attr {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.bio-jp { display: none; }
+.bio-en.hidden, .bio-jp.hidden { display: none; }
+
+.bio-body {
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  max-width: 640px;
+}
+.bio-body p { margin-bottom: 24px; }
+.bio-body em {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 1.1em;
+  color: var(--magenta);
+}
+
+.members-block {
+  margin-top: 56px;
+  padding-top: 40px;
+  border-top: 1px solid var(--line);
+}
+.members-label {
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+.members-list {
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+.members-list li {
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  color: var(--ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+.members-list li span {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--coral);
+  font-weight: 600;
+}
+
+/* ============ DISCOGRAPHY ============ */
+.disco-list { border-top: 1px solid var(--line-strong); }
+
+.disco-item {
+  display: grid;
+  grid-template-columns: 40px 70px 1fr auto;
+  gap: 28px;
+  align-items: center;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.disco-item:hover {
+  padding-left: 16px;
+  background: linear-gradient(90deg, rgba(255, 94, 94, 0.05), transparent);
+}
+.disco-item:hover .disco-play {
+  background: var(--coral);
+  color: var(--cream);
+  border-color: var(--coral);
+}
+
+.disco-num {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--muted);
+}
+.disco-art {
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.disco-item:nth-child(1) .disco-art { background: linear-gradient(135deg, var(--coral), var(--hot-pink)); }
+.disco-item:nth-child(2) .disco-art { background: linear-gradient(135deg, var(--gold), var(--coral)); }
+.disco-item:nth-child(3) .disco-art { background: linear-gradient(135deg, var(--royal), var(--magenta)); }
+.disco-item:nth-child(4) .disco-art { background: linear-gradient(135deg, var(--hot-pink), var(--royal)); }
+.disco-item:nth-child(5) .disco-art { background: linear-gradient(135deg, var(--magenta), var(--gold)); }
+
+.disco-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  color: var(--ink);
+}
+.disco-title small {
+  display: block;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+
+.disco-play {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.disco-play::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 9px solid currentColor;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  margin-left: 3px;
+}
+
+/* ============ SOUND & MOOD ============ */
+.sound {
+  background: linear-gradient(180deg, var(--cream) 0%, var(--peach) 100%);
+}
+
+.mood-headline {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(48px, 7vw, 96px);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  margin-bottom: 80px;
+  max-width: 900px;
+}
+.mood-headline em {
+  font-style: italic;
+  background: linear-gradient(120deg, var(--coral), var(--hot-pink), var(--magenta), var(--royal));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.mood-scenes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.scene-card {
+  padding: 40px 32px;
+  background: var(--cream);
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+.scene-card:hover { transform: translateY(-4px); }
+.scene-card::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  opacity: 0.7;
+}
+.scene-card:nth-child(1)::before { background: radial-gradient(circle, var(--coral), transparent); }
+.scene-card:nth-child(2)::before { background: radial-gradient(circle, var(--gold), transparent); }
+.scene-card:nth-child(3)::before { background: radial-gradient(circle, var(--royal), transparent); }
+
+.scene-icon {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 48px;
+  margin-bottom: 24px;
+  background: linear-gradient(120deg, var(--coral), var(--magenta));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.scene-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 28px;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.scene-desc {
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+/* ============ FOR FANS OF ============ */
+.fans {
+  background: var(--ink);
+  color: var(--cream);
+}
+.fans .section-label { color: var(--cream); opacity: 0.6; }
+.fans .section-h2 { color: var(--cream); }
+.fans .section-num { color: var(--gold); }
+
+.fans-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.fan-card {
+  padding: 48px 32px;
+  border-radius: 16px;
+  background: rgba(255, 246, 233, 0.05);
+  border: 1px solid rgba(255, 246, 233, 0.15);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.fan-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--coral), var(--hot-pink), var(--royal));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.fan-card:hover::before { opacity: 0.15; }
+.fan-card:hover { border-color: var(--coral); transform: translateY(-4px); }
+
+.fan-num {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--gold);
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.fan-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 40px;
+  line-height: 1.1;
+  margin-bottom: 12px;
+  color: var(--cream);
+  position: relative;
+}
+.fan-tag {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--coral);
+  font-weight: 500;
+  position: relative;
+}
+
+/* ============ TOUR ============ */
+.tour { background: var(--peach); }
+
+.tour-headline {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  margin-bottom: 80px;
+}
+
+.tour-stat-num {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: clamp(120px, 16vw, 240px);
+  line-height: 0.85;
+  letter-spacing: -0.05em;
+  background: linear-gradient(120deg, var(--coral), var(--hot-pink), var(--magenta));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.tour-stat-label {
+  font-size: 13px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-top: 12px;
+  font-weight: 600;
+}
+.tour-stat-detail {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink-soft);
+  margin-top: 8px;
+}
+
+.tour-timeline {
+  border-top: 1px solid var(--line-strong);
+  padding-top: 40px;
+}
+.tour-item {
+  display: grid;
+  grid-template-columns: 120px 1fr 240px;
+  gap: 32px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+  align-items: baseline;
+}
+.tour-year {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 28px;
+  color: var(--coral);
+}
+.tour-event {
+  font-family: 'Instrument Serif', serif;
+  font-size: 22px;
+  color: var(--ink);
+}
+.tour-location {
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: right;
+  font-weight: 500;
+}
+
+/* ============ PRESS ============ */
+.press-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 48px;
+}
+.press-item {
+  padding: 32px 0;
+  border-top: 2px solid var(--line-strong);
+}
+.press-quote {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 28px;
+  line-height: 1.4;
+  color: var(--ink);
+  margin-bottom: 24px;
+}
+.press-source {
+  font-size: 12px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--coral);
+  font-weight: 600;
+}
+.press-date {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* ============ OTONAMI BADGE ============ */
+.otonami-badge {
+  background: linear-gradient(135deg, var(--royal) 0%, var(--magenta) 50%, var(--coral) 100%);
+  padding: 120px 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  color: var(--cream);
+}
+.otonami-badge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.95 0 0 0 0 0.85 0 0 0 0.3 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+
+.otonami-badge-inner { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; }
+
+.otonami-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 246, 233, 0.4);
+  border-radius: 100px;
+  background: rgba(255, 246, 233, 0.1);
+  backdrop-filter: blur(10px);
+  font-weight: 500;
+}
+.otonami-eyebrow::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--gold);
+  border-radius: 50%;
+}
+
+.otonami-h {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(40px, 6vw, 80px);
+  line-height: 1;
+  margin-bottom: 24px;
+  color: var(--cream);
+  letter-spacing: -0.02em;
+}
+.otonami-h em { font-style: italic; color: var(--gold); }
+
+.otonami-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 48px;
+  margin: 56px 0;
+  padding: 56px 0;
+  border-top: 1px solid rgba(255, 246, 233, 0.3);
+  border-bottom: 1px solid rgba(255, 246, 233, 0.3);
+}
+.otonami-stat-num {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: clamp(56px, 8vw, 96px);
+  color: var(--gold);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.otonami-stat-label {
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-top: 12px;
+  opacity: 0.8;
+}
+
+.otonami-caption {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1.6;
+  opacity: 0.95;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* ============ CONNECT ============ */
+.connect {
+  padding: 120px 40px;
+  background: var(--ink);
+  color: var(--cream);
+}
+.connect .section-label { color: var(--cream); opacity: 0.6; }
+.connect .section-num { color: var(--gold); }
+
+.connect-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.connect-h {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(56px, 7vw, 104px);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  margin-bottom: 32px;
+  color: var(--cream);
+}
+.connect-h em {
+  font-style: italic;
+  background: linear-gradient(120deg, var(--coral), var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.connect-desc {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--cream);
+  opacity: 0.85;
+  max-width: 480px;
+  margin-bottom: 40px;
+}
+
+.connect-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+}
+.connect-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 28px;
+  background: rgba(255, 246, 233, 0.05);
+  border: 1px solid rgba(255, 246, 233, 0.2);
+  color: var(--cream);
+  font-family: inherit;
+  font-size: 15px;
+  text-decoration: none;
+  border-radius: 100px;
+  transition: all 0.3s ease;
+}
+.connect-button:hover {
+  background: var(--cream);
+  color: var(--ink);
+  transform: translateX(4px);
+}
+.connect-button::after { content: '→'; font-size: 18px; }
+
+.connect-contacts {
+  display: grid;
+  gap: 28px;
+}
+.contact-block {
+  padding: 24px 0;
+  border-top: 1px solid rgba(255, 246, 233, 0.15);
+}
+.contact-role {
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.contact-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+.contact-email {
+  font-size: 14px;
+  color: var(--cream);
+  opacity: 0.8;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 246, 233, 0.3);
+  padding-bottom: 2px;
+}
+.contact-email:hover { opacity: 1; border-color: var(--gold); }
+
+/* ============ FOOTER ============ */
+footer {
+  padding: 32px 40px;
+  background: var(--ink);
+  border-top: 1px solid rgba(255, 246, 233, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cream);
+  opacity: 0.6;
+}
+footer a {
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px solid var(--gold);
+  padding-bottom: 1px;
+  opacity: 1;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 900px) {
+  section { padding: 80px 24px; }
+  .topbar { padding: 14px 20px; }
+  .hero { padding: 90px 24px 24px; }
+  .hero h1 { font-size: 64px; }
+  .hero-tagline { font-size: 20px; }
+  .hero-cta-row { flex-direction: column; }
+  .btn-primary, .btn-ghost { width: 100%; justify-content: center; }
+  .hero-ticker-inner { font-size: 15px; }
+
+  .pickup-card { grid-template-columns: 1fr; padding: 32px 24px; gap: 32px; border-radius: 16px; }
+  .pickup-title { font-size: 56px; }
+  .pickup-feat { font-size: 18px; }
+
+  .bio-grid { grid-template-columns: 1fr; gap: 40px; }
+  .bio-sidebar { position: static; }
+  .pull-quote { font-size: 26px; }
+
+  .disco-item { grid-template-columns: 30px 56px 1fr; gap: 16px; padding: 16px 0; }
+  .disco-art { width: 56px; height: 56px; }
+  .disco-title { font-size: 19px; }
+  .disco-play { display: none; }
+
+  .mood-scenes { grid-template-columns: 1fr; }
+  .fans-grid { grid-template-columns: 1fr; }
+  .fan-name { font-size: 32px; }
+
+  .tour-headline { grid-template-columns: 1fr; gap: 32px; }
+  .tour-item { grid-template-columns: 1fr; gap: 4px; padding: 16px 0; }
+  .tour-location { text-align: left; }
+
+  .press-grid { grid-template-columns: 1fr; gap: 24px; }
+  .press-quote { font-size: 22px; }
+
+  .otonami-badge { padding: 80px 24px; }
+  .otonami-stat-row { grid-template-columns: 1fr; gap: 32px; padding: 32px 0; }
+
+  .connect-grid { grid-template-columns: 1fr; gap: 48px; }
+  .connect-h { font-size: 48px; }
+
+  footer { flex-direction: column; gap: 12px; padding: 24px; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span><span class="dot"></span>Live EPK</span>
+  </div>
+  <div style="display: flex; gap: 18px; align-items: center;">
+    <div class="lang-toggle">
+      <button class="active" data-lang="en"><span>EN</span></button>
+      <button data-lang="jp"><span>JP</span></button>
+    </div>
+    <a href="#connect">Contact</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-sun"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="kicker">Tokyo · Est. 2010 · Instrumental Quintet</div>
+    <h1>ROUTE<br>14band<span class="line2">— Singing Instruments</span></h1>
+    <p class="hero-tagline">A Tokyo quintet making <em>jazz that grooves like city pop</em> — instrumental music that hums, drives, and shines after dark.</p>
+    <div class="hero-cta-row">
+      <button class="btn-primary" onclick="document.querySelector('.pickup').scrollIntoView({behavior:'smooth'})">Hear our latest</button>
+      <button class="btn-ghost">Browse catalog</button>
+    </div>
+  </div>
+  <div class="hero-ticker">
+    <div class="hero-ticker-inner">
+      <span>SXSW × 10</span><span>Bay of Islands Jazz × 8</span><span>Up Late Austin TV 2026</span><span>100+ Tracks</span><span>Korea · China · NZ · USA</span><span>SXSW × 10</span><span>Bay of Islands Jazz × 8</span><span>Up Late Austin TV 2026</span><span>100+ Tracks</span><span>Korea · China · NZ · USA</span>
+    </div>
+  </div>
+</section>
+
+<!-- PICKUP TRACK -->
+<section class="pickup">
+  <div class="container">
+    <div class="section-num">i.</div>
+    <div class="section-label">Featured Track</div>
+    <div class="pickup-card">
+      <div class="pickup-meta">
+        <span class="pickup-tag">Latest Release · 2025</span>
+        <h2 class="pickup-title">Ghibli<br><em>Reimagined</em></h2>
+        <p class="pickup-feat">with Ryu Miho</p>
+        <p class="pickup-desc">A jazz-fusion love letter to the films we grew up with — warm, cinematic, and built to wash over you on a slow drive home.</p>
+        <div class="pickup-vibes">
+          <span class="vibe-tag">✦ cinematic</span>
+          <span class="vibe-tag">✦ nostalgic</span>
+          <span class="vibe-tag">✦ late-night</span>
+        </div>
+        <button class="play-button" onclick="alert('Demo: real EPK will embed Spotify or custom player')">
+          <span class="icon"></span>
+          Listen now
+        </button>
+      </div>
+      <div class="pickup-visual">
+        <div class="cassette"></div>
+        <div class="waveform-overlay">
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BIO -->
+<section class="bio" id="bio">
+  <div class="container">
+    <div class="section-num">ii.</div>
+    <div class="section-label">Biography</div>
+    <div class="bio-grid">
+      <div class="bio-sidebar">
+        <p class="pull-quote bio-en">"Instruments that <em>sing</em> — every line carries a melody you can hum."</p>
+        <p class="pull-quote-attr bio-en">— Band statement</p>
+
+        <p class="pull-quote bio-jp" style="display:none;">「<em>歌う</em>ように奏でる楽器たち」</p>
+        <p class="pull-quote-attr bio-jp" style="display:none;">— バンドステートメント</p>
+
+        <div class="members-block">
+          <div class="members-label">Members</div>
+          <ul class="members-list">
+            <li>Chihiro Yamazaki<span>Trumpet · Founder</span></li>
+            <li>Satoshi Yamashita<span>Drums</span></li>
+            <li>Koji Yamamoto<span>Bass</span></li>
+            <li>Hana Takami<span>Keys</span></li>
+            <li>Miz<span>Guitar</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="bio-content">
+        <div class="bio-body bio-en">
+          <p>Formed in Tokyo in 2010 by trumpeter and founder <em>Chihiro Yamazaki</em>, ROUTE14band is a five-piece instrumental ensemble built around a single idea — that horns, keys, bass, and guitar can phrase like a vocalist. They call it <em>Singing Instruments</em>.</p>
+          <p>Across 100+ released tracks, the band moves fluidly between jazz, fusion, and pop, with active distribution in Korea and China alongside Japan. Recent international collaborations include <em>Ghibli Reimagined</em> with vocalist Ryu Miho (2025), <em>MY HERO</em> with American duo Golden West, and <em>Our Summer</em> with Korean artist A-FUZZ.</p>
+          <p>ROUTE14band has performed at SXSW ten times and at the NZ Bay of Islands Jazz Festival eight times between 2017 and 2025, with a March 2026 appearance on Austin's Up Late TV. The group continues to grow a quietly determined international footprint — one festival, one collaboration at a time.</p>
+        </div>
+
+        <div class="bio-body bio-jp" style="display:none;">
+          <p>2010年、トランペット奏者の<em>山崎千裕</em>によって東京で結成された5人組インストゥルメンタル・アンサンブル。ホーン、キーボード、ベース、ギターが、まるでヴォーカリストのように歌う——「<em>Singing Instruments</em>」というアイデアが、すべての出発点。</p>
+          <p>これまでに100曲以上をリリース。ジャズ、フュージョン、ポップを自在に行き来しながら、日本のみならず韓国・中国でも配信展開を行う。近年の国際的なコラボレーションには、ヴォーカリスト Ryu Miho との『<em>Ghibli Reimagined</em>』（2025年）、米国デュオ Golden West との『<em>MY HERO</em>』、韓国アーティスト A-FUZZ との『<em>Our Summer</em>』などがある。</p>
+          <p>SXSW には10回、ニュージーランドの Bay of Islands Jazz Festival には2017年から2025年の間に8回出演。2026年3月にはオースティンの Up Late TV にも出演。一つのフェスティバル、一つのコラボレーションを丁寧に積み重ねながら、静かな決意とともに国際的な存在感を高めつつある。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DISCOGRAPHY -->
+<section class="disco">
+  <div class="container">
+    <div class="section-num">iii.</div>
+    <div class="section-label">Selected Discography</div>
+    <h2 class="section-h2">Recent <em>tracks</em></h2>
+    <div class="disco-list">
+      <div class="disco-item">
+        <div class="disco-num">01</div>
+        <div class="disco-art"></div>
+        <div class="disco-title">Ghibli Reimagined<small>2025 · with Ryu Miho</small></div>
+        <button class="disco-play"></button>
+      </div>
+      <div class="disco-item">
+        <div class="disco-num">02</div>
+        <div class="disco-art"></div>
+        <div class="disco-title">MY HERO<small>2024 · with Golden West</small></div>
+        <button class="disco-play"></button>
+      </div>
+      <div class="disco-item">
+        <div class="disco-num">03</div>
+        <div class="disco-art"></div>
+        <div class="disco-title">Our Summer<small>2024 · with A-FUZZ</small></div>
+        <button class="disco-play"></button>
+      </div>
+      <div class="disco-item">
+        <div class="disco-num">04</div>
+        <div class="disco-art"></div>
+        <div class="disco-title">Sunset Boulevard<small>2023 · single</small></div>
+        <button class="disco-play"></button>
+      </div>
+      <div class="disco-item">
+        <div class="disco-num">05</div>
+        <div class="disco-art"></div>
+        <div class="disco-title">Night Drive<small>2023 · single</small></div>
+        <button class="disco-play"></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOUND & MOOD -->
+<section class="sound">
+  <div class="container">
+    <div class="section-num">iv.</div>
+    <div class="section-label">Sound & Mood</div>
+    <h2 class="mood-headline">Made for the <em>moments</em> in between.</h2>
+    <div class="mood-scenes">
+      <div class="scene-card">
+        <div class="scene-icon">i.</div>
+        <h3 class="scene-title">Late-night drives</h3>
+        <p class="scene-desc">Slow tempo, warm horns, headlights through a quiet city. The kind of music that makes 2AM feel cinematic.</p>
+      </div>
+      <div class="scene-card">
+        <div class="scene-icon">ii.</div>
+        <h3 class="scene-title">Golden-hour cafés</h3>
+        <p class="scene-desc">Conversation underneath. Brass lines that don't compete with the room — they live with it.</p>
+      </div>
+      <div class="scene-card">
+        <div class="scene-icon">iii.</div>
+        <h3 class="scene-title">Rainy Sunday mornings</h3>
+        <p class="scene-desc">Nostalgic, melodic, slightly bittersweet. Music for slow weekends and Studio Ghibli rewatches.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOR FANS OF -->
+<section class="fans">
+  <div class="container">
+    <div class="section-num">v.</div>
+    <div class="section-label">For Fans Of</div>
+    <h2 class="section-h2">If you <em>love</em>…</h2>
+    <div class="fans-grid">
+      <div class="fan-card">
+        <div class="fan-num">i.</div>
+        <div class="fan-name">Snarky Puppy</div>
+        <div class="fan-tag">jazz · fusion</div>
+      </div>
+      <div class="fan-card">
+        <div class="fan-num">ii.</div>
+        <div class="fan-name">Khruangbin</div>
+        <div class="fan-tag">instrumental · world</div>
+      </div>
+      <div class="fan-card">
+        <div class="fan-num">iii.</div>
+        <div class="fan-name">Casiopea</div>
+        <div class="fan-tag">japanese fusion</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOUR -->
+<section class="tour">
+  <div class="container">
+    <div class="section-num">vi.</div>
+    <div class="section-label">Live & Tour Highlights</div>
+    <div class="tour-headline">
+      <div class="tour-stat">
+        <div class="tour-stat-num">10×</div>
+        <div class="tour-stat-label">SXSW Performances</div>
+        <div class="tour-stat-detail">Austin, Texas</div>
+      </div>
+      <div class="tour-stat">
+        <div class="tour-stat-num">08×</div>
+        <div class="tour-stat-label">Bay of Islands Jazz</div>
+        <div class="tour-stat-detail">New Zealand · 2017–2025</div>
+      </div>
+    </div>
+    <div class="tour-timeline">
+      <div class="tour-item">
+        <div class="tour-year">2026</div>
+        <div class="tour-event">Up Late Austin — TV Appearance</div>
+        <div class="tour-location">Austin · USA</div>
+      </div>
+      <div class="tour-item">
+        <div class="tour-year">2025</div>
+        <div class="tour-event">Bay of Islands Jazz Festival</div>
+        <div class="tour-location">Paihia · New Zealand</div>
+      </div>
+      <div class="tour-item">
+        <div class="tour-year">2025</div>
+        <div class="tour-event">SXSW — Tenth Appearance</div>
+        <div class="tour-location">Austin · USA</div>
+      </div>
+      <div class="tour-item">
+        <div class="tour-year">2024</div>
+        <div class="tour-event">Korea / China Distribution Launch</div>
+        <div class="tour-location">Seoul · Shanghai</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRESS -->
+<section class="press">
+  <div class="container">
+    <div class="section-num">vii.</div>
+    <div class="section-label">Press & Recognition</div>
+    <h2 class="section-h2"><em>Quiet</em> recognition.</h2>
+    <div class="press-grid">
+      <div class="press-item">
+        <p class="press-quote">"A Tokyo quintet whose horn lines breathe like a vocalist — patient, deliberate, and utterly singable."</p>
+        <div class="press-source">— Up Late Austin</div>
+        <div class="press-date">March 2026</div>
+      </div>
+      <div class="press-item">
+        <p class="press-quote">"ROUTE14band carries the Japanese fusion tradition forward without ever sounding nostalgic. They sound exactly like now."</p>
+        <div class="press-source">— [ Sample Outlet ]</div>
+        <div class="press-date">2025</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OTONAMI BADGE -->
+<section class="otonami-badge">
+  <div class="otonami-badge-inner">
+    <div class="otonami-eyebrow">Pitched via OTONAMI</div>
+    <h2 class="otonami-h">Reaching the <em>right</em> ears, worldwide.</h2>
+    <div class="otonami-stat-row">
+      <div>
+        <div class="otonami-stat-num">47</div>
+        <div class="otonami-stat-label">Curators Reached</div>
+      </div>
+      <div>
+        <div class="otonami-stat-num">12</div>
+        <div class="otonami-stat-label">Countries</div>
+      </div>
+      <div>
+        <div class="otonami-stat-num">83%</div>
+        <div class="otonami-stat-label">Open Rate</div>
+      </div>
+    </div>
+    <p class="otonami-caption">This EPK is auto-translated, auto-formatted, and delivered to curators worldwide through OTONAMI's matching engine.</p>
+  </div>
+</section>
+
+<!-- CONNECT -->
+<section class="connect" id="connect">
+  <div class="container">
+    <div class="section-num" style="color: var(--gold);">viii.</div>
+    <div class="section-label">Connect</div>
+    <div class="connect-grid">
+      <div>
+        <h2 class="connect-h">Get in <em>touch.</em></h2>
+        <p class="connect-desc">For licensing, sync, press inquiries, and curator partnerships, please reach the team directly. We respond within 48 hours.</p>
+        <div class="connect-buttons">
+          <a href="https://route14band.tokyo" class="connect-button" target="_blank">Official Site · route14band.tokyo</a>
+          <a href="#" class="connect-button">Spotify · @route14band</a>
+          <a href="#" class="connect-button">YouTube · @CYR14 · 10.2K</a>
+          <a href="#" class="connect-button">Instagram · @route14band · 12K</a>
+        </div>
+      </div>
+      <div class="connect-contacts">
+        <div class="contact-block">
+          <div class="contact-role">Management</div>
+          <div class="contact-name">TYCompany 合同会社</div>
+          <a href="mailto:contact@route14band.tokyo" class="contact-email">contact@route14band.tokyo</a>
+        </div>
+        <div class="contact-block">
+          <div class="contact-role">Sync / Licensing</div>
+          <div class="contact-name">Satoshi Yamashita</div>
+          <a href="mailto:sync@route14band.tokyo" class="contact-email">sync@route14band.tokyo</a>
+        </div>
+        <div class="contact-block">
+          <div class="contact-role">Press Inquiries</div>
+          <div class="contact-name">OTONAMI Press Desk</div>
+          <a href="mailto:press@otonami.io" class="contact-email">press@otonami.io</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>© 2026 ROUTE14band · TYCompany 合同会社</div>
+  <div>Powered by <a href="https://otonami.io" target="_blank">OTONAMI</a></div>
+</footer>
+
+<script>
+// Language toggle
+const langButtons = document.querySelectorAll('.lang-toggle button');
+langButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const lang = btn.dataset.lang;
+    langButtons.forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.bio-en').forEach(el => {
+      el.style.display = lang === 'en' ? '' : 'none';
+    });
+    document.querySelectorAll('.bio-jp').forEach(el => {
+      el.style.display = lang === 'jp' ? 'block' : 'none';
+    });
+  });
+});
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('section').forEach((section, i) => {
+  if (i === 0) return;
+  section.style.opacity = '0';
+  section.style.transform = 'translateY(30px)';
+  section.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+  observer.observe(section);
+});
+</script>
+
+</body>
+</html>

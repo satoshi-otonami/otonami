@@ -84,6 +84,7 @@ const PRESS_DRAFT = {
 function emptyForm() {
   return {
     ...STRING_FIELDS.reduce((acc, k) => ({ ...acc, [k]: '' }), {}),
+    theme: 'editorial_dark',
     sound_scenes: [],
     for_fans_of: [],
   };
@@ -117,6 +118,7 @@ export default function EpkEditorPage() {
       setPlaylistIds(Array.isArray(epk.playlist_track_ids) ? epk.playlist_track_ids : []);
       setForm({
         ...STRING_FIELDS.reduce((acc, k) => ({ ...acc, [k]: epk[k] ?? '' }), {}),
+        theme: epk.theme || 'editorial_dark',
         sound_scenes: Array.isArray(epk.sound_scenes) ? epk.sound_scenes : [],
         for_fans_of: Array.isArray(epk.for_fans_of) ? epk.for_fans_of : [],
       });
@@ -518,14 +520,14 @@ export default function EpkEditorPage() {
               <input style={{ ...inputStyle, background: '#f7f3ec', color: '#8a8270' }} value={slug || '（保存後に自動生成）'} readOnly />
             </Field>
             <Field label="テーマ">
-              <select style={inputStyle} value="editorial_dark" disabled>
+              <select style={inputStyle} value={form.theme} onChange={(e) => setField('theme', e.target.value)}>
                 <option value="editorial_dark">Editorial Dark</option>
-                <option value="sunset" disabled>Sunset（近日対応）</option>
+                <option value="sunset_citypop">Sunset CITYPOP</option>
                 <option value="brutalist" disabled>Brutalist（近日対応）</option>
               </select>
             </Field>
             <p style={{ fontSize: 13, color: '#8a8270', margin: '4px 0 0' }}>
-              公開状態は画面右上のボタンから切り替えできます。
+              テーマを変更したら「保存」を押してください。公開状態は右上のボタンから。
             </p>
           </div>
         )}

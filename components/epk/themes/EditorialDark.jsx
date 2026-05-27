@@ -176,7 +176,7 @@ export default function EditorialDarkTheme({ data }) {
         </div>
       )}
       <div className="epk-reveal">
-        <OtonamiBadgeSection stats={pitch_stats} />
+        <OtonamiBadgeSection stats={pitch_stats} lang={lang} />
       </div>
       <div className="epk-reveal">
         <ConnectSection artist={artist} epk={epk} lang={lang} num={num.connect} />

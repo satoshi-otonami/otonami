@@ -10,7 +10,8 @@ export default function HeroSection({ artist, epk, tracks, lang }) {
   const kickerParts = [artist?.region, artist?.label_name].filter(Boolean);
   const portraitImg = artist?.cover_url || artist?.avatar_url || null;
   const count = tracks?.length || 0;
-  const catalog = count ? `${count}${count >= 10 ? '+' : ''} tracks` : '—';
+  const unit = lang === 'en' ? ' tracks' : '曲';
+  const catalog = count ? `${count}${count >= 10 ? '+' : ''}${unit}` : '—';
 
   return (
     <section className="hero">
@@ -23,13 +24,16 @@ export default function HeroSection({ artist, epk, tracks, lang }) {
         {taglineText && <p className="hero-tagline">{taglineText}</p>}
         <div className="hero-meta">
           <div>
-            Genre<span>{genres.length ? genres.join(' · ') : '—'}</span>
+            {lang === 'en' ? 'Genre' : 'ジャンル'}
+            <span>{genres.length ? genres.join(' · ') : '—'}</span>
           </div>
           <div>
-            Origin<span>{artist?.region || 'JP'}</span>
+            {lang === 'en' ? 'Origin' : '拠点'}
+            <span>{artist?.region || 'JP'}</span>
           </div>
           <div>
-            Catalog<span>{catalog}</span>
+            {lang === 'en' ? 'Catalog' : 'カタログ'}
+            <span>{catalog}</span>
           </div>
         </div>
       </div>
@@ -65,7 +69,7 @@ export default function HeroSection({ artist, epk, tracks, lang }) {
           <div className="vinyl" />
         </div>
       </div>
-      <div className="scroll-cue">Scroll</div>
+      <div className="scroll-cue">{lang === 'en' ? 'Scroll' : 'スクロール'}</div>
     </section>
   );
 }

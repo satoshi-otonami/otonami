@@ -78,7 +78,7 @@ export const EDITORIAL_DARK_CSS = `
 .epk-root .pickup-card { background:var(--glass-bg); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid var(--glass-border); border-radius:4px; padding:64px 56px; position:relative; overflow:hidden; display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
 .epk-root .pickup-card::before { content:''; position:absolute; inset:0; background: radial-gradient(circle at 80% 20%, rgba(196,149,106,0.15) 0%, transparent 50%), radial-gradient(circle at 10% 90%, rgba(216,85,63,0.1) 0%, transparent 60%); pointer-events:none; }
 .epk-root .pickup-meta { position:relative; z-index:2; }
-.epk-root .pickup-tag { display:inline-block; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; color:var(--coral); padding:6px 12px; border:1px solid var(--coral); border-radius:100px; margin-bottom:32px; }
+.epk-root .pickup-tag { display:inline-block; font-size:10px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--coral); padding:6px 14px; border:1px solid var(--coral); border-radius:3px; margin-bottom:32px; }
 .epk-root .pickup-title { font-family:'Fraunces',serif; font-weight:300; font-size:clamp(44px,6vw,80px); line-height:0.95; letter-spacing:-0.02em; margin-bottom:8px; color:var(--paper); }
 .epk-root .pickup-subtitle { font-family:'Fraunces',serif; font-style:italic; font-weight:300; font-size:22px; color:var(--gold-bright); margin-bottom:32px; }
 .epk-root .pickup-desc { font-size:15px; line-height:1.7; color:var(--paper-warm); opacity:0.85; margin-bottom:40px; max-width:420px; }
@@ -226,6 +226,7 @@ export const EDITORIAL_DARK_CSS = `
 @media (max-width:600px){
   .epk-root .vinyl { display:none; }
   .epk-root .hero-photo-bg { filter:blur(20px) saturate(1.3); -webkit-filter:blur(20px) saturate(1.3); opacity:0.6; }
+  .epk-root .pickup-tag { font-size:9px; letter-spacing:0.15em; padding:5px 12px; }
 }
 
 /* Tablet single-column: let the photo size to its full height so the vinyl

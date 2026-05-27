@@ -17,10 +17,12 @@ function PinnedCard({ track, lang }) {
     ? new Date(track.release_date).getFullYear()
     : null;
   const tag = year
-    ? `Release · ${year}`
+    ? lang === 'en'
+      ? `Release · ${year}`
+      : `リリース · ${year}`
     : lang === 'en'
     ? 'Featured'
-    : 'フィーチャー';
+    : '注目';
   const url = listenUrl(track);
   const cover = track.cover_image_url || null;
   const bars = Array.from({ length: 16 });

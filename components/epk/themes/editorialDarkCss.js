@@ -141,7 +141,6 @@ export const EDITORIAL_DARK_CSS = `
   .epk-root .topbar-right { gap:12px; }
   .epk-root .hero { grid-template-columns:1fr; padding:100px 24px 40px; }
   .epk-root .hero-right { height:50vh; margin-top:32px; }
-  .epk-root .vinyl { display:none; }
   .epk-root .hero h1 { font-size:clamp(40px,12vw,56px); }
   .epk-root .hero-tagline { font-size:18px; }
   .epk-root .hero-meta { gap:24px; }
@@ -154,5 +153,17 @@ export const EDITORIAL_DARK_CSS = `
   .epk-root .connect-grid { grid-template-columns:1fr; gap:48px; }
   .epk-root .connect-h { font-size:44px; }
   .epk-root .epk-footer { flex-direction:column; gap:16px; padding:32px 24px; text-align:center; }
+}
+
+/* Phones only: drop the decorative vinyl. Tablets (>=601px) keep it visible. */
+@media (max-width:600px){
+  .epk-root .vinyl { display:none; }
+}
+
+/* Tablet single-column: let the photo size to its full height so the vinyl
+   sits inside the hero instead of overflowing past its bottom edge. */
+@media (min-width:601px) and (max-width:900px){
+  .epk-root .hero-right { height:auto; }
+  .epk-root .vinyl { right:-16px; bottom:0; }
 }
 `;

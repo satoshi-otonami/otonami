@@ -240,4 +240,9 @@ export const SUNSET_CITYPOP_CSS = `
 .theme-sunset-citypop .pull-quote-attr { font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); font-weight:500; }
 .theme-sunset-citypop .bio-body { font-size:17px; line-height:1.75; color:var(--ink-soft); max-width:640px; }
 .theme-sunset-citypop .bio-body p { margin-bottom:24px; }
+
+/* Phones: compact the Featured sticker further (proto had no <=600 rule) */
+@media (max-width:600px){
+  .theme-sunset-citypop .pickup-tag { font-size:9px; letter-spacing:0.25em; padding:5px 12px; }
+}
 `;

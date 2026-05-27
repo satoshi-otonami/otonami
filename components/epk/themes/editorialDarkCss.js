@@ -43,7 +43,7 @@ export const EDITORIAL_DARK_CSS = `
 .epk-root .hero-left { position:relative; z-index:2; }
 .epk-root .kicker { font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:0.32em; text-transform:uppercase; color:var(--gold); margin-bottom:28px; display:flex; align-items:center; gap:14px; animation:epk-fadeUp 0.8s ease 0.2s both; }
 .epk-root .kicker::before { content:''; width:32px; height:1px; background:var(--gold); }
-.epk-root .hero h1 { font-family:'Fraunces',serif; font-weight:300; font-size:clamp(56px,9vw,132px); line-height:0.92; letter-spacing:-0.03em; color:var(--paper); margin-bottom:32px; font-variation-settings:"opsz" 144; animation:epk-fadeUp 1s ease 0.3s both; word-break:break-word; }
+.epk-root .hero h1 { font-family:'Fraunces',serif; font-weight:300; font-size:clamp(56px,8vw,132px); line-height:0.92; letter-spacing:-0.035em; color:var(--paper); margin-bottom:32px; font-variation-settings:"opsz" 144; animation:epk-fadeUp 1s ease 0.3s both; white-space:nowrap; overflow-wrap:normal; word-break:keep-all; }
 .epk-root .hero h1 em { font-style:italic; font-weight:300; color:var(--gold-bright); display:block; font-size:0.5em; margin-top:8px; letter-spacing:-0.01em; }
 .epk-root .hero-tagline { font-family:'Fraunces',serif; font-style:italic; font-weight:300; font-size:clamp(20px,2vw,26px); line-height:1.4; color:var(--paper-warm); max-width:480px; margin-bottom:48px; animation:epk-fadeUp 1s ease 0.5s both; }
 .epk-root .hero-meta { display:flex; gap:48px; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); animation:epk-fadeUp 1s ease 0.7s both; flex-wrap:wrap; }
@@ -53,7 +53,7 @@ export const EDITORIAL_DARK_CSS = `
 .epk-root .portrait-frame { position:absolute; inset:0; background: linear-gradient(135deg, rgba(196,149,106,0.4) 0%, rgba(28,49,66,0.7) 60%, var(--ink-deepest) 100%), radial-gradient(circle at 30% 40%, rgba(216,85,63,0.5), transparent 60%); border:1px solid var(--line-strong); overflow:hidden; }
 .epk-root .portrait-frame img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .epk-root .portrait-frame svg { position:absolute; inset:0; width:100%; height:100%; }
-.epk-root .vinyl { position:absolute; width:140px; height:140px; right:-40px; bottom:-40px; border-radius:50%; background: radial-gradient(circle, var(--gold) 0%, var(--gold) 18%, var(--ink-deepest) 19%, var(--ink-deepest) 25%, #1a2c3a 26%, #1a2c3a 100%); box-shadow:0 20px 60px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(196,149,106,0.3); animation:epk-spin 12s linear infinite; }
+.epk-root .vinyl { position:absolute; width:120px; height:120px; right:-20px; bottom:-20px; border-radius:50%; background: radial-gradient(circle, var(--gold) 0%, var(--gold) 18%, var(--ink-deepest) 19%, var(--ink-deepest) 25%, #1a2c3a 26%, #1a2c3a 100%); box-shadow:0 20px 60px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(196,149,106,0.3); animation:epk-spin 12s linear infinite; }
 .epk-root .vinyl::after { content:''; position:absolute; inset:0; border-radius:50%; background:repeating-radial-gradient(circle, transparent 0, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 3px); }
 @keyframes epk-spin { to { transform:rotate(360deg); } }
 @keyframes epk-fadeUp { from{opacity:0; transform:translateY(20px)} to{opacity:1; transform:translateY(0)} }
@@ -99,6 +99,8 @@ export const EDITORIAL_DARK_CSS = `
 .epk-root .bio-body { font-size:16px; line-height:1.75; color:var(--paper-warm); max-width:640px; }
 .epk-root .bio-body p { margin-bottom:24px; }
 .epk-root .bio-body p:first-child::first-letter { font-family:'Fraunces',serif; font-weight:300; font-size:78px; line-height:0.85; float:left; padding:4px 12px 0 0; color:var(--gold-bright); font-style:italic; }
+/* Japanese bio: drop cap reads as a foreign-typography artifact — neutralize it. */
+.epk-root .bio-body.bio-jp p:first-child::first-letter { font-size:inherit; font-family:inherit; font-weight:inherit; font-style:inherit; float:none; padding:0; color:inherit; line-height:inherit; }
 
 /* OTONAMI badge */
 .epk-root .otonami-badge { background:linear-gradient(180deg, var(--ink-deep), var(--ink-deepest)); padding:100px 60px; text-align:center; position:relative; overflow:hidden; }
@@ -139,7 +141,8 @@ export const EDITORIAL_DARK_CSS = `
   .epk-root .topbar-right { gap:12px; }
   .epk-root .hero { grid-template-columns:1fr; padding:100px 24px 40px; }
   .epk-root .hero-right { height:50vh; margin-top:32px; }
-  .epk-root .hero h1 { font-size:56px; }
+  .epk-root .vinyl { display:none; }
+  .epk-root .hero h1 { font-size:clamp(40px,12vw,56px); }
   .epk-root .hero-tagline { font-size:18px; }
   .epk-root .hero-meta { gap:24px; }
   .epk-root .pickup-card { grid-template-columns:1fr; padding:40px 28px; gap:40px; }

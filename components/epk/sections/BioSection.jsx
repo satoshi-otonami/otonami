@@ -28,7 +28,7 @@ export default function BioSection({ artist, epk, lang }) {
           )}
         </div>
         <div className="bio-content">
-          <div className="bio-body">
+          <div className={`bio-body ${lang === 'jp' ? 'bio-jp' : 'bio-en'}`}>
             {paragraphs.length ? (
               paragraphs.map((p, i) => <p key={i}>{p}</p>)
             ) : (

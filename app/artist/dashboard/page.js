@@ -391,6 +391,7 @@ export default function ArtistDashboard() {
                 otherwise client-side nav reuses the cached instance and
                 logged-in users see the Demo state until a hard refresh. */}
             <a href="/studio" style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 700, color: THEME.text, fontFamily: THEME.font, textDecoration: 'none', cursor: 'pointer' }}>ダッシュボード</a>
+            <a href="/dashboard/epk" style={{ padding: '8px 14px', borderRadius: 8, fontSize: 14, fontWeight: 700, color: THEME.text, fontFamily: THEME.font, textDecoration: 'none', cursor: 'pointer' }}>EPK</a>
             <button onClick={() => { setPendingCuratorForPitch(null); setShowTrackSelectModal(true); }}
               className="nav-pitch-btn"
               style={{ padding: '8px 20px', borderRadius: 9999, fontSize: 14, fontWeight: 600, color: '#fff', background: THEME.coral, border: 'none', cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s' }}
@@ -426,6 +427,11 @@ export default function ArtistDashboard() {
                 onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
                 onMouseLeave={e => e.currentTarget.style.background = 'none'}
               >プロフィール編集</button>
+              <div style={{ height: 1, background: THEME.borderLight }} />
+              <a href="/dashboard/epk" style={{ width: '100%', padding: '12px 16px', textDecoration: 'none', cursor: 'pointer', fontSize: 13, color: THEME.text, fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 8, boxSizing: 'border-box' }}
+                onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+              >EPKを管理 →</a>
               <div style={{ height: 1, background: THEME.borderLight }} />
               <button onClick={handleLogout} style={{ width: '100%', padding: '12px 16px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.coral, fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 8 }}
                 onMouseEnter={e => e.currentTarget.style.background = THEME.bg}

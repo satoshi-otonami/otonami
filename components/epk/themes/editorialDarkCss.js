@@ -51,7 +51,7 @@ export const EDITORIAL_DARK_CSS = `
 .epk-root .hero-right { position:relative; z-index:2; height:78vh; display:flex; justify-content:center; align-items:center; }
 .epk-root .hero-visual { position:relative; width:100%; max-width:520px; aspect-ratio:4/5; animation:epk-fadeIn 1.4s ease 0.6s both; }
 .epk-root .portrait-frame { position:absolute; inset:0; background: linear-gradient(135deg, rgba(196,149,106,0.4) 0%, rgba(28,49,66,0.7) 60%, var(--ink-deepest) 100%), radial-gradient(circle at 30% 40%, rgba(216,85,63,0.5), transparent 60%); border:1px solid var(--line-strong); overflow:hidden; }
-.epk-root .portrait-frame img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.epk-root .portrait-frame img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; }
 .epk-root .portrait-frame svg { position:absolute; inset:0; width:100%; height:100%; }
 .epk-root .vinyl { position:absolute; width:120px; height:120px; right:-20px; bottom:-20px; border-radius:50%; background: radial-gradient(circle, var(--gold) 0%, var(--gold) 18%, var(--ink-deepest) 19%, var(--ink-deepest) 25%, #1a2c3a 26%, #1a2c3a 100%); box-shadow:0 20px 60px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(196,149,106,0.3); animation:epk-spin 12s linear infinite; }
 .epk-root .vinyl::after { content:''; position:absolute; inset:0; border-radius:50%; background:repeating-radial-gradient(circle, transparent 0, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 3px); }

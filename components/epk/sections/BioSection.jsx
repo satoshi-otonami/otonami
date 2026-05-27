@@ -1,5 +1,5 @@
 // EPK Biography — pull quote (sidebar) + bio body, language-aware.
-export default function BioSection({ artist, epk, lang }) {
+export default function BioSection({ artist, epk, lang, num = '02' }) {
   const quote =
     lang === 'en'
       ? epk?.pull_quote_en || epk?.pull_quote_jp
@@ -17,7 +17,7 @@ export default function BioSection({ artist, epk, lang }) {
 
   return (
     <section className="bio" id="bio">
-      <div className="section-label" data-no="02">
+      <div className="section-label" data-no={num}>
         Biography
       </div>
       <div className="bio-grid">

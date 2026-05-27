@@ -19,6 +19,8 @@ const ALLOWED = [
   'pull_quote_jp',
   'bio_extended_en',
   'bio_extended_jp',
+  'sound_scenes',
+  'for_fans_of',
   'contact_management_name',
   'contact_management_email',
   'contact_sync_name',

@@ -1,5 +1,5 @@
 // EPK Connect — social links (from artist) + contact blocks (from EPK).
-export default function ConnectSection({ artist, epk }) {
+export default function ConnectSection({ artist, epk, num = '03' }) {
   const a = artist || {};
   const e = epk || {};
 
@@ -32,7 +32,7 @@ export default function ConnectSection({ artist, epk }) {
 
   return (
     <section className="connect" id="connect">
-      <div className="section-label" data-no="03">
+      <div className="section-label" data-no={num}>
         Connect
       </div>
       <div className="connect-grid">

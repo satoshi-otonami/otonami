@@ -137,6 +137,60 @@ export const EDITORIAL_DARK_CSS = `
 .epk-root .epk-footer { padding:48px 60px; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:16px; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); flex-wrap:wrap; }
 .epk-root .epk-footer a { color:var(--gold); text-decoration:none; border-bottom:1px solid var(--gold); padding-bottom:1px; }
 
+/* Featured Playlist — list under the pinned pickup card */
+.epk-root .playlist-list { margin-top:56px; }
+.epk-root .playlist-list-title { font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); margin-bottom:16px; }
+.epk-root .playlist-list ul { list-style:none; }
+.epk-root .playlist-row { display:flex; align-items:center; gap:20px; padding:16px 8px; border-top:1px solid var(--line); transition:background 0.25s ease; }
+.epk-root .playlist-row:last-child { border-bottom:1px solid var(--line); }
+.epk-root .playlist-row:hover { background:var(--glass-bg); }
+.epk-root .playlist-num { font-family:'Fraunces',serif; font-style:italic; font-size:18px; color:var(--gold); min-width:26px; }
+.epk-root .playlist-art { width:56px; height:56px; border-radius:3px; object-fit:cover; flex-shrink:0; }
+.epk-root .playlist-art-ph { background:linear-gradient(135deg, var(--coral) 0%, var(--gold) 50%, var(--ink-mid) 100%); }
+.epk-root .playlist-info { display:flex; flex-direction:column; gap:4px; flex:1; min-width:0; }
+.epk-root .playlist-title { font-family:'Fraunces',serif; font-size:20px; color:var(--paper); line-height:1.2; }
+.epk-root .playlist-sub { font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+.epk-root .playlist-play { width:40px; height:40px; flex-shrink:0; border-radius:50%; border:1px solid var(--line-strong); color:var(--paper); display:flex; align-items:center; justify-content:center; text-decoration:none; font-size:12px; transition:all 0.25s ease; }
+.epk-root .playlist-play:hover { background:var(--paper); color:var(--ink-deepest); border-color:var(--paper); }
+
+/* Sound & Mood */
+.epk-root .scene-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:28px; }
+.epk-root .scene-card { background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:4px; padding:36px 28px; }
+.epk-root .scene-num { font-family:'Fraunces',serif; font-style:italic; font-size:28px; color:var(--gold); opacity:0.75; margin-bottom:18px; }
+.epk-root .scene-title { font-family:'Fraunces',serif; font-weight:300; font-size:26px; line-height:1.15; color:var(--paper); margin-bottom:14px; }
+.epk-root .scene-desc { font-size:14px; line-height:1.65; color:var(--paper-warm); opacity:0.85; }
+
+/* For Fans Of */
+.epk-root .fans-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.epk-root .fan-card { border:1px solid var(--line-strong); border-radius:4px; padding:36px 24px; text-align:center; transition:border-color 0.25s ease, background 0.25s ease; }
+.epk-root .fan-card:hover { background:var(--glass-bg); border-color:var(--gold); }
+.epk-root .fan-name { font-family:'Fraunces',serif; font-weight:300; font-size:28px; color:var(--paper); line-height:1.1; margin-bottom:8px; }
+.epk-root .fan-tag { font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); }
+.epk-root .fans-note { margin-top:28px; font-family:'Fraunces',serif; font-style:italic; font-size:14px; color:var(--muted); }
+
+/* Tour & Live */
+.epk-root .tour-highlights { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:24px; margin-bottom:56px; }
+.epk-root .highlight-card { background:var(--glass-bg); border:1px solid var(--glass-border); border-radius:4px; padding:36px 28px; }
+.epk-root .highlight-num { font-family:'Fraunces',serif; font-weight:300; font-size:56px; line-height:1; color:var(--gold-bright); letter-spacing:-0.02em; }
+.epk-root .highlight-num span { font-size:24px; font-style:italic; color:var(--gold); margin-left:4px; }
+.epk-root .highlight-label { font-family:'Fraunces',serif; font-size:22px; color:var(--paper); margin-top:16px; line-height:1.2; }
+.epk-root .highlight-loc { font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-top:10px; }
+.epk-root .tour-timeline { list-style:none; }
+.epk-root .tour-row { display:grid; grid-template-columns:80px 1fr auto; gap:24px; align-items:baseline; padding:20px 8px; border-top:1px solid var(--line); }
+.epk-root .tour-row:last-child { border-bottom:1px solid var(--line); }
+.epk-root .tour-year { font-family:'Fraunces',serif; font-style:italic; font-size:20px; color:var(--gold); }
+.epk-root .tour-event { font-size:16px; color:var(--paper); }
+.epk-root .tour-loc { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); text-align:right; }
+
+/* Press & Recognition */
+.epk-root .press-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:28px; }
+.epk-root .press-card { background:var(--glass-bg); border:1px solid var(--glass-border); border-left:2px solid var(--gold); border-radius:4px; padding:36px 32px; }
+.epk-root .press-quote { font-family:'Fraunces',serif; font-style:italic; font-weight:300; font-size:22px; line-height:1.45; color:var(--paper-warm); margin-bottom:24px; }
+.epk-root .press-meta { display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; }
+.epk-root .press-source { font-size:12px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); text-decoration:none; }
+.epk-root a.press-source:hover { border-bottom:1px solid var(--gold); }
+.epk-root .press-date { font-size:11px; letter-spacing:0.1em; color:var(--muted); }
+
 /* Responsive */
 @media (max-width:900px){
   .epk-root section { padding:80px 24px; }
@@ -157,6 +211,15 @@ export const EDITORIAL_DARK_CSS = `
   .epk-root .connect-grid { grid-template-columns:1fr; gap:48px; }
   .epk-root .connect-h { font-size:44px; }
   .epk-root .epk-footer { flex-direction:column; gap:16px; padding:32px 24px; text-align:center; }
+  .epk-root .scene-grid { grid-template-columns:1fr; gap:18px; }
+  .epk-root .fans-grid { grid-template-columns:1fr 1fr; }
+  .epk-root .tour-highlights { grid-template-columns:1fr; }
+  .epk-root .press-grid { grid-template-columns:1fr; }
+  .epk-root .tour-row { grid-template-columns:56px 1fr; gap:12px; }
+  .epk-root .tour-loc { grid-column:2; text-align:left; }
+  .epk-root .playlist-row { gap:14px; }
+  .epk-root .playlist-title { font-size:17px; }
+  .epk-root .playlist-art { width:48px; height:48px; }
 }
 
 /* Phones only: drop the decorative vinyl. Tablets (>=601px) keep it visible. */

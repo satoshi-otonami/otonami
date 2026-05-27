@@ -97,18 +97,10 @@ export function SunsetFeaturedPlaylist({ playlistTracks, artist, lang, num }) {
         </div>
 
         {others.length > 0 && (
-          <div style={{ marginTop: 64 }}>
-            <h2 className="section-h2" style={{ marginBottom: 32 }}>
-              {lang === 'en' ? (
-                <>
-                  Recent <em>tracks</em>
-                </>
-              ) : (
-                <>
-                  最近の<em>楽曲</em>
-                </>
-              )}
-            </h2>
+          <div>
+            <div className="playlist-more">
+              {lang === 'en' ? 'More from this playlist' : 'このプレイリストの他の楽曲'}
+            </div>
             <div className="disco-list">
               {others.map((t, i) => (
                 <DiscoRow key={t.id} track={t} idx={i + 2} />

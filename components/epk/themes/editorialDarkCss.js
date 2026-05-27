@@ -13,6 +13,9 @@ export const EDITORIAL_DARK_CSS = `
   --coral:#d8553f; --muted:#8a9aa8;
   --line:rgba(245,236,217,0.12); --line-strong:rgba(245,236,217,0.25);
   --glass-bg:rgba(245,236,217,0.04); --glass-border:rgba(245,236,217,0.14);
+  /* Shared EPK density tokens — same values across themes (brutalist will copy). */
+  --epk-hero-min-height:75vh; --epk-section-pad-y:80px; --epk-pickup-pad-top:60px;
+  --epk-bio-grid:1fr 2fr; --epk-bio-gap:60px;
   background:var(--ink-deepest); color:var(--paper);
   font-family:'DM Sans',sans-serif; font-size:16px; line-height:1.6;
   position:relative; overflow-x:hidden; min-height:100vh;
@@ -38,7 +41,7 @@ export const EDITORIAL_DARK_CSS = `
 .epk-root .lang-toggle button.active { background:var(--paper); color:var(--ink-deepest); opacity:1; }
 
 /* Hero */
-.epk-root .hero { min-height:100vh; position:relative; display:grid; grid-template-columns:1fr 1fr; align-items:center; padding:120px 60px 60px; overflow:hidden; }
+.epk-root .hero { min-height:var(--epk-hero-min-height); position:relative; display:grid; grid-template-columns:1fr 1fr; align-items:center; padding:var(--epk-section-pad-y) 60px 60px; overflow:hidden; }
 .epk-root .hero-bg { position:absolute; inset:0; background: radial-gradient(ellipse at 70% 30%, rgba(196,149,106,0.18) 0%, transparent 50%), radial-gradient(ellipse at 20% 70%, rgba(216,85,63,0.12) 0%, transparent 55%), linear-gradient(180deg, var(--ink-deep) 0%, var(--ink-deepest) 100%); }
 .epk-root .hero-left { position:relative; z-index:2; }
 .epk-root .kicker { font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:0.32em; text-transform:uppercase; color:var(--gold); margin-bottom:28px; display:flex; align-items:center; gap:14px; animation:epk-fadeUp 0.8s ease 0.2s both; }
@@ -48,7 +51,7 @@ export const EDITORIAL_DARK_CSS = `
 .epk-root .hero-tagline { font-family:'Fraunces',serif; font-style:italic; font-weight:300; font-size:clamp(20px,2vw,26px); line-height:1.4; color:var(--paper-warm); max-width:480px; margin-bottom:48px; animation:epk-fadeUp 1s ease 0.5s both; }
 .epk-root .hero-meta { display:flex; gap:48px; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); animation:epk-fadeUp 1s ease 0.7s both; flex-wrap:wrap; }
 .epk-root .hero-meta div span { display:block; color:var(--paper); font-size:18px; font-family:'Fraunces',serif; letter-spacing:0; text-transform:none; margin-top:4px; font-weight:400; }
-.epk-root .hero-right { position:relative; z-index:2; height:78vh; display:flex; justify-content:center; align-items:center; }
+.epk-root .hero-right { position:relative; z-index:2; height:58vh; display:flex; justify-content:center; align-items:center; }
 .epk-root .hero-visual { position:relative; width:100%; max-width:520px; aspect-ratio:4/5; animation:epk-fadeIn 1.4s ease 0.6s both; }
 .epk-root .portrait-frame { position:absolute; inset:0; background:var(--ink-deepest); border:1px solid var(--line-strong); overflow:hidden; }
 .epk-root .portrait-frame img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; z-index:3; filter:drop-shadow(0 18px 36px rgba(0,0,0,0.45)); }
@@ -66,7 +69,7 @@ export const EDITORIAL_DARK_CSS = `
 @keyframes epk-scrollline { 0%,100%{transform:scaleY(0.4); transform-origin:top} 50%{transform:scaleY(1); transform-origin:top} }
 
 /* Sections */
-.epk-root section { padding:120px 60px; position:relative; }
+.epk-root section { padding:var(--epk-section-pad-y) 60px; position:relative; }
 .epk-root .section-label { display:flex; align-items:center; gap:14px; font-size:11px; letter-spacing:0.32em; text-transform:uppercase; color:var(--gold); margin-bottom:48px; }
 .epk-root .section-label::before { content:attr(data-no); font-family:'Fraunces',serif; font-style:italic; font-size:20px; font-weight:300; letter-spacing:0; text-transform:none; color:var(--paper); opacity:0.7; }
 .epk-root .section-label::after { content:''; flex:1; height:1px; background:var(--line); }
@@ -74,7 +77,7 @@ export const EDITORIAL_DARK_CSS = `
 .epk-root .section-h2 em { font-style:italic; color:var(--gold-bright); font-weight:300; }
 
 /* Featured track */
-.epk-root .pickup { padding-top:60px; }
+.epk-root .pickup { padding-top:var(--epk-pickup-pad-top); }
 .epk-root .pickup-card { background:var(--glass-bg); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border:1px solid var(--glass-border); border-radius:4px; padding:64px 56px; position:relative; overflow:hidden; display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
 .epk-root .pickup-card::before { content:''; position:absolute; inset:0; background: radial-gradient(circle at 80% 20%, rgba(196,149,106,0.15) 0%, transparent 50%), radial-gradient(circle at 10% 90%, rgba(216,85,63,0.1) 0%, transparent 60%); pointer-events:none; }
 .epk-root .pickup-meta { position:relative; z-index:2; }
@@ -95,8 +98,8 @@ export const EDITORIAL_DARK_CSS = `
 
 /* Bio */
 .epk-root .bio { background:var(--ink-deep); }
-.epk-root .bio-grid { display:grid; grid-template-columns:1fr 1.5fr; gap:80px; align-items:start; }
-.epk-root .bio-sidebar { position:sticky; top:100px; }
+.epk-root .bio-grid { display:grid; grid-template-columns:var(--epk-bio-grid); gap:var(--epk-bio-gap); align-items:start; }
+.epk-root .bio-sidebar { position:static; }
 .epk-root .pull-quote { font-family:'Fraunces',serif; font-style:italic; font-weight:300; font-size:28px; line-height:1.35; color:var(--gold-bright); border-left:2px solid var(--gold); padding-left:24px; margin-bottom:16px; }
 .epk-root .pull-quote-translation { font-size:13px; letter-spacing:0.05em; color:var(--muted); padding-left:26px; }
 .epk-root .bio-body { font-size:16px; line-height:1.75; color:var(--paper-warm); max-width:640px; }
@@ -227,6 +230,8 @@ export const EDITORIAL_DARK_CSS = `
   .epk-root .vinyl { display:none; }
   .epk-root .hero-photo-bg { filter:blur(20px) saturate(1.3); -webkit-filter:blur(20px) saturate(1.3); opacity:0.6; }
   .epk-root .pickup-tag { font-size:9px; letter-spacing:0.15em; padding:5px 12px; }
+  .epk-root section { padding:56px 24px; }
+  .epk-root .hero { min-height:60vh; }
 }
 
 /* Tablet single-column: let the photo size to its full height so the vinyl

@@ -11,6 +11,9 @@ export const SUNSET_CITYPOP_CSS = `
   --hot-pink:#E8458F; --magenta:#C9388C; --royal:#2A4BC9; --sky:#6FA8FF;
   --gold:#F5B83A; --ink:#1A1230; --ink-soft:#2D1B4E; --muted:#786C8A;
   --line:rgba(26,18,48,0.12); --line-strong:rgba(26,18,48,0.25);
+  /* Shared EPK density tokens — same values across themes (brutalist will copy). */
+  --epk-hero-min-height:75vh; --epk-section-pad-y:80px; --epk-pickup-pad-top:60px;
+  --epk-bio-grid:1fr 2fr; --epk-bio-gap:60px;
   background:var(--cream); color:var(--ink);
   font-family:'DM Sans',sans-serif; font-size:16px; line-height:1.6;
   position:relative; overflow-x:hidden; min-height:100vh;
@@ -31,7 +34,7 @@ export const SUNSET_CITYPOP_CSS = `
 .theme-sunset-citypop .lang-toggle button.active span { color:var(--ink); mix-blend-mode:difference; }
 
 /* Hero */
-.theme-sunset-citypop .hero { min-height:100vh; position:relative; overflow:hidden; background: radial-gradient(ellipse 80% 60% at 80% 20%, rgba(255,94,94,0.9) 0%, transparent 60%), radial-gradient(ellipse 70% 80% at 10% 90%, rgba(232,69,143,0.85) 0%, transparent 55%), radial-gradient(ellipse 60% 50% at 50% 50%, rgba(245,184,58,0.4) 0%, transparent 70%), linear-gradient(180deg, #FFB18C 0%, #FF8FA8 40%, #C9388C 100%); color:var(--cream); display:grid; grid-template-rows:1fr auto; padding:100px 40px 40px; }
+.theme-sunset-citypop .hero { min-height:var(--epk-hero-min-height); position:relative; overflow:hidden; background: radial-gradient(ellipse 80% 60% at 80% 20%, rgba(255,94,94,0.9) 0%, transparent 60%), radial-gradient(ellipse 70% 80% at 10% 90%, rgba(232,69,143,0.85) 0%, transparent 55%), radial-gradient(ellipse 60% 50% at 50% 50%, rgba(245,184,58,0.4) 0%, transparent 70%), linear-gradient(180deg, #FFB18C 0%, #FF8FA8 40%, #C9388C 100%); color:var(--cream); display:grid; grid-template-rows:1fr auto; padding:var(--epk-section-pad-y) 40px 40px; }
 .theme-sunset-citypop .hero::before { content:''; position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.95 0 0 0 0 0.85 0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E"); opacity:0.5; mix-blend-mode:overlay; pointer-events:none; }
 .theme-sunset-citypop .hero-sun { position:absolute; top:20%; right:-10%; width:70vh; height:70vh; border-radius:50%; background:radial-gradient(circle, var(--gold) 0%, var(--coral) 50%, transparent 70%); opacity:0.6; filter:blur(20px); }
 .theme-sunset-citypop .hero-grid { position:absolute; bottom:0; left:0; right:0; height:35%; background: linear-gradient(180deg, transparent 0%, rgba(26,18,48,0.4) 100%), repeating-linear-gradient(180deg, transparent 0, transparent 20px, rgba(255,246,233,0.15) 20px, rgba(255,246,233,0.15) 21px), repeating-linear-gradient(90deg, transparent 0, transparent 8%, rgba(255,246,233,0.15) 8%, rgba(255,246,233,0.15) calc(8% + 1px)); transform:perspective(600px) rotateX(50deg); transform-origin:top; opacity:0.7; }
@@ -57,7 +60,7 @@ export const SUNSET_CITYPOP_CSS = `
 @keyframes sc-fadeUp { from{opacity:0; transform:translateY(30px)} to{opacity:1; transform:translateY(0)} }
 
 /* Sections */
-.theme-sunset-citypop section { padding:120px 40px; position:relative; }
+.theme-sunset-citypop section { padding:var(--epk-section-pad-y) 40px; position:relative; }
 .theme-sunset-citypop .container { max-width:1400px; margin:0 auto; }
 .theme-sunset-citypop .section-num { font-family:'Instrument Serif',serif; font-style:italic; font-size:14px; color:var(--coral); letter-spacing:0.05em; margin-bottom:12px; }
 .theme-sunset-citypop .section-label { font-size:11px; letter-spacing:0.32em; text-transform:uppercase; color:var(--ink); opacity:0.6; margin-bottom:32px; font-weight:500; }
@@ -65,7 +68,7 @@ export const SUNSET_CITYPOP_CSS = `
 .theme-sunset-citypop .section-h2 em { font-style:italic; background:linear-gradient(120deg, var(--coral), var(--hot-pink), var(--magenta)); -webkit-background-clip:text; background-clip:text; color:transparent; }
 
 /* Pickup / Featured Playlist */
-.theme-sunset-citypop .pickup { padding-top:100px; }
+.theme-sunset-citypop .pickup { padding-top:var(--epk-pickup-pad-top); }
 .theme-sunset-citypop .pickup-card { background:linear-gradient(135deg, #FFD9C7 0%, #FFB8C8 50%, #E8A8DA 100%); border-radius:24px; padding:56px; position:relative; overflow:hidden; display:grid; grid-template-columns:1.1fr 1fr; gap:60px; align-items:center; box-shadow:0 30px 80px rgba(232,69,143,0.2); }
 .theme-sunset-citypop .pickup-card::before { content:''; position:absolute; top:-60px; right:-60px; width:240px; height:240px; background:radial-gradient(circle, var(--gold) 0%, transparent 70%); opacity:0.6; }
 .theme-sunset-citypop .pickup-card::after { content:''; position:absolute; bottom:-80px; left:-80px; width:280px; height:280px; background:radial-gradient(circle, var(--royal) 0%, transparent 70%); opacity:0.3; }
@@ -95,6 +98,7 @@ export const SUNSET_CITYPOP_CSS = `
 /* Recent tracks list (merged discography) */
 .theme-sunset-citypop .disco { padding-top:0; }
 .theme-sunset-citypop .disco-list { border-top:1px solid var(--line-strong); }
+.theme-sunset-citypop .playlist-more { font-family:'DM Sans',sans-serif; font-size:12px; letter-spacing:0.25em; text-transform:uppercase; color:var(--muted); font-weight:600; margin:56px 0 20px; }
 .theme-sunset-citypop .disco-item { display:grid; grid-template-columns:40px 70px 1fr auto; gap:28px; align-items:center; padding:20px 0; border-bottom:1px solid var(--line); transition:all 0.3s ease; }
 .theme-sunset-citypop .disco-item:hover { padding-left:16px; background:linear-gradient(90deg, rgba(255,94,94,0.05), transparent); }
 .theme-sunset-citypop .disco-item:hover .disco-play { background:var(--coral); color:var(--cream); border-color:var(--coral); }
@@ -196,6 +200,16 @@ export const SUNSET_CITYPOP_CSS = `
 .theme-sunset-citypop .sc-footer { padding:32px 40px; background:var(--ink); border-top:1px solid rgba(255,246,233,0.1); display:flex; justify-content:space-between; align-items:center; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--cream); opacity:0.6; flex-wrap:wrap; gap:12px; }
 .theme-sunset-citypop .sc-footer a { color:var(--gold); text-decoration:none; border-bottom:1px solid var(--gold); padding-bottom:1px; opacity:1; }
 
+/* Bio */
+.theme-sunset-citypop .bio { background:var(--peach); position:relative; }
+.theme-sunset-citypop .bio-grid { display:grid; grid-template-columns:var(--epk-bio-grid); gap:var(--epk-bio-gap); align-items:start; }
+.theme-sunset-citypop .bio-sidebar { position:static; }
+.theme-sunset-citypop .pull-quote { font-family:'Instrument Serif',serif; font-style:italic; font-size:36px; line-height:1.2; color:var(--ink); margin-bottom:24px; letter-spacing:-0.01em; }
+.theme-sunset-citypop .pull-quote em { font-style:normal; background:linear-gradient(120deg, var(--coral), var(--magenta)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.theme-sunset-citypop .pull-quote-attr { font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); font-weight:500; }
+.theme-sunset-citypop .bio-body { font-size:17px; line-height:1.75; color:var(--ink-soft); max-width:640px; }
+.theme-sunset-citypop .bio-body p { margin-bottom:24px; }
+
 /* Responsive */
 @media (max-width:900px){
   .theme-sunset-citypop section { padding:80px 24px; }
@@ -231,18 +245,10 @@ export const SUNSET_CITYPOP_CSS = `
   .theme-sunset-citypop .sc-footer { flex-direction:column; gap:12px; padding:24px; text-align:center; }
 }
 
-/* Bio */
-.theme-sunset-citypop .bio { background:var(--peach); position:relative; }
-.theme-sunset-citypop .bio-grid { display:grid; grid-template-columns:1fr 1.4fr; gap:80px; align-items:start; }
-.theme-sunset-citypop .bio-sidebar { position:sticky; top:100px; }
-.theme-sunset-citypop .pull-quote { font-family:'Instrument Serif',serif; font-style:italic; font-size:36px; line-height:1.2; color:var(--ink); margin-bottom:24px; letter-spacing:-0.01em; }
-.theme-sunset-citypop .pull-quote em { font-style:normal; background:linear-gradient(120deg, var(--coral), var(--magenta)); -webkit-background-clip:text; background-clip:text; color:transparent; }
-.theme-sunset-citypop .pull-quote-attr { font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); font-weight:500; }
-.theme-sunset-citypop .bio-body { font-size:17px; line-height:1.75; color:var(--ink-soft); max-width:640px; }
-.theme-sunset-citypop .bio-body p { margin-bottom:24px; }
-
-/* Phones: compact the Featured sticker further (proto had no <=600 rule) */
+/* Phones: compact further (proto had no <=600 rule) */
 @media (max-width:600px){
   .theme-sunset-citypop .pickup-tag { font-size:9px; letter-spacing:0.25em; padding:5px 12px; }
+  .theme-sunset-citypop section { padding:56px 24px; }
+  .theme-sunset-citypop .hero { min-height:60vh; }
 }
 `;

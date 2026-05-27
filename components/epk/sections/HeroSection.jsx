@@ -37,7 +37,13 @@ export default function HeroSection({ artist, epk, tracks, lang }) {
         <div className="hero-visual">
           <div className="portrait-frame">
             {portraitImg ? (
-              <img src={portraitImg} alt={name} />
+              <>
+                <div
+                  className="hero-photo-bg"
+                  style={{ backgroundImage: `url("${portraitImg}")` }}
+                />
+                <img src={portraitImg} alt={name} />
+              </>
             ) : (
               <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice">
                 <defs>

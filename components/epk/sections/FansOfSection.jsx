@@ -18,7 +18,15 @@ export default function FansOfSection({ fans, influences, lang, num = '04' }) {
         For Fans Of
       </div>
       <h2 className="section-h2">
-        If you <em>love…</em>
+        {lang === 'en' ? (
+          <>
+            If you <em>love…</em>
+          </>
+        ) : (
+          <>
+            こんな音楽が<em>好きなら…</em>
+          </>
+        )}
       </h2>
       <div className="fans-grid">
         {list.map((f, i) => (
@@ -31,7 +39,7 @@ export default function FansOfSection({ fans, influences, lang, num = '04' }) {
       <p className="fans-note">
         {lang === 'en'
           ? 'Reference points — not affiliations.'
-          : '参考アーティスト（提携関係ではありません）'}
+          : '参考までに — 共演関係はありません'}
       </p>
     </section>
   );

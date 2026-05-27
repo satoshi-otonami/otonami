@@ -17,7 +17,7 @@ function Topbar({ lang, setLang }) {
       <div className="topbar-left">
         <span>
           <span className="dot" />
-          Live EPK
+          {lang === 'en' ? 'Live EPK' : '公開中のEPK'}
         </span>
         <span>Issue №001</span>
       </div>
@@ -36,7 +36,7 @@ function Topbar({ lang, setLang }) {
             JP
           </button>
         </div>
-        <a href="#connect">Contact</a>
+        <a href="#connect">{lang === 'en' ? 'Contact' : 'お問い合わせ'}</a>
       </div>
     </div>
   );
@@ -179,7 +179,7 @@ export default function EditorialDarkTheme({ data }) {
         <OtonamiBadgeSection stats={pitch_stats} />
       </div>
       <div className="epk-reveal">
-        <ConnectSection artist={artist} epk={epk} num={num.connect} />
+        <ConnectSection artist={artist} epk={epk} lang={lang} num={num.connect} />
       </div>
       <Footer artist={artist} epk={epk} />
     </div>

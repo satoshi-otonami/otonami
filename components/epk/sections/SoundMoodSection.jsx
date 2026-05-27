@@ -12,7 +12,15 @@ export default function SoundMoodSection({ scenes, lang, num = '03' }) {
         Sound &amp; Mood
       </div>
       <h2 className="section-h2">
-        Where it <em>plays.</em>
+        {lang === 'en' ? (
+          <>
+            Where it <em>plays.</em>
+          </>
+        ) : (
+          <>
+            どんな<em>場面で。</em>
+          </>
+        )}
       </h2>
       <div className="scene-grid">
         {list.map((s, i) => {

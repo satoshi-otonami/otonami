@@ -127,7 +127,7 @@ export default function FeaturedPlaylistSection({ playlistTracks, lang, num = '0
       {others.length > 0 && (
         <div className="playlist-list">
           <h3 className="playlist-list-title">
-            {lang === 'en' ? 'More from this artist' : 'その他の楽曲'}
+            {lang === 'en' ? 'More from this artist' : 'このアーティストの他の楽曲'}
           </h3>
           <ul>
             {others.map((t, i) => (

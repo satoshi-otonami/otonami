@@ -1,10 +1,13 @@
 // EPK Connect — social links (from artist) + contact blocks (from EPK).
-export default function ConnectSection({ artist, epk, num = '03' }) {
+// lang-aware: heading, description, contact roles, and "Official Site" toggle;
+// brand names (Spotify/YouTube/Instagram/X/Facebook) stay as-is.
+export default function ConnectSection({ artist, epk, lang = 'en', num = '03' }) {
   const a = artist || {};
   const e = epk || {};
+  const t = (en, jp) => (lang === 'en' ? en : jp);
 
   const links = [
-    { url: a.website_url, label: 'Official Site' },
+    { url: a.website_url, label: t('Official Site', '公式サイト') },
     { url: a.spotify_url, label: 'Spotify' },
     { url: a.youtube_url, label: 'YouTube' },
     { url: a.instagram_url, label: 'Instagram' },
@@ -14,17 +17,17 @@ export default function ConnectSection({ artist, epk, num = '03' }) {
 
   const contacts = [
     e.contact_management_email && {
-      role: 'Management',
+      role: t('Management', 'マネジメント'),
       name: e.contact_management_name,
       email: e.contact_management_email,
     },
     e.contact_sync_email && {
-      role: 'Sync / Licensing',
+      role: t('Sync / Licensing', 'シンク / ライセンス'),
       name: e.contact_sync_name,
       email: e.contact_sync_email,
     },
     e.contact_press_email && {
-      role: 'Press Inquiries',
+      role: t('Press Inquiries', 'プレスお問い合わせ'),
       name: 'OTONAMI Press Desk',
       email: e.contact_press_email,
     },
@@ -38,11 +41,19 @@ export default function ConnectSection({ artist, epk, num = '03' }) {
       <div className="connect-grid">
         <div>
           <h2 className="connect-h">
-            Get in <em>touch.</em>
+            {lang === 'en' ? (
+              <>
+                Get in <em>touch.</em>
+              </>
+            ) : (
+              <em>お問い合わせ</em>
+            )}
           </h2>
           <p className="connect-desc">
-            For licensing, sync, press inquiries, and curator partnerships,
-            please reach the team directly.
+            {t(
+              'For licensing, sync, press inquiries, and curator partnerships, please reach the team directly.',
+              'ライセンス、シンク、プレス、キュレーター連携のご相談は、直接チームまでご連絡ください。'
+            )}
           </p>
           {links.length > 0 && (
             <div className="connect-buttons">

@@ -10,7 +10,15 @@ export default function PressSection({ press, lang, num = '06' }) {
         Press &amp; Recognition
       </div>
       <h2 className="section-h2">
-        On the <em>record.</em>
+        {lang === 'en' ? (
+          <>
+            On the <em>record.</em>
+          </>
+        ) : (
+          <>
+            <em>メディア</em>の声。
+          </>
+        )}
       </h2>
       <div className="press-grid">
         {rows.map((p) => {

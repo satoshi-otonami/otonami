@@ -13,7 +13,15 @@ export default function TourSection({ tour, lang, num = '05' }) {
         Tour &amp; Live
       </div>
       <h2 className="section-h2">
-        On <em>stage.</em>
+        {lang === 'en' ? (
+          <>
+            On <em>stage.</em>
+          </>
+        ) : (
+          <>
+            <em>ステージ</em>にて。
+          </>
+        )}
       </h2>
 
       {highlights.length > 0 && (

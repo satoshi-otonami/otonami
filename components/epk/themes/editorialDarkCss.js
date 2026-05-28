@@ -15,6 +15,7 @@ export const EDITORIAL_DARK_CSS = `
   --glass-bg:rgba(245,236,217,0.04); --glass-border:rgba(245,236,217,0.14);
   /* Shared EPK density tokens — same values across themes (brutalist will copy). */
   --epk-hero-min-height:75vh; --epk-section-pad-y:80px; --epk-pickup-pad-top:60px;
+  --epk-pickup-max-h:70vh; --epk-pickup-cover-max-w:400px;
   --epk-bio-grid:1fr 2fr; --epk-bio-gap:60px;
   background:var(--ink-deepest); color:var(--paper);
   font-family:'DM Sans',sans-serif; font-size:16px; line-height:1.6;
@@ -82,14 +83,14 @@ export const EDITORIAL_DARK_CSS = `
 .epk-root .pickup-card::before { content:''; position:absolute; inset:0; background: radial-gradient(circle at 80% 20%, rgba(196,149,106,0.15) 0%, transparent 50%), radial-gradient(circle at 10% 90%, rgba(216,85,63,0.1) 0%, transparent 60%); pointer-events:none; }
 .epk-root .pickup-meta { position:relative; z-index:2; }
 .epk-root .pickup-tag { display:inline-block; font-size:10px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--coral); padding:6px 14px; border:1px solid var(--coral); border-radius:3px; margin-bottom:32px; }
-.epk-root .pickup-title { font-family:'Fraunces',serif; font-weight:300; font-size:clamp(44px,6vw,80px); line-height:0.95; letter-spacing:-0.02em; margin-bottom:8px; color:var(--paper); }
+.epk-root .pickup-title { font-family:'Fraunces',serif; font-weight:300; font-size:clamp(44px,6vw,64px); line-height:0.95; letter-spacing:-0.02em; margin-bottom:8px; color:var(--paper); }
 .epk-root .pickup-subtitle { font-family:'Fraunces',serif; font-style:italic; font-weight:300; font-size:22px; color:var(--gold-bright); margin-bottom:32px; }
 .epk-root .pickup-desc { font-size:15px; line-height:1.7; color:var(--paper-warm); opacity:0.85; margin-bottom:40px; max-width:420px; }
 .epk-root .play-button { display:inline-flex; align-items:center; gap:16px; background:var(--paper); color:var(--ink-deepest); border:none; font-family:'DM Sans',sans-serif; font-size:13px; letter-spacing:0.15em; text-transform:uppercase; padding:16px 32px; border-radius:100px; cursor:pointer; font-weight:500; transition:transform 0.3s ease; text-decoration:none; }
 .epk-root .play-button:hover { transform:translateX(4px); }
 .epk-root .play-button .icon { width:24px; height:24px; background:var(--ink-deepest); border-radius:50%; position:relative; display:inline-flex; align-items:center; justify-content:center; }
 .epk-root .play-button .icon::after { content:''; width:0; height:0; border-left:7px solid var(--paper); border-top:4px solid transparent; border-bottom:4px solid transparent; margin-left:2px; }
-.epk-root .pickup-visual { position:relative; z-index:2; aspect-ratio:1; border-radius:4px; overflow:hidden; background:linear-gradient(135deg, var(--coral) 0%, var(--gold) 40%, var(--ink-mid) 100%); }
+.epk-root .pickup-visual { position:relative; z-index:2; aspect-ratio:1; border-radius:4px; overflow:hidden; background:linear-gradient(135deg, var(--coral) 0%, var(--gold) 40%, var(--ink-mid) 100%); max-width:var(--epk-pickup-cover-max-w); width:100%; justify-self:end; }
 .epk-root .pickup-visual img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .epk-root .pickup-visual svg { position:absolute; inset:0; width:100%; height:100%; }
 .epk-root .waveform { position:absolute; bottom:24px; left:24px; right:24px; height:60px; display:flex; align-items:end; gap:3px; }
@@ -193,6 +194,12 @@ export const EDITORIAL_DARK_CSS = `
 .epk-root .press-source { font-size:12px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); text-decoration:none; }
 .epk-root a.press-source:hover { border-bottom:1px solid var(--gold); }
 .epk-root .press-date { font-size:11px; letter-spacing:0.1em; color:var(--muted); }
+
+/* Pickup PC cap + tighter top padding — mobile is untouched (still 60px). */
+@media (min-width:901px){
+  .epk-root { --epk-pickup-pad-top:48px; }
+  .epk-root .pickup-card { max-height:var(--epk-pickup-max-h); }
+}
 
 /* Responsive */
 @media (max-width:900px){

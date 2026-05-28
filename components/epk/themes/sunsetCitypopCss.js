@@ -13,6 +13,7 @@ export const SUNSET_CITYPOP_CSS = `
   --line:rgba(26,18,48,0.12); --line-strong:rgba(26,18,48,0.25);
   /* Shared EPK density tokens — same values across themes (brutalist will copy). */
   --epk-hero-min-height:75vh; --epk-section-pad-y:80px; --epk-pickup-pad-top:60px;
+  --epk-pickup-max-h:70vh; --epk-pickup-cover-max-w:400px;
   --epk-bio-grid:1fr 2fr; --epk-bio-gap:60px;
   background:var(--cream); color:var(--ink);
   font-family:'DM Sans',sans-serif; font-size:16px; line-height:1.6;
@@ -74,7 +75,7 @@ export const SUNSET_CITYPOP_CSS = `
 .theme-sunset-citypop .pickup-card::after { content:''; position:absolute; bottom:-80px; left:-80px; width:280px; height:280px; background:radial-gradient(circle, var(--royal) 0%, transparent 70%); opacity:0.3; }
 .theme-sunset-citypop .pickup-meta { position:relative; z-index:2; color:var(--ink); }
 .theme-sunset-citypop .pickup-tag { display:inline-block; font-size:10px; letter-spacing:0.3em; text-transform:uppercase; color:var(--ink); padding:6px 14px; background:var(--cream); border-radius:100px; margin-bottom:28px; font-weight:600; }
-.theme-sunset-citypop .pickup-title { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(56px,8vw,112px); line-height:0.9; letter-spacing:-0.04em; margin-bottom:16px; color:var(--ink); }
+.theme-sunset-citypop .pickup-title { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(56px,8vw,88px); line-height:0.9; letter-spacing:-0.04em; margin-bottom:16px; color:var(--ink); }
 .theme-sunset-citypop .pickup-title em { font-style:italic; color:var(--magenta); }
 .theme-sunset-citypop .pickup-feat { font-family:'Instrument Serif',serif; font-style:italic; font-size:24px; color:var(--ink-soft); margin-bottom:28px; }
 .theme-sunset-citypop .pickup-vibes { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:40px; }
@@ -83,7 +84,7 @@ export const SUNSET_CITYPOP_CSS = `
 .theme-sunset-citypop .play-button:hover { transform:scale(1.03); }
 .theme-sunset-citypop .play-button .icon { width:22px; height:22px; background:var(--coral); border-radius:50%; display:inline-flex; align-items:center; justify-content:center; }
 .theme-sunset-citypop .play-button .icon::after { content:''; width:0; height:0; border-left:6px solid var(--cream); border-top:4px solid transparent; border-bottom:4px solid transparent; margin-left:2px; }
-.theme-sunset-citypop .pickup-visual { position:relative; z-index:2; aspect-ratio:1; border-radius:16px; overflow:hidden; background:linear-gradient(135deg, var(--royal) 0%, var(--magenta) 50%, var(--coral) 100%); display:flex; align-items:center; justify-content:center; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+.theme-sunset-citypop .pickup-visual { position:relative; z-index:2; aspect-ratio:1; border-radius:16px; overflow:hidden; background:linear-gradient(135deg, var(--royal) 0%, var(--magenta) 50%, var(--coral) 100%); display:flex; align-items:center; justify-content:center; box-shadow:0 20px 60px rgba(0,0,0,0.2); max-width:var(--epk-pickup-cover-max-w); width:100%; justify-self:end; }
 .theme-sunset-citypop .pickup-visual img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .theme-sunset-citypop .cassette { width:70%; aspect-ratio:1; border-radius:50%; background:radial-gradient(circle, var(--cream) 0%, var(--cream) 18%, var(--ink) 19%, var(--ink) 24%, #2D1B4E 25%, #2D1B4E 100%); position:relative; animation:sc-spin 8s linear infinite; box-shadow:0 10px 40px rgba(0,0,0,0.3); }
 .theme-sunset-citypop .cassette::before { content:''; position:absolute; inset:0; border-radius:50%; background:repeating-radial-gradient(circle, transparent 0, transparent 3px, rgba(255,246,233,0.05) 3px, rgba(255,246,233,0.05) 5px); }
@@ -209,6 +210,12 @@ export const SUNSET_CITYPOP_CSS = `
 .theme-sunset-citypop .pull-quote-attr { font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); font-weight:500; }
 .theme-sunset-citypop .bio-body { font-size:17px; line-height:1.75; color:var(--ink-soft); max-width:640px; }
 .theme-sunset-citypop .bio-body p { margin-bottom:24px; }
+
+/* Pickup PC cap + tighter top padding — mobile is untouched (still 60px). */
+@media (min-width:901px){
+  .theme-sunset-citypop { --epk-pickup-pad-top:48px; }
+  .theme-sunset-citypop .pickup-card { max-height:var(--epk-pickup-max-h); }
+}
 
 /* Responsive */
 @media (max-width:900px){

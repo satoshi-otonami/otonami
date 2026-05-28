@@ -14,6 +14,7 @@ export const SUNSET_CITYPOP_CSS = `
   /* Shared EPK density tokens — same values across themes (brutalist will copy). */
   --epk-hero-min-height:75vh; --epk-section-pad-y:80px; --epk-pickup-pad-top:60px;
   --epk-pickup-max-h:70vh; --epk-pickup-cover-max-w:400px;
+  --epk-pickup-col-gap:40px; --epk-pickup-left-max-w:520px;
   --epk-bio-grid:1fr 2fr; --epk-bio-gap:60px;
   background:var(--cream); color:var(--ink);
   font-family:'DM Sans',sans-serif; font-size:16px; line-height:1.6;
@@ -84,7 +85,7 @@ export const SUNSET_CITYPOP_CSS = `
 .theme-sunset-citypop .play-button:hover { transform:scale(1.03); }
 .theme-sunset-citypop .play-button .icon { width:22px; height:22px; background:var(--coral); border-radius:50%; display:inline-flex; align-items:center; justify-content:center; }
 .theme-sunset-citypop .play-button .icon::after { content:''; width:0; height:0; border-left:6px solid var(--cream); border-top:4px solid transparent; border-bottom:4px solid transparent; margin-left:2px; }
-.theme-sunset-citypop .pickup-visual { position:relative; z-index:2; aspect-ratio:1; border-radius:16px; overflow:hidden; background:linear-gradient(135deg, var(--royal) 0%, var(--magenta) 50%, var(--coral) 100%); display:flex; align-items:center; justify-content:center; box-shadow:0 20px 60px rgba(0,0,0,0.2); max-width:var(--epk-pickup-cover-max-w); width:100%; justify-self:end; }
+.theme-sunset-citypop .pickup-visual { position:relative; z-index:2; aspect-ratio:1; border-radius:16px; overflow:hidden; background:linear-gradient(135deg, var(--royal) 0%, var(--magenta) 50%, var(--coral) 100%); display:flex; align-items:center; justify-content:center; box-shadow:0 20px 60px rgba(0,0,0,0.2); max-width:var(--epk-pickup-cover-max-w); width:100%; }
 .theme-sunset-citypop .pickup-visual img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .theme-sunset-citypop .cassette { width:70%; aspect-ratio:1; border-radius:50%; background:radial-gradient(circle, var(--cream) 0%, var(--cream) 18%, var(--ink) 19%, var(--ink) 24%, #2D1B4E 25%, #2D1B4E 100%); position:relative; animation:sc-spin 8s linear infinite; box-shadow:0 10px 40px rgba(0,0,0,0.3); }
 .theme-sunset-citypop .cassette::before { content:''; position:absolute; inset:0; border-radius:50%; background:repeating-radial-gradient(circle, transparent 0, transparent 3px, rgba(255,246,233,0.05) 3px, rgba(255,246,233,0.05) 5px); }
@@ -211,10 +212,18 @@ export const SUNSET_CITYPOP_CSS = `
 .theme-sunset-citypop .bio-body { font-size:17px; line-height:1.75; color:var(--ink-soft); max-width:640px; }
 .theme-sunset-citypop .bio-body p { margin-bottom:24px; }
 
-/* Pickup PC cap + tighter top padding — mobile is untouched (still 60px). */
+/* Pickup PC layout — tighter top padding, height cap, content-based grid
+   (left = fit-content capped at left-max-w, right = cover 320-400px) so the
+   card no longer has a wide empty middle between text and cover. Mobile is
+   untouched. */
 @media (min-width:901px){
   .theme-sunset-citypop { --epk-pickup-pad-top:48px; }
-  .theme-sunset-citypop .pickup-card { max-height:var(--epk-pickup-max-h); }
+  .theme-sunset-citypop .pickup-card {
+    max-height:var(--epk-pickup-max-h);
+    grid-template-columns:fit-content(var(--epk-pickup-left-max-w)) minmax(320px, var(--epk-pickup-cover-max-w));
+    column-gap:var(--epk-pickup-col-gap);
+  }
+  .theme-sunset-citypop .pickup-meta { max-width:var(--epk-pickup-left-max-w); }
 }
 
 /* Responsive */

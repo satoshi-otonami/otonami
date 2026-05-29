@@ -15,6 +15,7 @@ export const SUNSET_CITYPOP_CSS = `
   --epk-hero-min-height:75vh; --epk-section-pad-y:80px; --epk-pickup-pad-top:60px;
   --epk-pickup-max-h:70vh; --epk-pickup-cover-max-w:400px;
   --epk-pickup-col-gap:40px; --epk-pickup-left-max-w:520px;
+  --epk-pickup-card-max-w:840px; /* PC-only: cap+center the pickup card & list so the card hugs its content (no empty right side) */
   --epk-bio-grid:1fr 2fr; --epk-bio-gap:60px;
   background:var(--cream); color:var(--ink);
   font-family:'DM Sans',sans-serif; font-size:16px; line-height:1.6;
@@ -222,8 +223,14 @@ export const SUNSET_CITYPOP_CSS = `
     max-height:var(--epk-pickup-max-h);
     grid-template-columns:fit-content(var(--epk-pickup-left-max-w)) minmax(320px, var(--epk-pickup-cover-max-w));
     column-gap:var(--epk-pickup-col-gap);
+    /* Hug the grid content (no wide empty right side) and center within the container */
+    width:fit-content;
+    max-width:var(--epk-pickup-card-max-w);
+    margin-inline:auto;
   }
   .theme-sunset-citypop .pickup-meta { max-width:var(--epk-pickup-left-max-w); }
+  /* Keep the "More from this playlist" block aligned with the centered card */
+  .theme-sunset-citypop .playlist-block { max-width:var(--epk-pickup-card-max-w); margin-inline:auto; }
 }
 
 /* Responsive */

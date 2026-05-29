@@ -97,7 +97,7 @@ export function SunsetFeaturedPlaylist({ playlistTracks, artist, lang, num }) {
         </div>
 
         {others.length > 0 && (
-          <div>
+          <div className="playlist-block">
             <div className="playlist-more">
               {lang === 'en' ? 'More from this playlist' : 'このプレイリストの他の楽曲'}
             </div>

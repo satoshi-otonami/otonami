@@ -52,9 +52,9 @@ export const BRUTALIST_CSS = `
 .theme-brutalist .hero-issue-bar span { color:var(--gray); }
 .theme-brutalist .hero-issue-bar .red { color:var(--red); font-weight:600; }
 .theme-brutalist .hero-main { padding:32px 0 48px; display:grid; grid-template-columns:1.2fr 1fr; gap:40px; align-items:stretch; }
-.theme-brutalist .hero-left { display:flex; flex-direction:column; justify-content:space-between; }
+.theme-brutalist .hero-left { display:flex; flex-direction:column; justify-content:space-between; min-width:0; }
 .theme-brutalist .hero-eyebrow { font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; color:var(--ink); margin-bottom:24px; display:inline-block; border-top:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink); padding:6px 0; letter-spacing:0.05em; }
-.theme-brutalist .hero h1 { font-family:'Archivo Black',sans-serif; font-size:clamp(72px,13vw,200px); line-height:0.82; letter-spacing:-0.04em; margin-bottom:24px; color:var(--ink); animation:br-fadeUp 0.8s ease 0.2s both; }
+.theme-brutalist .hero h1 { font-family:'Archivo Black',sans-serif; font-size:clamp(72px,13vw,200px); line-height:0.82; letter-spacing:-0.04em; margin-bottom:24px; color:var(--ink); animation:br-fadeUp 0.8s ease 0.2s both; max-width:100%; overflow-wrap:break-word; }
 .theme-brutalist .hero h1 .red-stripe { display:inline-block; background:var(--red); color:var(--paper); padding:0 0.08em; }
 .theme-brutalist .hero-subhead { font-family:'Instrument Serif',serif; font-style:italic; font-size:clamp(22px,2.5vw,32px); line-height:1.3; margin-bottom:32px; max-width:540px; animation:br-fadeUp 0.8s ease 0.4s both; }
 .theme-brutalist .hero-subhead em { background:var(--ink); color:var(--paper); font-style:normal; padding:0 6px; }

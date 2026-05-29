@@ -96,7 +96,6 @@ export const BRUTALIST_CSS = `
 /* Proto bordered 1fr 1fr split — left meta + right visual divided by the ink
    frame. No center/cap variables: the frame fills its column so there is no
    empty right side to fix. */
-.theme-brutalist .pickup { padding-top:var(--epk-pickup-pad-top); }
 .theme-brutalist .pickup-card { display:grid; grid-template-columns:1fr 1fr; gap:0; border:2px solid var(--ink); background:var(--paper-warm); }
 .theme-brutalist .pickup-meta { padding:48px 40px; border-right:2px solid var(--ink); }
 .theme-brutalist .pickup-tag { font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; display:inline-block; background:var(--red); color:var(--paper); padding:4px 10px; margin-bottom:32px; font-weight:600; }
@@ -251,6 +250,11 @@ export const BRUTALIST_CSS = `
 .theme-brutalist .br-footer a { color:var(--red); text-decoration:none; border-bottom:1px solid var(--red); padding-bottom:1px; font-weight:600; }
 
 /* ============ RESPONSIVE ============ */
+/* PC-only: tighten the Featured Playlist top padding to match other themes'
+   density (mobile keeps the standard 56px section padding). */
+@media (min-width:901px) {
+  .theme-brutalist .pickup { padding-top:var(--epk-pickup-pad-top); }
+}
 @media (max-width:900px) {
   .theme-brutalist section { padding:56px 20px; }
   .theme-brutalist .topbar { grid-template-columns:1fr auto; gap:12px; padding:10px 16px; }

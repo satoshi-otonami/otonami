@@ -94,7 +94,13 @@ export function BrutalistFeaturedPlaylist({ playlistTracks, artist, lang, num })
           </div>
           <div className="pickup-visual">
             {pinned.cover_image_url ? (
-              <img src={pinned.cover_image_url} alt={pinned.title} />
+              <>
+                <div
+                  className="pickup-photo-bg"
+                  style={{ backgroundImage: `url("${pinned.cover_image_url}")` }}
+                />
+                <img src={pinned.cover_image_url} alt={pinned.title} />
+              </>
             ) : (
               <>
                 <div className="disc" />

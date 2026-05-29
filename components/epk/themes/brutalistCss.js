@@ -62,11 +62,16 @@ export const BRUTALIST_CSS = `
 .theme-brutalist .hero-meta-grid > div { font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--gray); }
 .theme-brutalist .hero-meta-grid > div strong { display:block; font-family:'Archivo Black',sans-serif; font-size:22px; color:var(--ink); margin-top:4px; letter-spacing:-0.02em; }
 .theme-brutalist .hero-right { position:relative; border:2px solid var(--ink); background:var(--ink); overflow:hidden; min-height:460px; animation:br-fadeIn 1s ease 0.4s both; }
-.theme-brutalist .hero-right img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-.theme-brutalist .hero-right.has-photo::after { content:'PRESS PHOTO 01'; position:absolute; bottom:12px; left:12px; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--paper); background:var(--red); padding:4px 8px; letter-spacing:0.05em; font-weight:600; z-index:3; }
+/* Photo shown contain+blur (matches editorial portrait-frame): blurred bg fills
+   the frame, contained fg keeps the subject uncropped. bg z1 < overlay z2 <
+   fg z3 < reg-mark z4 < label z5. */
+.theme-brutalist .hero-photo-bg { position:absolute; inset:-40px; background-size:cover; background-position:center; background-repeat:no-repeat; filter:blur(50px) saturate(1.4); -webkit-filter:blur(50px) saturate(1.4); opacity:0.7; z-index:1; transform:translateZ(0); will-change:filter; }
+.theme-brutalist .hero-right.has-photo::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg, rgba(10,10,10,0.2) 0%, rgba(10,10,10,0.5) 100%); z-index:2; pointer-events:none; }
+.theme-brutalist .hero-photo-fg { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; z-index:3; filter:drop-shadow(0 18px 36px rgba(0,0,0,0.45)); }
+.theme-brutalist .hero-right.has-photo::after { content:'PRESS PHOTO 01'; position:absolute; bottom:12px; left:12px; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--paper); background:var(--red); padding:4px 8px; letter-spacing:0.05em; font-weight:600; z-index:5; }
 .theme-brutalist .hero-right-visual { position:absolute; inset:0; background: radial-gradient(ellipse 60% 40% at 30% 30%, rgba(230,57,70,0.6) 0%, transparent 60%), radial-gradient(ellipse 50% 60% at 70% 70%, rgba(244,240,232,0.2) 0%, transparent 60%), linear-gradient(135deg, var(--ink) 0%, var(--ink-soft) 100%); }
 .theme-brutalist .hero-right-visual svg { position:absolute; inset:0; width:100%; height:100%; }
-.theme-brutalist .reg-mark { position:absolute; width:16px; height:16px; border:1.5px solid var(--paper); z-index:2; }
+.theme-brutalist .reg-mark { position:absolute; width:16px; height:16px; border:1.5px solid var(--paper); z-index:4; }
 .theme-brutalist .reg-mark::before, .theme-brutalist .reg-mark::after { content:''; position:absolute; background:var(--paper); }
 .theme-brutalist .reg-mark::before { top:50%; left:-4px; right:-4px; height:1.5px; transform:translateY(-50%); }
 .theme-brutalist .reg-mark::after { left:50%; top:-4px; bottom:-4px; width:1.5px; transform:translateX(-50%); }
@@ -110,7 +115,11 @@ export const BRUTALIST_CSS = `
 .theme-brutalist .play-button::before { content:'▶'; font-size:14px; color:var(--red); transition:color 0.2s; }
 .theme-brutalist .play-button:hover::before { color:var(--paper); }
 .theme-brutalist .pickup-visual { background:var(--ink); position:relative; overflow:hidden; min-height:460px; display:flex; align-items:center; justify-content:center; }
-.theme-brutalist .pickup-visual img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+/* Square jacket art in a landscape (≈1.49:1 @ PC) frame: contain keeps it
+   uncropped, blurred same-art bg fills the side gutters (no dead bars), frame
+   size unchanged so the 1fr/1fr split stays balanced. bg z1 < jacket z2. */
+.theme-brutalist .pickup-visual .pickup-photo-bg { position:absolute; inset:-40px; background-size:cover; background-position:center; background-repeat:no-repeat; filter:blur(50px) saturate(1.4); -webkit-filter:blur(50px) saturate(1.4); opacity:0.55; z-index:1; transform:translateZ(0); will-change:filter; }
+.theme-brutalist .pickup-visual img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; z-index:2; filter:drop-shadow(0 18px 36px rgba(0,0,0,0.45)); }
 .theme-brutalist .disc { width:75%; aspect-ratio:1; border-radius:50%; background: radial-gradient(circle, var(--red) 0%, var(--red) 16%, var(--ink) 17%, var(--ink) 22%, #2a2a2a 23%, #2a2a2a 100%); position:relative; animation:br-spin 6s linear infinite; }
 .theme-brutalist .disc::before { content:''; position:absolute; inset:0; border-radius:50%; background:repeating-radial-gradient(circle, transparent 0, transparent 2px, rgba(244,240,232,0.04) 2px, rgba(244,240,232,0.04) 4px); }
 .theme-brutalist .disc::after { content:''; position:absolute; top:50%; left:50%; width:8px; height:8px; background:var(--paper); border-radius:50%; transform:translate(-50%,-50%); }
@@ -268,6 +277,7 @@ export const BRUTALIST_CSS = `
   .theme-brutalist .hero-meta-grid { grid-template-columns:repeat(2,1fr); gap:16px; }
   .theme-brutalist .hero-meta-grid > div strong { font-size:18px; }
   .theme-brutalist .hero-right { min-height:320px; }
+  .theme-brutalist .hero-photo-bg { inset:-20px; filter:blur(30px) saturate(1.4); -webkit-filter:blur(30px) saturate(1.4); }
   .theme-brutalist .hero-ticker { margin:0 -20px; padding:12px 0; }
   .theme-brutalist .hero-ticker-inner { font-size:11px; }
   .theme-brutalist .section-head { grid-template-columns:auto 1fr; gap:12px; }
@@ -277,6 +287,7 @@ export const BRUTALIST_CSS = `
   .theme-brutalist .pickup-title { font-size:48px; }
   .theme-brutalist .pickup-desc { font-size:18px; }
   .theme-brutalist .pickup-visual { min-height:320px; }
+  .theme-brutalist .pickup-visual .pickup-photo-bg { inset:-20px; filter:blur(30px) saturate(1.4); -webkit-filter:blur(30px) saturate(1.4); }
   .theme-brutalist .bio-grid { grid-template-columns:1fr; gap:40px; }
   .theme-brutalist .pull-quote { font-size:28px; }
   .theme-brutalist .bio-body { padding-left:20px; }

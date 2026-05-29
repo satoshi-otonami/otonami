@@ -110,7 +110,13 @@ function Hero({ artist, epk, playlistTracks, tour, lang }) {
 
         <div className={`hero-right${photo ? ' has-photo' : ''}`}>
           {photo ? (
-            <img src={photo} alt={name} />
+            <>
+              <div
+                className="hero-photo-bg"
+                style={{ backgroundImage: `url("${photo}")` }}
+              />
+              <img className="hero-photo-fg" src={photo} alt={name} />
+            </>
           ) : (
             <div className="hero-right-visual">
               <svg

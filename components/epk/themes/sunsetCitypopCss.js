@@ -44,9 +44,11 @@ export const SUNSET_CITYPOP_CSS = `
 .theme-sunset-citypop .hero-content { position:relative; z-index:3; max-width:1400px; margin:0 auto; width:100%; align-self:center; }
 .theme-sunset-citypop .kicker { font-family:'DM Sans',sans-serif; font-size:12px; letter-spacing:0.32em; text-transform:uppercase; font-weight:500; margin-bottom:32px; display:inline-flex; align-items:center; gap:14px; padding:8px 18px; border:1px solid rgba(255,246,233,0.5); border-radius:100px; backdrop-filter:blur(10px); background:rgba(255,246,233,0.1); animation:sc-fadeUp 0.8s ease 0.2s both; }
 .theme-sunset-citypop .kicker::before { content:''; width:8px; height:8px; background:var(--gold); border-radius:50%; animation:sc-pulse 2s infinite; }
-.theme-sunset-citypop .hero h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(72px,14vw,220px); line-height:0.85; letter-spacing:-0.04em; margin-bottom:32px; animation:sc-fadeUp 1.2s ease 0.3s both; }
+/* h1 capped smaller than the no-photo proto (was 14vw/220px) so it never collides
+   with the right-column photo card — matches approved proto -photo-test-A.html. */
+.theme-sunset-citypop .hero h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(72px,11vw,180px); line-height:0.85; letter-spacing:-0.04em; margin-bottom:32px; animation:sc-fadeUp 1.2s ease 0.3s both; }
 .theme-sunset-citypop .hero h1 .line2 { display:block; font-style:italic; color:var(--gold); font-size:0.85em; margin-top:8px; }
-.theme-sunset-citypop .hero-tagline { font-family:'Instrument Serif',serif; font-style:italic; font-size:clamp(22px,2.5vw,32px); font-weight:400; line-height:1.3; max-width:640px; margin-bottom:48px; animation:sc-fadeUp 1s ease 0.5s both; }
+.theme-sunset-citypop .hero-tagline { font-family:'Instrument Serif',serif; font-style:italic; font-size:clamp(22px,2.2vw,30px); font-weight:400; line-height:1.3; max-width:540px; margin-bottom:40px; animation:sc-fadeUp 1s ease 0.5s both; }
 .theme-sunset-citypop .hero-tagline em { font-style:normal; color:var(--gold); }
 .theme-sunset-citypop .hero-cta-row { display:flex; gap:16px; flex-wrap:wrap; animation:sc-fadeUp 1s ease 0.7s both; }
 .theme-sunset-citypop .btn-primary { display:inline-flex; align-items:center; gap:14px; background:var(--cream); color:var(--ink); padding:16px 28px; border-radius:100px; text-decoration:none; font-weight:500; font-size:14px; letter-spacing:0.05em; transition:transform 0.3s ease; border:none; cursor:pointer; font-family:inherit; }
@@ -61,6 +63,18 @@ export const SUNSET_CITYPOP_CSS = `
 .theme-sunset-citypop .hero-ticker-inner span::after { content:'\\2726'; margin-left:48px; color:var(--gold); font-style:normal; }
 @keyframes sc-scroll-x { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 @keyframes sc-fadeUp { from{opacity:0; transform:translateY(30px)} to{opacity:1; transform:translateY(0)} }
+
+/* Hero framed photo card (案A) — artists.cover_url in a 3:2 frame, object-fit:contain
+   so the subject is NEVER cropped (whole band always visible). Echoes the pickup-card
+   visual family (rounded corners + gradient matte + gold corner glow). Ported verbatim
+   from the approved static proto route14band-epk-v2-citypop-photo-test-A.html. Additive
+   only: hero-sun / hero-grid / hero-ticker / headline treatment are untouched. The matte
+   gradient also serves as the cover_url=null fallback (no empty white/black frame). */
+.theme-sunset-citypop .hero-content-grid { display:grid; grid-template-columns:1.05fr 0.95fr; gap:56px; align-items:center; }
+.theme-sunset-citypop .hero-photo-card { position:relative; justify-self:end; width:100%; max-width:540px; aspect-ratio:3/2; border-radius:18px; overflow:hidden; background:linear-gradient(135deg, rgba(42,75,201,0.55) 0%, rgba(201,56,140,0.55) 60%, rgba(255,94,94,0.55) 100%); border:1px solid rgba(255,246,233,0.45); box-shadow:0 28px 80px rgba(232,69,143,0.42), 0 0 0 6px rgba(255,246,233,0.06); animation:sc-fadeUp 1s ease 0.5s both; }
+.theme-sunset-citypop .hero-photo-card img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+.theme-sunset-citypop .hero-photo-card::after { content:''; position:absolute; top:-44px; right:-44px; width:150px; height:150px; background:radial-gradient(circle, var(--gold) 0%, transparent 70%); opacity:0.55; pointer-events:none; }
+.theme-sunset-citypop .hero-photo-cap { position:absolute; left:14px; bottom:12px; z-index:2; font-size:10px; letter-spacing:0.28em; text-transform:uppercase; font-weight:600; color:var(--cream); text-shadow:0 1px 8px rgba(26,18,48,0.6); }
 
 /* Sections */
 .theme-sunset-citypop section { padding:var(--epk-section-pad-y) 40px; position:relative; }
@@ -238,8 +252,11 @@ export const SUNSET_CITYPOP_CSS = `
   .theme-sunset-citypop section { padding:80px 24px; }
   .theme-sunset-citypop .topbar { padding:14px 20px; }
   .theme-sunset-citypop .hero { padding:90px 24px 24px; }
-  .theme-sunset-citypop .hero h1 { font-size:64px; }
+  .theme-sunset-citypop .hero h1 { font-size:60px; }
   .theme-sunset-citypop .hero-tagline { font-size:20px; }
+  /* Hero photo card: stack under the text, full width (proto -photo-test-A.html mobile) */
+  .theme-sunset-citypop .hero-content-grid { grid-template-columns:1fr; gap:28px; }
+  .theme-sunset-citypop .hero-photo-card { justify-self:stretch; max-width:none; }
   .theme-sunset-citypop .hero-cta-row { flex-direction:column; }
   .theme-sunset-citypop .btn-primary, .theme-sunset-citypop .btn-ghost { width:100%; justify-content:center; }
   .theme-sunset-citypop .hero-ticker-inner { font-size:15px; }

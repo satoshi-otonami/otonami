@@ -40,6 +40,9 @@ function Topbar({ lang, setLang }) {
 
 function Hero({ artist, epk, tour, lang }) {
   const name = artist?.name || 'Artist';
+  // Hero press photo: profile cover only (NOT avatar_url / track cover_image_url).
+  // Rendered object-fit:contain in a 3:2 frame so the subject is never cropped.
+  const photo = artist?.cover_url || null;
   const parts = [artist?.region, artist?.label_name].filter(Boolean);
   const tagline =
     lang === 'en' ? epk?.tagline_en || epk?.tagline_jp : epk?.tagline_jp || epk?.tagline_en;
@@ -71,16 +74,30 @@ function Hero({ artist, epk, tour, lang }) {
       <div className="hero-sun" />
       <div className="hero-grid" />
       <div className="hero-content">
-        {parts.length > 0 && <div className="kicker">{parts.join(' · ')}</div>}
-        <h1>{name}</h1>
-        {taglineText && <p className="hero-tagline">{taglineText}</p>}
-        <div className="hero-cta-row">
-          <a className="btn-primary" href="#featured" onClick={scrollTo('featured')}>
-            {lang === 'en' ? 'Hear our latest' : '最新曲を聴く'}
-          </a>
-          <a className="btn-ghost" href="#featured" onClick={scrollTo('featured')}>
-            {lang === 'en' ? 'Browse catalog' : 'カタログを見る'}
-          </a>
+        <div className="hero-content-grid">
+          <div className="hero-text">
+            {parts.length > 0 && <div className="kicker">{parts.join(' · ')}</div>}
+            <h1>{name}</h1>
+            {taglineText && <p className="hero-tagline">{taglineText}</p>}
+            <div className="hero-cta-row">
+              <a className="btn-primary" href="#featured" onClick={scrollTo('featured')}>
+                {lang === 'en' ? 'Hear our latest' : '最新曲を聴く'}
+              </a>
+              <a className="btn-ghost" href="#featured" onClick={scrollTo('featured')}>
+                {lang === 'en' ? 'Browse catalog' : 'カタログを見る'}
+              </a>
+            </div>
+          </div>
+          {/* Framed 3:2 photo card. img only when cover_url exists; otherwise the
+              card's gradient matte shows (no empty frame). Caption is name-driven. */}
+          <div className="hero-photo-card">
+            {photo && <img src={photo} alt={name} />}
+            {photo && (
+              <span className="hero-photo-cap">
+                {name} · {lang === 'en' ? 'Live' : 'ライブ'}
+              </span>
+            )}
+          </div>
         </div>
       </div>
       {ticker.length > 0 && (

@@ -3,11 +3,13 @@ import { notFound } from 'next/navigation';
 import { getPublicEpk } from '@/lib/epk';
 import EditorialDarkTheme from '@/components/epk/themes/EditorialDark';
 import SunsetCitypopTheme from '@/components/epk/themes/SunsetCitypop';
+import BrutalistTheme from '@/components/epk/themes/Brutalist';
 
 // Theme registry, keyed by artist_epks.theme. Unknown -> editorial_dark.
 const THEMES = {
   editorial_dark: EditorialDarkTheme,
   sunset_citypop: SunsetCitypopTheme,
+  brutalist: BrutalistTheme,
 };
 
 // Dedupe the DB fetch across generateMetadata() + the page render.

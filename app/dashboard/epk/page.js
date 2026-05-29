@@ -523,7 +523,7 @@ export default function EpkEditorPage() {
               <select style={inputStyle} value={form.theme} onChange={(e) => setField('theme', e.target.value)}>
                 <option value="editorial_dark">Editorial Dark</option>
                 <option value="sunset_citypop">Sunset CITYPOP</option>
-                <option value="brutalist" disabled>Brutalist（近日対応）</option>
+                <option value="brutalist">Brutalist Indie</option>
               </select>
             </Field>
             <p style={{ fontSize: 13, color: '#8a8270', margin: '4px 0 0' }}>

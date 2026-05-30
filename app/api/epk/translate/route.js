@@ -8,8 +8,10 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'placeho
 
 // EPK-specific JA→EN *draft* translation for the editor's "英訳する" button.
 // Distinct from /api/translate (pitch, first-person voice): EPK bio/tagline are
-// written in the band's editorial third-person voice, and the SXSW "10回" review
-// taught us proper nouns + counts/years must survive translation untouched.
+// written in the band's editorial third-person voice. Counts/years must survive
+// untouched (the SXSW "10回" review). Proper nouns keep their established
+// English/romaji form, but Japanese-only person/place names are transcribed to
+// Hepburn romaji (the 山崎千裕 → Yamazaki Chihiro case), never left as kanji.
 const FIELD_CONFIG = {
   bio: { max_tokens: 1200 },
   tagline: { max_tokens: 300 },
@@ -19,9 +21,14 @@ const SYSTEM_PROMPT =
   'You are a translator for a music EPK (electronic press kit). Translate the ' +
   'Japanese text into natural, industry-standard English for international playlist ' +
   'curators and music press. ' +
-  'Preserve ALL proper nouns exactly as written — band names (e.g. ROUTE14band), ' +
-  'person names, song titles, festival names (e.g. SXSW, Bay of Islands Jazz Festival), ' +
-  'label names, and place names. Do not translate, re-romanize, or alter them. ' +
+  'Proper nouns — band names, person names, song titles, festival names, label names, ' +
+  'and place names. If an established English or romanized form already exists, keep it ' +
+  'exactly as written (e.g. ROUTE14band, SXSW, Bay of Islands Jazz Festival); do not ' +
+  'translate or re-spell it. If a name is written only in Japanese, transcribe it into ' +
+  'Hepburn romaji, surname before given name (e.g. 山崎千裕 → Yamazaki Chihiro); never ' +
+  'leave Japanese characters in the output, and never invent or reinterpret a spelling. ' +
+  'When a proper noun already appears in English elsewhere in the text, match that form ' +
+  'consistently. ' +
   'Preserve ALL numbers, counts, and years exactly as in the source ' +
   '(e.g. 「SXSWに10回」 → "ten times at SXSW" or "10 times"; never add, drop, or ' +
   'reinterpret a count). Do not introduce facts, opinions, or detail not present in ' +

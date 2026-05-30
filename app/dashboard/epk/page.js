@@ -108,6 +108,31 @@ function ChapIcon({ id }) {
   );
 }
 
+// "英訳する" — half-automatic JA→EN draft button for the Bio/Hero English fields.
+// The note makes explicit this is a draft the artist must review before saving.
+function TranslateButton({ label, busy, onClick }) {
+  return (
+    <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+      <button type="button" className="a-ghost" onClick={onClick} disabled={busy} style={{ fontSize: 12.5 }}>
+        {busy ? (
+          '翻訳中…'
+        ) : (
+          <>
+            <svg className="ico" viewBox="0 0 24 24" style={{ width: 14, height: 14 }}>
+              <path d="M4 5h7M9 3v2c0 4-2 7-6 8M5 9c0 3 3 5 7 5" />
+              <path d="m13 21 4-9 4 9M14.5 18h5" />
+            </svg>
+            {label}
+          </>
+        )}
+      </button>
+      <span style={{ fontSize: 11.5, color: '#9c8d80', lineHeight: 1.5 }}>
+        AIによる下訳です。固有名詞・ニュアンスを確認してから保存してください。
+      </span>
+    </div>
+  );
+}
+
 const EDITOR_CSS = `
 .epk-ed2{
   --coral:#FF6B4A;--coral-d:#E04E2E;--pink:#FF3D6E;--gold:#c4956a;--teal:#16a085;
@@ -256,11 +281,46 @@ export default function EpkEditorPage() {
   const [artist, setArtist] = useState(null);
   const [tourCount, setTourCount] = useState(0);
   const [pressCount, setPressCount] = useState(0);
+  const [translating, setTranslating] = useState(null); // 'bio' | 'tagline' while in-flight
 
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const flash = (text, kind = 'ok') => {
     setMsg({ text, kind });
     setTimeout(() => setMsg(null), 4000);
+  };
+
+  // Half-automatic JA→EN draft for the Bio/Hero English fields. Fills the
+  // English textarea with a Claude draft for the artist to review; never
+  // auto-saves, and never overwrites a non-empty English field without confirm.
+  const translateField = async (field) => {
+    const jpKey = field === 'bio' ? 'bio_extended_jp' : 'tagline_jp';
+    const enKey = field === 'bio' ? 'bio_extended_en' : 'tagline_en';
+    if (!(form[jpKey] || '').trim()) {
+      flash('先に日本語を入力してください', 'err');
+      return;
+    }
+    if (
+      (form[enKey] || '').trim() &&
+      !window.confirm('英語欄を下訳で置き換えますか？（現在の英文は失われます）')
+    ) {
+      return;
+    }
+    setTranslating(field);
+    try {
+      const res = await fetch('/api/epk/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ field, text_jp: form[jpKey] }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '翻訳に失敗しました');
+      setField(enKey, data.text_en);
+      flash('英訳の下訳を生成しました。内容を確認して保存してください。');
+    } catch (e) {
+      flash(e.message, 'err');
+    } finally {
+      setTranslating(null);
+    }
   };
 
   const hydrate = useCallback((epk, trackList) => {
@@ -548,6 +608,11 @@ export default function EpkEditorPage() {
                         placeholder="ジャズ、フュージョン、ポップを融合した…"
                       />
                     </Field>
+                    <TranslateButton
+                      label="日本語から英訳する"
+                      busy={translating === 'tagline'}
+                      onClick={() => translateField('tagline')}
+                    />
                   </div>
                 )}
 
@@ -597,6 +662,11 @@ export default function EpkEditorPage() {
                         onChange={(e) => setField('bio_extended_jp', e.target.value)}
                       />
                     </Field>
+                    <TranslateButton
+                      label="Bio本文を日本語から英訳する"
+                      busy={translating === 'bio'}
+                      onClick={() => translateField('bio')}
+                    />
                   </div>
                 )}
 

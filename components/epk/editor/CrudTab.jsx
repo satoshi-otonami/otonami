@@ -90,11 +90,19 @@ export default function CrudTab({
   emptyDraft,
   title,
   hint,
+  onCountChange,
 }) {
   const [rows, setRows] = useState([]);
   const [draft, setDraft] = useState(emptyDraft);
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState(false);
+
+  // Report row count up to the editor (powers the completion ring). Guarded on
+  // `loaded` so the initial empty state doesn't clobber the count the editor
+  // already fetched from /api/epk/save before this tab was opened.
+  useEffect(() => {
+    if (loaded && onCountChange) onCountChange(rows.length);
+  }, [rows, loaded, onCountChange]);
 
   const authHeaders = useCallback(
     () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }),

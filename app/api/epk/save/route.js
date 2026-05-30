@@ -7,6 +7,8 @@ import {
   updateEpk,
   generateSlugFromName,
   isSlugAvailable,
+  listTourByEpk,
+  listPressByEpk,
 } from '@/lib/epk';
 
 // Fields the editor is allowed to write (whitelist).
@@ -44,10 +46,28 @@ export async function GET(request) {
     if (!artist) {
       return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
     }
+    // Tour/Press counts power the editor's completion ring (Tour/Press chapters).
+    let tourCount = 0;
+    let pressCount = 0;
+    if (epk) {
+      const [tourRows, pressRows] = await Promise.all([
+        listTourByEpk(epk.id),
+        listPressByEpk(epk.id),
+      ]);
+      tourCount = tourRows.length;
+      pressCount = pressRows.length;
+    }
     return NextResponse.json({
       epk: epk || null,
       tracks: tracks || [],
-      artist: { id: artist.id, name: artist.name },
+      artist: {
+        id: artist.id,
+        name: artist.name,
+        is_founding: artist.is_founding ?? false,
+        founding_number: artist.founding_number ?? null,
+      },
+      tour_count: tourCount,
+      press_count: pressCount,
     });
   } catch (e) {
     console.error('EPK save GET error:', e);

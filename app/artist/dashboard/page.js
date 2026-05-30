@@ -177,6 +177,40 @@ function getSpotifyEmbedUrl(url) {
   return null;
 }
 
+const EPK_ENTRY_CSS = `
+.epk-entry{position:relative;border-radius:24px;overflow:hidden;border:1px solid rgba(60,40,28,.18);
+  background:linear-gradient(118deg,#FFF3EC 0%,#FDE9E4 48%,#F7EFE2 100%);
+  padding:32px 34px;display:flex;align-items:center;gap:32px;
+  box-shadow:0 18px 44px -28px rgba(255,107,74,.5)}
+.epk-entry::before{content:"";position:absolute;right:-40px;top:-40px;width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,61,110,.22),transparent 68%);pointer-events:none}
+.epk-entry-art{flex:0 0 150px;height:100px;border-radius:14px;position:relative;overflow:hidden;
+  background:linear-gradient(160deg,#FF6B4A,#FF3D6E 58%,#c4956a);box-shadow:0 10px 26px -12px rgba(255,61,110,.6)}
+.epk-entry-wave{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:4px}
+.epk-entry-wave span{width:4px;border-radius:2px;background:rgba(255,255,255,.85);animation:epkbars 1.2s ease-in-out infinite}
+.epk-entry-tag{position:absolute;left:11px;bottom:8px;font-family:'Sora',sans-serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#fff;opacity:.92}
+.epk-entry-body{flex:1;position:relative;z-index:1;min-width:0}
+.epk-entry-eyebrow{font-family:'Sora',sans-serif;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#E04E2E;font-weight:600;margin-bottom:8px}
+.epk-entry-body h2{font-family:'Sora',sans-serif;font-weight:700;font-size:23px;line-height:1.25;letter-spacing:-.01em;margin:0 0 8px;color:#241c17}
+.epk-entry-body p{color:#6b5d52;font-size:14px;max-width:520px;margin:0}
+.epk-entry-cta{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.epk-entry-btn{font-family:'Sora',sans-serif;font-weight:600;font-size:15px;color:#fff;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#FF6B4A 0%,#FF3D6E 60%,#c4956a 100%);padding:14px 24px;border-radius:13px;
+  display:inline-flex;align-items:center;gap:10px;box-shadow:0 10px 26px -8px rgba(255,61,110,.6);
+  transition:transform .15s ease,box-shadow .2s ease;white-space:nowrap;text-decoration:none}
+.epk-entry-btn:hover{transform:translateY(-2px);box-shadow:0 14px 32px -8px rgba(255,61,110,.7)}
+.epk-entry-meta{font-size:12.5px;color:#9c8d80;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.epk-entry-dot{width:7px;height:7px;border-radius:50%;background:#16a085;box-shadow:0 0 0 4px rgba(22,160,133,.16)}
+.epk-entry-dot.draft{background:#c4956a;box-shadow:0 0 0 4px rgba(196,149,106,.16)}
+@keyframes epkbars{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+@media(max-width:760px){
+  .epk-entry{flex-direction:column;align-items:flex-start;gap:18px;padding:24px}
+  .epk-entry-art{flex:0 0 auto;width:100%;height:84px}
+  .epk-entry-cta{align-items:stretch;width:100%}
+  .epk-entry-btn{justify-content:center}
+}
+`;
+
 export default function ArtistDashboard() {
   const [artist, setArtist] = useState(null);
   const [tracks, setTracks] = useState([]);
@@ -198,6 +232,8 @@ export default function ArtistDashboard() {
   const [token, setToken] = useState('');
   const [pitchStats, setPitchStats] = useState(null);
   const [recentPitches, setRecentPitches] = useState([]);
+  // EPK status for the entry card: undefined=loading, null=not created yet, object={slug,is_published,…}
+  const [epkInfo, setEpkInfo] = useState(undefined);
 
   // Modals
   // Initialize from ?add=1 so /studio's "♪ 楽曲をストック" CTA can deep-link
@@ -256,6 +292,14 @@ export default function ArtistDashboard() {
     if (!t) { window.location.href = '/artist/login'; return; }
     setToken(t);
     fetchProfile(t);
+    // EPK status powers the dashboard entry card (公開中 / 下書き / 未作成).
+    (async () => {
+      try {
+        const res = await fetch('/api/epk/save', { headers: { Authorization: `Bearer ${t}` } });
+        if (res.ok) { const d = await res.json(); setEpkInfo(d.epk || null); }
+        else setEpkInfo(null);
+      } catch { setEpkInfo(null); }
+    })();
   }, []);
 
   const fetchProfile = async (t) => {
@@ -441,6 +485,45 @@ export default function ArtistDashboard() {
           )}
         </div>
       </header>
+
+      {/* ── EPK entry card (most prominent CTA — top of dashboard) ── */}
+      <style>{EPK_ENTRY_CSS}</style>
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 20px 0' }}>
+        <div className="epk-entry">
+          <div className="epk-entry-art">
+            <div className="epk-entry-wave">
+              {[14, 28, 20, 40, 24, 52, 30, 44, 18, 36, 22, 30, 16].map((h, i) => (
+                <span
+                  key={i}
+                  style={{ height: h, animationDelay: `${i * 0.07}s`, animationDuration: `${1 + (i % 4) * 0.25}s` }}
+                />
+              ))}
+            </div>
+            <span className="epk-entry-tag">Electronic Press Kit</span>
+          </div>
+          <div className="epk-entry-body">
+            <div className="epk-entry-eyebrow">Your Electronic Press Kit</div>
+            <h2>あなたの作品を、世界のキュレーターへ。</h2>
+            <p>EPKは、海外プレイリスターやラジオDJに「あなたの音」を一目で伝える名刺です。写真・楽曲・物語を整えて、ピッチの返信率を上げましょう。</p>
+          </div>
+          <div className="epk-entry-cta">
+            <a className="epk-entry-btn" href="/dashboard/epk">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+              {epkInfo ? 'EPKを編集する' : 'EPKを作成する'}
+            </a>
+            {epkInfo === undefined ? null : epkInfo && epkInfo.is_published && epkInfo.slug ? (
+              <div className="epk-entry-meta"><span className="epk-entry-dot" /> 公開中 · otonami.io/epk/{epkInfo.slug}</div>
+            ) : epkInfo ? (
+              <div className="epk-entry-meta"><span className="epk-entry-dot draft" /> 下書き（未公開）</div>
+            ) : (
+              <div className="epk-entry-meta"><span className="epk-entry-dot draft" /> まだ作成していません</div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* ── Cover + Profile Hero ── */}
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 20px 0' }}>

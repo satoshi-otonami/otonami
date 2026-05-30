@@ -205,6 +205,13 @@ const EDITOR_CSS = `
 .epk-ed2 .pv-open:hover{background:var(--cream2);color:var(--ink)}
 .epk-ed2 .pv-note{font-size:11.5px;color:var(--ink3);margin-top:12px;line-height:1.5}
 .epk-ed2 .ico{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.epk-ed2 .theme-thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+.epk-ed2 .theme-thumb{display:flex;flex-direction:column;gap:8px;padding:8px;border-radius:13px;border:2px solid var(--line2);background:var(--card);cursor:pointer;transition:.15s;font-family:var(--dm);width:100%}
+.epk-ed2 .theme-thumb:hover{border-color:rgba(255,107,74,.5);background:var(--cream2)}
+.epk-ed2 .theme-thumb img{display:block;width:100%;height:auto;aspect-ratio:960/542;object-fit:cover;border-radius:8px;background:var(--cream2)}
+.epk-ed2 .theme-thumb .tname{font-family:var(--sora);font-size:12px;font-weight:500;color:var(--ink2);text-align:center}
+.epk-ed2 .theme-thumb.on{border-color:var(--coral);box-shadow:0 8px 20px -10px rgba(255,107,74,.55)}
+.epk-ed2 .theme-thumb.on .tname{color:var(--coral-d);font-weight:600}
 @media(max-width:860px){
   .epk-ed2{padding:24px 12px 70px}
   .epk-ed2 .ed-head{flex-wrap:wrap}
@@ -217,7 +224,20 @@ const EDITOR_CSS = `
   .epk-ed2 .canvas{grid-template-columns:1fr;padding:22px 18px}
   .epk-ed2 .preview{display:none}
 }
+@media(max-width:560px){
+  .epk-ed2 .theme-thumbs{grid-template-columns:1fr;gap:14px}
+}
 `;
+
+// Theme picker thumbnails for the settings tab. `value` MUST match the <select>
+// option values (editorial_dark / sunset_citypop / brutalist — confirmed in code).
+// Interim route14band EPK screenshots under /public/epk-themes; swap for generic
+// artwork later without touching this shape.
+const THEME_THUMBS = [
+  { value: 'sunset_citypop', label: 'Sunset CITYPOP', img: '/epk-themes/epk-theme-sunset-citypop.jpg' },
+  { value: 'editorial_dark', label: 'Editorial Dark', img: '/epk-themes/epk-theme-editorial-dark.jpg' },
+  { value: 'brutalist', label: 'Brutalist Indie', img: '/epk-themes/epk-theme-brutalist-indie.jpg' },
+];
 
 const TOUR_FIELDS = [
   { key: 'year', label: '年 (Year)', placeholder: '2025' },
@@ -746,6 +766,20 @@ export default function EpkEditorPage() {
                         <option value="brutalist">Brutalist Indie</option>
                       </select>
                     </Field>
+                    <div className="theme-thumbs" role="group" aria-label="テーマのプレビュー">
+                      {THEME_THUMBS.map((t) => (
+                        <button
+                          type="button"
+                          key={t.value}
+                          className={`theme-thumb${form.theme === t.value ? ' on' : ''}`}
+                          onClick={() => setField('theme', t.value)}
+                          aria-pressed={form.theme === t.value}
+                        >
+                          <img src={t.img} alt={`${t.label} テーマのプレビュー`} loading="lazy" width="960" height="542" />
+                          <span className="tname">{t.label}</span>
+                        </button>
+                      ))}
+                    </div>
                     <p style={{ fontSize: 13, color: '#8a8270', margin: '4px 0 0' }}>
                       テーマを変更したら「保存する」を押してください。公開状態は右上のボタンから。
                     </p>

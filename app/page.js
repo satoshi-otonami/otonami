@@ -31,10 +31,16 @@ const COPY = {
       sub: 'Get your music to international media — playlist placements, reviews, and new listeners.',
     },
     founding: {
-      eyebrow: '◆ FOUNDING ARTIST PROGRAM',
-      heading: 'For the first 20 artists — special treatment.',
-      body: 'To celebrate the OTONAMI launch, the first 20 artists receive over 3× the standard credits, the Founding Artist designation, and a permanent badge shown on pitch emails and your dashboard.',
-      deadline: 'Deadline: first 20 artists, or June 30, 2026 (whichever comes first)',
+      eyebrow: '◆ FOUNDING ARTIST PROGRAM — CLOSED',
+      heading: 'The Founding Artist program is now closed.',
+      body: 'The Founding Artist program (limited to 20 artists) has reached capacity. Thank you to everyone who joined.',
+      deadline: 'Registration is now open as usual.',
+      cta: 'Register as Artist (Free) →',
+    },
+    epk: {
+      badge: 'NEW',
+      text: 'Live EPK is here. Build a one-page press kit — tracks, bio, and highlights — to share with curators and press.',
+      link: 'See a live example →',
     },
     how: {
       label: 'FOR ARTISTS & LABELS',
@@ -73,10 +79,16 @@ const COPY = {
       sub: '海外の音楽メディアに曲を届けて、プレイリスト掲載・レビュー・新しいリスナーとの出会いを生むサービス。',
     },
     founding: {
-      eyebrow: '◆ FOUNDING ARTIST PROGRAM',
-      heading: '最初の20組限定、特別待遇。',
-      body: 'OTONAMIローンチを記念し、先着20組のアーティストには通常の3倍以上のクレジットを付与。Founding Artistの称号と専用バッジが、ピッチメール・ダッシュボード上で表示されます。',
-      deadline: '締切：先着20組、または2026年6月30日まで（早い方）',
+      eyebrow: '◆ FOUNDING ARTIST PROGRAM — 受付終了',
+      heading: 'Founding Artist 枠は受付を終了しました。',
+      body: 'Founding Artist 枠（20組限定）は受付を終了しました。ご参加ありがとうございました。',
+      deadline: '現在は通常登録を受付中です。',
+      cta: 'アーティスト登録（無料）→',
+    },
+    epk: {
+      badge: 'NEW',
+      text: 'アーティスト向けの Live EPK（電子プレスキット）が使えるようになりました。曲・バイオ・実績を1ページにまとめて、キュレーターやメディアに共有できます。',
+      link: '実際の例を見る →',
     },
     how: {
       label: 'アーティスト・レーベルの方へ',
@@ -866,6 +878,69 @@ export default function HomePage() {
             }}>
               {t.founding.deadline}
             </div>
+            <div style={{ marginTop: 24 }}>
+              <a href="/artist" className="cta-coral" style={{ padding: '12px 28px', fontSize: 14, display: 'inline-block' }}>
+                {t.founding.cta}
+              </a>
+            </div>
+          </div>
+        </section>
+      </AnimatedSection>
+
+      {/* ========== EPK ANNOUNCEMENT (NEW feature, no counts) ========== */}
+      <AnimatedSection>
+        <section style={{ background: '#ffffff', padding: '0 24px 72px' }}>
+          <div style={{
+            maxWidth: 720,
+            margin: '0 auto',
+            padding: '24px 28px',
+            borderRadius: 16,
+            border: '1px solid #f0d9d1',
+            background: 'linear-gradient(135deg, rgba(255,107,74,0.07) 0%, rgba(255,107,74,0.02) 100%)',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: 16,
+          }}>
+            <span style={{
+              flexShrink: 0,
+              padding: '4px 10px',
+              borderRadius: 999,
+              background: '#FF6B4A',
+              color: '#fff',
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              fontFamily: D.fBody,
+            }}>
+              {t.epk.badge}
+            </span>
+            <p style={{
+              flex: '1 1 320px',
+              margin: 0,
+              fontSize: 15,
+              lineHeight: 1.7,
+              color: L.text,
+              fontFamily: D.fBody,
+            }}>
+              {t.epk.text}
+            </p>
+            <a
+              href="https://otonami.io/epk/route14band"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                flexShrink: 0,
+                color: '#FF6B4A',
+                fontSize: 14,
+                fontWeight: 700,
+                textDecoration: 'none',
+                fontFamily: D.fBody,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {t.epk.link}
+            </a>
           </div>
         </section>
       </AnimatedSection>

@@ -318,7 +318,7 @@ export default function ArtistRegistrationPage() {
           {/* ── STEP 1: Basic Info ── */}
           {step === 1 && (
             <>
-              {/* Founding Artist 限定枠の予告（先着20組 / 2026-06-30 締切） */}
+              {/* Founding Artist 限定枠は満枠につき受付終了。通常登録は受付中。 */}
               <div style={{
                 marginBottom: 24,
                 padding: '20px 18px',
@@ -334,14 +334,11 @@ export default function ArtistRegistrationPage() {
                   fontFamily: THEME.font,
                   marginBottom: 10,
                 }}>
-                  ◆ FOUNDING ARTIST 限定枠
+                  ◆ FOUNDING ARTIST 限定枠 — 受付終了
                 </div>
                 <p style={{ fontSize: 14, lineHeight: 1.7, color: THEME.text, fontFamily: THEME.font, margin: 0 }}>
-                  OTONAMIローンチ記念として、最初の<strong>20組限定</strong>で<strong>10クレジット</strong>（通常3クレジット）を付与しています。Founding Artistとして認定され、ピッチメール・プロフィール・LPに専用バッジが表示されます。
+                  Founding Artist 枠（20組限定）は受付を終了しました。ご参加ありがとうございました。現在は通常登録を受付中です。このまま登録を進めてください。
                 </p>
-                <div style={{ fontSize: 11, color: THEME.textMuted, marginTop: 10, fontFamily: THEME.font }}>
-                  ※ 締切：先着20組、または2026年6月30日（早い方）
-                </div>
               </div>
               <h2 style={{ fontFamily: THEME.fontDisplay, fontSize: 28, fontWeight: 700, color: THEME.text, margin: '0 0 6px' }}>アーティスト登録</h2>
               <p style={{ color: THEME.textSub, fontSize: 15, margin: '0 0 28px', fontFamily: THEME.font }}>あなたの音楽を世界に届けましょう</p>

@@ -39,8 +39,17 @@ const COPY = {
     },
     epk: {
       badge: 'NEW',
-      text: 'Live EPK is here. Build a one-page press kit — tracks, bio, and highlights — to share with curators and press.',
-      link: 'See a live example →',
+      label: 'FREE LIVE EPK',
+      heading: 'No website? Your EPK is one — free.',
+      sub: 'Many artists only have social links. A Live EPK gives you one professional page — tracks, bio, photos, highlights — ready to send to curators and press worldwide.',
+      benefits: [
+        'Free with your artist account',
+        'Your website, instantly — even with just social links',
+        'Built for the world — one link for curators & press',
+      ],
+      ctaPrimary: 'Start your EPK (Free) →',
+      ctaSecondary: 'See a live example →',
+      imgAlt: 'A live EPK on OTONAMI — ROUTE14band',
     },
     how: {
       label: 'FOR ARTISTS & LABELS',
@@ -87,8 +96,17 @@ const COPY = {
     },
     epk: {
       badge: 'NEW',
-      text: 'アーティスト向けの Live EPK（電子プレスキット）が使えるようになりました。曲・バイオ・実績を1ページにまとめて、キュレーターやメディアに共有できます。',
-      link: '実際の例を見る →',
+      label: 'FREE LIVE EPK',
+      heading: 'ホームページがなくても大丈夫。EPKが、その代わりになります。',
+      sub: 'SNSのリンクしかなくても、Live EPK なら曲・バイオ・写真・実績を1枚のプロ仕様ページに。海外のキュレーターやメディアへそのまま共有できます。',
+      benefits: [
+        'アーティスト登録だけで、無料',
+        'SNSしかなくても、すぐにあなたのサイトに',
+        '世界に向けて。1リンクでキュレーターやメディアへ',
+      ],
+      ctaPrimary: 'EPKを作る（無料）→',
+      ctaSecondary: '実際の例を見る →',
+      imgAlt: 'OTONAMIのLive EPK実例 — ROUTE14band',
     },
     how: {
       label: 'アーティスト・レーベルの方へ',
@@ -832,7 +850,7 @@ export default function HomePage() {
       <AnimatedSection>
         <section style={{
           background: 'linear-gradient(180deg, #faf6ef 0%, #ffffff 100%)',
-          padding: '80px 24px',
+          padding: '80px 24px 30px',
           borderBottom: '1px solid #e5e2dc',
         }}>
           <div style={{ maxWidth: 720, margin: '0 auto', textAlign: 'center' }}>
@@ -887,60 +905,111 @@ export default function HomePage() {
         </section>
       </AnimatedSection>
 
-      {/* ========== EPK ANNOUNCEMENT (NEW feature, no counts) ========== */}
+      {/* ========== FREE LIVE EPK PROMO (image + text, no counts) ========== */}
       <AnimatedSection>
-        <section style={{ background: '#ffffff', padding: '0 24px 72px' }}>
-          <div style={{
-            maxWidth: 720,
+        <section style={{ background: '#FBF4EC', padding: '24px 24px 72px' }}>
+          <div className="two-col" style={{
+            maxWidth: 1080,
             margin: '0 auto',
-            padding: '24px 28px',
-            borderRadius: 16,
-            border: '1px solid #f0d9d1',
-            background: 'linear-gradient(135deg, rgba(255,107,74,0.07) 0%, rgba(255,107,74,0.02) 100%)',
-            display: 'flex',
-            flexWrap: 'wrap',
+            display: 'grid',
+            gridTemplateColumns: '1.05fr 1fr',
+            gap: 48,
             alignItems: 'center',
-            gap: 16,
           }}>
-            <span style={{
-              flexShrink: 0,
-              padding: '4px 10px',
-              borderRadius: 999,
-              background: '#FF6B4A',
-              color: '#fff',
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              fontFamily: D.fBody,
-            }}>
-              {t.epk.badge}
-            </span>
-            <p style={{
-              flex: '1 1 320px',
-              margin: 0,
-              fontSize: 15,
-              lineHeight: 1.7,
-              color: L.text,
-              fontFamily: D.fBody,
-            }}>
-              {t.epk.text}
-            </p>
-            <a
-              href="https://otonami.io/epk/route14band"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                flexShrink: 0,
-                color: '#FF6B4A',
-                fontSize: 14,
-                fontWeight: 700,
-                textDecoration: 'none',
+            {/* Left: copy */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
+                <span style={{
+                  padding: '4px 12px',
+                  borderRadius: 999,
+                  background: '#FF6B4A',
+                  color: '#fff',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  fontFamily: D.fBody,
+                }}>
+                  {t.epk.badge}
+                </span>
+                <span style={{
+                  color: '#c4956a',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: '0.22em',
+                  fontFamily: D.fBody,
+                }}>
+                  {t.epk.label}
+                </span>
+              </div>
+              <h2 style={{
+                fontFamily: D.fHead,
+                fontSize: 32,
+                fontWeight: 600,
+                color: L.text,
+                margin: '0 0 18px',
+                lineHeight: 1.3,
+              }}>
+                {t.epk.heading}
+              </h2>
+              <p style={{
+                fontSize: 16,
+                lineHeight: 1.6,
+                color: L.textSec,
+                margin: '0 0 24px',
                 fontFamily: D.fBody,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {t.epk.link}
-            </a>
+              }}>
+                {t.epk.sub}
+              </p>
+              <ul style={{
+                listStyle: 'none',
+                margin: '0 0 28px',
+                padding: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+              }}>
+                {t.epk.benefits.map((b, i) => (
+                  <li key={i} style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 10,
+                    fontSize: 15,
+                    lineHeight: 1.55,
+                    color: L.text,
+                    fontFamily: D.fBody,
+                  }}>
+                    <span style={{ flexShrink: 0, color: '#FF6B4A', fontWeight: 700, fontSize: 16, lineHeight: 1.55 }}>✓</span>
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+                <a href="/artist" className="cta-coral" style={{ padding: '12px 28px', fontSize: 14, display: 'inline-block' }}>
+                  {t.epk.ctaPrimary}
+                </a>
+                <a href="/epk/route14band" style={{
+                  color: '#993C1D',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  fontFamily: D.fBody,
+                  whiteSpace: 'nowrap',
+                }}>
+                  {t.epk.ctaSecondary}
+                </a>
+              </div>
+            </div>
+            {/* Right: live EPK mockup */}
+            <div>
+              <img
+                src="/epk-promo-mockup.png"
+                alt={t.epk.imgAlt}
+                loading="lazy"
+                width={1100}
+                height={736}
+                style={{ display: 'block', width: '100%', maxWidth: '100%', height: 'auto', borderRadius: 12 }}
+              />
+            </div>
           </div>
         </section>
       </AnimatedSection>

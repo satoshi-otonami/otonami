@@ -38,18 +38,18 @@ const COPY = {
       cta: 'Register as Artist (Free) →',
     },
     epk: {
-      badge: 'NEW',
-      label: 'FREE LIVE EPK',
-      heading: 'No website? Your EPK is one — free.',
-      sub: 'Many artists only have social links. A Live EPK gives you one professional page — tracks, bio, photos, highlights — ready to send to curators and press worldwide.',
-      benefits: [
-        'Free with your artist account',
-        'Your website, instantly — even with just social links',
-        'Built for the world — one link for curators & press',
-      ],
+      eyebrow: 'FREE · BILINGUAL · LIVE EPK',
+      heading: { pre: 'More than a link in bio.', em: 'A page that shows your music at its best.', post: '' },
+      sub: "Your tracks, photos, and milestones on one page. The more you add, the better it gets — drop it in your bio and it's your official site, in Japanese and English, ready for the world.",
       ctaPrimary: 'Start your EPK (Free) →',
       ctaSecondary: 'See a live example →',
       imgAlt: 'A live EPK on OTONAMI — ROUTE14band',
+      themesLabel: 'Three themes to match your world.',
+      themes: [
+        { name: 'Editorial Dark', img: '/epk-themes/epk-theme-editorial-dark.jpg', selected: true },
+        { name: 'Sunset City Pop', img: '/epk-themes/epk-theme-sunset-citypop.jpg' },
+        { name: 'Brutalist', img: '/epk-themes/epk-theme-brutalist-indie.jpg' },
+      ],
     },
     how: {
       label: 'FOR ARTISTS & LABELS',
@@ -95,18 +95,18 @@ const COPY = {
       cta: 'アーティスト登録（無料）→',
     },
     epk: {
-      badge: 'NEW',
-      label: 'FREE LIVE EPK',
-      heading: 'ホームページがなくても大丈夫。EPKが、その代わりになります。',
-      sub: 'SNSのリンクしかなくても、Live EPK なら曲・バイオ・写真・実績を1枚のプロ仕様ページに。海外のキュレーターやメディアへそのまま共有できます。',
-      benefits: [
-        'アーティスト登録だけで、無料',
-        'SNSしかなくても、すぐにあなたのサイトに',
-        '世界に向けて。1リンクでキュレーターやメディアへ',
-      ],
+      eyebrow: 'FREE · BILINGUAL · LIVE EPK',
+      heading: { pre: 'リンクを並べるだけじゃない、', em: 'あなたの魅力', post: 'を伝える1ページ。' },
+      sub: '曲・写真・実績を1ページに。曲を追加するほど、あなたの魅力が伝わるページに育ちます。SNSに貼れば、そのまま公式ページ。海外へは日本語でも、英語でも。',
       ctaPrimary: 'EPKを作る（無料）→',
       ctaSecondary: '実際の例を見る →',
       imgAlt: 'OTONAMIのLive EPK実例 — ROUTE14band',
+      themesLabel: '世界観は、3つのテーマから選べる',
+      themes: [
+        { name: 'Editorial Dark', img: '/epk-themes/epk-theme-editorial-dark.jpg', selected: true },
+        { name: 'Sunset City Pop', img: '/epk-themes/epk-theme-sunset-citypop.jpg' },
+        { name: 'Brutalist', img: '/epk-themes/epk-theme-brutalist-indie.jpg' },
+      ],
     },
     how: {
       label: 'アーティスト・レーベルの方へ',
@@ -908,107 +908,112 @@ export default function HomePage() {
       {/* ========== FREE LIVE EPK PROMO (image + text, no counts) ========== */}
       <AnimatedSection>
         <section style={{ background: '#FBF4EC', padding: '24px 24px 72px' }}>
-          <div className="two-col" style={{
-            maxWidth: 1080,
-            margin: '0 auto',
-            display: 'grid',
-            gridTemplateColumns: '1.05fr 1fr',
-            gap: 48,
-            alignItems: 'center',
-          }}>
-            {/* Left: copy */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
-                <span style={{
-                  padding: '4px 12px',
-                  borderRadius: 999,
-                  background: '#FF6B4A',
-                  color: '#fff',
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: '0.12em',
-                  fontFamily: D.fBody,
+          <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+            {/* Eyebrow */}
+            <div style={{
+              color: '#c4956a',
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.22em',
+              fontFamily: D.fBody,
+              marginBottom: 18,
+            }}>
+              {t.epk.eyebrow}
+            </div>
+            {/* Top: copy + mockup */}
+            <div className="two-col" style={{
+              display: 'grid',
+              gridTemplateColumns: '1.05fr 1fr',
+              gap: 48,
+              alignItems: 'center',
+              marginBottom: 36,
+            }}>
+              {/* Left: copy */}
+              <div>
+                <h2 style={{
+                  fontFamily: D.fHead,
+                  fontSize: 32,
+                  fontWeight: 600,
+                  color: L.text,
+                  margin: '0 0 18px',
+                  lineHeight: 1.32,
                 }}>
-                  {t.epk.badge}
-                </span>
-                <span style={{
-                  color: '#c4956a',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: '0.22em',
+                  {t.epk.heading.pre}<br />
+                  <span style={{ color: '#FF6B4A' }}>{t.epk.heading.em}</span>{t.epk.heading.post}
+                </h2>
+                <p style={{
+                  fontSize: 16,
+                  lineHeight: 1.78,
+                  color: L.textSec,
+                  margin: '0 0 28px',
                   fontFamily: D.fBody,
+                  maxWidth: 460,
                 }}>
-                  {t.epk.label}
-                </span>
-              </div>
-              <h2 style={{
-                fontFamily: D.fHead,
-                fontSize: 32,
-                fontWeight: 600,
-                color: L.text,
-                margin: '0 0 18px',
-                lineHeight: 1.3,
-              }}>
-                {t.epk.heading}
-              </h2>
-              <p style={{
-                fontSize: 16,
-                lineHeight: 1.6,
-                color: L.textSec,
-                margin: '0 0 24px',
-                fontFamily: D.fBody,
-              }}>
-                {t.epk.sub}
-              </p>
-              <ul style={{
-                listStyle: 'none',
-                margin: '0 0 28px',
-                padding: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12,
-              }}>
-                {t.epk.benefits.map((b, i) => (
-                  <li key={i} style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 10,
-                    fontSize: 15,
-                    lineHeight: 1.55,
-                    color: L.text,
+                  {t.epk.sub}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+                  <a href="/artist" className="cta-coral" style={{ padding: '12px 28px', fontSize: 14, display: 'inline-block' }}>
+                    {t.epk.ctaPrimary}
+                  </a>
+                  <a href="/epk/route14band" style={{
+                    color: '#993C1D',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    textDecoration: 'none',
                     fontFamily: D.fBody,
+                    whiteSpace: 'nowrap',
                   }}>
-                    <span style={{ flexShrink: 0, color: '#FF6B4A', fontWeight: 700, fontSize: 16, lineHeight: 1.55 }}>✓</span>
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-                <a href="/artist" className="cta-coral" style={{ padding: '12px 28px', fontSize: 14, display: 'inline-block' }}>
-                  {t.epk.ctaPrimary}
-                </a>
-                <a href="/epk/route14band" style={{
-                  color: '#993C1D',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  textDecoration: 'none',
-                  fontFamily: D.fBody,
-                  whiteSpace: 'nowrap',
-                }}>
-                  {t.epk.ctaSecondary}
-                </a>
+                    {t.epk.ctaSecondary}
+                  </a>
+                </div>
+              </div>
+              {/* Right: live EPK mockup */}
+              <div>
+                <img
+                  src="/epk-promo-mockup.png"
+                  alt={t.epk.imgAlt}
+                  loading="lazy"
+                  width={1100}
+                  height={736}
+                  style={{ display: 'block', width: '100%', maxWidth: '100%', height: 'auto', borderRadius: 13 }}
+                />
               </div>
             </div>
-            {/* Right: live EPK mockup */}
-            <div>
-              <img
-                src="/epk-promo-mockup.png"
-                alt={t.epk.imgAlt}
-                loading="lazy"
-                width={1100}
-                height={736}
-                style={{ display: 'block', width: '100%', maxWidth: '100%', height: 'auto', borderRadius: 12 }}
-              />
+            {/* Bottom: theme picker */}
+            <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 22 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <span style={{ color: '#c4956a', fontSize: 15, lineHeight: 1 }} aria-hidden="true">🎨</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: L.text, fontFamily: D.fBody }}>
+                  {t.epk.themesLabel}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                {t.epk.themes.map((th) => (
+                  <figure key={th.name} style={{
+                    margin: 0,
+                    borderRadius: 10,
+                    overflow: 'hidden',
+                    border: th.selected ? '2px solid #FF6B4A' : '1px solid rgba(0,0,0,0.1)',
+                    background: '#fff',
+                  }}>
+                    <img
+                      src={th.img}
+                      alt={lang === 'en' ? `${th.name} theme` : `${th.name} テーマ`}
+                      loading="lazy"
+                      style={{ display: 'block', width: '100%', height: 'auto' }}
+                    />
+                    <figcaption style={{
+                      padding: '7px 9px',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: L.textSec,
+                      fontFamily: D.fBody,
+                    }}>
+                      {th.name}
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
             </div>
           </div>
         </section>

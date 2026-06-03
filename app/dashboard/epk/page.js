@@ -212,6 +212,22 @@ const EDITOR_CSS = `
 .epk-ed2 .theme-thumb .tname{font-family:var(--sora);font-size:12px;font-weight:500;color:var(--ink2);text-align:center}
 .epk-ed2 .theme-thumb.on{border-color:var(--coral);box-shadow:0 8px 20px -10px rgba(255,107,74,.55)}
 .epk-ed2 .theme-thumb.on .tname{color:var(--coral-d);font-weight:600}
+.epk-ed2 .theme-thumb-wrap{position:relative}
+.epk-ed2 .theme-zoom{position:absolute;top:14px;right:14px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line2);border-radius:50%;background:rgba(255,255,255,.86);color:var(--ink2);cursor:pointer;transition:.15s;backdrop-filter:blur(2px);box-shadow:0 3px 10px -4px rgba(60,40,28,.4);z-index:2}
+.epk-ed2 .theme-zoom:hover{background:#fff;color:var(--coral-d);border-color:rgba(255,107,74,.5)}
+.epk-ed2 .theme-zoom:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+.epk-ed2 .lb-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;animation:lbFade .14s ease}
+.epk-ed2 .lb-modal{position:relative;display:flex;flex-direction:column;gap:14px;width:100%;max-width:992px;max-height:85vh;overflow:auto;padding:16px;border-radius:18px;border:1px solid var(--line2);background:var(--card);box-shadow:0 28px 70px -30px rgba(0,0,0,.6)}
+.epk-ed2 .lb-x{position:absolute;top:12px;right:12px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line2);border-radius:50%;background:var(--card);color:var(--ink2);cursor:pointer;transition:.15s;z-index:1}
+.epk-ed2 .lb-x:hover{background:var(--cream2);color:var(--ink)}
+.epk-ed2 .lb-img{display:block;width:100%;max-width:960px;height:auto;margin:0 auto;object-fit:contain;border-radius:10px;background:var(--cream2)}
+.epk-ed2 .lb-name{font-family:var(--sora);font-size:15px;font-weight:600;color:var(--ink);text-align:center;margin:0}
+.epk-ed2 .lb-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.epk-ed2 .lb-pick{font-family:var(--sora);font-weight:600;font-size:13.5px;color:#fff;background:var(--coral);border:none;padding:11px 20px;border-radius:10px;cursor:pointer;transition:.15s;box-shadow:0 6px 16px -8px rgba(255,107,74,.7)}
+.epk-ed2 .lb-pick:hover{filter:brightness(1.05)}
+.epk-ed2 .lb-close{font-family:var(--dm);font-weight:500;font-size:13.5px;color:var(--ink2);background:var(--card);border:1px solid var(--line2);padding:11px 18px;border-radius:10px;cursor:pointer;transition:.15s}
+.epk-ed2 .lb-close:hover{background:var(--cream2);color:var(--ink)}
+@keyframes lbFade{from{opacity:0}to{opacity:1}}
 @media(max-width:860px){
   .epk-ed2{padding:24px 12px 70px}
   .epk-ed2 .ed-head{flex-wrap:wrap}
@@ -302,6 +318,7 @@ export default function EpkEditorPage() {
   const [tourCount, setTourCount] = useState(0);
   const [pressCount, setPressCount] = useState(0);
   const [translating, setTranslating] = useState(null); // 'bio' | 'tagline' while in-flight
+  const [zoomTheme, setZoomTheme] = useState(null); // theme value being zoomed in lightbox (null = closed)
 
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const flash = (text, kind = 'ok') => {
@@ -358,6 +375,14 @@ export default function EpkEditorPage() {
       });
     }
   }, []);
+
+  // Close theme lightbox on Escape
+  useEffect(() => {
+    if (!zoomTheme) return;
+    const onKey = (e) => { if (e.key === 'Escape') setZoomTheme(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [zoomTheme]);
 
   // Auth + initial load
   useEffect(() => {
@@ -768,21 +793,78 @@ export default function EpkEditorPage() {
                     </Field>
                     <div className="theme-thumbs" role="group" aria-label="テーマのプレビュー">
                       {THEME_THUMBS.map((t) => (
-                        <button
-                          type="button"
-                          key={t.value}
-                          className={`theme-thumb${form.theme === t.value ? ' on' : ''}`}
-                          onClick={() => setField('theme', t.value)}
-                          aria-pressed={form.theme === t.value}
-                        >
-                          <img src={t.img} alt={`${t.label} テーマのプレビュー`} loading="lazy" width="960" height="542" />
-                          <span className="tname">{t.label}</span>
-                        </button>
+                        <div className="theme-thumb-wrap" key={t.value}>
+                          <button
+                            type="button"
+                            className={`theme-thumb${form.theme === t.value ? ' on' : ''}`}
+                            onClick={() => setField('theme', t.value)}
+                            aria-pressed={form.theme === t.value}
+                          >
+                            <img src={t.img} alt={`${t.label} テーマのプレビュー`} loading="lazy" width="960" height="542" />
+                            <span className="tname">{t.label}</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="theme-zoom"
+                            onClick={(e) => { e.stopPropagation(); setZoomTheme(t.value); }}
+                            aria-label={`${t.label} を拡大表示`}
+                            title="拡大して見る"
+                          >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <circle cx="11" cy="11" r="7" />
+                              <line x1="16.5" y1="16.5" x2="21" y2="21" />
+                              <line x1="11" y1="8" x2="11" y2="14" />
+                              <line x1="8" y1="11" x2="14" y2="11" />
+                            </svg>
+                          </button>
+                        </div>
                       ))}
                     </div>
                     <p style={{ fontSize: 13, color: '#8a8270', margin: '4px 0 0' }}>
                       テーマを変更したら「保存する」を押してください。公開状態は右上のボタンから。
                     </p>
+                    {zoomTheme && (() => {
+                      const zt = THEME_THUMBS.find((t) => t.value === zoomTheme);
+                      if (!zt) return null;
+                      return (
+                        <div
+                          className="lb-overlay"
+                          onClick={() => setZoomTheme(null)}
+                          role="dialog"
+                          aria-modal="true"
+                          aria-label="テーマプレビュー"
+                        >
+                          <div className="lb-modal" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              className="lb-x"
+                              onClick={() => setZoomTheme(null)}
+                              aria-label="閉じる"
+                              ref={(el) => el && el.focus()}
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                              </svg>
+                            </button>
+                            <img className="lb-img" src={zt.img} alt={`${zt.label} テーマのプレビュー（拡大）`} width="960" height="542" />
+                            <p className="lb-name">{zt.label}</p>
+                            <div className="lb-actions">
+                              <button
+                                type="button"
+                                className="lb-pick"
+                                onClick={() => { setField('theme', zoomTheme); setZoomTheme(null); }}
+                              >
+                                このテーマを選ぶ
+                              </button>
+                              <button type="button" className="lb-close" onClick={() => setZoomTheme(null)}>
+                                閉じる
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

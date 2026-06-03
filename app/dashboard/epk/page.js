@@ -231,6 +231,7 @@ const EDITOR_CSS = `
 @media(max-width:860px){
   .epk-ed2{padding:24px 12px 70px}
   .epk-ed2 .ed-head{flex-wrap:wrap}
+  .epk-ed2 .ed-title{flex-wrap:wrap}
   .epk-ed2 .ed-body{grid-template-columns:1fr}
   .epk-ed2 .nav{border-right:none;border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;padding:12px 10px}
   .epk-ed2 .nav-h{display:none}
@@ -242,6 +243,9 @@ const EDITOR_CSS = `
 }
 @media(max-width:560px){
   .epk-ed2 .theme-thumbs{grid-template-columns:1fr;gap:14px}
+  /* スマホ幅: ロゴ＋タイトル＋リングを上段、操作ボタン群を別行(全幅)に逃がして重なり回避 */
+  .epk-ed2 .ed-head{gap:12px;align-items:flex-start;padding:18px 16px}
+  .epk-ed2 .ed-actions{flex:1 1 100%}
 }
 `;
 

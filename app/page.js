@@ -38,8 +38,8 @@ const COPY = {
       cta: 'Register as Artist (Free) →',
     },
     epk: {
-      eyebrow: 'FREE · BILINGUAL · LIVE EPK',
-      heading: { pre: 'More than a link in bio.', em: 'A page that shows your music at its best.', post: '' },
+      tags: ['Free', 'Japanese & English', '3 themes'],
+      heading: { pre: 'More than a link in bio.', em: 'A page that shows your music at its best.', mid: '', nowrap: '' },
       sub: "Your tracks, photos, and milestones on one page. The more you add, the better it gets — drop it in your bio and it's your official site, in Japanese and English, ready for the world.",
       ctaPrimary: 'Start your EPK (Free) →',
       ctaSecondary: 'See a live example →',
@@ -95,8 +95,8 @@ const COPY = {
       cta: 'アーティスト登録（無料）→',
     },
     epk: {
-      eyebrow: 'FREE · BILINGUAL · LIVE EPK',
-      heading: { pre: 'リンクを並べるだけじゃない、', em: 'あなたの魅力', post: 'を伝える1ページ。' },
+      tags: ['無料', '日本語 & 英語', '3つのテーマ'],
+      heading: { pre: 'リンクを並べるだけじゃない、', em: 'あなたの魅力', mid: 'を伝える', nowrap: '1ページ。' },
       sub: '曲・写真・実績を1ページに。曲を追加するほど、あなたの魅力が伝わるページに育ちます。SNSに貼れば、そのまま公式ページ。海外へは日本語でも、英語でも。',
       ctaPrimary: 'EPKを作る（無料）→',
       ctaSecondary: '実際の例を見る →',
@@ -258,6 +258,8 @@ export default function HomePage() {
   const menuRef = useRef(null);
   const loginMenuRef = useRef(null);
   const canvasRef = useRef(null);
+  const epkRef = useRef(null);
+  const [epkVisible, setEpkVisible] = useState(false);
 
   /* ── Canvas waveform animation ── */
   useEffect(() => {
@@ -343,6 +345,19 @@ export default function HomePage() {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  /* ── EPK promo section: scroll-reveal (stagger handled via CSS delays) ── */
+  useEffect(() => {
+    const el = epkRef.current;
+    if (!el) return;
+    if (!('IntersectionObserver' in window)) { setEpkVisible(true); return; }
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setEpkVisible(true); observer.disconnect(); } },
+      { threshold: 0.12 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -546,6 +561,86 @@ export default function HomePage() {
         }
         @media (max-width: 480px) {
           .hero-h1 { font-size: 28px !important; }
+        }
+
+        /* ===== EPK PROMO SECTION (Phase 1: vivid color-face, sans-serif, motion) ===== */
+        .epk-hero {
+          background: linear-gradient(135deg, #FF6B4A 0%, #FF3D6E 100%);
+          border-radius: 20px;
+          padding: 38px 38px;
+          align-items: center;
+        }
+        .epk-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+        .epk-tags span {
+          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+          font-size: 12px; font-weight: 500; color: #fff;
+          background: rgba(255,255,255,0.18);
+          border-radius: 999px; padding: 4px 12px; white-space: nowrap;
+        }
+        .epk-heading {
+          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+          font-weight: 600; font-size: clamp(25px, 5vw, 32px);
+          line-height: 1.45; color: #fff; margin: 0 0 16px;
+          word-break: auto-phrase; line-break: strict; overflow-wrap: anywhere;
+        }
+        .epk-heading .accent { color: #FFE3D8; }
+        .epk-heading .nowrap { white-space: nowrap; word-break: keep-all; }
+        .epk-sub {
+          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+          font-size: 15px; line-height: 1.8; color: rgba(255,255,255,0.92);
+          margin: 0 0 24px; max-width: 460px; word-break: auto-phrase;
+        }
+        .epk-ctas { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+        .epk-cta-primary {
+          background: #fff; color: #FF3D6E; font-weight: 700; font-size: 14px;
+          padding: 13px 26px; border-radius: 999px; text-decoration: none;
+          font-family: 'Sora','Noto Sans JP',sans-serif; white-space: nowrap;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+        }
+        .epk-cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,0.20); }
+        .epk-cta-secondary {
+          color: #fff; font-weight: 700; font-size: 14px; text-decoration: none;
+          font-family: 'Sora','Noto Sans JP',sans-serif; white-space: nowrap;
+        }
+        .epk-cta-secondary:hover { text-decoration: underline; }
+        .epk-shot {
+          width: 100%; display: block; border-radius: 13px; border: 5px solid #fff;
+          box-shadow: 0 14px 40px rgba(0,0,0,0.18);
+          transition: transform 0.35s ease;
+        }
+        .epk-shot:hover { transform: translateY(-6px); }
+        .epk-themes-label {
+          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+          font-size: 13px; font-weight: 600; color: #1a1a1a;
+          display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+        }
+        .epk-themes-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; }
+        .epk-themes-row figure {
+          margin: 0; border-radius: 9px; overflow: hidden;
+          border: 1px solid rgba(0,0,0,0.1); background: #fff;
+        }
+        .epk-themes-row figure.sel { border: 2px solid #FF6B4A; }
+        .epk-themes-row img { width: 100%; display: block; height: auto; }
+        .epk-themes-row figcaption {
+          background: #fff; padding: 7px 9px; font-size: 11px; font-weight: 600;
+          color: #5a5048; font-family: 'Sora','Noto Sans JP',sans-serif;
+        }
+        /* scroll-reveal */
+        .epk-reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .epk-reveal.is-visible { opacity: 1; transform: none; }
+        .epk-reveal-strong { transform: translateY(24px); }
+        @media (max-width: 768px) {
+          .epk-hero { padding: 26px 20px; }
+          .epk-themes-row { display: flex; overflow-x: auto; gap: 10px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+          .epk-themes-row figure { flex: 0 0 70%; scroll-snap-align: start; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .epk-reveal, .epk-reveal.is-visible {
+            opacity: 1 !important; transform: none !important; transition: none !important;
+          }
+          .epk-cta-primary, .epk-shot { transition: none !important; }
+          .epk-cta-primary:hover, .epk-shot:hover { transform: none !important; }
         }
       `}</style>
 
@@ -905,119 +1000,85 @@ export default function HomePage() {
         </section>
       </AnimatedSection>
 
-      {/* ========== FREE LIVE EPK PROMO (image + text, no counts) ========== */}
-      <AnimatedSection>
-        <section style={{ background: '#FBF4EC', padding: '24px 24px 72px' }}>
-          <div style={{ maxWidth: 1080, margin: '0 auto' }}>
-            {/* Eyebrow */}
-            <div style={{
-              color: '#c4956a',
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: '0.22em',
-              fontFamily: D.fBody,
-              marginBottom: 18,
-            }}>
-              {t.epk.eyebrow}
-            </div>
-            {/* Top: copy + mockup */}
-            <div className="two-col" style={{
-              display: 'grid',
-              gridTemplateColumns: '1.05fr 1fr',
-              gap: 48,
-              alignItems: 'center',
-              marginBottom: 36,
-            }}>
-              {/* Left: copy */}
-              <div>
-                <h2 style={{
-                  fontFamily: D.fHead,
-                  fontSize: 32,
-                  fontWeight: 600,
-                  color: L.text,
-                  margin: '0 0 18px',
-                  lineHeight: 1.32,
-                }}>
-                  {t.epk.heading.pre}<br />
-                  <span style={{ color: '#FF6B4A' }}>{t.epk.heading.em}</span>{t.epk.heading.post}
-                </h2>
-                <p style={{
-                  fontSize: 16,
-                  lineHeight: 1.78,
-                  color: L.textSec,
-                  margin: '0 0 28px',
-                  fontFamily: D.fBody,
-                  maxWidth: 460,
-                }}>
-                  {t.epk.sub}
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-                  <a href="/artist" className="cta-coral" style={{ padding: '12px 28px', fontSize: 14, display: 'inline-block' }}>
-                    {t.epk.ctaPrimary}
-                  </a>
-                  <a href="/epk/route14band" style={{
-                    color: '#993C1D',
-                    fontSize: 14,
-                    fontWeight: 700,
-                    textDecoration: 'none',
-                    fontFamily: D.fBody,
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {t.epk.ctaSecondary}
-                  </a>
-                </div>
+      {/* ========== FREE LIVE EPK PROMO (Phase 1: vivid color-face + motion) ========== */}
+      <section ref={epkRef} style={{ background: '#FBF4EC', padding: '24px 24px 72px' }}>
+        <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+          {/* Top: vivid color-face card (Coral → Pink) */}
+          <div className="epk-hero two-col" style={{
+            display: 'grid',
+            gridTemplateColumns: '1.05fr 1fr',
+            gap: 30,
+            marginBottom: 40,
+          }}>
+            {/* Left: copy */}
+            <div>
+              <div
+                className={`epk-tags epk-reveal${epkVisible ? ' is-visible' : ''}`}
+                style={{ transitionDelay: '0ms' }}
+              >
+                {t.epk.tags.map((tag) => (<span key={tag}>{tag}</span>))}
               </div>
-              {/* Right: live EPK mockup */}
-              <div>
-                <img
-                  src="/epk-promo-mockup.png"
-                  alt={t.epk.imgAlt}
-                  loading="lazy"
-                  width={1100}
-                  height={736}
-                  style={{ display: 'block', width: '100%', maxWidth: '100%', height: 'auto', borderRadius: 13 }}
-                />
+              <h2
+                className={`epk-heading epk-reveal epk-reveal-strong${epkVisible ? ' is-visible' : ''}`}
+                style={{ transitionDelay: epkVisible ? '80ms' : '0ms' }}
+              >
+                {t.epk.heading.pre}<br />
+                <span className="accent">{t.epk.heading.em}</span>{t.epk.heading.mid}
+                {t.epk.heading.nowrap ? <span className="nowrap">{t.epk.heading.nowrap}</span> : null}
+              </h2>
+              <p
+                className={`epk-sub epk-reveal${epkVisible ? ' is-visible' : ''}`}
+                style={{ transitionDelay: epkVisible ? '160ms' : '0ms' }}
+              >
+                {t.epk.sub}
+              </p>
+              <div
+                className={`epk-ctas epk-reveal${epkVisible ? ' is-visible' : ''}`}
+                style={{ transitionDelay: epkVisible ? '240ms' : '0ms' }}
+              >
+                <a href="/artist" className="epk-cta-primary">{t.epk.ctaPrimary}</a>
+                <a href="/epk/route14band" className="epk-cta-secondary">{t.epk.ctaSecondary}</a>
               </div>
             </div>
-            {/* Bottom: theme picker */}
-            <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 22 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <span style={{ color: '#c4956a', fontSize: 15, lineHeight: 1 }} aria-hidden="true">🎨</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: L.text, fontFamily: D.fBody }}>
-                  {t.epk.themesLabel}
-                </span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-                {t.epk.themes.map((th) => (
-                  <figure key={th.name} style={{
-                    margin: 0,
-                    borderRadius: 10,
-                    overflow: 'hidden',
-                    border: th.selected ? '2px solid #FF6B4A' : '1px solid rgba(0,0,0,0.1)',
-                    background: '#fff',
-                  }}>
-                    <img
-                      src={th.img}
-                      alt={lang === 'en' ? `${th.name} theme` : `${th.name} テーマ`}
-                      loading="lazy"
-                      style={{ display: 'block', width: '100%', height: 'auto' }}
-                    />
-                    <figcaption style={{
-                      padding: '7px 9px',
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: L.textSec,
-                      fontFamily: D.fBody,
-                    }}>
-                      {th.name}
-                    </figcaption>
-                  </figure>
-                ))}
-              </div>
+            {/* Right: live EPK mockup, floating on the color face */}
+            <div
+              className={`epk-reveal${epkVisible ? ' is-visible' : ''}`}
+              style={{ transitionDelay: epkVisible ? '200ms' : '0ms' }}
+            >
+              <img
+                className="epk-shot"
+                src="/epk-promo-mockup.png"
+                alt={t.epk.imgAlt}
+                loading="lazy"
+                width={1100}
+                height={736}
+              />
             </div>
           </div>
-        </section>
-      </AnimatedSection>
+          {/* Bottom: theme picker (cream/white, outside the color face) */}
+          <div
+            className={`epk-reveal${epkVisible ? ' is-visible' : ''}`}
+            style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 22, transitionDelay: epkVisible ? '300ms' : '0ms' }}
+          >
+            <div className="epk-themes-label">
+              <span aria-hidden="true">🎨</span>
+              <span>{t.epk.themesLabel}</span>
+            </div>
+            <div className="epk-themes-row">
+              {t.epk.themes.map((th) => (
+                <figure key={th.name} className={th.selected ? 'sel' : undefined}>
+                  <img
+                    src={th.img}
+                    alt={lang === 'en' ? `${th.name} theme` : `${th.name} テーマ`}
+                    loading="lazy"
+                  />
+                  <figcaption>{th.name}</figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ========== SECTION 3: FOUNDER STRIP ========== */}
       <section id="founder" className="founder-strip" style={{

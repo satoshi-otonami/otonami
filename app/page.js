@@ -246,6 +246,14 @@ function FAQItem({ question, answer, isOpen, onClick, theme = 'light' }) {
   );
 }
 
+/* EPK theme preview (Phase 2): same-frame webp, color-only crossfade */
+const EPK_THEMES = [
+  { id: 'editorial-dark', label: 'Editorial Dark', src: '/epk-themes/epk-theme-editorial-dark.webp' },
+  { id: 'sunset',         label: 'Sunset',         src: '/epk-themes/epk-theme-sunset.webp' },
+  { id: 'brutalist',      label: 'Brutalist',      src: '/epk-themes/epk-theme-brutalist.webp' },
+];
+const EPK_ROTATE_MS = 4500;
+
 /* ─────────────────────────────────────────
    Page
 ───────────────────────────────────────── */
@@ -260,6 +268,10 @@ export default function HomePage() {
   const canvasRef = useRef(null);
   const epkRef = useRef(null);
   const [epkVisible, setEpkVisible] = useState(false);
+  const [epkActive, setEpkActive] = useState(0);   // active theme index
+  const [epkPaused, setEpkPaused] = useState(false); // user interacted → stop auto-rotate
+  const [epkReduce, setEpkReduce] = useState(false); // prefers-reduced-motion
+  const epkTimer = useRef(null);
 
   /* ── Canvas waveform animation ── */
   useEffect(() => {
@@ -359,6 +371,31 @@ export default function HomePage() {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  /* ── EPK theme preview: prefers-reduced-motion (initial + live) ── */
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const apply = () => setEpkReduce(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
+  /* ── EPK theme preview: auto-rotate (until user interacts / reduced-motion) ── */
+  useEffect(() => {
+    if (epkPaused || epkReduce) return;
+    epkTimer.current = setInterval(() => {
+      setEpkActive((i) => (i + 1) % EPK_THEMES.length);
+    }, EPK_ROTATE_MS);
+    return () => clearInterval(epkTimer.current);
+  }, [epkPaused, epkReduce]);
+
+  /* select a theme + stop auto-rotate once the user interacts */
+  const selectEpkTheme = (i) => {
+    setEpkActive(i);
+    setEpkPaused(true);
+    if (epkTimer.current) clearInterval(epkTimer.current);
+  };
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -606,29 +643,37 @@ export default function HomePage() {
         .epk-cta-secondary:hover { text-decoration: underline; }
         .epk-media {
           width: 100%; max-width: 520px; margin: 0 auto;
-          aspect-ratio: 1100 / 736; /* match source image (1100×736) to reserve space, no distortion */
         }
-        .epk-shot {
-          width: 100%; height: auto; display: block; border-radius: 13px; border: 5px solid #fff;
+        /* Crossfade stage: frame fixed (aspect-ratio), only the inner color changes */
+        .epk-stage {
+          position: relative; width: 100%; aspect-ratio: 1600 / 689;
+          border-radius: 13px; overflow: hidden; border: 5px solid #fff;
           box-shadow: 0 14px 40px rgba(0,0,0,0.18);
-          transition: transform 0.35s ease;
         }
-        .epk-shot:hover { transform: translateY(-6px); }
+        .epk-stage-img {
+          position: absolute; inset: 0; width: 100%; height: 100%;
+          object-fit: cover; opacity: 0; transition: opacity 600ms ease; will-change: opacity;
+        }
+        .epk-stage-img.is-active { opacity: 1; }
         .epk-themes-label {
           font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
           font-size: 13px; font-weight: 600; color: #1a1a1a;
           display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
         }
         .epk-themes-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; }
-        .epk-themes-row figure {
-          margin: 0; border-radius: 9px; overflow: hidden;
-          border: 1px solid rgba(0,0,0,0.1); background: #fff;
+        .epk-thumb {
+          position: relative; margin: 0; padding: 0; display: block; cursor: pointer;
+          border-radius: 9px; overflow: hidden; background: #fff;
+          border: 2px solid transparent;
+          transition: border-color 0.2s ease, transform 0.2s ease;
         }
-        .epk-themes-row figure.sel { border: 2px solid #FF6B4A; }
-        .epk-themes-row img { width: 100%; display: block; height: auto; }
-        .epk-themes-row figcaption {
-          background: #fff; padding: 7px 9px; font-size: 11px; font-weight: 600;
-          color: #5a5048; font-family: 'Sora','Noto Sans JP',sans-serif;
+        .epk-thumb.sel { border-color: #FF6B4A; transform: translateY(-2px); }
+        .epk-thumb img { width: 100%; display: block; height: auto; }
+        .epk-thumb-label {
+          position: absolute; left: 7px; bottom: 7px;
+          font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #fff;
+          text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+          font-family: 'Sora','Noto Sans JP',sans-serif;
         }
         /* scroll-reveal */
         .epk-reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
@@ -637,14 +682,15 @@ export default function HomePage() {
         @media (max-width: 768px) {
           .epk-hero { padding: 26px 20px; }
           .epk-themes-row { display: flex; overflow-x: auto; gap: 10px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
-          .epk-themes-row figure { flex: 0 0 70%; scroll-snap-align: start; }
+          .epk-thumb { flex: 0 0 70%; scroll-snap-align: start; }
         }
         @media (prefers-reduced-motion: reduce) {
           .epk-reveal, .epk-reveal.is-visible {
             opacity: 1 !important; transform: none !important; transition: none !important;
           }
-          .epk-cta-primary, .epk-shot { transition: none !important; }
-          .epk-cta-primary:hover, .epk-shot:hover { transform: none !important; }
+          .epk-cta-primary { transition: none !important; }
+          .epk-cta-primary:hover { transform: none !important; }
+          .epk-stage-img, .epk-thumb { transition: none !important; }
         }
       `}</style>
 
@@ -1049,14 +1095,21 @@ export default function HomePage() {
               className={`epk-media epk-reveal${epkVisible ? ' is-visible' : ''}`}
               style={{ transitionDelay: epkVisible ? '200ms' : '0ms' }}
             >
-              <img
-                className="epk-shot"
-                src="/epk-promo-mockup.png"
-                alt={t.epk.imgAlt}
-                loading="lazy"
-                width={1100}
-                height={736}
-              />
+              <div className="epk-stage" aria-live="polite">
+                {EPK_THEMES.map((th, i) => (
+                  <img
+                    key={th.id}
+                    className={`epk-stage-img${i === epkActive ? ' is-active' : ''}`}
+                    src={th.src}
+                    alt={lang === 'en' ? `OTONAMI EPK theme — ${th.label}` : `OTONAMIのEPKテーマ — ${th.label}`}
+                    width={1600}
+                    height={689}
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    fetchPriority={i === 0 ? 'high' : 'auto'}
+                    decoding="async"
+                  />
+                ))}
+              </div>
             </div>
           </div>
           {/* Bottom: theme picker (cream/white, outside the color face) */}
@@ -1068,16 +1121,27 @@ export default function HomePage() {
               <span aria-hidden="true">🎨</span>
               <span>{t.epk.themesLabel}</span>
             </div>
-            <div className="epk-themes-row">
-              {t.epk.themes.map((th) => (
-                <figure key={th.name} className={th.selected ? 'sel' : undefined}>
+            <div className="epk-themes-row" role="tablist" aria-label={t.epk.themesLabel}>
+              {EPK_THEMES.map((th, i) => (
+                <button
+                  key={th.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={i === epkActive}
+                  className={`epk-thumb${i === epkActive ? ' sel' : ''}`}
+                  onClick={() => selectEpkTheme(i)}
+                  onMouseEnter={() => selectEpkTheme(i)}
+                >
                   <img
-                    src={th.img}
-                    alt={lang === 'en' ? `${th.name} theme` : `${th.name} テーマ`}
+                    src={th.src}
+                    alt=""
+                    width={1600}
+                    height={689}
                     loading="lazy"
+                    decoding="async"
                   />
-                  <figcaption>{th.name}</figcaption>
-                </figure>
+                  <span className="epk-thumb-label">{th.label}</span>
+                </button>
               ))}
             </div>
           </div>

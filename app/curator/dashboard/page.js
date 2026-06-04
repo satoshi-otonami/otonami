@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { CL as T } from '@/lib/design-tokens';
 import { supabase } from '@/lib/supabase';
+import { externalHref } from '@/lib/url';
 
 const STATUS_LABELS = {
   sent:     { en: 'Pending',  ja: '未対応',  color: '#eab308', bg: 'rgba(234,179,8,0.12)' },
@@ -885,12 +886,12 @@ export default function CuratorDashboard() {
                           {curator.playlist && (
                             <span style={{ color: T.text, fontSize: 13, fontWeight: 600, fontFamily: T.font }}>
                               {curator.url
-                                ? <a href={curator.url} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, textDecoration: 'none' }}>{curator.playlist} →</a>
+                                ? <a href={externalHref(curator.url)} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, textDecoration: 'none' }}>{curator.playlist} →</a>
                                 : curator.playlist}
                             </span>
                           )}
                           {curator.playlist_url && (
-                            <a href={curator.playlist_url} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, fontSize: 12, fontFamily: T.font, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <a href={externalHref(curator.playlist_url)} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, fontSize: 12, fontFamily: T.font, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
                               Playlist →
                             </a>
                           )}

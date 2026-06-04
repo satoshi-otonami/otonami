@@ -2221,8 +2221,12 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       const updated = {...prev};
       // songTitle: always use trackData if available (user just analyzed this track)
       if (trackData.songName) updated.songTitle = trackData.songName;
-      // songLink: use the listening URL from curator analysis
-      if (trackData.listeningUrl) updated.songLink = trackData.listeningUrl;
+      // songLink: use the listening URL from curator analysis — but NOT when we
+      // arrived via a dashboard handoff (linkedTrackId set). In that case
+      // artist.songLink is already the correct track URL from ?song_link=, and
+      // a stale trackData.listeningUrl left over from a curators-tab analysis
+      // (e.g. a different song) would otherwise overwrite it. (chihiro #2)
+      if (!linkedTrackId && trackData.listeningUrl) updated.songLink = trackData.listeningUrl;
       // Artist name: always carry over from curator tab analysis
       if (trackData.artistName) {
         updated.name = updated.name || trackData.artistName;

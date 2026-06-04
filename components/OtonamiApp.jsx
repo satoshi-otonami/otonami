@@ -753,12 +753,13 @@ const EMPTY_ARTIST   = {name:"",nameEn:"",genre:"",mood:"",description:"",songTi
 const EMPTY_LINKS    = {spotify:"",apple:"",youtube:"",soundcloud:"",instagram:"",twitter:"",facebook:"",website:""};
 const EMPTY_FOLLOWERS = {spotify:0,youtube:0,soundcloud:0,instagram:0,twitter:0,facebook:0};
 
-// A restored draft.artist is only safe to use if it's a plain object. A stale or
-// corrupted sessionStorage payload can hold a truthy-but-wrong shape (string,
-// array, number) that slips past `_draft?.artist || EMPTY_ARTIST` and then blows
-// up the first render — with no recoverable error since reload re-reads the same
-// broken value (chihiro whiteout #3). Reject anything that isn't a plain object.
-function isValidArtist(a) {
+// A restored draft slice (artist/links/followers) is only safe to use if it's a
+// plain object — the shape all three are persisted as. A stale or corrupted
+// sessionStorage payload can hold a truthy-but-wrong shape (string, array,
+// number) that slips past `_draft?.x || EMPTY_x` and then blows up the first
+// render — with no recoverable error since reload re-reads the same broken value
+// (chihiro whiteout #3). Reject anything that isn't a plain object.
+function isValidObject(a) {
   return a != null && typeof a === 'object' && !Array.isArray(a);
 }
 
@@ -793,12 +794,13 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
 
   // ── Persistent artist form state (survives page navigation) ──
   const _draft = useMemo(() => loadArtistDraft(), []);
-  // Merge over EMPTY_ARTIST so every known field is always a safe primitive even
-  // if the restored object is missing some (or all) of them. Invalid shapes are
-  // discarded entirely and start from EMPTY_ARTIST — silently, no user notice.
-  const [artist,    setArtist]    = useState(isValidArtist(_draft?.artist) ? { ...EMPTY_ARTIST, ..._draft.artist } : EMPTY_ARTIST);
-  const [links,     setLinks]     = useState(_draft?.links     || EMPTY_LINKS);
-  const [followers, setFollowers] = useState(_draft?.followers || EMPTY_FOLLOWERS);
+  // Merge each slice over its EMPTY_* default so every known field is always a
+  // safe primitive even if the restored object is missing some (or all) of them.
+  // Invalid (non-plain-object) shapes are discarded entirely and start from the
+  // default — silently, no user notice. Same guard for all three slices.
+  const [artist,    setArtist]    = useState(isValidObject(_draft?.artist)    ? { ...EMPTY_ARTIST,    ..._draft.artist }    : EMPTY_ARTIST);
+  const [links,     setLinks]     = useState(isValidObject(_draft?.links)     ? { ...EMPTY_LINKS,     ..._draft.links }     : EMPTY_LINKS);
+  const [followers, setFollowers] = useState(isValidObject(_draft?.followers) ? { ...EMPTY_FOLLOWERS, ..._draft.followers } : EMPTY_FOLLOWERS);
 
   const [linkedTrackId, setLinkedTrackId] = useState(null);
   const [linkedTrackAiStatus, setLinkedTrackAiStatus] = useState(null);

@@ -604,8 +604,12 @@ export default function HomePage() {
           font-family: 'Sora','Noto Sans JP',sans-serif; white-space: nowrap;
         }
         .epk-cta-secondary:hover { text-decoration: underline; }
+        .epk-media {
+          width: 100%; max-width: 520px; margin: 0 auto;
+          aspect-ratio: 1100 / 736; /* match source image (1100×736) to reserve space, no distortion */
+        }
         .epk-shot {
-          width: 100%; display: block; border-radius: 13px; border: 5px solid #fff;
+          width: 100%; height: auto; display: block; border-radius: 13px; border: 5px solid #fff;
           box-shadow: 0 14px 40px rgba(0,0,0,0.18);
           transition: transform 0.35s ease;
         }
@@ -1006,7 +1010,7 @@ export default function HomePage() {
           {/* Top: vivid color-face card (Coral → Pink) */}
           <div className="epk-hero two-col" style={{
             display: 'grid',
-            gridTemplateColumns: '1.05fr 1fr',
+            gridTemplateColumns: '1.25fr 1fr',
             gap: 30,
             marginBottom: 40,
           }}>
@@ -1042,7 +1046,7 @@ export default function HomePage() {
             </div>
             {/* Right: live EPK mockup, floating on the color face */}
             <div
-              className={`epk-reveal${epkVisible ? ' is-visible' : ''}`}
+              className={`epk-media epk-reveal${epkVisible ? ' is-visible' : ''}`}
               style={{ transitionDelay: epkVisible ? '200ms' : '0ms' }}
             >
               <img

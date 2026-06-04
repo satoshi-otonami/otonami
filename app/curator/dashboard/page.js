@@ -1144,7 +1144,7 @@ export default function CuratorDashboard() {
                         return null;
                       })()}
                       {pitch.song_link && (
-                        <a href={pitch.song_link} target="_blank" rel="noopener noreferrer"
+                        <a href={externalHref(pitch.song_link)} target="_blank" rel="noopener noreferrer"
                           onClick={() => {
                             const token = localStorage.getItem('curator_token');
                             fetch(`/api/curator/pitch/${pitch.id}`, {
@@ -1248,7 +1248,7 @@ export default function CuratorDashboard() {
                           {pitch.placement_url && (
                             <div style={{ marginTop: 6 }}>
                               <span style={{ color: T.accent, fontSize: 11, fontWeight: 700, fontFamily: T.font }}>{pitch.placement_platform || 'Placement'}: </span>
-                              <a href={pitch.placement_url} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, fontSize: 12, wordBreak: 'break-all', fontFamily: T.font }}>{pitch.placement_url}</a>
+                              <a href={externalHref(pitch.placement_url)} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, fontSize: 12, wordBreak: 'break-all', fontFamily: T.font }}>{pitch.placement_url}</a>
                             </div>
                           )}
                         </div>

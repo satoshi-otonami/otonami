@@ -1,6 +1,7 @@
 // EPK Featured Playlist — a pinned "pickup" track (large) + a short list of
 // other tracks. Replaces the single Featured Track from Phase 1. Hidden when
 // the playlist is empty (the theme also guards on data presence).
+import { externalHref } from '@/lib/url';
 
 function listenUrl(track) {
   return (
@@ -36,7 +37,7 @@ function PinnedCard({ track, lang }) {
         {url && (
           <a
             className="play-button"
-            href={url}
+            href={externalHref(url)}
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -104,7 +105,7 @@ function PlaylistRow({ track, num }) {
       {url && (
         <a
           className="playlist-play"
-          href={url}
+          href={externalHref(url)}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Play ${track.title}`}

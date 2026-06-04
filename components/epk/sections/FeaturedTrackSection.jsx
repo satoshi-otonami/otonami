@@ -1,4 +1,6 @@
 // EPK Featured Track — the pinned "pickup" card. Hidden entirely when no track.
+import { externalHref } from '@/lib/url';
+
 export default function FeaturedTrackSection({ track }) {
   if (!track) return null;
 
@@ -28,7 +30,7 @@ export default function FeaturedTrackSection({ track }) {
           {listenUrl && (
             <a
               className="play-button"
-              href={listenUrl}
+              href={externalHref(listenUrl)}
               target="_blank"
               rel="noopener noreferrer"
             >

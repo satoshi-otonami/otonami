@@ -1,5 +1,7 @@
 // EPK Press & Recognition — pull-quote cards. Source: epk_press rows (ordered
 // by sort_order). Hidden when empty.
+import { externalHref } from '@/lib/url';
+
 export default function PressSection({ press, lang, num = '06' }) {
   const rows = Array.isArray(press) ? press : [];
   if (rows.length === 0) return null;
@@ -31,7 +33,7 @@ export default function PressSection({ press, lang, num = '06' }) {
                 {p.source_url ? (
                   <a
                     className="press-source"
-                    href={p.source_url}
+                    href={externalHref(p.source_url)}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

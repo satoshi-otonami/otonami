@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { CL as T } from '@/lib/design-tokens';
+import { externalHref } from '@/lib/url';
 
 function renderBody(text) {
   if (!text) return null;
@@ -292,7 +293,7 @@ function PitchView({ pitchId }) {
               </div>
             )}
             {pitch.song_link && (
-              <a href={pitch.song_link} target="_blank" rel="noopener noreferrer"
+              <a href={externalHref(pitch.song_link)} target="_blank" rel="noopener noreferrer"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   color: T.accent, fontSize: 13, textDecoration: 'none',
@@ -360,7 +361,7 @@ function PitchView({ pitchId }) {
                 <div style={{ color: T.accent, fontSize: 11, fontWeight: 700, marginBottom: 4, fontFamily: T.font }}>
                   {pitch.placement_platform || 'Placement'} — Placement URL
                 </div>
-                <a href={pitch.placement_url} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, fontSize: 13, wordBreak: 'break-all', fontFamily: T.font }}>
+                <a href={externalHref(pitch.placement_url)} target="_blank" rel="noopener noreferrer" style={{ color: T.accent, fontSize: 13, wordBreak: 'break-all', fontFamily: T.font }}>
                   {pitch.placement_url}
                 </a>
               </div>

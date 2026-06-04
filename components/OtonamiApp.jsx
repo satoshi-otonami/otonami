@@ -7,6 +7,7 @@ import API, { authFetch, ApiError } from '@/lib/api-client';
 import { analyzeTrack } from '@/lib/api-track';
 import { describeTrackCharacteristics } from '@/lib/track-description';
 import { getMatchLabel, rankCurators, calculateMatchScore } from '@/lib/match-score';
+import { externalHref } from '@/lib/url';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useSearchParams } from 'next/navigation';
@@ -2025,7 +2026,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
             {dc.bio && <p style={{fontSize:14,color:'#6b6560',lineHeight:1.7,margin:0}}>{dc.bio}</p>}
 
             {/* Platform URL */}
-            {dc.url && <a href={dc.url} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{display:'inline-flex',alignItems:'center',gap:6,color:'#c4956a',fontSize:13,textDecoration:'none',wordBreak:'break-all'}}>→ {dc.url}</a>}
+            {dc.url && <a href={externalHref(dc.url)} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{display:'inline-flex',alignItems:'center',gap:6,color:'#c4956a',fontSize:13,textDecoration:'none',wordBreak:'break-all'}}>→ {dc.url}</a>}
 
             {/* Genres they love */}
             {dc.genres?.length > 0 && <div>
@@ -2070,7 +2071,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
             {/* Playlist link */}
             {dc.playlistUrl && <div>
               <div style={{fontSize:13,fontWeight:500,color:'#6b6560',marginBottom:10}}>Their playlist</div>
-              <a href={dc.playlistUrl} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{display:'flex',alignItems:'center',gap:10,background:'#ffffff',borderRadius:10,padding:14,color:'#c4956a',textDecoration:'none',fontSize:13,border:'1px solid rgba(0,0,0,0.05)',wordBreak:'break-all'}}>♪ {dc.playlistUrl}</a>
+              <a href={externalHref(dc.playlistUrl)} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{display:'flex',alignItems:'center',gap:10,background:'#ffffff',borderRadius:10,padding:14,color:'#c4956a',textDecoration:'none',fontSize:13,border:'1px solid rgba(0,0,0,0.05)',wordBreak:'break-all'}}>♪ {dc.playlistUrl}</a>
             </div>}
 
           </div>
@@ -3400,7 +3401,7 @@ function PitchDetailModal({pitch, curators, savePitches, allPitches, onClose, no
             <div style={{background:'#f0ede6',borderRadius:12,padding:'1rem',fontSize:'0.85rem',lineHeight:1.7,color:'#6b6560',marginBottom:10}}>{pitch.feedbackMessage}</div>
             {pitch.placementUrl && <div style={{background:'rgba(196,149,106,0.06)',borderRadius:10,padding:'0.8rem',border:'1px solid rgba(196,149,106,0.25)',fontSize:'0.82rem',color:'#c4956a',marginBottom:8}}>
               <div style={{fontWeight:700,marginBottom:4}}>✓ 掲載済み{pitch.placementPlatform ? ` — ${pitch.placementPlatform}` : ''}</div>
-              <a href={pitch.placementUrl} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb',fontSize:'0.78rem',wordBreak:'break-all'}}>{pitch.placementUrl}</a>
+              <a href={externalHref(pitch.placementUrl)} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb',fontSize:'0.78rem',wordBreak:'break-all'}}>{pitch.placementUrl}</a>
             </div>}
           </> : <div style={{textAlign:'center',padding:'2.5rem',color:'#9a958e',fontSize:'0.85rem'}}>まだフィードバックがありません<br/>キュレーターのレビュー待ちです</div>}
         </div>}
@@ -3419,7 +3420,7 @@ function PitchDetailModal({pitch, curators, savePitches, allPitches, onClose, no
           <button onClick={savePlacement} style={{...css.btnPrimary,width:'100%',marginTop:4}}>保存</button>
           {pitch.placementUrl && <div style={{marginTop:10,padding:'0.7rem',background:'rgba(196,149,106,0.06)',borderRadius:10,border:'1px solid rgba(196,149,106,0.25)',fontSize:'0.78rem'}}>
             <div style={{fontWeight:600,color:'#c4956a',marginBottom:4}}>✓ 掲載済み</div>
-            <a href={pitch.placementUrl} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb',fontSize:'0.75rem'}}>{pitch.placementUrl}</a>
+            <a href={externalHref(pitch.placementUrl)} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb',fontSize:'0.75rem'}}>{pitch.placementUrl}</a>
           </div>}
         </div>}
 
@@ -3598,7 +3599,7 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
 
             {p.placementUrl && <div style={{marginTop:8,padding:"0.6rem 0.8rem",background:"rgba(196,149,106,0.06)",borderRadius:10,border:"1px solid rgba(196,149,106,0.3)",fontSize:"0.78rem"}}>
               <div style={{color:"#c4956a",fontWeight:700,marginBottom:4}}>✓ 掲載済み</div>
-              <a href={p.placementUrl} target="_blank" rel="noopener noreferrer" style={{color:"#c4956a",wordBreak:"break-all"}}>{p.placementUrl}</a>
+              <a href={externalHref(p.placementUrl)} target="_blank" rel="noopener noreferrer" style={{color:"#c4956a",wordBreak:"break-all"}}>{p.placementUrl}</a>
             </div>}
 
             <div style={{fontSize:"0.72rem",color:"#9a958e",marginTop:8}}>回答期限: {(() => { const d = p.deadline ? new Date(p.deadline) : (p.sentAt ? new Date(new Date(p.sentAt).getTime() + 7*24*60*60*1000) : null); return d && d.getFullYear() > 2000 ? d.toLocaleDateString("ja-JP") : "—"; })()}</div>

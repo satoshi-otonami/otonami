@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { authFetch, ApiError } from '@/lib/api-client';
+import { externalHref } from '@/lib/url';
 
 // 認証付きAPIエラーをユーザー向けアラートに変換
 function showApiError(e, fallbackMsg = 'エラーが発生しました') {
@@ -611,37 +612,37 @@ export default function ArtistDashboard() {
           {(artist.spotify_url || artist.youtube_url || artist.instagram_url || artist.twitter_url || artist.facebook_url || artist.website_url) && (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
               {artist.spotify_url && (
-                <a href={artist.spotify_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
+                <a href={externalHref(artist.spotify_url)} target="_blank" rel="noopener noreferrer" className="sns-pill"
                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#1DB954', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
                   <SpotifyIcon /> Spotify
                 </a>
               )}
               {artist.youtube_url && (
-                <a href={artist.youtube_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
+                <a href={externalHref(artist.youtube_url)} target="_blank" rel="noopener noreferrer" className="sns-pill"
                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#FF0000', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
                   <YouTubeIcon /> YouTube
                 </a>
               )}
               {artist.instagram_url && (
-                <a href={artist.instagram_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
+                <a href={externalHref(artist.instagram_url)} target="_blank" rel="noopener noreferrer" className="sns-pill"
                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
                   <InstagramIcon /> Instagram
                 </a>
               )}
               {artist.twitter_url && (
-                <a href={artist.twitter_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
+                <a href={externalHref(artist.twitter_url)} target="_blank" rel="noopener noreferrer" className="sns-pill"
                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#000', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
                   𝕏
                 </a>
               )}
               {artist.facebook_url && (
-                <a href={artist.facebook_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
+                <a href={externalHref(artist.facebook_url)} target="_blank" rel="noopener noreferrer" className="sns-pill"
                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#1877F2', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
                   Facebook
                 </a>
               )}
               {artist.website_url && (
-                <a href={artist.website_url} target="_blank" rel="noopener noreferrer" className="sns-pill"
+                <a href={externalHref(artist.website_url)} target="_blank" rel="noopener noreferrer" className="sns-pill"
                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9999, background: '#1a1a1a', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
                   Website
                 </a>
@@ -828,7 +829,7 @@ export default function ArtistDashboard() {
                       {pitch.placement_url && (
                         <div style={{ marginTop: 8 }}>
                           <span style={{ fontSize: 12, color: THEME.green }}>✓ 掲載済み: </span>
-                          <a href={pitch.placement_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: THEME.gold }}>{pitch.placement_url}</a>
+                          <a href={externalHref(pitch.placement_url)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: THEME.gold }}>{pitch.placement_url}</a>
                         </div>
                       )}
                     </div>
@@ -1108,16 +1109,16 @@ export default function ArtistDashboard() {
                           {/* Track URLs */}
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
                             {track.youtube_url && (
-                              <a href={track.youtube_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#FF0000', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#FF000010', fontFamily: THEME.font }}>YouTube</a>
+                              <a href={externalHref(track.youtube_url)} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#FF0000', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#FF000010', fontFamily: THEME.font }}>YouTube</a>
                             )}
                             {track.spotify_url && (
-                              <a href={track.spotify_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#1DB954', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#1DB95410', fontFamily: THEME.font }}>Spotify</a>
+                              <a href={externalHref(track.spotify_url)} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#1DB954', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#1DB95410', fontFamily: THEME.font }}>Spotify</a>
                             )}
                             {track.soundcloud_url && (
-                              <a href={track.soundcloud_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#FF5500', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#FF550010', fontFamily: THEME.font }}>SoundCloud</a>
+                              <a href={externalHref(track.soundcloud_url)} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#FF5500', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#FF550010', fontFamily: THEME.font }}>SoundCloud</a>
                             )}
                             {track.bandcamp_url && (
-                              <a href={track.bandcamp_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#1DA0C3', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#1DA0C310', fontFamily: THEME.font }}>Bandcamp</a>
+                              <a href={externalHref(track.bandcamp_url)} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#1DA0C3', textDecoration: 'none', padding: '4px 10px', borderRadius: 6, background: '#1DA0C310', fontFamily: THEME.font }}>Bandcamp</a>
                             )}
                           </div>
 
@@ -1168,7 +1169,7 @@ export default function ArtistDashboard() {
                                   <p style={{ fontSize: 11, color: THEME.textMuted, margin: '0 0 2px', fontFamily: THEME.font }}>{p.curator_name}:</p>
                                   <p style={{ fontSize: 13, color: THEME.text, lineHeight: 1.5, margin: 0, fontFamily: THEME.font }}>{p.feedback_message}</p>
                                   {p.placement_url && (
-                                    <a href={p.placement_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: THEME.gold, display: 'block', marginTop: 4 }}>✓ {p.placement_url}</a>
+                                    <a href={externalHref(p.placement_url)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: THEME.gold, display: 'block', marginTop: 4 }}>✓ {p.placement_url}</a>
                                   )}
                                 </div>
                               ))}
@@ -1365,7 +1366,7 @@ export default function ArtistDashboard() {
                 {dc.bio && <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.7, margin: 0 }}>{dc.bio}</p>}
 
                 {/* Platform URL */}
-                {dc.url && <a href={dc.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: THEME.gold, fontSize: 13, textDecoration: 'none', wordBreak: 'break-all' }}>→ {dc.url}</a>}
+                {dc.url && <a href={externalHref(dc.url)} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: THEME.gold, fontSize: 13, textDecoration: 'none', wordBreak: 'break-all' }}>→ {dc.url}</a>}
 
                 {/* Genres they love */}
                 {dc.genres?.length > 0 && (
@@ -1431,7 +1432,7 @@ export default function ArtistDashboard() {
                 {dc.playlistUrl && (
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 500, color: THEME.textSub, marginBottom: 10 }}>Their playlist</div>
-                    <a href={dc.playlistUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#ffffff', borderRadius: 10, padding: 14, color: THEME.gold, textDecoration: 'none', fontSize: 13, border: `1px solid ${THEME.border}`, wordBreak: 'break-all' }}>♪ {dc.playlistUrl}</a>
+                    <a href={externalHref(dc.playlistUrl)} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#ffffff', borderRadius: 10, padding: 14, color: THEME.gold, textDecoration: 'none', fontSize: 13, border: `1px solid ${THEME.border}`, wordBreak: 'break-all' }}>♪ {dc.playlistUrl}</a>
                   </div>
                 )}
 

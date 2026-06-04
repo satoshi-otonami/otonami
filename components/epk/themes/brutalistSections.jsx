@@ -4,6 +4,8 @@
 // as the "More from this playlist" list (proto disco-list styling reused).
 // `num` is a zero-padded numeric string ("01", "02", …) from the theme shell.
 
+import { externalHref } from '@/lib/url';
+
 function listenUrl(t) {
   return t.spotify_url || t.youtube_url || t.soundcloud_url || t.bandcamp_url || null;
 }
@@ -40,7 +42,7 @@ function DiscoRow({ track, idx }) {
       {url ? (
         <a
           className="disco-play"
-          href={url}
+          href={externalHref(url)}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Play ${track.title}`}
@@ -87,7 +89,7 @@ export function BrutalistFeaturedPlaylist({ playlistTracks, artist, lang, num })
               </div>
             )}
             {purl && (
-              <a className="play-button" href={purl} target="_blank" rel="noopener noreferrer">
+              <a className="play-button" href={externalHref(purl)} target="_blank" rel="noopener noreferrer">
                 {lang === 'en' ? 'Listen now' : '試聴する'}
               </a>
             )}
@@ -334,7 +336,7 @@ export function BrutalistPress({ press, lang, num }) {
               <div className="press-item" key={p.id}>
                 {quote && <p className="press-quote">{quote}</p>}
                 {p.source_url ? (
-                  <a className="press-source" href={p.source_url} target="_blank" rel="noopener noreferrer">
+                  <a className="press-source" href={externalHref(p.source_url)} target="_blank" rel="noopener noreferrer">
                     {p.source}
                   </a>
                 ) : (
@@ -460,7 +462,7 @@ export function BrutalistConnect({ artist, epk, lang, num }) {
                   <a
                     key={i}
                     className="connect-button"
-                    href={l.url}
+                    href={externalHref(l.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

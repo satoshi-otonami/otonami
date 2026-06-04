@@ -1,6 +1,8 @@
 // EPK Connect — social links (from artist) + contact blocks (from EPK).
 // lang-aware: heading, description, contact roles, and "Official Site" toggle;
 // brand names (Spotify/YouTube/Instagram/X/Facebook) stay as-is.
+import { externalHref } from '@/lib/url';
+
 export default function ConnectSection({ artist, epk, lang = 'en', num = '03' }) {
   const a = artist || {};
   const e = epk || {};
@@ -61,7 +63,7 @@ export default function ConnectSection({ artist, epk, lang = 'en', num = '03' })
                 <a
                   key={i}
                   className="connect-button"
-                  href={l.url}
+                  href={externalHref(l.url)}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

@@ -45,6 +45,12 @@ const COPY = {
       ctaSecondary: 'See a live example →',
       imgAlt: 'A live EPK on OTONAMI — ROUTE14band',
       themesLabel: 'Three themes to match your world.',
+      themesBadge: 'NEW',
+      themesEyebrow: 'OTONAMI EPK',
+      themesHeadline: 'Your own official page — free.',
+      themesSub: 'Dark, City Pop, or Brutalist — pick the look that fits your sound, from three themes.',
+      themesBody: "No need to pitch first. Start with your own page. Share it anywhere and it works as your official profile, worldwide.",
+      themesCta: 'Start free',
       themes: [
         { name: 'Editorial Dark', img: '/epk-themes/epk-theme-editorial-dark.jpg', selected: true },
         { name: 'Sunset City Pop', img: '/epk-themes/epk-theme-sunset-citypop.jpg' },
@@ -102,6 +108,12 @@ const COPY = {
       ctaSecondary: '実際の例を見る →',
       imgAlt: 'OTONAMIのLive EPK実例 — ROUTE14band',
       themesLabel: '世界観は、3つのテーマから選べる',
+      themesBadge: 'NEW',
+      themesEyebrow: 'OTONAMI EPK',
+      themesHeadline: '無料で持てる、あなたの公式ページ。',
+      themesSub: 'ダーク／シティポップ／ブルータリスト。3つの世界観から、あなたの音に似合う"一着"を。',
+      themesBody: 'ピッチに進まなくてもOK。まずは自分専用のページを持つところから。SNSに貼れば、そのまま海外にも届く公式プロフィールに。',
+      themesCta: '無料ではじめる',
       themes: [
         { name: 'Editorial Dark', img: '/epk-themes/epk-theme-editorial-dark.jpg', selected: true },
         { name: 'Sunset City Pop', img: '/epk-themes/epk-theme-sunset-citypop.jpg' },
@@ -655,11 +667,56 @@ export default function HomePage() {
           object-fit: cover; opacity: 0; transition: opacity 600ms ease; will-change: opacity;
         }
         .epk-stage-img.is-active { opacity: 1; }
-        .epk-themes-label {
-          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
-          font-size: 13px; font-weight: 600; color: #1a1a1a;
-          display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+        /* ── EPK new-launch announcement (replaces the old themes label) ── */
+        .lp-launch { margin-bottom: 22px; }
+        .lp-launch__badges { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .lp-new-badge {
+          display: inline-flex; align-items: center; gap: 6px;
+          background: #FF6B4A; color: #fff;
+          font-family: 'Sora',sans-serif; font-weight: 800;
+          font-size: 12px; letter-spacing: 0.14em;
+          padding: 7px 13px; border-radius: 999px;
+          animation: lpNewPulse 1.8s ease-in-out infinite;
         }
+        @keyframes lpNewPulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.07); opacity: 0.82; }
+        }
+        .lp-launch__eyebrow {
+          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+          font-weight: 600; font-size: 12px; letter-spacing: 0.18em; color: #993C1D;
+        }
+        .lp-launch__h {
+          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+          font-weight: 800; font-size: clamp(28px, 4.5vw, 40px); line-height: 1.16;
+          margin: 0 0 14px; color: #1a1a1a; /* fallback */
+        }
+        @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+          .lp-launch__h {
+            background: linear-gradient(118deg, #FF6B4A 0%, #FF3D6E 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent; color: transparent;
+          }
+        }
+        .lp-launch__sub {
+          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+          font-size: clamp(16px, 2.2vw, 18px); line-height: 1.7;
+          font-weight: 500; color: #1a1a1a; margin: 0 0 8px; word-break: auto-phrase;
+        }
+        .lp-launch__body {
+          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+          font-size: 15px; line-height: 1.75; color: #5F5E5A; margin: 0; max-width: 640px;
+          word-break: auto-phrase;
+        }
+        .lp-launch__cta-wrap { margin-top: 24px; }
+        .lp-launch__cta {
+          display: inline-flex; align-items: center; gap: 8px;
+          background: #FF6B4A; color: #fff;
+          font-family: 'Sora','Noto Sans JP',sans-serif; font-weight: 600; font-size: 15px;
+          padding: 13px 26px; border-radius: 999px; text-decoration: none;
+          transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+        .lp-launch__cta:hover { transform: translateY(-1px); opacity: 0.94; }
         .epk-themes-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; }
         .epk-thumb {
           position: relative; margin: 0; padding: 0; display: block; cursor: pointer;
@@ -691,6 +748,9 @@ export default function HomePage() {
           .epk-cta-primary { transition: none !important; }
           .epk-cta-primary:hover { transform: none !important; }
           .epk-stage-img, .epk-thumb { transition: none !important; }
+          .lp-new-badge { animation: none !important; }
+          .lp-launch__cta { transition: none !important; }
+          .lp-launch__cta:hover { transform: none !important; }
         }
       `}</style>
 
@@ -1117,9 +1177,15 @@ export default function HomePage() {
             className={`epk-reveal${epkVisible ? ' is-visible' : ''}`}
             style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 22, transitionDelay: epkVisible ? '300ms' : '0ms' }}
           >
-            <div className="epk-themes-label">
-              <span aria-hidden="true">🎨</span>
-              <span>{t.epk.themesLabel}</span>
+            {/* === EPK new-launch announcement (replaces the old themes label) === */}
+            <div className="lp-launch">
+              <div className="lp-launch__badges">
+                <span className="lp-new-badge">● {t.epk.themesBadge}</span>
+                <span className="lp-launch__eyebrow">{t.epk.themesEyebrow}</span>
+              </div>
+              <h2 className="lp-launch__h">{t.epk.themesHeadline}</h2>
+              <p className="lp-launch__sub">{t.epk.themesSub}</p>
+              <p className="lp-launch__body">{t.epk.themesBody}</p>
             </div>
             <div className="epk-themes-row" role="tablist" aria-label={t.epk.themesLabel}>
               {EPK_THEMES.map((th, i) => (
@@ -1143,6 +1209,10 @@ export default function HomePage() {
                   <span className="epk-thumb-label">{th.label}</span>
                 </button>
               ))}
+            </div>
+            {/* === sub-CTA (same destination as the hero primary CTA) === */}
+            <div className="lp-launch__cta-wrap">
+              <a href="/artist" className="lp-launch__cta">{t.epk.themesCta}　→</a>
             </div>
           </div>
         </div>

@@ -505,11 +505,11 @@ export default function ArtistRegistrationPage() {
               <label style={lbl}>カバー画像（任意）</label>
               <div
                 onClick={() => coverInputRef.current?.click()}
-                style={{ marginTop: 10, borderRadius: 10, overflow: 'hidden', border: `2px dashed ${coverPreview ? THEME.gold : THEME.border}`, background: THEME.bg, cursor: 'pointer', height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+                style={{ marginTop: 10, borderRadius: 10, overflow: 'hidden', border: `2px dashed ${coverPreview ? THEME.gold : THEME.border}`, background: THEME.bg, cursor: 'pointer', aspectRatio: '3 / 2', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
               >
                 {coverPreview
                   ? <img src={coverPreview} alt="cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <div style={{ textAlign: 'center', color: THEME.textMuted }}><div style={{ width: 24, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto' }} /><div style={{ fontSize: 11, marginTop: 6 }}>カバー画像を選択</div><div style={{ fontSize: 10, marginTop: 2 }}>JPEG, PNG, WebP（5MB以下）</div></div>}
+                  : <div style={{ textAlign: 'center', color: THEME.textMuted }}><div style={{ width: 24, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto' }} /><div style={{ fontSize: 11, marginTop: 6 }}>カバー画像を選択</div><div style={{ fontSize: 10, marginTop: 2 }}>JPEG, PNG, WebP（5MB以下）／推奨 1920×1280px（横長・3:2）</div></div>}
               </div>
               <input ref={coverInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => applyCoverFile(e.target.files?.[0])} />
 

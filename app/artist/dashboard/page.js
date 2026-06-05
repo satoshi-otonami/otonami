@@ -529,7 +529,7 @@ export default function ArtistDashboard() {
       {/* ── Cover + Profile Hero ── */}
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 20px 0' }}>
         <div style={{ position: 'relative', borderRadius: '16px 16px 0 0', overflow: 'hidden' }}>
-          <div className="cover-area" style={{ height: 220, position: 'relative' }}>
+          <div className="cover-area" style={{ aspectRatio: '3 / 2', position: 'relative' }}>
             <div style={{
               position: 'absolute', inset: 0,
               background: artist.cover_url ? `url(${artist.cover_url}) center/cover` : 'linear-gradient(135deg, #c4956a 0%, #e85d3a 100%)',
@@ -2580,7 +2580,7 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
         <div
           style={{
             width: '100%',
-            height: 120,
+            aspectRatio: '3 / 2',
             borderRadius: 12,
             border: `1px solid ${THEME.border}`,
             marginTop: 8,
@@ -2593,7 +2593,7 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
           <input
             ref={coverFileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept="image/*"
             onChange={handleCoverFileChange}
             style={{ display: 'none' }}
           />
@@ -2604,7 +2604,7 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
           >
             カバー画像を変更
           </button>
-          <p style={{ fontSize: 11, color: THEME.textMuted, margin: 0 }}>JPEG, PNG, WebP, GIF（5MB以下） / 推奨: 1920×480px</p>
+          <p style={{ fontSize: 11, color: THEME.textMuted, margin: 0 }}>JPEG, PNG, WebP（5MB以下）／推奨 1920×1280px（横長・3:2）</p>
         </div>
         {coverError && (
           <p style={{ color: THEME.coral, fontSize: 12, marginTop: 6 }}>{coverError}</p>
@@ -2649,7 +2649,7 @@ const globalStyles = `
   .sns-pill:hover { opacity: 0.85; transform: translateY(-1px); }
   .sns-pill { transition: all 0.15s; }
   @media (max-width: 768px) {
-    .cover-area { height: 160px !important; }
+    .cover-area { aspect-ratio: 3 / 2 !important; }
     .avatar-hero { width: 80px !important; height: 80px !important; margin-top: -40px !important; }
     .nav-links { display: none !important; }
     .header-name { display: none; }

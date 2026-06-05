@@ -2300,7 +2300,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         artistName: (artistName || '').trim(),
       });
       console.log('[analyzeTrack] result:', { songName: result.songName, artistName: result.artistName, audioFeatures: result.audioFeatures, soundnetError: result.soundnetError });
-      if (setTrackData) setTrackData({ ...result, genre: artist.genre, mood: artist.mood });
+      if (setTrackData) setTrackData({ ...result, genre: artist.genre, mood: artist.mood, listeningUrl: (trackUrl || artist.songLink || '').trim() || null });
       setTrackAnalysisStatus('done');
     } catch (e) {
       console.warn('Track analyze:', e.message);
@@ -2619,7 +2619,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     const tempPitches = targets.map(c => ({
       id: "p_" + Date.now() + "_" + c.id,
       artistId: user.id, artistEmail: user.email, artistName: artist.name, artistNameEn: artist.nameEn||artist.name,
-      songTitle: artist.songTitle, songLink: getSongLink(), genre: artist.genre, mood: artist.mood, description: artist.description, influences: artist.influences, achievements: artist.achievements, trackId: linkedTrackId || null,
+      songTitle: pitchSongTitle || artist.songTitle, songLink: getSongLink(), genre: artist.genre, mood: artist.mood, description: artist.description, influences: artist.influences, achievements: artist.achievements, trackId: linkedTrackId || null,
       pitchText: personalizePitch(pitchText, c), epk,
       matchScore: effectiveTrack ? calculateMatchScore(c, effectiveTrack) : null,
       curatorId: c.id, curatorName: c.name, curatorPlatform: c.platform, curatorEmail: c.email, creditCost: c.creditCost||2,
@@ -2809,7 +2809,21 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       <div style={{marginTop:8,background:"rgba(196,149,106,0.06)",borderRadius:10,padding:"0.7rem",border:"1px solid rgba(196,149,106,0.3)"}}>
         <label style={{fontSize:"0.72rem",color:"#c4956a",fontWeight:700}}>ピッチ楽曲URL <span style={{color:"#e85d3a"}}>*</span>（キュレーターに聴いてもらう曲）</label>
         <div style={{fontSize:"0.6rem",color:"#c4956a",marginBottom:4}}>Spotify, YouTube, SoundCloud等のURLを入力 — ピッチメールに自動挿入されます</div>
-        <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.06)"}} value={artist.songLink||""} onChange={e=>setF("songLink",e.target.value)} placeholder="https://open.spotify.com/track/... or https://youtube.com/watch?v=..."/>
+        <input style={{...css.input,border:"1px solid rgba(196,149,106,0.3)",background:"rgba(196,149,106,0.06)"}} value={artist.songLink||""} onChange={e=>{
+          const v = e.target.value;
+          setF("songLink", v);
+          // The user is manually editing the pitched URL. Any previously analyzed
+          // track (e.g. a different song carried over from the curators tab, or an
+          // auto-analysis of a dashboard track) is now stale: it would otherwise
+          // keep showing the wrong audio-feature card AND block re-analysis (the
+          // analyze effects skip when trackData already has audioFeatures). Drop it
+          // so display, analysis and send all follow the edited URL. (chihiro #2)
+          if (trackData && (trackData.listeningUrl || '').trim() !== v.trim()) {
+            if (setTrackData) setTrackData(null);
+            setTrackAnalysisStatus('idle');
+            lastAnalyzedKeyRef.current = '';
+          }
+        }} placeholder="https://open.spotify.com/track/... or https://youtube.com/watch?v=..."/>
         {/* Pitch song title — auto-populated from oEmbed, editable */}
         <div style={{marginTop:6}}>
           <label style={{fontSize:"0.62rem",color:"#c4956a",fontWeight:600,display:"flex",alignItems:"center",gap:5}}>

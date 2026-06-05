@@ -48,7 +48,6 @@ const COPY = {
       themesCta: 'Start free',
       exampleCta: 'See a live example',
       editEpkCta: 'Edit your EPK',
-      welcomeBack: 'Welcome back.',
       alreadyMember: 'Already have an account? Log in',
       themes: [
         { name: 'Editorial Dark', img: '/epk-themes/epk-theme-editorial-dark.jpg', selected: true },
@@ -110,7 +109,6 @@ const COPY = {
       themesCta: '無料ではじめる',
       exampleCta: '実際の例を見る',
       editEpkCta: 'EPKを編集する',
-      welcomeBack: 'おかえりなさい。',
       alreadyMember: 'すでに登録済みの方は ログイン',
       themes: [
         { name: 'Editorial Dark', img: '/epk-themes/epk-theme-editorial-dark.jpg', selected: true },
@@ -674,10 +672,10 @@ export default function HomePage() {
         }
 
         /* Themes lead + thumbnails (on Coral) */
-        .hero__themes { margin-top: 28px; }
+        .hero__themes { margin-top: 32px; }
         .hero__themes-lead {
           font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
-          font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.92); margin: 0 0 12px;
+          font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.92); margin: 0 0 16px;
           word-break: auto-phrase;
         }
         .epk-themes-row { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 11px; }
@@ -697,7 +695,7 @@ export default function HomePage() {
         }
 
         /* CTA row (primary white pill + ghost) */
-        .hero__cta { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-top: 24px; }
+        .hero__cta { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
         .hero__cta-primary {
           display: inline-flex; align-items: center; gap: 8px;
           background: #fff; color: #D4537E;
@@ -712,13 +710,8 @@ export default function HomePage() {
           text-decoration: none; opacity: 0.95; white-space: nowrap;
         }
         .hero__cta-ghost:hover { text-decoration: underline; }
-        /* Auth-aware CTA: guest cluster (register button + login link), logged-in note */
+        /* Auth-aware CTA: guest cluster (register button + login link) */
         .hero__cta-guest { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
-        .hero__cta-note {
-          width: 100%; margin: 0 0 8px;
-          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
-          font-weight: 600; font-size: 13px; color: rgba(255,255,255,0.92);
-        }
         .hero__cta-login {
           color: #fff; font-family: 'Sora','Noto Sans JP',sans-serif; font-weight: 600; font-size: 14px;
           text-decoration: underline; text-underline-offset: 3px; opacity: 0.95; white-space: nowrap;
@@ -1195,7 +1188,6 @@ export default function HomePage() {
             >
               {isArtistLoggedIn ? (
                 <div className="hero__cta-guest">
-                  <p className="hero__cta-note">{t.epk.welcomeBack}</p>
                   <a href="/dashboard/epk" className="hero__cta-primary">{t.epk.editEpkCta}　→</a>
                 </div>
               ) : (

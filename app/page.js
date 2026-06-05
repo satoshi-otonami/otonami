@@ -47,6 +47,9 @@ const COPY = {
       themesSub: 'No need to pitch first. Pick the look that fits your sound, from three themes.',
       themesCta: 'Start free',
       exampleCta: 'See a live example',
+      editEpkCta: 'Edit your EPK',
+      welcomeBack: 'Welcome back.',
+      alreadyMember: 'Already have an account? Log in',
       themes: [
         { name: 'Editorial Dark', img: '/epk-themes/epk-theme-editorial-dark.jpg', selected: true },
         { name: 'Sunset City Pop', img: '/epk-themes/epk-theme-sunset-citypop.jpg' },
@@ -106,6 +109,9 @@ const COPY = {
       themesSub: 'ピッチに進まなくてもOK。3つの世界観から、あなたの音に似合う"一着"を。',
       themesCta: '無料ではじめる',
       exampleCta: '実際の例を見る',
+      editEpkCta: 'EPKを編集する',
+      welcomeBack: 'おかえりなさい。',
+      alreadyMember: 'すでに登録済みの方は ログイン',
       themes: [
         { name: 'Editorial Dark', img: '/epk-themes/epk-theme-editorial-dark.jpg', selected: true },
         { name: 'Sunset City Pop', img: '/epk-themes/epk-theme-sunset-citypop.jpg' },
@@ -276,6 +282,16 @@ export default function HomePage() {
   const [epkPaused, setEpkPaused] = useState(false); // user interacted → stop auto-rotate
   const [epkReduce, setEpkReduce] = useState(false); // prefers-reduced-motion
   const epkTimer = useRef(null);
+  const [isArtistLoggedIn, setIsArtistLoggedIn] = useState(false); // default = guest (avoid hydration mismatch)
+
+  /* ── Auth-aware CTA: detect artist login after mount (client-only) ── */
+  useEffect(() => {
+    try {
+      setIsArtistLoggedIn(!!localStorage.getItem('artist_token'));
+    } catch {
+      /* SSR / private mode: stay guest */
+    }
+  }, []);
 
   /* ── Canvas waveform animation ── */
   useEffect(() => {
@@ -696,6 +712,18 @@ export default function HomePage() {
           text-decoration: none; opacity: 0.95; white-space: nowrap;
         }
         .hero__cta-ghost:hover { text-decoration: underline; }
+        /* Auth-aware CTA: guest cluster (register button + login link), logged-in note */
+        .hero__cta-guest { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+        .hero__cta-note {
+          width: 100%; margin: 0 0 8px;
+          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
+          font-weight: 600; font-size: 13px; color: rgba(255,255,255,0.92);
+        }
+        .hero__cta-login {
+          color: #fff; font-family: 'Sora','Noto Sans JP',sans-serif; font-weight: 600; font-size: 14px;
+          text-decoration: underline; text-underline-offset: 3px; opacity: 0.95; white-space: nowrap;
+        }
+        .hero__cta-login:hover { opacity: 1; }
 
         /* scroll-reveal */
         .epk-reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
@@ -1160,12 +1188,22 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* CTA: primary (start free → /artist) + ghost (live example → /epk/route14band) */}
+            {/* CTA: auth-aware primary (logged-in → edit EPK / guest → register + login) + ghost (live example, always) */}
             <div
               className={`hero__cta epk-reveal${epkVisible ? ' is-visible' : ''}`}
               style={{ transitionDelay: epkVisible ? '360ms' : '0ms' }}
             >
-              <a href="/artist" className="hero__cta-primary">{t.epk.themesCta}　→</a>
+              {isArtistLoggedIn ? (
+                <div className="hero__cta-guest">
+                  <p className="hero__cta-note">{t.epk.welcomeBack}</p>
+                  <a href="/dashboard/epk" className="hero__cta-primary">{t.epk.editEpkCta}　→</a>
+                </div>
+              ) : (
+                <div className="hero__cta-guest">
+                  <a href="/artist" className="hero__cta-primary">{t.epk.themesCta}　→</a>
+                  <a href="/artist/login" className="hero__cta-login">{t.epk.alreadyMember}　→</a>
+                </div>
+              )}
               <a href="/epk/route14band" className="hero__cta-ghost">{t.epk.exampleCta}　→</a>
             </div>
           </div>

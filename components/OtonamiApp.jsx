@@ -386,6 +386,11 @@ function AuthLoadingScreen() {
   );
 }
 
+// Valid artist studio tabs — the only `page` values ArtistApp's <main> can
+// render. Shared by App (history sync, post-login normalization) and ArtistApp
+// (blank-main fallback) so there is a single source of truth.
+const ARTIST_TABS = ["dashboard","curators","pitch","tracking","analytics","shop"];
+
 // ─── App ───
 export default function App() {
   const [mode, setMode] = useState(() => {
@@ -429,10 +434,27 @@ export default function App() {
   });
   const historyTabRef = useRef(false); // true after first artist tab push
 
+  // Capture the dashboard→studio handoff intent (tab / auto_analyze) ONCE at
+  // first render — synchronously, before ArtistApp mounts and strips these
+  // params from the URL (readUrlParams). On a cold first visit otonami-user is
+  // not yet in storage, so the `page` initializer above could only fall back to
+  // "auth"/"landing"; after async auto-login resolves we use this ref to
+  // normalize `page` to the tab the user actually asked for.
+  const handoffIntentRef = useRef(null);
+  if (handoffIntentRef.current === null) {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      handoffIntentRef.current = {
+        tab: (tab && ARTIST_TABS.includes(tab)) ? tab : null,
+        autoAnalyze: params.get('auto_analyze') === 'true',
+      };
+    } catch { handoffIntentRef.current = { tab: null, autoAnalyze: false }; }
+  }
+
   const notify = (msg, type="success") => { setNotif({msg,type}); setTimeout(()=>setNotif(null),4000); };
 
   // ── Browser history: sync artist tabs with pushState ──
-  const ARTIST_TABS = ["dashboard","curators","pitch","tracking","analytics","shop"];
   useEffect(() => {
     // Skip while auth is resolving. Without this guard the first-fire
     // replaceState wipes dashboard→studio handoff params (track_title,
@@ -476,6 +498,30 @@ export default function App() {
           const u = { id: data.artist.id, name: data.artist.name, email: data.artist.email, type: 'artist' };
           setUser(u);
           try { localStorage.setItem('otonami-user', JSON.stringify(u)); } catch {}
+          // A confirmed artist_token means this is an artist session. On a cold
+          // first visit otonami-mode may be unset (e.g. plain /studio with no
+          // ?role=artist), which would render CuratorApp and blank <main>.
+          // Default mode to "artist" only when it is not already set, so an
+          // explicit curator session is never overridden.
+          setMode(prev => {
+            if (prev) return prev;
+            try { localStorage.setItem('otonami-mode', 'artist'); } catch {}
+            return 'artist';
+          });
+          // Cold first visit had no otonami-user, so the `page` initializer
+          // could only fall back to "auth"/"landing". Now that auth resolved
+          // and `user` is set, the `page==="auth" && !user` guard no longer
+          // fires and ArtistApp would render an unhandled page → blank <main>.
+          // Normalize to the tab the handoff asked for (mirrors the
+          // otonami-user-present branch of the page initializer). Functional
+          // update so we don't read a stale `page` from the [] effect closure.
+          setPage(prev => {
+            if (ARTIST_TABS.includes(prev)) return prev; // already a valid tab
+            const intent = handoffIntentRef.current;
+            if (intent?.tab) return intent.tab;
+            if (intent?.autoAnalyze) return 'curators';
+            return 'dashboard';
+          });
           // Load real pitch data from API for studio stats
           if (data.recentPitches?.length) {
             setPitches(prev => {
@@ -1073,6 +1119,10 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches} refreshPitches={refreshPitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches}/>}
       {page==="shop" && <CreditShop user={user} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage}/>}
+      {/* Safety net: if `page` is ever a value none of the branches above
+          handle (e.g. a stale "auth"/"landing" left over after async
+          auto-login), fall back to the dashboard so <main> is never blank. */}
+      {!ARTIST_TABS.includes(page) && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify} loggedInArtist={loggedInArtist}/>}
     </main>
     <footer style={{borderTop:"1px solid rgba(0,0,0,0.05)",padding:"1.2rem 1.5rem",textAlign:"center",background:"#f8f7f4",fontSize:"0.72rem",color:"#9a958e"}}>
       <div>OTONAMI — Connecting Japanese Music to the World | TYCompany LLC</div>

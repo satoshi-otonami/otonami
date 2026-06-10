@@ -687,7 +687,7 @@ function Landing({onArtist, onCurator}) {
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"1rem",marginBottom:"3rem"}}>
-        {[["6","登録キュレーター"],["7日","フィードバック保証"],["¥0","キュレーター登録無料"],["AI","英語ピッチ自動生成"]].map(([n,l],i) =>
+        {[["100%","人間のアーティスト"],["7日","フィードバック保証"],["¥0","キュレーター登録無料"],["AI","英語ピッチ自動生成"]].map(([n,l],i) =>
           <div key={i} style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"1.5rem",textAlign:"center"}}>
             <div style={{fontSize:"1.8rem",fontWeight:800,color:"#c4956a"}}>{n}</div>
             <div style={{fontSize:"0.78rem",color:"#6b6560",marginTop:4}}>{l}</div>

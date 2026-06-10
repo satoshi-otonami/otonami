@@ -278,6 +278,12 @@ export default function ArtistLoginPage() {
               }}>
                 新規登録 →
               </a>
+
+              <div style={{ textAlign: 'center', marginTop: 16 }}>
+                <a href="/curator" style={{ fontSize: 12, color: THEME.textMuted, textDecoration: 'none', fontFamily: THEME.font }}>
+                  キュレーターの方はこちら →
+                </a>
+              </div>
             </>
           ) : (
             /* OTP Step */

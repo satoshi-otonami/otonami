@@ -429,6 +429,16 @@ export default function App() {
       }
       // ?role=artist → skip landing, go to auth
       if (params.get('role') === 'artist') return "auth";
+      // Unauthenticated cold visit. If an artist_token is present, the
+      // auto-login effect resolves the session and 361d94d normalizes `page`,
+      // so fall through to "landing" (which never paints — isAuthLoading gates
+      // it) and let normalization run. Only when there is NO session signal at
+      // all (no otonami-user, no artist_token, no ?role) do we send the visitor
+      // to the real login page: /studio is the signed-in app body; new-user
+      // signup lives on otonami.io / /artist. "redirecting" renders the loading
+      // screen so the Landing registration buttons never flash.
+      const hasToken = !!localStorage.getItem('artist_token');
+      if (!hasToken && !params.get('role')) return "redirecting";
     } catch {}
     return "landing";
   });
@@ -480,6 +490,16 @@ export default function App() {
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []); // eslint-disable-line
+
+  // ── Redirect unauthenticated visitors to the real login ──
+  // page === "redirecting" means the initializer found no session signal at all.
+  // /studio is the app body for signed-in users; the real auth (email+password →
+  // artist_token) lives at /artist/login. replace() so back-nav doesn't loop.
+  useEffect(() => {
+    if (page !== "redirecting") return;
+    try { window.location.replace('/artist/login'); }
+    catch { window.location.href = '/artist/login'; }
+  }, [page]);
 
   // ── Auto-login from artist_token (works with or without ?role=artist) ──
   useEffect(() => {
@@ -613,6 +633,11 @@ const saveCurators = async (c) => {
   // who arrived with an artist_token in storage, we never paint a frame
   // of the Demo state while /api/artists is in flight.
   if (isAuthLoading) return <AuthLoadingScreen />;
+
+  // ─── Redirecting to /artist/login (unauthenticated, no session signal) ───
+  // Show the loading screen instead of Landing so its registration buttons
+  // never flash before the redirect effect fires.
+  if (page === "redirecting") return <AuthLoadingScreen />;
 
   // ─── Landing ───
   if (page === "landing" && !user) return <Landing onArtist={() => { setMode("artist"); try { localStorage.setItem('otonami-mode', 'artist'); } catch {} setPage("auth"); }} onCurator={() => { window.location.href = '/curator'; }} />;

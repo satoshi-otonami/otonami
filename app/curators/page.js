@@ -143,7 +143,7 @@ function SectionBlock({ title, children }) {
 }
 
 /* ── Curator Card ── */
-function CuratorCard({ c, score, selected, onToggle, onDetail }) {
+function CuratorCard({ c, score, selected, onToggle, onDetail, lang }) {
   const [hovered, setHovered] = useState(false);
 
   const scoreBg    = score >= 75 ? T.greenLight  : score >= 60 ? T.accentLight  : T.amberLight;
@@ -219,6 +219,15 @@ function CuratorCard({ c, score, selected, onToggle, onDetail }) {
         )}
       </div>
 
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 12,
+        padding: '4px 10px', background: T.accentLight,
+        border: `1px solid ${T.accentBorder}`, borderRadius: 8,
+        fontSize: 12, fontWeight: 600, color: T.accent, fontFamily: T.font, whiteSpace: 'nowrap',
+      }}>
+        ♪ {lang === 'ja' ? `ピッチ送信：${c.creditCost || 2}クレジット` : `Pitch: ${c.creditCost || 2} credit${(c.creditCost || 2) === 1 ? '' : 's'}`}
+      </div>
+
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: 12 }}>
           {c.followers?.spotify   && <span style={{ fontSize: 12, color: T.textMuted, fontFamily: T.font }}>♫ {fmt(c.followers.spotify)}</span>}
@@ -243,7 +252,7 @@ function CuratorCard({ c, score, selected, onToggle, onDetail }) {
 }
 
 /* ── Curator Detail Modal ── */
-function CuratorModal({ c, score, selected, onClose, onToggle }) {
+function CuratorModal({ c, score, selected, onClose, onToggle, lang }) {
   useEffect(() => {
     if (!c) return;
     const handler = e => { if (e.key === 'Escape') onClose(); };
@@ -411,10 +420,13 @@ function CuratorModal({ c, score, selected, onClose, onToggle }) {
 
         <div style={{
           padding: '20px 32px', borderTop: `1px solid ${T.border}`,
-          display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
           background: T.white, flexShrink: 0,
           borderRadius: `0 0 ${T.radiusXl}px ${T.radiusXl}px`,
         }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: T.accent, fontFamily: T.font }}>
+            ♪ {lang === 'ja' ? `ピッチ送信：${c.creditCost || 2}クレジット` : `Pitch: ${c.creditCost || 2} credit${(c.creditCost || 2) === 1 ? '' : 's'}`}
+          </span>
           <button
             onClick={() => { onToggle(c.id); onClose(); }}
             style={{
@@ -508,10 +520,22 @@ export default function CuratorsPage() {
 
   const hasFilters = genreFilter || typeFilter || searchQ;
 
-  /* ── Start Campaign handler — sends visitor to artist signup ── */
+  /* ── Total credits required for the current selection ── */
+  const selectedCredits = useMemo(() =>
+    curators.filter(c => selected.has(c.id)).reduce((s, c) => s + (c.creditCost || 2), 0),
+    [curators, selected]);
+
+  /* ── Start Campaign handler — carries the selected curators into /studio,
+     routing through /artist/login (with a next= back to /studio) when the
+     visitor is not signed in. ── */
   const handleStartCampaign = useCallback(() => {
-    router.push('/artist');
-  }, [router]);
+    const ids = [...selected];
+    if (ids.length === 0) { router.push('/artist'); return; }
+    const studioUrl = `/studio?curator_id=${ids.join(',')}`;
+    let loggedIn = false;
+    try { loggedIn = !!localStorage.getItem('artist_token'); } catch {}
+    router.push(loggedIn ? studioUrl : `/artist/login?next=${encodeURIComponent(studioUrl)}`);
+  }, [router, selected]);
 
   /* ════════════════════════════════════════════════
      RENDER
@@ -550,6 +574,7 @@ export default function CuratorsPage() {
           selected={selected.has(modal.id)}
           onClose={() => setModal(null)}
           onToggle={toggle}
+          lang={lang}
         />
       )}
 
@@ -714,6 +739,7 @@ export default function CuratorsPage() {
                 selected={selected.has(c.id)}
                 onToggle={toggle}
                 onDetail={setModal}
+                lang={lang}
               />
             ))}
           </div>
@@ -743,7 +769,9 @@ export default function CuratorsPage() {
                 {selected.size}{lang === 'ja' ? '名を選択中' : selected.size === 1 ? ' curator selected' : ' curators selected'}
               </div>
               <div style={{ fontSize: 12, color: T.textSub, fontFamily: T.font, marginTop: 2 }}>
-                {lang === 'ja' ? 'キャンペーンを開始してピッチを送ろう' : 'Start a campaign to pitch your music'}
+                {lang === 'ja'
+                  ? `合計 ${selectedCredits}クレジット（¥${selectedCredits * 160}相当）でピッチ送信`
+                  : `${selectedCredits} credit${selectedCredits === 1 ? '' : 's'} total (≈¥${selectedCredits * 160}) to pitch`}
               </div>
             </div>
           </div>

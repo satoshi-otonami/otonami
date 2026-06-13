@@ -152,7 +152,14 @@ export default function ArtistLoginPage() {
         return;
       }
       localStorage.setItem('artist_token', data.token);
-      window.location.href = '/artist/dashboard';
+      // Honour a ?next= handoff (e.g. /curators → login → /studio?curator_id=…).
+      // Only same-origin absolute paths are allowed, to avoid open redirects.
+      let dest = '/artist/dashboard';
+      try {
+        const next = new URLSearchParams(window.location.search).get('next');
+        if (next && next.startsWith('/') && !next.startsWith('//')) dest = next;
+      } catch {}
+      window.location.href = dest;
     } catch (e) {
       setOtpError(e.message);
     } finally {

@@ -953,9 +953,15 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
   useEffect(() => {
     if (!curators || curators.length === 0) return;
     if (pendingCuratorId) {
-      const found = curators.find(c => c.id === pendingCuratorId);
-      if (found && !selected.includes(found.id)) {
-        setSelected(prev => [...prev, found.id]);
+      // pendingCuratorId may be a single id or a comma-separated list — the
+      // public /curators page hands off every selected curator at once.
+      const ids = String(pendingCuratorId).split(',').map(s => s.trim()).filter(Boolean);
+      const matched = ids
+        .map(id => curators.find(c => c.id === id))
+        .filter(Boolean)
+        .map(c => c.id);
+      if (matched.length) {
+        setSelected(prev => [...prev, ...matched.filter(id => !prev.includes(id))]);
       }
       setPendingCuratorId(null);
     } else if (pendingCuratorName) {

@@ -3,6 +3,11 @@ import { useState, useEffect, useRef } from 'react';
 import { CL as T } from '@/lib/design-tokens';
 import { supabase } from '@/lib/supabase';
 
+// Persist curator registration progress so a mobile reload / tab switch
+// doesn't wipe an almost-finished form. Auth fields are never stored.
+const DRAFT_KEY = 'otonami_curator_reg_draft_v1';
+const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+
 const TYPE_OPTIONS = [
   { value: 'playlist', en: 'Playlist Curator',  ja: 'プレイリスト' },
   { value: 'blog',     en: 'Blog',              ja: 'ブログ' },
@@ -100,6 +105,7 @@ export default function CuratorRegistrationPage() {
   const [status, setStatus] = useState(null);
   const [error, setError] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const draftSaveReady = useRef(false);
 
   useEffect(() => {
     try {
@@ -109,6 +115,45 @@ export default function CuratorRegistrationPage() {
       else setLang('en');
     } catch {}
   }, []);
+
+  // Restore an in-progress registration draft on mount (mobile reload safety).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (!draft?.savedAt || Date.now() - draft.savedAt > DRAFT_TTL_MS) {
+        localStorage.removeItem(DRAFT_KEY);
+        return;
+      }
+      if (draft.fields && typeof draft.fields === 'object') {
+        setForm((f) => ({ ...f, ...draft.fields }));
+      }
+      if (typeof draft.openToAllGenres === 'boolean') setOpenToAllGenres(draft.openToAllGenres);
+      if (typeof draft.step === 'number' && draft.step >= 1 && draft.step <= 3) {
+        setRegisterStep(draft.step);
+      }
+    } catch {
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
+    }
+  }, []);
+
+  // Persist the draft as the user edits. Never store password (security).
+  // Skip the first run so the empty initial state can't clobber a restored draft.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!draftSaveReady.current) { draftSaveReady.current = true; return; }
+    try {
+      const { password, ...safe } = form;
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        step: registerStep,
+        fields: safe,
+        openToAllGenres,
+        savedAt: Date.now(),
+      }));
+    } catch {}
+  }, [form, registerStep, openToAllGenres]);
 
   useEffect(() => {
     try {
@@ -349,6 +394,7 @@ export default function CuratorRegistrationPage() {
         }
         throw new Error(data.error || 'Registration failed');
       }
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
       setStatus('success');
     } catch (e) {
       const msg = e instanceof TypeError

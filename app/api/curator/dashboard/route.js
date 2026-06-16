@@ -228,18 +228,39 @@ export async function PATCH(request) {
     if (data.artist_email) {
       const sc = { accepted: '✓ Accepted', declined: 'Declined', feedback: 'Feedback' };
       const statusLabel = sc[status] || status;
+
+      // Look up the curator's contact details so the artist can reply directly —
+      // mirror of the pitch-send email, which routes replies straight to the artist.
+      let curatorEmail = null;
+      let curatorContactUrl = null;
+      try {
+        const { data: curatorRow } = await db
+          .from('curators')
+          .select('email, url')
+          .eq('id', pCuratorId)
+          .maybeSingle();
+        curatorEmail = curatorRow?.email?.trim() || null;
+        if (curatorRow?.url && /^https?:\/\//i.test(curatorRow.url)) {
+          curatorContactUrl = curatorRow.url.trim();
+        }
+      } catch (e) {
+        console.warn('[dashboard] Curator contact lookup failed (non-fatal):', e?.message);
+      }
+
       // Escape DB-stored / curator-supplied values before HTML interpolation
       const safeCuratorName = escapeHtml(data.curator_name || 'A curator');
       const safeSubject = escapeHtml(data.subject || '');
       const safeFeedback = escapeHtml(data.feedback_message);
       const safeUrl = escapeHtml(data.placement_url);
+      const safeCuratorEmail = escapeHtml(curatorEmail);
+      const safeCuratorContactUrl = escapeHtml(curatorContactUrl);
       try {
         const { data: emailResult, error: emailError } = await resend.emails.send({
         from: `OTONAMI <${FROM}>`,
         to: [data.artist_email],
-        reply_to: 'info@otonami.io',
+        reply_to: curatorEmail || 'info@otonami.io',
         subject: `OTONAMI — ${data.curator_name || 'A curator'} responded to your pitch`,
-        text: `${data.curator_name || 'A curator'} responded to your pitch "${data.subject || ''}".\n\nStatus: ${statusLabel}${data.feedback_message ? `\n\nFeedback: ${data.feedback_message}` : ''}${data.placement_url ? `\n\nPlacement: ${data.placement_url}` : ''}\n\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
+        text: `${data.curator_name || 'A curator'} responded to your pitch "${data.subject || ''}".\n\nStatus: ${statusLabel}${data.feedback_message ? `\n\nFeedback: ${data.feedback_message}` : ''}${data.placement_url ? `\n\nPlacement: ${data.placement_url}` : ''}${curatorEmail ? `\n\nReply directly to ${data.curator_name || 'the curator'}: ${curatorEmail}` : ''}${curatorContactUrl ? `\nContact: ${curatorContactUrl}` : ''}\n\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
         headers: {
           'List-Unsubscribe': '<mailto:info@otonami.io?subject=unsubscribe>',
         },
@@ -255,6 +276,7 @@ export async function PATCH(request) {
             </div>
             ${safeFeedback ? `<div style="background:#13132a;border-radius:10px;padding:14px 18px;margin-bottom:16px;color:#ccc;font-size:14px;line-height:1.7;">${safeFeedback}</div>` : ''}
             ${safeUrl ? `<div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:10px;padding:14px 18px;margin-bottom:16px;"><p style="color:#38bdf8;font-weight:700;margin:0 0 6px;">Your track was featured!</p><a href="${safeUrl}" style="color:#0ea5e9;font-size:13px;">${safeUrl}</a></div>` : ''}
+            ${(safeCuratorEmail || safeCuratorContactUrl) ? `<div style="background:#13132a;border:1px solid #1e1e3a;border-radius:10px;padding:14px 18px;margin-bottom:16px;"><div style="color:#a78bfa;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:8px;">REPLY DIRECTLY / 直接返信</div>${safeCuratorEmail ? `<div style="color:#ccc;font-size:14px;line-height:1.7;">Reply directly to ${safeCuratorName}: <a href="mailto:${safeCuratorEmail}" style="color:#FF6B4A;text-decoration:underline;">${safeCuratorEmail}</a></div>` : ''}${safeCuratorContactUrl ? `<div style="color:#ccc;font-size:13px;line-height:1.7;margin-top:6px;">Contact: <a href="${safeCuratorContactUrl}" style="color:#FF6B4A;text-decoration:underline;word-break:break-all;">${safeCuratorContactUrl}</a></div>` : ''}</div>` : ''}
             <div style="text-align:center;margin-top:24px;">
               <a href="${APP_URL}" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#7c3aed,#2563eb);border-radius:20px;color:#fff;text-decoration:none;font-weight:700;">View Details →</a>
             </div>

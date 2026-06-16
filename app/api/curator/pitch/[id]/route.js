@@ -38,6 +38,27 @@ async function sendFeedbackNotification(pitch) {
   const subject      = pitch.subject || 'your pitch';
   const status       = pitch.status;
 
+  // Look up the curator's contact details so the artist can reply directly —
+  // mirror of the pitch-send email, which routes replies straight to the artist.
+  let curatorEmail = null;
+  let curatorContactUrl = null;
+  if (pitch.curator_id) {
+    try {
+      const db = getServiceSupabase();
+      const { data: curatorRow } = await db
+        .from('curators')
+        .select('email, url')
+        .eq('id', pitch.curator_id)
+        .maybeSingle();
+      curatorEmail = curatorRow?.email?.trim() || null;
+      if (curatorRow?.url && /^https?:\/\//i.test(curatorRow.url)) {
+        curatorContactUrl = curatorRow.url.trim();
+      }
+    } catch (e) {
+      console.warn('[pitch-detail] Curator contact lookup failed (non-fatal):', e?.message);
+    }
+  }
+
   const statusConfig = {
     accepted: { label: '✓ Accepted / 承認されました', color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: '#10b981' },
     declined: { label: 'Declined / 見送りとなりました', color: '#ef4444', bg: 'rgba(239,68,68,0.10)', border: '#ef4444' },
@@ -51,6 +72,8 @@ async function sendFeedbackNotification(pitch) {
   const safeFeedback = escapeHtml(pitch.feedback_message);
   const safePlacementUrl = escapeHtml(pitch.placement_url);
   const safePlacementPlatform = escapeHtml(pitch.placement_platform);
+  const safeCuratorEmail = escapeHtml(curatorEmail);
+  const safeCuratorContactUrl = escapeHtml(curatorContactUrl);
 
   const html = `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;color:#334155;background:#0a0a18;border-radius:16px;overflow:hidden;">
@@ -98,6 +121,15 @@ async function sendFeedbackNotification(pitch) {
         </div>
         ` : ''}
 
+        ${(safeCuratorEmail || safeCuratorContactUrl) ? `
+        <!-- Reply directly to curator -->
+        <div style="background:#13132a;border:1px solid #1e1e3a;border-radius:10px;padding:16px 18px;margin-bottom:20px;">
+          <div style="color:#a78bfa;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:8px;">REPLY DIRECTLY / 直接返信</div>
+          ${safeCuratorEmail ? `<div style="color:#ccc;font-size:14px;line-height:1.7;">Reply directly to ${safeCuratorName}: <a href="mailto:${safeCuratorEmail}" style="color:#FF6B4A;text-decoration:underline;">${safeCuratorEmail}</a></div>` : ''}
+          ${safeCuratorContactUrl ? `<div style="color:#ccc;font-size:13px;line-height:1.7;margin-top:6px;">Contact: <a href="${safeCuratorContactUrl}" style="color:#FF6B4A;text-decoration:underline;word-break:break-all;">${safeCuratorContactUrl}</a></div>` : ''}
+        </div>
+        ` : ''}
+
         <!-- CTA -->
         <div style="text-align:center;margin-top:28px;">
           <a href="${APP_URL}" style="display:inline-block;padding:13px 32px;background:linear-gradient(135deg,#7c3aed,#2563eb);border-radius:24px;color:#fff;text-decoration:none;font-weight:700;font-size:15px;">
@@ -117,10 +149,10 @@ async function sendFeedbackNotification(pitch) {
     const { data, error } = await resend.emails.send({
       from: `OTONAMI <${FROM}>`,
       to: [artistEmail],
-      reply_to: 'info@otonami.io',
+      reply_to: curatorEmail || 'info@otonami.io',
       subject: `OTONAMI — ${curatorName} responded to your pitch "${subject}"`,
       html,
-      text: `${curatorName} responded to your pitch "${subject}".\n\nStatus: ${sc.label}\n${pitch.feedback_message ? `\nFeedback: ${pitch.feedback_message}\n` : ''}${pitch.placement_url ? `\nPlacement: ${pitch.placement_url}\n` : ''}\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
+      text: `${curatorName} responded to your pitch "${subject}".\n\nStatus: ${sc.label}\n${pitch.feedback_message ? `\nFeedback: ${pitch.feedback_message}\n` : ''}${pitch.placement_url ? `\nPlacement: ${pitch.placement_url}\n` : ''}${curatorEmail ? `\nReply directly to ${curatorName}: ${curatorEmail}\n` : ''}${curatorContactUrl ? `Contact: ${curatorContactUrl}\n` : ''}\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
       headers: {
         'List-Unsubscribe': '<mailto:info@otonami.io?subject=unsubscribe>',
       },

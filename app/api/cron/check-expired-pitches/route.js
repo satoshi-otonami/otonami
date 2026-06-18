@@ -31,6 +31,7 @@ export async function GET(request) {
     const results = [];
 
     for (const pitch of expiredPitches) {
+     try {
       if (!(pitch.credits_charged > 0)) {
         // Nothing to refund — still mark expired below.
       }
@@ -57,15 +58,16 @@ export async function GET(request) {
           console.error(`[cron] Refund RPC failed for pitch ${pitch.id}:`, rpcErr);
         } else {
           refundOk = true;
-          await supabase.from('credit_transactions').insert({
+          const { error: txErr } = await supabase.from('credit_transactions').insert({
             artist_id: artistId,
             amount: pitch.credits_charged,
             type: 'expiry_refund',
             description: 'Expired pitch refund',
             metadata: { pitch_id: pitch.id, curator_id: pitch.curator_id },
-          }).catch(txErr => {
-            console.warn('[cron] credit_transactions log failed (non-fatal):', txErr.message);
           });
+          if (txErr) {
+            console.warn('[cron] credit_transactions log failed (non-fatal):', txErr.message);
+          }
         }
       }
 
@@ -76,7 +78,6 @@ export async function GET(request) {
           status: 'expired',
           refunded_at: new Date().toISOString(),
           refund_credits: refundOk ? pitch.credits_charged : 0,
-          updated_at: new Date().toISOString(),
         })
         .eq('id', pitch.id);
 
@@ -89,7 +90,12 @@ export async function GET(request) {
           refund_ok: refundOk,
           curator: pitch.curator_name,
         });
+      } else {
+        console.error(`[cron] Mark-expired failed for pitch ${pitch.id}:`, updateError.message);
       }
+     } catch (pitchErr) {
+       console.error(`[cron] Unexpected error processing pitch ${pitch.id}:`, pitchErr?.message || pitchErr);
+     }
     }
 
     console.log(`[cron] Processed ${results.length} expired pitches`, results);

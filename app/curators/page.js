@@ -65,7 +65,10 @@ function mapCurator(c) {
     type: TYPE_LABEL[c.type] || c.type || 'Curator',
     color: nameColor(c.name),
     certified: false,
-    shareRate: 0,
+    // Response rate = responded / received, computed live server-side.
+    // null when the curator has received no pitches yet → UI renders "—".
+    responseRate: (c.responseRate === undefined ? null : c.responseRate),
+    pitchesReceived: c.pitchesReceived || 0,
     followers: c.followers ? { total: c.followers } : {},
     genres: c.genres || [],
     genresOpen: c.accepts || [],
@@ -82,7 +85,7 @@ function mapCurator(c) {
   };
 }
 
-/* ── Match score (genre overlap + shareRate bonus) ── */
+/* ── Match score (genre overlap + response-rate bonus) ── */
 const calcMatch = (curator, trackGenres) => {
   if (!trackGenres || trackGenres.length === 0) return null;
   const all = [...(curator.genres || []), ...(curator.genresOpen || [])];
@@ -90,7 +93,7 @@ const calcMatch = (curator, trackGenres) => {
     all.some(cg => cg.toLowerCase() === g.toLowerCase())
   ).length;
   if (overlap === 0) return null;
-  return Math.min(100, Math.round(overlap / trackGenres.length * 100 + (curator.shareRate || 0) * 0.5));
+  return Math.min(100, Math.round(overlap / trackGenres.length * 100 + (curator.responseRate || 0) * 0.5));
 };
 
 /* ── Avatar component ── */
@@ -318,8 +321,8 @@ function CuratorModal({ c, score, selected, onClose, onToggle, lang }) {
           <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.75, fontFamily: T.font, margin: 0 }}>{c.bio}</p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px', background: T.bg, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
-            <span style={{ fontSize: 13, color: T.textSub, fontFamily: T.font }}>Share rate</span>
-            <span style={{ fontWeight: 700, fontSize: 22, color: T.accent, fontFamily: T.font }}>{c.shareRate}%</span>
+            <span style={{ fontSize: 13, color: T.textSub, fontFamily: T.font }}>{lang === 'ja' ? '回答率' : 'Response rate'}</span>
+            <span style={{ fontWeight: 700, fontSize: 22, color: T.accent, fontFamily: T.font }}>{(c.responseRate == null) ? '—' : `${c.responseRate}%`}</span>
             {score != null && (
               <>
                 <span style={{ flex: 1 }} />

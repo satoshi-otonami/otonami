@@ -1,0 +1,37 @@
+name: Expire pitches (refund backup)
+
+# Independent backup trigger for the 7-day expired-pitch credit refund.
+# Vercel Cron (vercel.json: 0 9 * * *) is the primary trigger, but the Hobby
+# plan gives no execution guarantee, so this runs the same endpoint on its own
+# schedule. The handler is idempotent (only processes status='sent' pitches with
+# refunded_at IS NULL), so overlapping/extra runs are safe no-ops.
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'   # twice daily (~00:00 and 12:00 UTC), offset from Vercel's 09:00 UTC run
+  workflow_dispatch: {}       # allow manual run from the Actions tab
+
+concurrency:
+  group: expire-pitches
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call expired-pitches endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET secret is not set in the repository"; exit 1
+          fi
+          code=$(curl -sS -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            https://otonami.io/api/cron/check-expired-pitches)
+          echo "HTTP ${code}"
+          cat /tmp/out.json || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::expired-pitches endpoint returned HTTP ${code}"; exit 1
+          fi

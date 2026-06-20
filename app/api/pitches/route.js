@@ -237,11 +237,62 @@ export async function POST(request) {
     // (per CLAUDE.md). Ignore any client-supplied credits_charged value.
     const { data: curator } = await db
       .from('curators')
-      .select('tier')
+      .select('tier, email')
       .eq('id', cleanRow.curator_id)
       .maybeSingle();
     const creditsRequired = curator?.tier || 2;
     cleanRow.credits_charged = creditsRequired;
+
+    // ── Same-contact duplicate guard (v1, first-write-wins) ──
+    // One person (e.g. a curator named Dario) may hold several curator
+    // profiles under a single email. Without this guard, an artist who selects
+    // more than one of that person's profiles would pitch the same track to the
+    // same inbox multiple times — double-charged, double-notified. We dedup on
+    // the *contact email* (resolved from curator_id here, because the pitches
+    // table has no curator_email column), the track (song_link) and the artist
+    // (artist_email, else artist_name). Only an ACTIVE prior pitch blocks:
+    // status IN ('sent','accepted','feedback'); 'declined'/'expired' are left
+    // re-pitchable. The skip happens BEFORE the credit RPC and INSERT below, so
+    // no credits are spent, and because no id is returned the client's email
+    // step (gated on _hasUUID) is skipped too.
+    // first-write-wins: whichever profile the send loop reaches first wins.
+    // A future best-match-wins version would prefer the highest match_score
+    // among the same-email profiles instead of send order.
+    const curatorEmail = curator?.email?.trim() || null;
+    // Skip dedup when the contact email is unknown (don't fuse NULLs) or the
+    // track has no link to key on (song_link is NULL on a few legacy rows).
+    if (curatorEmail && cleanRow.song_link) {
+      const { data: siblings } = await db
+        .from('curators')
+        .select('id')
+        .eq('email', curatorEmail);
+      const siblingIds = (siblings || []).map((s) => s.id);
+      if (siblingIds.length) {
+        let dupQuery = db
+          .from('pitches')
+          .select('id')
+          .in('curator_id', siblingIds)
+          .eq('song_link', cleanRow.song_link)
+          .in('status', ['sent', 'accepted', 'feedback'])
+          .limit(1);
+        dupQuery = cleanRow.artist_email
+          ? dupQuery.eq('artist_email', cleanRow.artist_email)
+          : dupQuery.eq('artist_name', cleanRow.artist_name);
+        const { data: dup } = await dupQuery;
+        if (dup && dup.length) {
+          console.log(
+            `[pitches] Skipped duplicate to contact=${curatorEmail} existing_pitch=${dup[0].id} (no charge, no email)`
+          );
+          return NextResponse.json({
+            skipped: true,
+            reason: 'duplicate_curator_contact',
+            curator_email: curatorEmail,
+            existing_pitch_id: dup[0].id,
+            charged: false,
+          });
+        }
+      }
+    }
 
     const { data: newCredits, error: rpcError } = await db.rpc(
       'increment_artist_credits',

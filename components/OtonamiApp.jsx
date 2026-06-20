@@ -2716,9 +2716,19 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     const newPitches = [];
     let latestCredits = credits;
     let insufficientCreditsHit = false;
+    let skippedCount = 0;
     for (const p of tempPitches) {
       try {
         const result = await insertPitchGetUUID(p);
+        if (result?.skipped) {
+          // Same-contact duplicate: the server already holds an active pitch
+          // for this track to this curator's email (another of their profiles).
+          // No DB row, no charge, no email — just tally it for the summary.
+          // first-write-wins; send order here is the curators-array order, not
+          // match_score, so the kept pitch is the first reached, not the best.
+          skippedCount++;
+          continue;
+        }
         if (result?.id) {
           // Use translated pitchText (if translation occurred) for the email body
           newPitches.push({ ...p, id: result.id, pitchText: result.pitchText ?? p.pitchText, _hasUUID: true });
@@ -2763,9 +2773,18 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     }
     // Show the "sent" success state only when at least one pitch was actually saved.
     const savedCount = newPitches.filter(p => p._hasUUID).length;
+    // Neutral, no-emoji note when same-contact duplicates were skipped server-side.
+    const skipNote = skippedCount > 0
+      ? `（同一連絡先のキュレーターには既にこのトラックをピッチ済みのため、${skippedCount}件をスキップしました（クレジット消費なし）。/ ${skippedCount} pitch(es) skipped: the same curator contact was already pitched for this track. No credits were used.）`
+      : "";
     if (savedCount > 0) {
       setPitchSent(true);
-      notify("✓ " + emailsSent + "件送信完了");
+      notify("✓ " + emailsSent + "件送信完了" + skipNote);
+    } else if (skippedCount > 0) {
+      // Every selected profile resolved to an already-pitched contact: nothing
+      // sent, nothing charged. This is not a failure — keep the tone neutral.
+      setPitchSent(true);
+      notify(`同一連絡先のキュレーターには既にこのトラックをピッチ済みのため、${skippedCount}件をスキップしました（クレジット消費なし）。/ ${skippedCount} pitch(es) skipped: the same curator contact was already pitched for this track. No credits were used.`);
     } else {
       notify("送信に失敗しました。時間をおいて再度お試しください", "error");
     }

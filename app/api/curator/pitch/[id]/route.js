@@ -114,10 +114,17 @@ async function sendFeedbackNotification(pitch) {
         <!-- Placement info -->
         <div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:10px;padding:16px 18px;margin-bottom:20px;">
           <div style="color:#38bdf8;font-size:13px;font-weight:800;margin-bottom:8px;">
-            Your track was featured! / あなたの楽曲が紹介されました！
+            Your pitch was accepted! / ピッチが承認されました！
+          </div>
+          <div style="color:#94a3b8;font-size:13px;line-height:1.6;margin-bottom:8px;">
+            The curator plans to add your track to this playlist:<br>
+            キュレーターがプレイリストへの追加を予定しています:
           </div>
           ${safePlacementPlatform ? `<div style="color:#94a3b8;font-size:12px;margin-bottom:6px;">Platform: <strong style="color:#38bdf8;">${safePlacementPlatform}</strong></div>` : ''}
           <a href="${safePlacementUrl}" style="color:#0ea5e9;font-size:13px;word-break:break-all;">${safePlacementUrl}</a>
+          <div style="color:#64748b;font-size:12px;line-height:1.6;margin-top:10px;">
+            It may take some time to appear on the playlist. / 反映までに時間がかかることがあります。
+          </div>
         </div>
         ` : ''}
 

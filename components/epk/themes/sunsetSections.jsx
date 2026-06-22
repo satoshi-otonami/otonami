@@ -332,7 +332,9 @@ export function SunsetPress({ press, lang, num }) {
   );
 }
 
-// OTONAMI badge — existing Phase 2A strings + Response Rate (no open-rate data).
+// OTONAMI badge — credibility stats (Curators Reached / Countries only).
+// Response Rate was removed from public EPKs: it drops on curator non-reply
+// (an external factor), so it under-represents the artist.
 export function SunsetBadge({ stats, lang }) {
   const s = stats || {};
   const t = (en, jp) => (lang === 'en' ? en : jp);
@@ -364,10 +366,6 @@ export function SunsetBadge({ stats, lang }) {
             <div>
               <div className="otonami-stat-num">{s.countries}</div>
               <div className="otonami-stat-label">{t('Countries', '国数')}</div>
-            </div>
-            <div>
-              <div className="otonami-stat-num">{s.response_rate}%</div>
-              <div className="otonami-stat-label">{t('Response Rate', '返信率')}</div>
             </div>
           </div>
         )}

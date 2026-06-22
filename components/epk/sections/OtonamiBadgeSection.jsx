@@ -42,14 +42,6 @@ export default function OtonamiBadgeSection({ stats, lang = 'en' }) {
               </div>
               <div className="otonami-stat-label">{t('Countries', '国数')}</div>
             </div>
-            <div>
-              <div className="otonami-stat-num">
-                <em>{s.response_rate}%</em>
-              </div>
-              <div className="otonami-stat-label">
-                {t('Response Rate', '返信率')}
-              </div>
-            </div>
           </div>
         )}
         <p className="otonami-caption">

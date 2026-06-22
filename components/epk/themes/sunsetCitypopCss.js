@@ -189,7 +189,7 @@ export const SUNSET_CITYPOP_CSS = `
 .theme-sunset-citypop .otonami-eyebrow::before { content:''; width:6px; height:6px; background:var(--gold); border-radius:50%; }
 .theme-sunset-citypop .otonami-h { font-family:'Instrument Serif',serif; font-size:clamp(40px,6vw,80px); line-height:1; margin-bottom:24px; color:var(--cream); letter-spacing:-0.02em; }
 .theme-sunset-citypop .otonami-h em { font-style:italic; color:var(--gold); }
-.theme-sunset-citypop .otonami-stat-row { display:grid; grid-template-columns:repeat(3,1fr); gap:48px; margin:56px 0; padding:56px 0; border-top:1px solid rgba(255,246,233,0.3); border-bottom:1px solid rgba(255,246,233,0.3); }
+.theme-sunset-citypop .otonami-stat-row { display:grid; grid-template-columns:repeat(2,1fr); gap:48px; margin:56px 0; padding:56px 0; border-top:1px solid rgba(255,246,233,0.3); border-bottom:1px solid rgba(255,246,233,0.3); }
 .theme-sunset-citypop .otonami-stat-num { font-family:'Instrument Serif',serif; font-style:italic; font-size:clamp(56px,8vw,96px); color:var(--gold); line-height:1; letter-spacing:-0.03em; }
 .theme-sunset-citypop .otonami-stat-label { font-size:11px; letter-spacing:0.3em; text-transform:uppercase; margin-top:12px; opacity:0.8; }
 .theme-sunset-citypop .otonami-caption { font-family:'Instrument Serif',serif; font-style:italic; font-size:20px; line-height:1.6; opacity:0.95; max-width:640px; margin:0 auto; }

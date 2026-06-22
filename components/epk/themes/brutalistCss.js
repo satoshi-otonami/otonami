@@ -227,7 +227,7 @@ export const BRUTALIST_CSS = `
 .theme-brutalist .otonami-eyebrow { font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.2em; display:inline-block; padding:6px 14px; border:1.5px solid var(--paper); margin-bottom:32px; font-weight:600; }
 .theme-brutalist .otonami-h { font-family:'Archivo Black',sans-serif; font-size:clamp(56px,9vw,128px); line-height:0.85; letter-spacing:-0.04em; margin-bottom:32px; color:var(--paper); }
 .theme-brutalist .otonami-h em { font-family:'Instrument Serif',serif; font-style:italic; font-weight:400; color:var(--ink); }
-.theme-brutalist .otonami-stat-row { display:grid; grid-template-columns:repeat(3,1fr); gap:0; margin:56px 0; padding:40px 0; border-top:2px solid var(--paper); border-bottom:2px solid var(--paper); }
+.theme-brutalist .otonami-stat-row { display:grid; grid-template-columns:repeat(2,1fr); gap:0; margin:56px 0; padding:40px 0; border-top:2px solid var(--paper); border-bottom:2px solid var(--paper); }
 .theme-brutalist .otonami-stat-row > div { border-right:1.5px solid rgba(244,240,232,0.4); padding:12px 0; }
 .theme-brutalist .otonami-stat-row > div:last-child { border-right:none; }
 .theme-brutalist .otonami-stat-num { font-family:'Archivo Black',sans-serif; font-size:clamp(56px,8vw,96px); line-height:1; letter-spacing:-0.04em; color:var(--paper); }

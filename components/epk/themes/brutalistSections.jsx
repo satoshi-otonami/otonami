@@ -385,10 +385,6 @@ export function BrutalistBadge({ stats, lang }) {
               <div className="otonami-stat-num">{s.countries}</div>
               <div className="otonami-stat-label">{t('Countries', '国数')}</div>
             </div>
-            <div>
-              <div className="otonami-stat-num">{s.response_rate}%</div>
-              <div className="otonami-stat-label">{t('Response Rate', '返信率')}</div>
-            </div>
           </div>
         )}
         <p className="otonami-caption">

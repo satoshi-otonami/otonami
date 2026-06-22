@@ -116,7 +116,7 @@ export const EDITORIAL_DARK_CSS = `
 .epk-root .otonami-badge::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at center, rgba(196,149,106,0.1) 0%, transparent 70%); }
 .epk-root .otonami-badge-inner { position:relative; z-index:2; max-width:720px; margin:0 auto; }
 .epk-root .otonami-eyebrow { font-size:11px; letter-spacing:0.4em; text-transform:uppercase; color:var(--gold); margin-bottom:32px; }
-.epk-root .otonami-stat-row { display:grid; grid-template-columns:repeat(3,1fr); gap:48px; margin:48px 0; padding:48px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.epk-root .otonami-stat-row { display:grid; grid-template-columns:repeat(2,1fr); gap:48px; margin:48px 0; padding:48px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 .epk-root .otonami-stat-num { font-family:'Fraunces',serif; font-weight:300; font-size:64px; color:var(--paper); line-height:1; letter-spacing:-0.02em; }
 .epk-root .otonami-stat-num em { font-style:italic; color:var(--gold-bright); }
 .epk-root .otonami-stat-label { font-size:10px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); margin-top:12px; }

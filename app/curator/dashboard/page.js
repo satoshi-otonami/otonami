@@ -25,6 +25,9 @@ const TYPE_OPTIONS = [
   { value: 'media',    en: 'Media Outlet',      ja: 'メディア' },
   { value: 'radio',    en: 'Radio / Podcast',   ja: 'ラジオ・ポッドキャスト' },
   { value: 'label',    en: 'Record Label',      ja: 'レコードレーベル' },
+  { value: 'booking_agent', en: 'Booking Agent',     ja: 'ブッキングエージェント' },
+  { value: 'sync',     en: 'Sync / Licensing',   ja: 'シンク・ライセンス' },
+  { value: 'management', en: 'Artist Management', ja: 'アーティストマネジメント' },
   { value: 'other',    en: 'Other',             ja: 'その他' },
 ];
 
@@ -57,6 +60,9 @@ const OPPORTUNITY_OPTIONS = [
   { value: 'radio',     en: 'Radio play',                          ja: 'ラジオで放送' },
   { value: 'reel',      en: 'Create post or reel on social media', ja: 'SNS投稿・リールを作成' },
   { value: 'interview', en: 'Interview',                           ja: 'インタビュー' },
+  { value: 'live_booking',       en: 'Live booking',                ja: 'ライブブッキング' },
+  { value: 'sync_licensing',     en: 'Sync / licensing',            ja: 'シンク・楽曲使用' },
+  { value: 'management_signing', en: 'Management / signing',        ja: 'マネジメント・契約' },
 ];
 
 const TYPE_BADGE = {
@@ -65,6 +71,9 @@ const TYPE_BADGE = {
   media:    { bg: 'rgba(96,165,250,0.15)', color: '#60a5fa', label: 'Media' },
   radio:    { bg: 'rgba(16,185,129,0.15)', color: '#34d399', label: 'Radio' },
   label:    { bg: 'rgba(236,72,153,0.15)', color: '#f472b6', label: 'Label' },
+  booking_agent: { bg: 'rgba(232,93,58,0.15)', color: '#e85d3a', label: 'Booking' },
+  sync:     { bg: 'rgba(20,184,166,0.15)', color: '#2dd4bf', label: 'Sync' },
+  management: { bg: 'rgba(168,85,247,0.15)', color: '#a78bfa', label: 'Management' },
   other:    { bg: '#f3f0ea', color: T.textSub, label: 'Other' },
 };
 

@@ -49,6 +49,9 @@ const TYPE_LABEL = {
   media: 'Media Outlet/Journalist',
   radio: 'Radio/Podcast',
   label: 'Label/Management',
+  booking_agent: 'Booking Agent',
+  sync: 'Sync / Licensing',
+  management: 'Artist Management',
   other: 'Curator',
 };
 

@@ -14,6 +14,9 @@ const TYPE_OPTIONS = [
   { value: 'media',    en: 'Media Outlet',      ja: 'メディア' },
   { value: 'radio',    en: 'Radio / Podcast',   ja: 'ラジオ・ポッドキャスト' },
   { value: 'label',    en: 'Record Label',      ja: 'レコードレーベル' },
+  { value: 'booking_agent', en: 'Booking Agent',     ja: 'ブッキングエージェント' },
+  { value: 'sync',     en: 'Sync / Licensing',   ja: 'シンク・ライセンス' },
+  { value: 'management', en: 'Artist Management', ja: 'アーティストマネジメント' },
   { value: 'other',    en: 'Other',             ja: 'その他' },
 ];
 
@@ -50,6 +53,9 @@ const OPPORTUNITY_OPTIONS = [
   { value: 'interview', icon: '•', en: 'Interview',           ja: 'インタビュー' },
   { value: 'event',     icon: '•', en: 'Event / Festival',    ja: 'イベント・フェス' },
   { value: 'label',     icon: '○', en: 'Label Consideration', ja: 'レーベル検討' },
+  { value: 'live_booking',       icon: '•', en: 'Live Booking',        ja: 'ライブブッキング' },
+  { value: 'sync_licensing',     icon: '•', en: 'Sync / Licensing',    ja: 'シンク・楽曲使用' },
+  { value: 'management_signing', icon: '○', en: 'Management / Signing', ja: 'マネジメント・契約' },
 ];
 
 const RESPONSE_TIME_OPTIONS = [

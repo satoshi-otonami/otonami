@@ -1950,6 +1950,8 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
           label:      {bg:'rgba(168,85,247,0.12)',text:'#a855f7',label:'Label'},
           management: {bg:'rgba(232,93,58,0.12)',text:'#e85d3a',label:'Mgmt'},
           publisher:  {bg:'rgba(96,165,250,0.12)',text:'#60a5fa',label:'Publisher'},
+          booking_agent: {bg:'rgba(232,93,58,0.12)',text:'#e85d3a',label:'Booking'},
+          sync:       {bg:'rgba(20,184,166,0.12)',text:'#2dd4bf',label:'Sync'},
         };
         const regionFlags = {'Japan':'🇯🇵','US':'🇺🇸','USA':'🇺🇸','UK':'🇬🇧','France':'🇫🇷','Germany':'🇩🇪','Australia':'🇦🇺','Global':'○'};
         const renderCard = (c, isRecommended) => {
@@ -3540,7 +3542,8 @@ function PitchDetailModal({pitch, curators, savePitches, allPitches, onClose, no
   if (!pitch) return null;
 
   const curator = curators?.find(c => c.id === pitch.curatorId);
-  const isLabelType = ['label','management','publisher'].includes(curator?.type);
+  // Deal/contract-oriented types get the 契約交渉 (deal) tab.
+  const isLabelType = ['label','management','publisher','booking_agent','sync'].includes(curator?.type);
   const messages = pitch.messages || [];
 
   const sendMessage = async () => {

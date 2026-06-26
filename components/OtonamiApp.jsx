@@ -980,6 +980,9 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       ...prev,
       ...(prev.name ? {} : { name: loggedInArtist.name }),
       ...(prev.genre ? {} : { genre: (loggedInArtist.genres || []).join(', ') }),
+      // Bridge DB `moods` (array) → form `mood` (string). Without this the self-
+      // reported mood never reaches effectiveTrack, capping match score (no Mood axis).
+      ...(prev.mood ? {} : { mood: (loggedInArtist.moods || []).join(', ') }),
     }));
     // Auto-fill SNS links from artist profile
     setLinks(prev => ({
@@ -1754,7 +1757,8 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   // Build effective track: merge artist genre/mood into trackData (or use artist alone for initial ranking)
   const effectiveTrack = useMemo(() => {
     const trackGenre = trackData?.genre || artist?.genre || '';
-    const mood       = trackData?.mood  || artist?.mood  || '';
+    const artistMood = Array.isArray(artist?.moods) ? artist.moods.join(', ') : (artist?.mood || '');
+    const mood       = trackData?.mood  || artistMood || '';
     if (!trackGenre && !trackData?.audioFeatures) return null;
     return { ...trackData, genre: trackGenre, mood };
   }, [trackData, artist]);
@@ -2272,7 +2276,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   // Build effective track for match scoring (same logic as CuratorBrowser)
   const effectiveTrack = useMemo(() => {
     const trackGenre = trackData?.genre || artist?.genre || '';
-    const mood       = trackData?.mood  || artist?.mood  || '';
+    const artistMood = Array.isArray(artist?.moods) ? artist.moods.join(', ') : (artist?.mood || '');
+    const mood       = trackData?.mood  || artistMood || '';
     if (!trackGenre && !trackData?.audioFeatures) return null;
     return { ...trackData, genre: trackGenre, mood };
   }, [trackData, artist]);
@@ -2386,7 +2391,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   }, []); // Run once on mount
 
   const applyToForm = (p) => {
-    setArtist({name:p.name||"",nameEn:p.nameEn||p.name_en||"",genre:p.genre||"",mood:p.mood||"",description:p.description||"",songTitle:p.songTitle||p.song_title||"",songLink:p.songLink||p.song_link||"",influences:p.influences||"",achievements:p.achievements||"",sns:p.sns||""});
+    // mood/genre may arrive as singular strings (saved drafts) or DB arrays (moods/genres) — bridge both.
+    const pGenre = p.genre || (Array.isArray(p.genres) ? p.genres.join(', ') : '') || '';
+    const pMood  = p.mood  || (Array.isArray(p.moods)  ? p.moods.join(', ')  : '') || '';
+    setArtist({name:p.name||"",nameEn:p.nameEn||p.name_en||"",genre:pGenre,mood:pMood,description:p.description||"",songTitle:p.songTitle||p.song_title||"",songLink:p.songLink||p.song_link||"",influences:p.influences||"",achievements:p.achievements||"",sns:p.sns||""});
     setLinks(p._links || {spotify:"",apple:"",youtube:"",soundcloud:"",instagram:"",twitter:"",facebook:"",website:""});
     setFollowers(p._followers || {spotify:0,youtube:0,soundcloud:0,instagram:0,twitter:0,facebook:0});
   };

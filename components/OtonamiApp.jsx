@@ -1978,6 +1978,23 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
                 {c.badges?.map(b => <span key={b} style={{fontSize:'0.6rem',padding:'0.1rem 0.4rem',borderRadius:6,background:b==='verified'?'#dcfce7':'#eff6ff',color:b==='verified'?'#16a34a':'#2563eb'}}>{BADGES[b]}</span>)}
               </div>
               <div style={{fontSize:'0.75rem',color:'#9a958e',marginBottom:6}}>{c.platform}{c.audience ? ' · '+(c.audience>=1000?(c.audience/1000).toFixed(1)+'K':c.audience) : ''}</div>
+              {/* Live activity badge (display-only; from pitches aggregation) */}
+              {(() => {
+                const recv = c.pitchesReceived || 0, resp = c.pitchesResponded || 0, acc = c.pitchesAccepted || 0;
+                // Answer rate lights only when the curator has actually responded (responded >= 1).
+                if (resp < 1) {
+                  return <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8,flexWrap:'wrap'}}>
+                    <span style={{background:'rgba(196,149,106,0.12)',border:'1px solid rgba(196,149,106,0.25)',color:'#c4956a',fontSize:'0.62rem',fontWeight:600,padding:'1px 8px',borderRadius:999}}>New</span>
+                    <span style={{fontSize:'0.66rem',color:'#9a958e'}}>Collecting reviews</span>
+                    {acc > 0 && <span style={{background:'rgba(196,149,106,0.12)',border:'1px solid rgba(196,149,106,0.25)',color:'#c4956a',fontSize:'0.62rem',fontWeight:600,padding:'1px 8px',borderRadius:999}}>{acc} placement{acc>1?'s':''}</span>}
+                  </div>;
+                }
+                const ar = Math.round(resp / recv * 100);
+                return <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8,flexWrap:'wrap'}}>
+                  <span style={{background:'rgba(78,205,196,0.14)',border:'1px solid rgba(78,205,196,0.3)',color:'#1f9e8f',fontSize:'0.62rem',fontWeight:600,padding:'1px 8px',borderRadius:999}}>✓ {ar}% answer rate</span>
+                  {acc > 0 && <span style={{background:'rgba(196,149,106,0.12)',border:'1px solid rgba(196,149,106,0.25)',color:'#c4956a',fontSize:'0.62rem',fontWeight:600,padding:'1px 8px',borderRadius:999}}>{acc} placement{acc>1?'s':''}</span>}
+                </div>;
+              })()}
               {c.bio && <p style={{fontSize:14,color:'#9a958e',margin:'0 0 10px',lineHeight:1.5}}>{c.bio.length>80?c.bio.substring(0,80)+'…':c.bio}</p>}
               {ml && c.matchReasons?.length > 0 && <div style={{fontSize:'0.62rem',color:'#c4956a',marginBottom:8}}>{c.matchReasons.slice(0,2).join(' · ')}</div>}
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
@@ -2097,25 +2114,58 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
               </div>}
             </div>}
 
-            {/* Stats */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
-              <div style={{background:'#ffffff',borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
-                <div style={{fontSize:20,fontWeight:600,color:'#1a1a1a'}}>
-                  {(dc.pitchesResponded && dc.pitchesReceived) ? Math.round((dc.pitchesResponded/dc.pitchesReceived)*100)+'%' : '--'}
+            {/* Stats — live activity from pitches (display-only; never affects score/order) */}
+            {(() => {
+              const recv = dc.pitchesReceived || 0;
+              const resp = dc.pitchesResponded || 0;
+              const acc  = dc.pitchesAccepted || 0;
+              const cell = {background:'#ffffff',borderRadius:10,padding:'14px 10px',textAlign:'center'};
+              const num  = {fontSize:20,fontWeight:600,color:'#1a1a1a'};
+              const lbl  = {fontSize:11,color:'#9a958e',marginTop:3};
+              const respondsIn = (
+                <div style={cell}>
+                  <div style={{fontSize:17,fontWeight:600,color:'#1a1a1a',lineHeight:1.2}}>{dc.responseTime || '7 days'}</div>
+                  <div style={lbl}>Responds in</div>
                 </div>
-                <div style={{fontSize:11,color:'#9a958e',marginTop:3}}>Answer rate</div>
-              </div>
-              <div style={{background:'#ffffff',borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
-                <div style={{fontSize:20,fontWeight:600,color:'#1a1a1a'}}>
-                  {(dc.pitchesAccepted && dc.pitchesResponded) ? Math.round((dc.pitchesAccepted/dc.pitchesResponded)*100)+'%' : '--'}
+              );
+              const placementsCell = acc > 0 ? (
+                <div style={cell}>
+                  <div style={{...num,color:'#c4956a'}}>{acc}</div>
+                  <div style={lbl}>{acc === 1 ? 'Placement' : 'Placements'}</div>
                 </div>
-                <div style={{fontSize:11,color:'#9a958e',marginTop:3}}>Share rate</div>
-              </div>
-              <div style={{background:'#ffffff',borderRadius:10,padding:'14px 10px',textAlign:'center'}}>
-                <div style={{fontSize:17,fontWeight:600,color:'#1a1a1a',lineHeight:1.2}}>{dc.responseTime || '7 days'}</div>
-                <div style={{fontSize:11,color:'#9a958e',marginTop:3}}>Responds in</div>
-              </div>
-            </div>
+              ) : null;
+              // Answer rate lights only when the curator has actually responded (responded >= 1).
+              // received >= 1 but responded === 0 → still neutral "New" (no 0% shown).
+              if (resp < 1) {
+                const cols = placementsCell ? '2fr 1fr 1fr' : '2fr 1fr';
+                return (
+                  <div style={{display:'grid',gridTemplateColumns:cols,gap:10}}>
+                    <div style={{...cell,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4}}>
+                      <span style={{display:'inline-block',background:'rgba(196,149,106,0.12)',border:'1px solid rgba(196,149,106,0.25)',color:'#c4956a',fontSize:12,fontWeight:600,padding:'2px 12px',borderRadius:999}}>New</span>
+                      <div style={{...lbl,marginTop:2}}>Collecting reviews</div>
+                    </div>
+                    {placementsCell}
+                    {respondsIn}
+                  </div>
+                );
+              }
+              const answerRate = Math.round((resp / recv) * 100);
+              return (
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
+                  <div style={cell}>
+                    <div style={{...num,color:'#1f9e8f'}}>{answerRate}%</div>
+                    <div style={lbl}>Answer rate</div>
+                  </div>
+                  {placementsCell || (
+                    <div style={cell}>
+                      <div style={{...num,color:'#1a1a1a'}}>—</div>
+                      <div style={lbl}>Placements</div>
+                    </div>
+                  )}
+                  {respondsIn}
+                </div>
+              );
+            })()}
 
             {/* Bio */}
             {dc.bio && <p style={{fontSize:14,color:'#6b6560',lineHeight:1.7,margin:0}}>{dc.bio}</p>}

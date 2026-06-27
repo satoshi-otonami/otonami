@@ -1,0 +1,36 @@
+name: SNS intro weekly draft
+
+# SNS自動キュレーター紹介の週次トリガー。
+# 毎週 月曜 0:00 UTC（= 月曜 9:00 JST）に /api/admin/sns-intro を叩き、
+# 未紹介キュレーターを1件pick → 5媒体キャプション生成 → 下書きメールを山下さん宛に送信する。
+# introduced_at はこの時点では更新しない（下書きメール内のワンタップリンクで確定）。
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'   # 毎週月曜 00:00 UTC = 月曜 09:00 JST
+  workflow_dispatch: {}     # Actionsタブから手動実行（テスト起動用）
+
+concurrency:
+  group: sns-intro-weekly
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call sns-intro endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET secret is not set in the repository"; exit 1
+          fi
+          code=$(curl -sS -o /tmp/out.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            https://otonami.io/api/admin/sns-intro)
+          echo "HTTP ${code}"
+          cat /tmp/out.json || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::sns-intro endpoint returned HTTP ${code}"; exit 1
+          fi

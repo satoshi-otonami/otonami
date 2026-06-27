@@ -3,9 +3,10 @@
 // pick → 5媒体キャプション生成 → 下書きメールを山下さん宛に送信。
 // この時点では introduced_at を更新しない（実投稿後にPhase 2bでワンタップ確定）。
 
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { pickUnintroducedCurator } from '@/lib/db';
+import { pickUnintroducedCurator, setIntroMarkToken } from '@/lib/db';
 import { generateSnsIntroCaptions } from '@/lib/sns-intro-caption';
 import { escapeHtml } from '@/lib/html-escape';
 
@@ -13,6 +14,10 @@ export const dynamic = 'force-dynamic';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM = `OTONAMI <${process.env.EMAIL_FROM || 'info@otonami.io'}>`;
+// 確定リンクの基底URL。末尾の改行/スラッシュ事故を防ぐため trim+strip（env未設定なら本番固定）。
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io')
+  .trim()
+  .replace(/\/+$/, '');
 // 下書きメールの宛先（山下さん受信用）。1箇所に集約。
 const DRAFT_TO =
   process.env.SNS_INTRO_DRAFT_TO ||
@@ -28,7 +33,7 @@ const PLATFORM_LABELS = {
 };
 const ORDER = ['x', 'instagram', 'threads', 'facebook', 'linkedin'];
 
-function buildDraftEmail(curator, captions, audit) {
+function buildDraftEmail(curator, captions, audit, markUrl) {
   const sections = ORDER.map((k) => {
     const label = PLATFORM_LABELS[k];
     const body = escapeHtml(captions[k] || '(なし)').replace(/\n/g, '<br>');
@@ -54,7 +59,11 @@ function buildDraftEmail(curator, captions, audit) {
           </p>
           <p style="margin:0 0 18px;font-size:12px;color:#9b9590;">そのままコピペして各SNSに貼ってください。ハッシュタグ総数: ${audit.hashtagCount} / 絵文字: ${audit.hasEmoji ? 'あり(要確認)' : 'なし'}</p>
           ${sections}
-          <p style="margin:18px 0 0;font-size:12px;color:#9b9590;">※ 投稿済みフラグ(introduced_at)はまだ更新していません（Phase 2bでワンタップ確定）。</p>
+          <div style="margin:8px 0 0;padding:18px;background:#f9f7f2;border:1px solid #e8e6e0;border-radius:8px;">
+            <p style="margin:0 0 12px;font-size:14px;line-height:1.7;color:#1a1612;">この内容で各SNSに投稿したら、次のリンクをタップして掲載済みにしてください（次回の紹介対象から自動で外れます）。</p>
+            <a href="${escapeHtml(markUrl)}" style="display:inline-block;background:#c4956a;color:#fff;text-decoration:none;font-size:15px;font-weight:600;padding:12px 22px;border-radius:8px;">投稿済みにする</a>
+          </div>
+          <p style="margin:18px 0 0;font-size:12px;color:#9b9590;">※ 投稿済みフラグ(introduced_at)はまだ更新していません。上のリンクをタップした時点で確定します（誤タップは確定画面の「取り消す」で戻せます）。</p>
         </td></tr>
       </table>
     </td></tr></table>
@@ -68,7 +77,10 @@ function buildDraftEmail(curator, captions, audit) {
     `ハッシュタグ総数: ${audit.hashtagCount} / 絵文字: ${audit.hasEmoji ? 'あり' : 'なし'}`,
     ``,
     ...ORDER.flatMap((k) => [`■ ${PLATFORM_LABELS[k]}`, captions[k] || '(なし)', '']),
-    `※ introduced_at は未更新（Phase 2bで確定）。`,
+    `各SNSに投稿したら、次のリンクをタップして掲載済みにしてください（次回の紹介対象から外れます）:`,
+    markUrl,
+    ``,
+    `※ introduced_at は上のリンクをタップした時点で確定します（誤タップは確定画面の「取り消す」で戻せます）。`,
   ].join('\n');
 
   return { html, text };
@@ -102,8 +114,15 @@ async function handle(request) {
     // 2) キャプション生成
     const { captions, audit } = await generateSnsIntroCaptions(curator);
 
+    // 2.5) ワンタップ確定トークンを発行・保存（pick毎に上書き＝古い下書きリンクは無効化）。
+    const markToken = crypto.randomBytes(32).toString('hex'); // 64 hex chars
+    await setIntroMarkToken(curator.id, markToken);
+    const markUrl = `${APP_URL}/api/admin/sns-intro/mark?curator=${encodeURIComponent(
+      curator.id
+    )}&token=${markToken}`;
+
     // 3) 下書きメール送信（Resend。SDKは4xxでthrowしないので result.error を明示チェック）
-    const { html, text } = buildDraftEmail(curator, captions, audit);
+    const { html, text } = buildDraftEmail(curator, captions, audit, markUrl);
     const subject = `[OTONAMI SNS下書き] 新規キュレーター紹介: ${curator.name}`;
     const { data, error } = await resend.emails.send({
       from: FROM,

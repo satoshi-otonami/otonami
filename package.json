@@ -12,6 +12,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",
     "@fontsource/dm-sans": "^5.2.8",
+    "@fontsource/noto-sans-jp": "^5.2.9",
     "@fontsource/sora": "^5.2.8",
     "@supabase/supabase-js": "^2.45.0",
     "@upstash/ratelimit": "^2.0.8",

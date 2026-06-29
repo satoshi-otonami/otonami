@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { pickUnintroducedCurator, setIntroMarkToken } from '@/lib/db';
 import { generateSnsIntroCaptions } from '@/lib/sns-intro-caption';
+import { renderCuratorCard } from '@/lib/sns-intro-card';
 import { escapeHtml } from '@/lib/html-escape';
 
 export const dynamic = 'force-dynamic';
@@ -124,6 +125,18 @@ async function handle(request) {
     // 3) 下書きメール送信（Resend。SDKは4xxでthrowしないので result.error を明示チェック）
     const { html, text } = buildDraftEmail(curator, captions, audit, markUrl);
     const subject = `[OTONAMI SNS下書き] 新規キュレーター紹介: ${curator.name}`;
+
+    // 3.5) ブランドカード画像(1080×1080 PNG)を添付。生成失敗してもメール本体は送る。
+    let attachments = [];
+    try {
+      const cardBuffer = await renderCuratorCard(curator);
+      if (cardBuffer) {
+        attachments = [{ filename: 'curator-card.png', content: cardBuffer }];
+      }
+    } catch (e) {
+      console.error('[sns-intro] card render failed, sending text-only:', e);
+    }
+
     const { data, error } = await resend.emails.send({
       from: FROM,
       to: [DRAFT_TO],
@@ -132,6 +145,7 @@ async function handle(request) {
       html,
       text,
       headers: { 'List-Unsubscribe': '<mailto:info@otonami.io?subject=unsubscribe>' },
+      attachments,
     });
 
     if (error) {

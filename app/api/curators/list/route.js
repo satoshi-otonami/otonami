@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
+import { isTestCurator } from '@/lib/curator-visibility';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +37,9 @@ export async function GET() {
       }
     }
 
-    const curators = (data || []).map(c => {
+    // Test/dummy curators never appear on the public list (display-only exclusion;
+    // the DB row stays because past pitches reference it).
+    const curators = (data || []).filter(c => !isTestCurator(c)).map(c => {
       const s = stats[c.id] || { received: 0, responded: 0 };
       return {
         id: c.id,

@@ -285,7 +285,7 @@ export async function PATCH(request, { params }) {
   // 1. ピッチを取得
   const { data: existingPitch } = await db
     .from('pitches')
-    .select('id, curator_id')
+    .select('id, curator_id, status')
     .eq('id', pitchId)
     .single();
 
@@ -302,6 +302,17 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
   }
 
+  // Guard: an accepted pitch cannot be reverted to 'sent' (Undo). Reverting
+  // left the acceptance trace intact and let the expiry cron wrongly refund
+  // it. UI hides Undo on accepted rows; this blocks direct/API/multi-tab
+  // bypass. Curators must contact info@otonami.io to change an acceptance.
+  if (status === 'sent' && existingPitch.status === 'accepted') {
+    return NextResponse.json(
+      { error: 'An accepted pitch cannot be reverted. Contact info@otonami.io to make changes.' },
+      { status: 409 }
+    );
+  }
+
   // 3. 認可済み — 更新
   const updates = { status };
   if (feedback_message) updates.feedback_message = feedback_message;
@@ -309,6 +320,13 @@ export async function PATCH(request, { params }) {
     updates.placement_url = normalizedPlacementUrl;
     if (placement_platform) updates.placement_platform = placement_platform;
     if (placement_date) updates.placement_date = placement_date;
+  }
+  // Undo of a feedback-only pitch → return to a clean pending state:
+  // clear the response trace in the SAME update so the row is truly
+  // "unanswered" again (else the cron guard would skip it forever).
+  if (status === 'sent') {
+    updates.responded_at = null;
+    updates.feedback_message = null;
   }
 
   let { data, error } = await db

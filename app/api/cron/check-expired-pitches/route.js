@@ -73,6 +73,49 @@ async function sendRefundEmail({ to, artistName, curatorName, credits, newBalanc
   });
 }
 
+// Admin alert: pitches that are status='sent' + past deadline yet carry a
+// response trace (responded_at / placement_url / feedback_message). These were
+// skipped by the refund query's guard and need manual review. One email per run,
+// only when ≥1 such row exists. Reuses the existing Resend client — no new deps.
+async function sendInconsistencyAlert(rows) {
+  const admin = 'satoshiy339@gmail.com';
+  const lines = rows.map((r) => {
+    const traces = [
+      r.responded_at ? 'responded_at' : null,
+      r.placement_url ? 'placement_url' : null,
+      r.feedback_message ? 'feedback_message' : null,
+    ].filter(Boolean).join(', ');
+    return `- pitch ${r.id} | artist=${r.artist_email || 'unknown'} | curator=${r.curator_name || 'unknown'} | traces: ${traces}`;
+  });
+  const body =
+    `Detected ${rows.length} pitch(es) with status='sent' past deadline that still carry a response trace ` +
+    `(accepted/feedback likely reverted via Undo). These were NOT refunded by the cron guard and need manual review:\n\n` +
+    lines.join('\n') +
+    `\n\nReview in the DB / curator dashboard before any credit action.`;
+  const htmlBody =
+    `<p>Detected <strong>${rows.length}</strong> pitch(es) with status='sent' past deadline that still carry a response trace ` +
+    `(accepted/feedback likely reverted via Undo). These were <strong>NOT</strong> refunded by the cron guard and need manual review:</p>` +
+    `<ul>${rows
+      .map((r) => {
+        const traces = [
+          r.responded_at ? 'responded_at' : null,
+          r.placement_url ? 'placement_url' : null,
+          r.feedback_message ? 'feedback_message' : null,
+        ].filter(Boolean).join(', ');
+        return `<li>pitch ${escapeHtml(r.id)} | artist=${escapeHtml(r.artist_email) || 'unknown'} | curator=${escapeHtml(r.curator_name) || 'unknown'} | traces: ${escapeHtml(traces)}</li>`;
+      })
+      .join('')}</ul>` +
+    `<p>Review in the DB / curator dashboard before any credit action.</p>`;
+  await resend.emails.send({
+    from: FROM,
+    to: admin,
+    reply_to: 'info@otonami.io',
+    subject: '[OTONAMI] Pitch status inconsistency detected',
+    html: htmlBody,
+    text: body,
+  });
+}
+
 export async function GET(request) {
   // Vercel Cron authentication
   const authHeader = request.headers.get('authorization');
@@ -81,16 +124,48 @@ export async function GET(request) {
   }
 
   try {
-    // Fetch expired pitches (sent, past deadline, not yet refunded)
+    const nowIso = new Date().toISOString();
+
+    // Fetch expired pitches (sent, past deadline, not yet refunded).
+    // GUARD: never expire/refund a pitch that carries any response trace —
+    // responded_at / placement_url / feedback_message. A curator "Undo" that
+    // reverts status to 'sent' leaves those fields intact, which previously
+    // caused an already-accepted pitch to be wrongly expired + refunded
+    // (chihiro × Tinnitist, 6/30). Rows matching that shape are surfaced as an
+    // admin alert below instead of being processed.
     const { data: expiredPitches, error: fetchError } = await supabase
       .from('pitches')
       .select('id, artist_id, artist_email, artist_name, credits_charged, curator_id, subject, curator_name')
       .eq('status', 'sent')
       .is('refunded_at', null)
+      .is('responded_at', null)
+      .is('placement_url', null)
+      .is('feedback_message', null)
       .not('deadline_at', 'is', null)
-      .lt('deadline_at', new Date().toISOString());
+      .lt('deadline_at', nowIso);
 
     if (fetchError) throw fetchError;
+
+    // ── Inconsistency detection + admin alert ──────────────────────────────
+    // status='sent', past deadline, but has a response trace → should never be
+    // refunded. Alert once (only when ≥1 such row exists); never blocks the run.
+    try {
+      const { data: inconsistent } = await supabase
+        .from('pitches')
+        .select('id, artist_email, curator_name, responded_at, placement_url, feedback_message')
+        .eq('status', 'sent')
+        .is('refunded_at', null)
+        .not('deadline_at', 'is', null)
+        .lt('deadline_at', nowIso)
+        .or('responded_at.not.is.null,placement_url.not.is.null,feedback_message.not.is.null');
+
+      if (inconsistent && inconsistent.length > 0) {
+        await sendInconsistencyAlert(inconsistent);
+      }
+    } catch (alertErr) {
+      // Non-fatal: alerting must never break refund processing.
+      console.error('[cron] inconsistency alert failed:', alertErr?.message || alertErr);
+    }
 
     if (!expiredPitches || expiredPitches.length === 0) {
       return Response.json({ message: 'No expired pitches', processed: 0 });

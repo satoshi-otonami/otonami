@@ -381,10 +381,19 @@ export default function CuratorDashboard() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        // 409 = accepted pitch cannot be reverted (e.g. stale tab bypassing UI).
+        const msg = await res.json().catch(() => null);
+        showToast(msg?.error || 'Update failed');
+        return;
+      }
+      // Undo (revert to 'sent') returns the row to a clean pending state:
+      // drop the response trace locally to mirror the server-side clear.
+      const cleared = status === 'sent';
       setPitches(prev => prev.map(p => p.id === pitchId ? {
         ...p, status,
-        feedback_message: body.feedback_message,
+        feedback_message: cleared ? null : body.feedback_message,
+        responded_at: cleared ? null : p.responded_at,
         placement_url: body.placement_url,
         placement_platform: body.placement_platform,
       } : p));
@@ -1176,11 +1185,27 @@ export default function CuratorDashboard() {
                     onMouseEnter={e => e.currentTarget.style.background = T.accentLight}
                     onMouseLeave={e => e.currentTarget.style.background = T.white}
                     >{isExpanded ? 'Close / 閉じる' : 'Read / 読む'}</button>
-                    {pitch.status !== 'sent' && (
-                      <button onClick={() => handleAction(pitch.id, 'sent')} disabled={isBusy} style={{ padding: '7px 14px', border: `1px solid ${T.border}`, borderRadius: 8, background: T.white, color: T.textSub, fontSize: 11, cursor: isBusy ? 'not-allowed' : 'pointer', fontFamily: T.font }}>
+                    {pitch.status === 'accepted' ? (
+                      // Accepted pitches cannot be undone (reverting to 'sent'
+                      // left the acceptance trace intact and caused the expiry
+                      // cron to wrongly refund). Direct the curator to support.
+                      <span style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, maxWidth: 170, lineHeight: 1.4, textAlign: 'right' }}>
+                        Need to change this?{' '}
+                        <a href="mailto:info@otonami.io" style={{ color: T.accent, textDecoration: 'underline' }}>Contact info@otonami.io</a>
+                      </span>
+                    ) : pitch.status !== 'sent' ? (
+                      <button
+                        onClick={() => {
+                          if (window.confirm('This will withdraw your response and delete your feedback. The pitch will return to pending. Continue?')) {
+                            handleAction(pitch.id, 'sent');
+                          }
+                        }}
+                        disabled={isBusy}
+                        style={{ padding: '7px 14px', border: `1px solid ${T.border}`, borderRadius: 8, background: T.white, color: T.textSub, fontSize: 11, cursor: isBusy ? 'not-allowed' : 'pointer', fontFamily: T.font }}
+                      >
                         Undo / 取り消し
                       </button>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 

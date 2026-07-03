@@ -124,29 +124,54 @@ export default function CuratorMarquee({ data, lang }) {
           </>
         )}
 
-        {/* FEATURED IN — real third-party press coverage (media feature bar) */}
+        {/* FEATURED IN — real third-party press coverage (media feature cards) */}
         <div style={{ marginBottom: 28 }}>
           <p style={{
             fontSize: 11, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase',
-            color: '#a89f92', fontFamily: FONT, marginBottom: 12,
+            color: '#a89f92', fontFamily: FONT, marginBottom: 14,
           }}>
             {lang === 'en' ? 'Featured in' : 'メディア掲載'}
           </p>
-          <div style={{
-            display: 'flex', justifyContent: 'center', alignItems: 'center',
-            gap: '10px 24px', flexWrap: 'wrap',
-          }}>
+          <div className="lp-media-cards">
+            {/* Card 1 — YV Art Magazine (linked interview) */}
             <a
               href="https://www.vinniejinn.com/post/satoshiyamashita-otonami"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ fontSize: 15, fontWeight: 600, color: '#c4956a', fontFamily: FONT, textDecoration: 'none' }}
+              className="lp-media-card lp-media-card--link"
             >
-              YV Art Magazine
+              <span style={{
+                fontSize: 10.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase',
+                color: '#c4956a', fontFamily: FONT,
+              }}>
+                {lang === 'en' ? 'Interview' : 'インタビュー'}
+              </span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a', fontFamily: FONT }}>
+                YV Art Magazine
+              </span>
+              <span style={{ fontSize: 12, color: '#8a8276', fontFamily: FONT }}>
+                {lang === 'en' ? 'July 2026' : '2026年7月'}
+              </span>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: '#c4956a', fontFamily: FONT, marginTop: 2 }}>
+                {lang === 'en' ? 'Read article ↗' : '記事を読む ↗'}
+              </span>
             </a>
-            <span style={{ fontSize: 15, fontWeight: 600, color: '#c4956a', fontFamily: FONT }}>
-              E-TALENTBANK / Yahoo!ニュース
-            </span>
+
+            {/* Card 2 — E-TALENTBANK / Yahoo! News (news mention, no live link) */}
+            <div className="lp-media-card lp-media-card--news">
+              <span style={{
+                fontSize: 10.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase',
+                color: '#a89f92', fontFamily: FONT,
+              }}>
+                {lang === 'en' ? 'News' : 'ニュース'}
+              </span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#6b6459', fontFamily: FONT }}>
+                {lang === 'en' ? 'E-TALENTBANK / Yahoo! News JAPAN' : 'E-TALENTBANK / Yahoo!ニュース'}
+              </span>
+              <span style={{ fontSize: 12, color: '#a89f92', fontFamily: FONT }}>
+                {lang === 'en' ? 'May 2026' : '2026年5月 配信'}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -159,6 +184,38 @@ export default function CuratorMarquee({ data, lang }) {
       </div>
 
       <style>{`
+        .lp-media-cards {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 12px;
+          max-width: 560px;
+          margin: 0 auto;
+          text-align: left;
+        }
+        @media (min-width: 640px) {
+          .lp-media-cards { grid-template-columns: 1fr 1fr; }
+        }
+        .lp-media-card {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          padding: 14px 16px;
+          border-radius: 12px;
+          background: #FDF9F2;
+        }
+        .lp-media-card--link {
+          border: 1px solid #e7d3bd;
+          text-decoration: none;
+          transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        }
+        .lp-media-card--link:hover {
+          border-color: #c4956a;
+          box-shadow: 0 2px 10px rgba(196, 149, 106, 0.14);
+        }
+        .lp-media-card--news {
+          border: 1px solid #f0e9de;
+          background: #fcfaf6;
+        }
         .lp-cm-mask {
           overflow: hidden;
           -webkit-mask-image: linear-gradient(90deg, transparent 0%, white 8%, white 92%, transparent 100%);

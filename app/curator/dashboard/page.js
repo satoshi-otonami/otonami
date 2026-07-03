@@ -16,6 +16,7 @@ const FILTER_TABS = [
   { key: 'all',      en: 'All',      ja: 'すべて' },
   { key: 'sent',     en: 'Pending',  ja: '未対応' },
   { key: 'accepted', en: 'Accepted', ja: '承認' },
+  { key: 'feedback', en: 'Feedback', ja: 'FB済' },
   { key: 'declined', en: 'Declined', ja: '却下' },
 ];
 
@@ -182,7 +183,7 @@ function SectionLabel({ children }) {
 export default function CuratorDashboard() {
   const [curator, setCurator] = useState(null);
   const [pitches, setPitches] = useState([]);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('sent');
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState('');
   const [expanded, setExpanded] = useState(null);
@@ -239,10 +240,12 @@ export default function CuratorDashboard() {
   useEffect(() => {
     if (!curator) return;
     const token = localStorage.getItem('curator_token');
-    const url = filter === 'all' ? '/api/curator/dashboard' : `/api/curator/dashboard?status=${filter}`;
-    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    // Fetch ALL pitches once and filter client-side: tab counts are derived
+    // from this array, so a per-tab server fetch would zero out every other
+    // tab's badge (and the stats grid) whenever a non-All tab is active.
+    fetch('/api/curator/dashboard', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => setPitches(d.pitches || []));
-  }, [filter, curator]);
+  }, [curator]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3500); };
 
@@ -477,8 +480,10 @@ export default function CuratorDashboard() {
     all: pitches.length,
     sent: pitches.filter(p => p.status === 'sent').length,
     accepted: pitches.filter(p => p.status === 'accepted').length,
+    feedback: pitches.filter(p => p.status === 'feedback').length,
     declined: pitches.filter(p => p.status === 'declined').length,
   };
+  const visiblePitches = filter === 'all' ? pitches : pitches.filter(p => p.status === filter);
 
   const fbInp = {
     width: '100%', background: T.white, border: `1px solid ${T.border}`,
@@ -528,7 +533,6 @@ export default function CuratorDashboard() {
           .fb-input { font-size: 16px !important; }
           .fb-textarea { min-height: 100px !important; font-size: 16px !important; }
           .pill-tag-edit { min-height: 36px !important; padding: 6px 12px !important; }
-          .pitch-fb-stars button { min-width: 44px !important; min-height: 44px !important; font-size: 26px !important; padding: 0 !important; }
           .dash-filter-tabs { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; flex-wrap: nowrap !important; }
           .dash-filter-tabs button { flex-shrink: 0 !important; min-height: 44px !important; }
         }
@@ -1108,13 +1112,15 @@ export default function CuratorDashboard() {
         </div>
 
         {/* ── ピッチ一覧 ── */}
-        {pitches.length === 0 ? (
+        {visiblePitches.length === 0 ? (
           <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: T.radiusLg, textAlign: 'center', padding: '48px 24px', boxShadow: T.shadow }}>
             <div style={{ width: 48, height: 2, background: '#c4956a', borderRadius: 1, margin: '0 auto 16px' }} />
-            <p style={{ color: T.textMuted, fontSize: 14, fontFamily: T.font }}>No pitches yet. / まだピッチはありません。</p>
+            <p style={{ color: T.textMuted, fontSize: 14, fontFamily: T.font }}>
+              {pitches.length === 0 ? 'No pitches yet. / まだピッチはありません。' : 'No pitches in this tab. / このタブにピッチはありません。'}
+            </p>
           </div>
         ) : (
-          pitches.map(pitch => {
+          visiblePitches.map(pitch => {
             const s = STATUS_LABELS[pitch.status] || STATUS_LABELS.sent;
             const isExpanded = expanded === pitch.id;
             const isBusy = updating === pitch.id;
@@ -1225,12 +1231,15 @@ export default function CuratorDashboard() {
                     {/* ── Feedback UI ── */}
                     <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 12, padding: '16px 18px' }}>
                       <div style={{ color: T.textSub, fontSize: 12, fontWeight: 700, marginBottom: 12, letterSpacing: 0.5, fontFamily: T.font }}>FEEDBACK / フィードバック</div>
-                      <div className="pitch-fb-stars" style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
-                        {[1,2,3,4,5].map(star => (
-                          <button key={star} onClick={() => setDraft(pitch.id, 'rating', star === (feedbackDraft[pitch.id]?.rating) ? 0 : star)} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 3px', color: star <= (feedbackDraft[pitch.id]?.rating || 0) ? '#f59e0b' : T.border, minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>★</button>
-                        ))}
-                        {feedbackDraft[pitch.id]?.rating > 0 && <span style={{ color: '#f59e0b', fontSize: 12, alignSelf: 'center', fontFamily: T.font }}>{feedbackDraft[pitch.id].rating}/5</span>}
-                      </div>
+                      {['feedback', 'accepted', 'declined'].includes(pitch.status) && (
+                        <div style={{ padding: '10px 14px', background: s.bg, border: `1px solid ${s.color}44`, borderRadius: 8, marginBottom: 4 }}>
+                          <span style={{ color: s.color, fontSize: 13, fontWeight: 700, fontFamily: T.font }}>
+                            ✓ Responded — {s.en} / 応答済み（{s.ja}）
+                            {pitch.responded_at && ` · ${new Date(pitch.responded_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })}`}
+                          </span>
+                        </div>
+                      )}
+                      {pitch.status === 'sent' && (<>
                       <textarea className="fb-input fb-textarea" value={feedbackDraft[pitch.id]?.text || ''} onChange={e => setDraft(pitch.id, 'text', e.target.value)} placeholder="Share your thoughts on this track... (Required for payment)" rows={4}
                         style={{ ...fbInp, border: `1px solid ${(feedbackDraft[pitch.id]?.text?.trim().length > 0 && feedbackDraft[pitch.id]?.text?.trim().length < 20) ? '#ef4444' : T.border}`, resize: 'vertical', minHeight: 100 }} />
                       {feedbackDraft[pitch.id]?.text?.trim().length > 0 && feedbackDraft[pitch.id]?.text?.trim().length < 20 && (
@@ -1265,7 +1274,7 @@ export default function CuratorDashboard() {
                         const canOther = !isBusy && validFeedback;
                         return (
                           <div className="action-btns-row" style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-                            {(pitch.status === 'sent' || pitch.status === 'feedback') && (
+                            {pitch.status === 'sent' && (
                               <>
                                 <button onClick={() => handleAction(pitch.id, 'accepted')} disabled={!canAccept} style={{ padding: '9px 18px', border: 'none', borderRadius: 8, background: canAccept ? '#10b981' : T.border, color: '#fff', fontSize: 12, fontWeight: 700, cursor: canAccept ? 'pointer' : 'not-allowed', fontFamily: T.font }}>{isBusy ? '...' : '✓ Accept & Featured'}</button>
                                 <button onClick={() => handleFeedbackOnly(pitch.id)} disabled={!canOther} style={{ padding: '9px 18px', border: 'none', borderRadius: 8, background: canOther ? T.accent : T.border, color: '#fff', fontSize: 12, fontWeight: 700, cursor: canOther ? 'pointer' : 'not-allowed', fontFamily: T.font }}>{isBusy ? '...' : 'Feedback Only'}</button>
@@ -1275,6 +1284,7 @@ export default function CuratorDashboard() {
                           </div>
                         );
                       })()}
+                      </>)}
                       {(pitch.feedback_message || pitch.placement_url) && (
                         <div style={{ marginTop: 14, padding: '10px 14px', background: T.white, borderRadius: 8, border: `1px solid ${T.border}` }}>
                           <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6, fontFamily: T.font }}>Previous feedback / 過去のフィードバック</div>

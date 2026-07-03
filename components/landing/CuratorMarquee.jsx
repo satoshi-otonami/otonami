@@ -124,6 +124,20 @@ export default function CuratorMarquee({ data, lang }) {
           </>
         )}
 
+        {/* Media feature — YV Art Magazine (first third-party press, 2026-07-03) */}
+        <p style={{ fontSize: 13, marginBottom: 12, fontFamily: FONT }}>
+          <a
+            href="https://www.vinniejinn.com/post/satoshiyamashita-otonami"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#c4956a', textDecoration: 'none', fontWeight: 600 }}
+          >
+            {lang === 'en'
+              ? 'Featured in YV Art Magazine — Read the interview →'
+              : '海外メディア YV Art Magazine に掲載されました — インタビューを読む →'}
+          </a>
+        </p>
+
         {/* Browse all curators */}
         <p style={{ fontSize: 13, marginBottom: 28, fontFamily: FONT }}>
           <a href="/curators" style={{ color: '#c4956a', textDecoration: 'none', fontWeight: 600 }}>

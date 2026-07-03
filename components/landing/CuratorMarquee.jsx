@@ -124,19 +124,31 @@ export default function CuratorMarquee({ data, lang }) {
           </>
         )}
 
-        {/* Media feature — YV Art Magazine (first third-party press, 2026-07-03) */}
-        <p style={{ fontSize: 13, marginBottom: 12, fontFamily: FONT }}>
-          <a
-            href="https://www.vinniejinn.com/post/satoshiyamashita-otonami"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: '#c4956a', textDecoration: 'none', fontWeight: 600 }}
-          >
-            {lang === 'en'
-              ? 'Featured in YV Art Magazine — Read the interview →'
-              : '海外メディア YV Art Magazine に掲載されました — インタビューを読む →'}
-          </a>
-        </p>
+        {/* FEATURED IN — real third-party press coverage (media feature bar) */}
+        <div style={{ marginBottom: 28 }}>
+          <p style={{
+            fontSize: 11, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase',
+            color: '#a89f92', fontFamily: FONT, marginBottom: 12,
+          }}>
+            {lang === 'en' ? 'Featured in' : 'メディア掲載'}
+          </p>
+          <div style={{
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+            gap: '10px 24px', flexWrap: 'wrap',
+          }}>
+            <a
+              href="https://www.vinniejinn.com/post/satoshiyamashita-otonami"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 15, fontWeight: 600, color: '#c4956a', fontFamily: FONT, textDecoration: 'none' }}
+            >
+              YV Art Magazine
+            </a>
+            <span style={{ fontSize: 15, fontWeight: 600, color: '#c4956a', fontFamily: FONT }}>
+              E-TALENTBANK / Yahoo!ニュース
+            </span>
+          </div>
+        </div>
 
         {/* Browse all curators */}
         <p style={{ fontSize: 13, marginBottom: 28, fontFamily: FONT }}>
@@ -144,18 +156,6 @@ export default function CuratorMarquee({ data, lang }) {
             {lang === 'en' ? 'Browse all curators →' : 'キュレーター一覧を見る →'}
           </a>
         </p>
-
-        {/* Featured in */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
-          <span style={{
-            fontSize: 11, fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase',
-            color: '#b8b2a7', fontFamily: FONT,
-          }}>
-            Featured in
-          </span>
-          <span style={{ fontSize: 16, color: '#999', opacity: 0.5 }}>Music Press Asia</span>
-          <span style={{ fontSize: 16, color: '#999', opacity: 0.5 }}>Bandwagon</span>
-        </div>
       </div>
 
       <style>{`

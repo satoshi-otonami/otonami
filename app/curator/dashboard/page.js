@@ -483,7 +483,27 @@ export default function CuratorDashboard() {
     feedback: pitches.filter(p => p.status === 'feedback').length,
     declined: pitches.filter(p => p.status === 'declined').length,
   };
-  const visiblePitches = filter === 'all' ? pitches : pitches.filter(p => p.status === filter);
+  // Map pitch_id → its actual earning record (source of truth for the reward
+  // amount shown on responded rows). Derived from /api/curator/earnings, NOT
+  // from tier — the per-credit price has changed over time, so a tier-based
+  // calculation would misstate what was actually paid. pitch_id can be null on
+  // legacy rows; those simply don't match and show no amount.
+  const earningByPitchId = {};
+  for (const e of (earnings?.earnings || [])) {
+    if (e.pitch_id != null) earningByPitchId[String(e.pitch_id)] = e;
+  }
+
+  let visiblePitches = filter === 'all' ? pitches : pitches.filter(p => p.status === filter);
+  // Pending tab: surface the pitches closest to their deadline first so
+  // curators act on the most time-critical ones. Other tabs keep the API's
+  // created_at-desc order. Rows without a deadline sort last.
+  if (filter === 'sent') {
+    visiblePitches = [...visiblePitches].sort((a, b) => {
+      const da = a.deadline_at ? new Date(a.deadline_at).getTime() : Infinity;
+      const db = b.deadline_at ? new Date(b.deadline_at).getTime() : Infinity;
+      return da - db;
+    });
+  }
 
   const fbInp = {
     width: '100%', background: T.white, border: `1px solid ${T.border}`,
@@ -1157,15 +1177,22 @@ export default function CuratorDashboard() {
                           : ''}
                       </span>
                       {pitch.status === 'sent' && pitch.deadline_at && (() => {
-                        const hoursLeft = Math.max(0, Math.floor((new Date(pitch.deadline_at) - new Date()) / (1000 * 60 * 60)));
-                        if (hoursLeft < 48) {
-                          return (
-                            <span style={{ color: '#FF3D6E', fontSize: 11, fontWeight: 600, fontFamily: T.font }}>
-                              {hoursLeft < 24 ? 'EXPIRES TODAY' : `${Math.floor(hoursLeft / 24)}d left`} — respond to keep your earnings
-                            </span>
-                          );
-                        }
-                        return null;
+                        const msLeft = new Date(pitch.deadline_at) - new Date();
+                        // Past the deadline: expiring is the cron's responsibility.
+                        // Don't invent a new state here — just hide the badge.
+                        if (msLeft < 0) return null;
+                        const hoursLeft = Math.floor(msLeft / (1000 * 60 * 60));
+                        const daysLeft = Math.floor(hoursLeft / 24);
+                        const urgent = daysLeft <= 2; // 2 days or fewer → red
+                        const label = hoursLeft < 24 ? 'Due today' : `${daysLeft} days left`;
+                        return (
+                          <span style={{
+                            padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, fontFamily: T.font,
+                            color: urgent ? '#FF3D6E' : '#a16207',
+                            background: urgent ? 'rgba(255,61,110,0.1)' : 'rgba(234,179,8,0.12)',
+                            border: `1px solid ${urgent ? 'rgba(255,61,110,0.25)' : 'rgba(234,179,8,0.25)'}`,
+                          }}>{label}</span>
+                        );
                       })()}
                       {pitch.song_link && (
                         <a href={externalHref(pitch.song_link)} target="_blank" rel="noopener noreferrer"
@@ -1231,14 +1258,26 @@ export default function CuratorDashboard() {
                     {/* ── Feedback UI ── */}
                     <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 12, padding: '16px 18px' }}>
                       <div style={{ color: T.textSub, fontSize: 12, fontWeight: 700, marginBottom: 12, letterSpacing: 0.5, fontFamily: T.font }}>FEEDBACK / フィードバック</div>
-                      {['feedback', 'accepted', 'declined'].includes(pitch.status) && (
-                        <div style={{ padding: '10px 14px', background: s.bg, border: `1px solid ${s.color}44`, borderRadius: 8, marginBottom: 4 }}>
-                          <span style={{ color: s.color, fontSize: 13, fontWeight: 700, fontFamily: T.font }}>
-                            ✓ Responded — {s.en} / 応答済み（{s.ja}）
-                            {pitch.responded_at && ` · ${new Date(pitch.responded_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })}`}
-                          </span>
-                        </div>
-                      )}
+                      {['feedback', 'accepted', 'declined'].includes(pitch.status) && (() => {
+                        // Reward shown from the real curator_earnings record (via
+                        // pitch_id), never derived from tier. Responded rows with no
+                        // matching earning (e.g. undo residue / legacy) show no amount
+                        // rather than a misleading ¥0.
+                        const earn = earningByPitchId[String(pitch.id)];
+                        return (
+                          <div style={{ padding: '10px 14px', background: s.bg, border: `1px solid ${s.color}44`, borderRadius: 8, marginBottom: 4 }}>
+                            <span style={{ color: s.color, fontSize: 13, fontWeight: 700, fontFamily: T.font }}>
+                              ✓ Responded — {s.en} / 応答済み（{s.ja}）
+                              {pitch.responded_at && ` · ${new Date(pitch.responded_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })}`}
+                            </span>
+                            {earn && earn.amount != null && (
+                              <span style={{ color: T.accent, fontSize: 13, fontWeight: 700, fontFamily: T.font, marginLeft: 8 }}>
+                                · ¥{(earn.amount || 0).toLocaleString()}{earn.status === 'pending' ? ' (pending)' : ' earned'}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                       {pitch.status === 'sent' && (<>
                       <textarea className="fb-input fb-textarea" value={feedbackDraft[pitch.id]?.text || ''} onChange={e => setDraft(pitch.id, 'text', e.target.value)} placeholder="Share your thoughts on this track... (Required for payment)" rows={4}
                         style={{ ...fbInp, border: `1px solid ${(feedbackDraft[pitch.id]?.text?.trim().length > 0 && feedbackDraft[pitch.id]?.text?.trim().length < 20) ? '#ef4444' : T.border}`, resize: 'vertical', minHeight: 100 }} />
@@ -1284,6 +1323,9 @@ export default function CuratorDashboard() {
                           </div>
                         );
                       })()}
+                      <p style={{ color: T.textMuted, fontSize: 11, marginTop: 8, marginBottom: 0, fontFamily: T.font, lineHeight: 1.5 }}>
+                        Feedback-only responses are paid the same as acceptances.
+                      </p>
                       </>)}
                       {(pitch.feedback_message || pitch.placement_url) && (
                         <div style={{ marginTop: 14, padding: '10px 14px', background: T.white, borderRadius: 8, border: `1px solid ${T.border}` }}>

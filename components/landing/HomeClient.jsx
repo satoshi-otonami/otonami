@@ -799,37 +799,37 @@ export default function HomeClient({ curatorMarquee }) {
         <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 0, opacity: 0.5, pointerEvents: 'none' }} />
         <div style={{ ...wrap, textAlign: 'center', position: 'relative', zIndex: 1 }}>
 
-          {/* Launch Badge */}
-          <div className="hero-tag-anim launch-badge" style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '8px 20px',
-            borderRadius: 9999,
-            background: 'rgba(196, 149, 106, 0.12)',
-            border: '1px solid rgba(196, 149, 106, 0.25)',
-            marginBottom: 24,
-          }}>
-            <span style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: '#c4956a',
-              boxShadow: '0 0 8px rgba(196,149,106,0.6)',
-              animation: 'pulse-dot 2s ease-in-out infinite',
-              flexShrink: 0,
-            }} />
-            <span style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#c4956a',
-              letterSpacing: '0.5px',
+          {/* Traction pill — dynamic stats from the same DB source as the Trust marquee (never hardcoded) */}
+          {curatorMarquee?.count ? (
+            <div className="hero-tag-anim launch-badge" style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '8px 20px',
+              borderRadius: 9999,
+              background: 'rgba(196, 149, 106, 0.12)',
+              border: '1px solid rgba(196, 149, 106, 0.25)',
+              marginBottom: 24,
             }}>
-              {lang === 'en'
-                ? 'Now Live'
-                : 'Now Live'}
-            </span>
-          </div>
+              <span style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: '#c4956a',
+                boxShadow: '0 0 8px rgba(196,149,106,0.6)',
+                animation: 'pulse-dot 2s ease-in-out infinite',
+                flexShrink: 0,
+              }} />
+              <span style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#c4956a',
+                letterSpacing: '0.5px',
+              }}>
+                {curatorMarquee.count} curators · {curatorMarquee.countries} countries
+              </span>
+            </div>
+          ) : null}
 
           <h1 className="hero-h1 hero-heading" style={{ fontFamily: D.fHead, fontSize: 52, fontWeight: 500, lineHeight: 1.2, color: D.text, marginBottom: 28, letterSpacing: '-0.5px' }}>
             {t.hero.h1.map((line, i) => (
@@ -856,7 +856,7 @@ export default function HomeClient({ curatorMarquee }) {
             flexWrap: 'wrap',
             justifyContent: 'center',
           }}>
-            <a href="/curator" className="hero-cta-primary" style={{
+            <a href="/artist" className="hero-cta-primary" style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
@@ -870,9 +870,9 @@ export default function HomeClient({ curatorMarquee }) {
               boxShadow: '0 4px 20px rgba(196,149,106,0.3)',
               transition: 'transform 0.2s, box-shadow 0.2s',
             }}>
-              {lang === 'en' ? 'Register as Curator →' : 'キュレーター登録 →'}
+              {lang === 'en' ? 'Register as Artist (Free) →' : 'アーティスト登録（無料） →'}
             </a>
-            <a href="/artist" className="hero-cta-secondary" style={{
+            <a href="/curator" className="hero-cta-secondary" style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
@@ -886,7 +886,7 @@ export default function HomeClient({ curatorMarquee }) {
               border: '1px solid rgba(255,255,255,0.3)',
               transition: 'transform 0.2s, background 0.2s',
             }}>
-              {lang === 'en' ? 'Register as Artist →' : 'アーティストとして登録 →'}
+              {lang === 'en' ? 'Register as Curator →' : 'キュレーター登録 →'}
             </a>
           </div>
 
@@ -899,6 +899,55 @@ export default function HomeClient({ curatorMarquee }) {
               {lang === 'en' ? 'Artist Login' : 'アーティストログイン'}
             </a>
           </div>
+        </div>
+      </section>
+
+      {/* ========== SECTION 4: HOW IT WORKS (moved above founder — artist funnel first) ========== */}
+      <section id="how-it-works" style={{ background: '#faf8f5', padding: '100px 0' }} className="section-pad">
+        <div style={wrap}>
+          <AnimatedSection>
+            <div style={{ textAlign: 'center', marginBottom: 56 }}>
+              <div style={{ width: 40, height: 3, borderRadius: 2, background: 'linear-gradient(90deg, #c4956a, #e85d3a)', margin: '0 auto 16px' }} />
+              <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 20 }}>{t.how.label}</div>
+              <h2 style={{ fontFamily: D.fHead, fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 700, color: L.text, lineHeight: 1.25 }}>{t.how.title}</h2>
+            </div>
+          </AnimatedSection>
+
+          <div className="how-grid artist-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))', gap: 16, width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+            {t.how.steps.map((step, i) => (
+              <AnimatedSection key={i} delay={i * 100}>
+                <div className="how-card-light artist-step-card step-card" style={{ padding: 24 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                    {/* Step number circle — replaces emoji icons */}
+                    <div style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      background: 'rgba(196,149,106,0.1)',
+                      border: '1px solid rgba(196,149,106,0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 16,
+                      fontWeight: 700,
+                      color: '#c4956a',
+                      flexShrink: 0,
+                    }}>
+                      {String(i + 1).padStart(2, '0')}
+                    </div>
+                  </div>
+                  <h3 className="step-title" style={{ fontSize: 16, fontWeight: 600, color: L.text, marginBottom: 8 }}>{step.t}</h3>
+                  <p className="step-desc" style={{ fontSize: 14, color: L.textSec, lineHeight: 1.5, margin: 0 }}>{step.d}</p>
+                </div>
+              </AnimatedSection>
+            ))}
+          </div>
+
+          <AnimatedSection delay={300}>
+            <div style={{ textAlign: 'center', marginTop: 48 }}>
+              <a href="/artist" className="cta-coral cta-button" style={{ fontSize: 16, padding: '15px 36px' }}>{t.how.cta}</a>
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
@@ -1049,55 +1098,6 @@ export default function HomeClient({ curatorMarquee }) {
       {/* ========== TRUST / CURATOR MARQUEE (DB-driven, data via server page props) ========== */}
       <CuratorMarquee data={curatorMarquee} lang={lang} />
 
-      {/* ========== SECTION 4: HOW IT WORKS ========== */}
-      <section id="how-it-works" style={{ background: '#faf8f5', padding: '100px 0' }} className="section-pad">
-        <div style={wrap}>
-          <AnimatedSection>
-            <div style={{ textAlign: 'center', marginBottom: 56 }}>
-              <div style={{ width: 40, height: 3, borderRadius: 2, background: 'linear-gradient(90deg, #c4956a, #e85d3a)', margin: '0 auto 16px' }} />
-              <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 20 }}>{t.how.label}</div>
-              <h2 style={{ fontFamily: D.fHead, fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 700, color: L.text, lineHeight: 1.25 }}>{t.how.title}</h2>
-            </div>
-          </AnimatedSection>
-
-          <div className="how-grid artist-steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))', gap: 16, width: '100%', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
-            {t.how.steps.map((step, i) => (
-              <AnimatedSection key={i} delay={i * 100}>
-                <div className="how-card-light artist-step-card step-card" style={{ padding: 24 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    {/* Step number circle — replaces emoji icons */}
-                    <div style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: '50%',
-                      background: 'rgba(196,149,106,0.1)',
-                      border: '1px solid rgba(196,149,106,0.3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 16,
-                      fontWeight: 700,
-                      color: '#c4956a',
-                      flexShrink: 0,
-                    }}>
-                      {String(i + 1).padStart(2, '0')}
-                    </div>
-                  </div>
-                  <h3 className="step-title" style={{ fontSize: 16, fontWeight: 600, color: L.text, marginBottom: 8 }}>{step.t}</h3>
-                  <p className="step-desc" style={{ fontSize: 14, color: L.textSec, lineHeight: 1.5, margin: 0 }}>{step.d}</p>
-                </div>
-              </AnimatedSection>
-            ))}
-          </div>
-
-          <AnimatedSection delay={300}>
-            <div style={{ textAlign: 'center', marginTop: 48 }}>
-              <a href="/artist" className="cta-coral cta-button" style={{ fontSize: 16, padding: '15px 36px' }}>{t.how.cta}</a>
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
       {/* ========== EPK PERK CARD (registration perk — relocated after 3-step) ========== */}
       <section ref={epkRef} style={{ background: '#fff', padding: '40px 24px 48px' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
@@ -1127,59 +1127,6 @@ export default function HomeClient({ curatorMarquee }) {
           </div>
         </div>
       </section>
-
-      {/* ========== AUDIENCE SELECTOR BANNER ========== */}
-      <div style={{
-        padding: '40px 20px',
-        background: 'linear-gradient(135deg, #f0ede6 0%, #e5e2dc 100%)',
-        textAlign: 'center',
-      }}>
-        <p style={{
-          fontSize: 14,
-          color: '#6b6560',
-          marginBottom: 16,
-          fontWeight: 500,
-        }}>
-          {lang === 'en' ? 'Find your section' : 'あなたに合った情報を見る'}
-        </p>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: 16,
-          flexWrap: 'wrap',
-        }}>
-          <a href="#for-curators" style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '14px 32px',
-            borderRadius: 9999,
-            background: '#1a1715',
-            color: '#f0ede6',
-            fontWeight: 600,
-            fontSize: 15,
-            textDecoration: 'none',
-            transition: 'transform 0.2s',
-          }}>
-            {lang === 'en' ? 'Curator / Media' : 'キュレーター・メディア'}
-          </a>
-          <a href="#for-artists" style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '14px 32px',
-            borderRadius: 9999,
-            background: '#c4956a',
-            color: '#fff',
-            fontWeight: 600,
-            fontSize: 15,
-            textDecoration: 'none',
-            transition: 'transform 0.2s',
-          }}>
-            {lang === 'en' ? 'Artist / Label' : 'アーティスト・レーベル'}
-          </a>
-        </div>
-      </div>
 
       {/* ========== SECTION 5: FOR CURATORS ========== */}
       <AnimatedSection>

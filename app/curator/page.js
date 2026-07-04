@@ -72,6 +72,9 @@ export default function CuratorRegistrationPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const avatarInputRef = useRef(null);
+  // Referral source (?ref=) captured on load; passed through to registration
+  // payload so we can attribute registrations to their outreach channel.
+  const referralSource = useRef(null);
 
   // Login
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -165,6 +168,8 @@ export default function CuratorRegistrationPage() {
     try {
       const params = new URLSearchParams(window.location.search);
       if (params.get('tab') === 'login') setTab('login');
+      const ref = params.get('ref');
+      if (ref) referralSource.current = ref;
     } catch {}
   }, []);
 
@@ -389,7 +394,7 @@ export default function CuratorRegistrationPage() {
       if (form.socialInstagram.trim()) socialLinks.instagram = form.socialInstagram.trim();
       const res = await fetch('/api/curator', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, openToAllGenres, iconUrl, socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : null }),
+        body: JSON.stringify({ ...form, openToAllGenres, iconUrl, socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : null, referralSource: referralSource.current || null }),
       });
       const data = await res.json();
       if (!res.ok) {

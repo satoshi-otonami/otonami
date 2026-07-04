@@ -78,6 +78,11 @@ export async function POST(request) {
 
     const validTier = Math.min(5, Math.max(1, parseInt(form.tier) || 2));
 
+    // Referral source (?ref=): outreach-channel attribution (e.g. timm / dm / sns / groover).
+    // Sanitize to [A-Za-z0-9_-], max 32 chars; anything else → NULL (organic/unknown).
+    const rawRef = typeof form.referralSource === 'string' ? form.referralSource.trim() : '';
+    const referralSource = /^[A-Za-z0-9_-]{1,32}$/.test(rawRef) ? rawRef : null;
+
     const { data, error } = await supabase
       .from('curators')
       .insert({
@@ -108,6 +113,7 @@ export async function POST(request) {
         tags: ['pending_review'],
         tier: validTier,
         is_seed: false,
+        referral_source: referralSource,
       })
       .select()
       .single();

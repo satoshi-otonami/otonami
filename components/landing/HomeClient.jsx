@@ -33,21 +33,12 @@ const COPY = {
     },
     epk: {
       imgAlt: 'A live EPK on OTONAMI — ROUTE14band',
-      themesLabel: 'Three themes to match your world.',
       themesBadge: 'NEW',
-      themesEyebrow: 'OTONAMI EPK',
-      themesHeadline: 'Your own official page — free.',
-      unifiedLead: 'More than a link in bio. Your songs, photos, and milestones on one page — share it anywhere and it works as your official profile, worldwide.',
-      themesSub: 'No need to pitch first. Pick the look that fits your sound, from three themes.',
-      themesCta: 'Start free',
+      perkLabel: 'Included free',
+      themesHeadline: 'More than pitching — your free EPK page.',
+      unifiedLead: 'Songs, photos, and press in one page. Every registered artist gets a free EPK that works overseas.',
       exampleCta: 'See a live example',
       editEpkCta: 'Edit your EPK',
-      alreadyMember: 'Already have an account? Log in',
-      themes: [
-        { name: 'Editorial Dark', img: '/epk-themes/epk-theme-editorial-dark.jpg', selected: true },
-        { name: 'Sunset City Pop', img: '/epk-themes/epk-theme-sunset-citypop.jpg' },
-        { name: 'Brutalist', img: '/epk-themes/epk-theme-brutalist-indie.jpg' },
-      ],
     },
     how: {
       label: 'FOR ARTISTS & LABELS',
@@ -87,21 +78,12 @@ const COPY = {
     },
     epk: {
       imgAlt: 'OTONAMIのLive EPK実例 — ROUTE14band',
-      themesLabel: '世界観は、3つのテーマから選べる',
       themesBadge: 'NEW',
-      themesEyebrow: 'OTONAMI EPK',
-      themesHeadline: '無料で持てる、あなたの公式ページ。',
-      unifiedLead: 'リンクを並べるだけじゃない。曲・写真・実績を1ページに。SNSに貼れば、そのまま海外にも届く公式プロフィールに。',
-      themesSub: 'ピッチに進まなくてもOK。3つの世界観から、あなたの音に似合う"一着"を。',
-      themesCta: '無料ではじめる',
+      perkLabel: '登録特典',
+      themesHeadline: 'ピッチだけじゃない。公式EPKページも無料で。',
+      unifiedLead: '曲・写真・実績を1ページに。アーティスト登録すると、そのまま海外にも届く公式プロフィールが無料で持てます。',
       exampleCta: '実際の例を見る',
       editEpkCta: 'EPKを編集する',
-      alreadyMember: 'すでに登録済みの方は ログイン',
-      themes: [
-        { name: 'Editorial Dark', img: '/epk-themes/epk-theme-editorial-dark.jpg', selected: true },
-        { name: 'Sunset City Pop', img: '/epk-themes/epk-theme-sunset-citypop.jpg' },
-        { name: 'Brutalist', img: '/epk-themes/epk-theme-brutalist-indie.jpg' },
-      ],
     },
     how: {
       label: 'アーティスト・レーベルの方へ',
@@ -241,13 +223,8 @@ function FAQItem({ question, answer, isOpen, onClick, theme = 'light' }) {
   );
 }
 
-/* EPK theme preview (Phase 2): same-frame webp, color-only crossfade */
-const EPK_THEMES = [
-  { id: 'editorial-dark', label: 'Editorial Dark', src: '/epk-themes/epk-theme-editorial-dark.webp' },
-  { id: 'sunset',         label: 'Sunset',         src: '/epk-themes/epk-theme-sunset.webp' },
-  { id: 'brutalist',      label: 'Brutalist',      src: '/epk-themes/epk-theme-brutalist.webp' },
-];
-const EPK_ROTATE_MS = 4500;
+/* EPK perk card: single static representative image (Editorial Dark) */
+const EPK_PERK_IMG = '/epk-themes/epk-theme-editorial-dark.webp';
 
 /* ─────────────────────────────────────────
    Page
@@ -263,20 +240,6 @@ export default function HomeClient({ curatorMarquee }) {
   const canvasRef = useRef(null);
   const epkRef = useRef(null);
   const [epkVisible, setEpkVisible] = useState(false);
-  const [epkActive, setEpkActive] = useState(0);   // active theme index
-  const [epkPaused, setEpkPaused] = useState(false); // user interacted → stop auto-rotate
-  const [epkReduce, setEpkReduce] = useState(false); // prefers-reduced-motion
-  const epkTimer = useRef(null);
-  const [isArtistLoggedIn, setIsArtistLoggedIn] = useState(false); // default = guest (avoid hydration mismatch)
-
-  /* ── Auth-aware CTA: detect artist login after mount (client-only) ── */
-  useEffect(() => {
-    try {
-      setIsArtistLoggedIn(!!localStorage.getItem('artist_token'));
-    } catch {
-      /* SSR / private mode: stay guest */
-    }
-  }, []);
 
   /* ── Canvas waveform animation ── */
   useEffect(() => {
@@ -376,31 +339,6 @@ export default function HomeClient({ curatorMarquee }) {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-
-  /* ── EPK theme preview: prefers-reduced-motion (initial + live) ── */
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const apply = () => setEpkReduce(mq.matches);
-    apply();
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, []);
-
-  /* ── EPK theme preview: auto-rotate (until user interacts / reduced-motion) ── */
-  useEffect(() => {
-    if (epkPaused || epkReduce) return;
-    epkTimer.current = setInterval(() => {
-      setEpkActive((i) => (i + 1) % EPK_THEMES.length);
-    }, EPK_ROTATE_MS);
-    return () => clearInterval(epkTimer.current);
-  }, [epkPaused, epkReduce]);
-
-  /* select a theme + stop auto-rotate once the user interacts */
-  const selectEpkTheme = (i) => {
-    setEpkActive(i);
-    setEpkPaused(true);
-    if (epkTimer.current) clearInterval(epkTimer.current);
-  };
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -605,123 +543,65 @@ export default function HomeClient({ curatorMarquee }) {
           .hero-h1 { font-size: 28px !important; }
         }
 
-        /* ===== UNIFIED EPK SHOWCASE (one Coral color-face: hero + announcement merged) ===== */
-        .epk-hero {
-          background: linear-gradient(135deg, #FF6B4A 0%, #FF3D6E 100%);
-          border-radius: 20px;
-          padding: 38px 38px;
+        /* ===== EPK PERK CARD (registration perk — compact neutral card) ===== */
+        .epk-perk {
+          display: grid; grid-template-columns: 1.15fr 1fr; gap: 32px; align-items: center;
+          background: #FDF9F2; border: 1px solid #f0e9de; border-radius: 18px;
+          padding: 32px 34px;
         }
-        .epk-media {
-          width: 100%; max-width: 520px; margin: 0 auto;
-        }
-        /* Crossfade stage: frame fixed (aspect-ratio), only the inner color changes */
-        .epk-stage {
-          position: relative; width: 100%; aspect-ratio: 1600 / 689;
-          border-radius: 13px; overflow: hidden; border: 5px solid #fff;
-          box-shadow: 0 14px 40px rgba(0,0,0,0.18);
-        }
-        .epk-stage-img {
-          position: absolute; inset: 0; width: 100%; height: 100%;
-          object-fit: cover; opacity: 0; transition: opacity 600ms ease; will-change: opacity;
-        }
-        .epk-stage-img.is-active { opacity: 1; }
-
-        /* Badge (white pill, Coral text, pulse) */
-        .lp-launch__badges { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .epk-perk__body { min-width: 0; }
+        .epk-perk__badges { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
         .lp-new-badge {
           display: inline-flex; align-items: center; gap: 6px;
-          background: rgba(255,255,255,0.96); color: #D4537E;
+          background: #FF3D6E; color: #fff;
           font-family: 'Sora',sans-serif; font-weight: 800;
-          font-size: 12px; letter-spacing: 0.14em;
-          padding: 7px 13px; border-radius: 999px;
+          font-size: 11px; letter-spacing: 0.14em;
+          padding: 5px 11px; border-radius: 999px;
           animation: lpNewPulse 1.8s ease-in-out infinite;
         }
         @keyframes lpNewPulse {
           0%, 100% { transform: scale(1); opacity: 1; }
           50% { transform: scale(1.07); opacity: 0.82; }
         }
-        .lp-launch__eyebrow {
+        .epk-perk__eyebrow {
           font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
-          font-weight: 600; font-size: 12px; letter-spacing: 0.18em; color: rgba(255,255,255,0.88);
+          font-weight: 700; font-size: 12px; letter-spacing: 0.16em; color: #c4956a; text-transform: uppercase;
         }
-
-        /* Main headline + lead (white on Coral) */
-        .hero__h {
+        .epk-perk__h {
           font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
-          font-weight: 800; font-size: clamp(30px, 5vw, 44px); line-height: 1.14;
-          color: #fff; margin: 0 0 12px; word-break: auto-phrase;
+          font-weight: 800; font-size: clamp(22px, 3.4vw, 30px); line-height: 1.24;
+          color: #1a1a1a; margin: 0 0 12px; word-break: auto-phrase;
         }
-        .hero__lead {
+        .epk-perk__lead {
           font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
-          font-size: clamp(15px, 2.2vw, 17px); line-height: 1.7;
-          color: rgba(255,255,255,0.96); font-weight: 500; margin: 0; max-width: 620px;
-          word-break: auto-phrase;
+          font-size: 15px; line-height: 1.7; color: #57503f; font-weight: 500;
+          margin: 0 0 20px; max-width: 560px; word-break: auto-phrase;
         }
-
-        /* Themes lead + thumbnails (on Coral) */
-        .hero__themes { margin-top: 32px; }
-        .hero__themes-lead {
-          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
-          font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.92); margin: 0 0 16px;
-          word-break: auto-phrase;
+        .epk-perk__cta { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+        .epk-perk__link {
+          color: #e85d3a; font-family: 'Sora','Noto Sans JP',sans-serif; font-weight: 700; font-size: 15px;
+          text-decoration: none; white-space: nowrap;
         }
-        .epk-themes-row { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 11px; }
-        .epk-thumb {
-          position: relative; margin: 0; padding: 0; display: block; cursor: pointer;
-          border-radius: 9px; overflow: hidden; background: #fff;
-          border: 2px solid rgba(255,255,255,0.55);
-          transition: border-color 0.2s ease, transform 0.2s ease;
+        .epk-perk__link:hover { text-decoration: underline; text-underline-offset: 3px; }
+        .epk-perk__link--sub { color: #8a8276; font-weight: 600; font-size: 14px; }
+        .epk-perk__media {
+          width: 100%; border-radius: 12px; overflow: hidden;
+          border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.12);
         }
-        .epk-thumb.sel { border-color: #fff; transform: translateY(-2px); }
-        .epk-thumb img { width: 100%; display: block; height: auto; }
-        .epk-thumb-label {
-          position: absolute; left: 7px; bottom: 7px;
-          font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: #fff;
-          text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-          font-family: 'Sora','Noto Sans JP',sans-serif;
-        }
-
-        /* CTA row (primary white pill + ghost) */
-        .hero__cta { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
-        .hero__cta-primary {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: #fff; color: #D4537E;
-          font-family: 'Sora','Noto Sans JP',sans-serif; font-weight: 700; font-size: 15px;
-          padding: 13px 26px; border-radius: 999px; text-decoration: none; white-space: nowrap;
-          box-shadow: 0 4px 14px rgba(0,0,0,0.12);
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .hero__cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,0,0,0.20); }
-        .hero__cta-ghost {
-          color: #fff; font-family: 'Sora','Noto Sans JP',sans-serif; font-weight: 600; font-size: 14px;
-          text-decoration: none; opacity: 0.95; white-space: nowrap;
-        }
-        .hero__cta-ghost:hover { text-decoration: underline; }
-        /* Auth-aware CTA: guest cluster (register button + login link) */
-        .hero__cta-guest { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
-        .hero__cta-login {
-          color: #fff; font-family: 'Sora','Noto Sans JP',sans-serif; font-weight: 600; font-size: 14px;
-          text-decoration: underline; text-underline-offset: 3px; opacity: 0.95; white-space: nowrap;
-        }
-        .hero__cta-login:hover { opacity: 1; }
+        .epk-perk__media img { width: 100%; display: block; height: auto; aspect-ratio: 1600 / 689; object-fit: cover; }
 
         /* scroll-reveal */
         .epk-reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
         .epk-reveal.is-visible { opacity: 1; transform: none; }
-        .epk-reveal-strong { transform: translateY(24px); }
         @media (max-width: 768px) {
-          .epk-hero { padding: 26px 20px; }
-          .epk-themes-row { display: flex; overflow-x: auto; gap: 10px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
-          .epk-thumb { flex: 0 0 70%; scroll-snap-align: start; }
+          .epk-perk { grid-template-columns: 1fr; gap: 22px; padding: 26px 22px; }
+          .epk-perk__media { order: -1; }
         }
         @media (prefers-reduced-motion: reduce) {
           .epk-reveal, .epk-reveal.is-visible {
             opacity: 1 !important; transform: none !important; transition: none !important;
           }
-          .epk-stage-img, .epk-thumb { transition: none !important; }
           .lp-new-badge { animation: none !important; }
-          .hero__cta-primary { transition: none !important; }
-          .hero__cta-primary:hover { transform: none !important; }
         }
       `}</style>
 
@@ -1022,114 +902,6 @@ export default function HomeClient({ curatorMarquee }) {
         </div>
       </section>
 
-      {/* ========== UNIFIED EPK SHOWCASE (one Coral card: hero + announcement merged) ========== */}
-      <section ref={epkRef} style={{ background: '#FBF4EC', padding: '72px 24px 72px' }}>
-        <div style={{ maxWidth: 1080, margin: '0 auto' }}>
-          {/* Unified Coral showcase: hero copy + EPK announcement merged into ONE color-face card */}
-          <div className="epk-hero">
-            <div className="two-col" style={{
-              display: 'grid',
-              gridTemplateColumns: '1.25fr 1fr',
-              gap: 30,
-              alignItems: 'center',
-            }}>
-              {/* Left: badge + main headline + lead */}
-              <div>
-                <div
-                  className={`lp-launch__badges epk-reveal${epkVisible ? ' is-visible' : ''}`}
-                  style={{ transitionDelay: '0ms' }}
-                >
-                  <span className="lp-new-badge">● {t.epk.themesBadge}</span>
-                  <span className="lp-launch__eyebrow">{t.epk.themesEyebrow}</span>
-                </div>
-                <h1
-                  className={`hero__h epk-reveal epk-reveal-strong${epkVisible ? ' is-visible' : ''}`}
-                  style={{ transitionDelay: epkVisible ? '80ms' : '0ms' }}
-                >
-                  {t.epk.themesHeadline}
-                </h1>
-                <p
-                  className={`hero__lead epk-reveal${epkVisible ? ' is-visible' : ''}`}
-                  style={{ transitionDelay: epkVisible ? '160ms' : '0ms' }}
-                >
-                  {t.epk.unifiedLead}
-                </p>
-              </div>
-              {/* Right: live EPK crossfade representative-large (Phase 2 — logic unchanged) */}
-              <div
-                className={`epk-media epk-reveal${epkVisible ? ' is-visible' : ''}`}
-                style={{ transitionDelay: epkVisible ? '200ms' : '0ms' }}
-              >
-                <div className="epk-stage" aria-live="polite">
-                  {EPK_THEMES.map((th, i) => (
-                    <img
-                      key={th.id}
-                      className={`epk-stage-img${i === epkActive ? ' is-active' : ''}`}
-                      src={th.src}
-                      alt={lang === 'en' ? `OTONAMI EPK theme — ${th.label}` : `OTONAMIのEPKテーマ — ${th.label}`}
-                      width={1600}
-                      height={689}
-                      loading={i === 0 ? 'eager' : 'lazy'}
-                      fetchPriority={i === 0 ? 'high' : 'auto'}
-                      decoding="async"
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Themes lead + thumbnails (switch the representative-large above) */}
-            <div
-              className={`hero__themes epk-reveal${epkVisible ? ' is-visible' : ''}`}
-              style={{ transitionDelay: epkVisible ? '300ms' : '0ms' }}
-            >
-              <p className="hero__themes-lead">{t.epk.themesSub}</p>
-              <div className="epk-themes-row" role="tablist" aria-label={t.epk.themesLabel}>
-                {EPK_THEMES.map((th, i) => (
-                  <button
-                    key={th.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={i === epkActive}
-                    className={`epk-thumb${i === epkActive ? ' sel' : ''}`}
-                    onClick={() => selectEpkTheme(i)}
-                    onMouseEnter={() => selectEpkTheme(i)}
-                  >
-                    <img
-                      src={th.src}
-                      alt=""
-                      width={1600}
-                      height={689}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <span className="epk-thumb-label">{th.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* CTA: auth-aware primary (logged-in → edit EPK / guest → register + login) + ghost (live example, always) */}
-            <div
-              className={`hero__cta epk-reveal${epkVisible ? ' is-visible' : ''}`}
-              style={{ transitionDelay: epkVisible ? '360ms' : '0ms' }}
-            >
-              {isArtistLoggedIn ? (
-                <div className="hero__cta-guest">
-                  <a href="/dashboard/epk" className="hero__cta-primary">{t.epk.editEpkCta}　→</a>
-                </div>
-              ) : (
-                <div className="hero__cta-guest">
-                  <a href="/artist" className="hero__cta-primary">{t.epk.themesCta}　→</a>
-                  <a href="/artist/login" className="hero__cta-login">{t.epk.alreadyMember}　→</a>
-                </div>
-              )}
-              <a href="/epk/route14band" className="hero__cta-ghost">{t.epk.exampleCta}　→</a>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ========== SECTION 3: FOUNDER STRIP ========== */}
       <section id="founder" className="founder-strip" style={{
         padding: '64px 20px',
@@ -1323,6 +1095,36 @@ export default function HomeClient({ curatorMarquee }) {
               <a href="/artist" className="cta-coral cta-button" style={{ fontSize: 16, padding: '15px 36px' }}>{t.how.cta}</a>
             </div>
           </AnimatedSection>
+        </div>
+      </section>
+
+      {/* ========== EPK PERK CARD (registration perk — relocated after 3-step) ========== */}
+      <section ref={epkRef} style={{ background: '#fff', padding: '40px 24px 48px' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div className={`epk-perk epk-reveal${epkVisible ? ' is-visible' : ''}`}>
+            <div className="epk-perk__body">
+              <div className="epk-perk__badges">
+                <span className="lp-new-badge">● {t.epk.themesBadge}</span>
+                <span className="epk-perk__eyebrow">{t.epk.perkLabel}</span>
+              </div>
+              <h2 className="epk-perk__h">{t.epk.themesHeadline}</h2>
+              <p className="epk-perk__lead">{t.epk.unifiedLead}</p>
+              <div className="epk-perk__cta">
+                <a href="/epk/route14band" className="epk-perk__link">{t.epk.exampleCta}　→</a>
+                <a href="/dashboard/epk" className="epk-perk__link epk-perk__link--sub">{t.epk.editEpkCta}　→</a>
+              </div>
+            </div>
+            <div className="epk-perk__media">
+              <img
+                src={EPK_PERK_IMG}
+                alt={t.epk.imgAlt}
+                width={1600}
+                height={689}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

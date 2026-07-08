@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "db:setup": "node supabase/setup.js"
+    "db:setup": "node supabase/setup.js",
+    "email:dev": "email dev --dir emails",
+    "email:export": "email export --dir emails --outDir ~/otonami-outputs/emails"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.0",
@@ -28,6 +30,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
+    "react-email": "^6.6.6",
     "canvas": "^3.2.3",
     "postcss": "^8.4.38",
     "puppeteer": "^24.40.0",

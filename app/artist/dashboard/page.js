@@ -178,6 +178,15 @@ function getSpotifyEmbedUrl(url) {
   return null;
 }
 
+// Human label for a sent pitch's stored language. `body` is not always English:
+// 'en' = generated English, 'ja_translated' = Japanese translation of the pitch,
+// null/legacy = language not recorded (older rows).
+function pitchLangLabel(lang) {
+  if (lang === 'en') return '送信した英文';
+  if (lang === 'ja_translated') return '送信した和文（日本語訳）';
+  return '送信した本文';
+}
+
 const EPK_ENTRY_CSS = `
 .epk-entry{position:relative;border-radius:24px;overflow:hidden;border:1px solid rgba(60,40,28,.18);
   background:linear-gradient(118deg,#FFF3EC 0%,#FDE9E4 48%,#F7EFE2 100%);
@@ -257,6 +266,10 @@ export default function ArtistDashboard() {
   // Curator profile modal
   const [selectedCurator, setSelectedCurator] = useState(null);
   const [curatorLoading, setCuratorLoading] = useState(false);
+
+  // Sent-pitch body viewer modal (read-only). Holds the raw pitch row so we can
+  // show the exact text that was sent (`body`) plus its language (`pitch_language`).
+  const [pitchBodyModal, setPitchBodyModal] = useState(null);
 
   // YouTube embed state per track
   const [playingYT, setPlayingYT] = useState(null);
@@ -832,6 +845,16 @@ export default function ArtistDashboard() {
                           <a href={externalHref(pitch.placement_url)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: THEME.gold }}>{pitch.placement_url}</a>
                         </div>
                       )}
+                      {pitch.body && (
+                        <button onClick={() => setPitchBodyModal(pitch)} style={{
+                          marginTop: 10, background: 'transparent', border: `1px solid ${THEME.border}`,
+                          borderRadius: 8, padding: '6px 12px', fontSize: 12, color: THEME.textSub,
+                          cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s',
+                        }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = THEME.gold; e.currentTarget.style.color = THEME.gold; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = THEME.border; e.currentTarget.style.color = THEME.textSub; }}
+                        >送信した本文を見る</button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1158,6 +1181,13 @@ export default function ArtistDashboard() {
                                      p.status === 'interested' || p.status === 'accepted' ? '✓ 採用' :
                                      p.status === 'declined' ? '不採用' : p.status}
                                   </span>
+                                  {p.body && (
+                                    <button onClick={() => setPitchBodyModal(p)} style={{
+                                      background: 'transparent', border: 'none', padding: 0, fontSize: 11,
+                                      color: THEME.gold, cursor: 'pointer', textDecoration: 'underline',
+                                      textDecorationColor: `${THEME.gold}40`, textUnderlineOffset: 2, fontFamily: THEME.font,
+                                    }}>本文</button>
+                                  )}
                                   <span style={{ fontSize: 11, color: THEME.textMuted, marginLeft: 'auto' }}>
                                     {p.sent_at ? new Date(p.sent_at).toLocaleDateString('ja-JP') : ''}
                                   </span>
@@ -1638,6 +1668,51 @@ export default function ArtistDashboard() {
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: '12px', borderRadius: 100, background: THEME.card, border: `1.5px solid ${THEME.border}`, color: THEME.textSub, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: THEME.font }}>キャンセル</button>
               <button onClick={() => handleDeleteTrack(deleteConfirm)} style={{ flex: 1, padding: '12px', borderRadius: 100, background: THEME.coral, border: 'none', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: THEME.font }}>削除する</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Sent Pitch Body Viewer (read-only) ── */}
+      {pitchBodyModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400, padding: 20 }}
+          onClick={() => setPitchBodyModal(null)}
+        >
+          <div style={{ background: '#ffffff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', maxWidth: 620, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'flex-start', gap: 12, position: 'sticky', top: 0, background: '#fff', zIndex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, letterSpacing: '0.04em', color: THEME.gold, fontWeight: 600, marginBottom: 4, fontFamily: THEME.font }}>{pitchLangLabel(pitchBodyModal.pitch_language)}</div>
+                <h3 style={{ fontSize: 17, fontWeight: 700, color: THEME.text, fontFamily: THEME.font, margin: 0 }}>{pitchBodyModal.curator_name} へのピッチ</h3>
+                <div style={{ fontSize: 12, color: THEME.textMuted, marginTop: 4, fontFamily: THEME.font }}>
+                  {pitchBodyModal.sent_at ? new Date(pitchBodyModal.sent_at).toLocaleDateString('ja-JP') : ''}
+                  {pitchBodyModal.status ? ` ・ ${
+                    pitchBodyModal.status === 'sent' ? '送信済み' :
+                    pitchBodyModal.status === 'opened' ? '開封済み' :
+                    pitchBodyModal.status === 'listened' ? '試聴済み' :
+                    pitchBodyModal.status === 'feedback' ? 'FB受信' :
+                    pitchBodyModal.status === 'interested' || pitchBodyModal.status === 'accepted' ? '採用' :
+                    pitchBodyModal.status === 'declined' ? '不採用' :
+                    pitchBodyModal.status === 'expired' ? '期限切れ' : pitchBodyModal.status
+                  }` : ''}
+                </div>
+              </div>
+              <button onClick={() => setPitchBodyModal(null)} style={{ background: 'transparent', border: 'none', color: THEME.textMuted, fontSize: 24, cursor: 'pointer', padding: 4, lineHeight: 1, flexShrink: 0 }}>×</button>
+            </div>
+            {/* Body */}
+            <div style={{ padding: 24 }}>
+              {pitchBodyModal.subject && (
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, color: THEME.textMuted, marginBottom: 4, fontFamily: THEME.font }}>件名</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: THEME.text, fontFamily: THEME.font }}>{pitchBodyModal.subject}</div>
+                </div>
+              )}
+              <div style={{ fontSize: 11, color: THEME.textMuted, marginBottom: 6, fontFamily: THEME.font }}>本文</div>
+              <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 14, lineHeight: 1.7, color: THEME.text, fontFamily: THEME.font, background: THEME.bg, borderRadius: 10, padding: 16 }}>
+                {pitchBodyModal.body}
+              </div>
             </div>
           </div>
         </div>

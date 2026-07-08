@@ -373,6 +373,29 @@ Start with "Subject: " line. Then the pitch. Then "---EPK---" separator. Then th
     const pitch = stripJapaneseParens((parts[0] || '').trim());
     const epk = stripJapaneseParens((parts[1] || '').trim());
 
+    // Persist the achievements/description the artist actually used, so the next
+    // pitch (e.g. re-pitching the same track to another curator) prefills them
+    // instead of forcing re-entry. Last-used-wins, but only for non-empty values
+    // so an omitted field never wipes a previously saved one. Non-fatal: a save
+    // failure must not break pitch generation. Does NOT touch `bio` (EPK source).
+    try {
+      const profileUpdate = {};
+      const usedAchievements = (artist.achievements || '').trim();
+      const usedDescription = (artist.description || '').trim();
+      if (usedAchievements) profileUpdate.achievements = usedAchievements;
+      if (usedDescription) profileUpdate.description = usedDescription;
+      if (Object.keys(profileUpdate).length > 0) {
+        const sbSave = getServiceSupabase();
+        const { error: saveErr } = await sbSave
+          .from('artists')
+          .update(profileUpdate)
+          .eq('id', payload.artistId);
+        if (saveErr) console.warn('Pitch: profile prefill save failed:', saveErr.message);
+      }
+    } catch (e) {
+      console.warn('Pitch: profile prefill save exception:', e.message);
+    }
+
     return NextResponse.json({
       pitch,
       epk,

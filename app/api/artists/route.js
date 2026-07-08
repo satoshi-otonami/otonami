@@ -325,6 +325,10 @@ export async function PATCH(request) {
       'region', 'label_name', 'genres', 'moods', 'influences',
       'spotify_url', 'youtube_url', 'instagram_url',
       'twitter_url', 'facebook_url', 'website_url',
+      // Pitch-form self-intro fields, persisted so the next pitch prefills them
+      // (last-used-wins; written by /api/pitch on successful generation). These
+      // are distinct from `bio`, which stays reserved for the EPK fallback.
+      'achievements', 'description',
     ];
     const updateData = {};
     for (const key of ALLOWED) {

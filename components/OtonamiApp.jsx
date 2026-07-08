@@ -983,6 +983,13 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       // Bridge DB `moods` (array) → form `mood` (string). Without this the self-
       // reported mood never reaches effectiveTrack, capping match score (no Mood axis).
       ...(prev.mood ? {} : { mood: (loggedInArtist.moods || []).join(', ') }),
+      // Prefill the pitch self-intro fields from the saved profile (written by
+      // /api/pitch, last-used-wins) so re-pitching the same track to another
+      // curator doesn't force re-entry. Fill-when-empty only: a non-empty draft
+      // (the user's in-session edits) always wins, and an empty profile value
+      // never wipes existing draft content.
+      ...(prev.achievements ? {} : (loggedInArtist.achievements ? { achievements: loggedInArtist.achievements } : {})),
+      ...(prev.description ? {} : (loggedInArtist.description ? { description: loggedInArtist.description } : {})),
     }));
     // Auto-fill SNS links from artist profile
     setLinks(prev => ({

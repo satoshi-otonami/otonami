@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import AnimatedSection from '@/components/AnimatedSection';
 import CuratorMarquee from '@/components/landing/CuratorMarquee';
+import WhatsNew from '@/components/landing/WhatsNew';
 /* OTONAMIPromo import kept for when promo section is restored */
 // import OTONAMIPromo from '@/components/OTONAMIPromo';
 import { DT as D } from '@/lib/design-tokens';
@@ -64,6 +65,7 @@ const COPY = {
       ],
       copy: '© 2026 TYCompany LLC',
       email: 'info@otonami.io',
+      social: { x: 'OTONAMI on X', instagram: 'OTONAMI on Instagram' },
     },
   },
   ja: {
@@ -109,8 +111,15 @@ const COPY = {
       ],
       copy: '© 2026 TYCompany LLC',
       email: 'info@otonami.io',
+      social: { x: 'OTONAMI公式X', instagram: 'OTONAMI公式Instagram' },
     },
   },
+};
+
+/* Social profile URLs (verified 2026-07-13 — do not swap for lookalikes) */
+const SOCIAL = {
+  x: 'https://x.com/otonami_io',
+  instagram: 'https://www.instagram.com/otonami.io/',
 };
 
 /* ─────────────────────────────────────────
@@ -229,7 +238,7 @@ const EPK_PERK_IMG = '/epk-themes/epk-theme-editorial-dark.webp';
 /* ─────────────────────────────────────────
    Page
 ───────────────────────────────────────── */
-export default function HomeClient({ curatorMarquee }) {
+export default function HomeClient({ curatorMarquee, siteUpdates }) {
   const [lang, setLang] = useState('ja');
   const [menuOpen, setMenuOpen] = useState(false);
   const [loginMenuOpen, setLoginMenuOpen] = useState(false);
@@ -1097,6 +1106,9 @@ export default function HomeClient({ curatorMarquee }) {
 
       {/* ========== TRUST / CURATOR MARQUEE (DB-driven, data via server page props) ========== */}
       <CuratorMarquee data={curatorMarquee} lang={lang} />
+
+      {/* ========== WHAT'S NEW (site_updates, data via server page props, ISR) ========== */}
+      <WhatsNew updates={siteUpdates} lang={lang} />
 
       {/* ========== EPK PERK CARD (registration perk — relocated after 3-step) ========== */}
       <section ref={epkRef} style={{ background: '#fff', padding: '40px 24px 48px' }}>
@@ -2169,6 +2181,38 @@ export default function HomeClient({ curatorMarquee }) {
                   onMouseLeave={e => e.target.style.color = D.textMuted}
                 >{l.label}</a>
               ))}
+              <span className="footer-social" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <a
+                  href={SOCIAL.x}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t.footer.social.x}
+                  className="footer-social-link"
+                  style={{ color: D.textMuted, transition: 'color 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44 }}
+                  onMouseEnter={e => e.currentTarget.style.color = D.textSec}
+                  onMouseLeave={e => e.currentTarget.style.color = D.textMuted}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z" />
+                  </svg>
+                </a>
+                <a
+                  href={SOCIAL.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t.footer.social.instagram}
+                  className="footer-social-link"
+                  style={{ color: D.textMuted, transition: 'color 0.2s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44 }}
+                  onMouseEnter={e => e.currentTarget.style.color = D.textSec}
+                  onMouseLeave={e => e.currentTarget.style.color = D.textMuted}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37Z" />
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  </svg>
+                </a>
+              </span>
             </nav>
           </div>
           <div style={{ borderTop: `1px solid ${D.border}`, paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>

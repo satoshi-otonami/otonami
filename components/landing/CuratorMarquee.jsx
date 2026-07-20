@@ -112,7 +112,7 @@ export default function CuratorMarquee({ data, lang }) {
             <p style={{ fontSize: 16, color: '#64748b', marginBottom: 24, fontFamily: FONT }}>
               <strong style={{ color: '#c4956a', fontWeight: 700 }}>{data.count}</strong> curators
               &nbsp;・&nbsp;
-              <strong style={{ color: '#c4956a', fontWeight: 700 }}>{data.countries}</strong> countries
+              listening worldwide
               &nbsp;—&nbsp;
               {lang === 'en' ? 'Recently joined curators' : '最近参加したキュレーター'}
             </p>

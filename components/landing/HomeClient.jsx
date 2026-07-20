@@ -840,6 +840,18 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
             </div>
           ) : null}
 
+          {curatorMarquee?.count ? (
+            <p style={{
+              fontSize: 12,
+              color: 'rgba(255,255,255,0.5)',
+              letterSpacing: '0.3px',
+              marginTop: -12,
+              marginBottom: 24,
+            }}>
+              Radio · Press · Playlists · Labels &amp; more
+            </p>
+          ) : null}
+
           <h1 className="hero-h1 hero-heading" style={{ fontFamily: D.fHead, fontSize: 52, fontWeight: 500, lineHeight: 1.2, color: D.text, marginBottom: 28, letterSpacing: '-0.5px' }}>
             {t.hero.h1.map((line, i) => (
               <span key={i} className="hero-line" style={{ display: 'block', color: i === t.hero.h1Gold ? '#c4956a' : D.text }}>

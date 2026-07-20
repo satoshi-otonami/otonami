@@ -835,7 +835,7 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
                 color: '#c4956a',
                 letterSpacing: '0.5px',
               }}>
-                {curatorMarquee.count} curators · {curatorMarquee.countries} countries
+                {curatorMarquee.count} curators · listening worldwide
               </span>
             </div>
           ) : null}

@@ -365,7 +365,7 @@ export function SunsetBadge({ stats, lang }) {
             </div>
             <div>
               <div className="otonami-stat-num">{s.countries}</div>
-              <div className="otonami-stat-label">{t('Countries', '国数')}</div>
+              <div className="otonami-stat-label">{t('Curator bases', '拠点国')}</div>
             </div>
           </div>
         )}

@@ -40,7 +40,7 @@ export default function OtonamiBadgeSection({ stats, lang = 'en' }) {
               <div className="otonami-stat-num">
                 <em>{s.countries}</em>
               </div>
-              <div className="otonami-stat-label">{t('Countries', '国数')}</div>
+              <div className="otonami-stat-label">{t('Curator bases', '拠点国')}</div>
             </div>
           </div>
         )}

@@ -569,6 +569,17 @@ export default function CuratorsPage() {
           .filter-bar select, .filter-bar input { width: 100% !important; }
           .curator-grid { grid-template-columns: 1fr !important; }
         }
+        .hero-break { display: none; }
+        @media (max-width: 640px) {
+          .page-content { padding-top: 28px !important; }
+          .hero-block { margin-bottom: 24px !important; }
+          .hero-sep { display: none; }
+          .hero-break { display: block; }
+          .hero-lead { font-size: 15px !important; }
+          .stats-bar { gap: 8px !important; margin-bottom: 20px !important; }
+          .stat-pill { padding: 6px 12px !important; font-size: 12px !important; }
+          .stat-pill span:first-child { font-size: 14px !important; }
+        }
         input:focus, select:focus { border-color: ${T.accent} !important; outline: none; }
       `}</style>
 
@@ -615,18 +626,18 @@ export default function CuratorsPage() {
       </header>
 
       {/* ── Page Content ── */}
-      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '48px 24px 160px' }}>
+      <div className="page-content" style={{ maxWidth: 1040, margin: '0 auto', padding: '48px 24px 160px' }}>
 
         {/* ── Page Title ── */}
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+        <div className="hero-block" style={{ textAlign: 'center', marginBottom: 48 }}>
           <h1 style={{
-            fontFamily: T.fontDisplay, fontSize: 38, fontWeight: 700,
+            fontFamily: T.fontDisplay, fontSize: 'clamp(1.5rem, 6vw, 2.375rem)', fontWeight: 700,
             color: T.text, letterSpacing: -0.5, marginBottom: 12,
             lineHeight: 1.2,
           }}>
-            キュレーター一覧 / Curator Network
+            キュレーター一覧<span className="hero-sep"> / </span><br className="hero-break" />Curator Network
           </h1>
-          <p style={{ fontSize: 16, color: T.textSub, fontFamily: T.font, maxWidth: 560, margin: '0 auto', lineHeight: 1.7 }}>
+          <p className="hero-lead" style={{ fontSize: 16, color: T.textSub, fontFamily: T.font, maxWidth: 560, margin: '0 auto', lineHeight: 1.7 }}>
             {lang === 'ja'
               ? '世界中のプレイリストキュレーター・音楽メディアを探して、あなたの音楽を届けよう。'
               : 'Discover playlist curators and music media outlets worldwide. Select curators and start your campaign.'}
@@ -634,7 +645,7 @@ export default function CuratorsPage() {
         </div>
 
         {/* ── Stats hint bar ── */}
-        <div style={{
+        <div className="stats-bar" style={{
           display: 'flex', gap: 24, alignItems: 'center', justifyContent: 'center',
           marginBottom: 36, flexWrap: 'wrap',
         }}>
@@ -642,9 +653,9 @@ export default function CuratorsPage() {
             { icon: '○', label: lang === 'ja' ? '世界各国のキュレーター' : 'Curators from around the world' },
             { icon: '♫', label: lang === 'ja' ? 'Spotifyプレイリスト収録' : 'Spotify playlists included' },
             { icon: '•', label: lang === 'ja' ? 'メディア・ブログ多数'   : 'Media & blogs coverage'  },
-            { icon: '✓', label: lang === 'ja' ? '招待制で参加' : 'Invitation-based participation' },
+            { icon: '✓', label: lang === 'ja' ? 'キュレーター登録無料' : 'Free to join for curators' },
           ].map((stat, i) => (
-            <div key={i} style={{
+            <div key={i} className="stat-pill" style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '8px 16px', background: T.white,
               border: `1px solid ${T.border}`, borderRadius: T.radiusLg,

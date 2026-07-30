@@ -543,6 +543,21 @@ export default function CuratorsPage() {
     router.push(loggedIn ? studioUrl : `/artist/login?next=${encodeURIComponent(studioUrl)}`);
   }, [router, selected]);
 
+  /* ── Hero stat pills — curator count reuses the same `curators` array
+     (post curator-visibility filtering) that backs the filter bar's count,
+     so the two numbers can never diverge at page load. ── */
+  const hasCuratorsCount = !loadingCurators && curators.length > 0;
+  const STATS = [
+    {
+      icon: '○',
+      ja: hasCuratorsCount ? `世界のキュレーター${curators.length}組` : '世界のキュレーター',
+      en: hasCuratorsCount ? `${curators.length} curators worldwide` : 'Curators worldwide',
+    },
+    { icon: '♫', ja: 'プレイリスト・ラジオ', en: 'Playlists & radio' },
+    { icon: '•', ja: 'メディア・ブログ', en: 'Media & blogs' },
+    { icon: '✓', ja: 'レーベル・シンクライセンス', jaMobile: 'レーベル・シンク', en: 'Labels & sync' },
+  ];
+
   /* ════════════════════════════════════════════════
      RENDER
   ════════════════════════════════════════════════ */
@@ -569,16 +584,33 @@ export default function CuratorsPage() {
           .filter-bar select, .filter-bar input { width: 100% !important; }
           .curator-grid { grid-template-columns: 1fr !important; }
         }
-        .hero-break { display: none; }
+        .lang-short, .cta-short, .pill-label-mobile { display: none; }
         @media (max-width: 640px) {
+          .site-header { padding: 0 14px !important; }
+          .header-right { gap: 8px !important; }
+          .lang-btn { padding: 6px 10px !important; font-size: 12px !important; }
+          .lang-full { display: none; }
+          .lang-short { display: inline; }
+          .join-cta { padding: 8px 12px !important; font-size: 12px !important; }
+          .cta-full { display: none; }
+          .cta-short { display: inline; }
+
           .page-content { padding-top: 28px !important; }
           .hero-block { margin-bottom: 24px !important; }
+          .hero-title { display: flex !important; flex-direction: column !important; gap: 4px !important; }
           .hero-sep { display: none; }
-          .hero-break { display: block; }
+          .hero-jp, .hero-en { font-size: inherit; }
+          .lang-jp-primary .hero-jp { order: 1; }
+          .lang-jp-primary .hero-en { order: 2; font-size: 0.58em; font-weight: 600; color: ${T.textSub}; }
+          .lang-en-primary .hero-en { order: 1; }
+          .lang-en-primary .hero-jp { order: 2; font-size: 0.58em; font-weight: 600; color: ${T.textSub}; }
           .hero-lead { font-size: 15px !important; }
-          .stats-bar { gap: 8px !important; margin-bottom: 20px !important; }
-          .stat-pill { padding: 6px 12px !important; font-size: 12px !important; }
+
+          .stats-bar { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; margin-bottom: 20px !important; }
+          .stat-pill { justify-content: center !important; padding: 6px 10px !important; font-size: 12px !important; }
           .stat-pill span:first-child { font-size: 14px !important; }
+          .pill-label-full { display: none; }
+          .pill-label-mobile { display: inline; }
         }
         input:focus, select:focus { border-color: ${T.accent} !important; outline: none; }
       `}</style>
@@ -596,7 +628,7 @@ export default function CuratorsPage() {
       )}
 
       {/* ── Site Header ── */}
-      <header style={{
+      <header className="site-header" style={{
         position: 'sticky', top: 0, zIndex: 100,
         background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)',
         borderBottom: `1px solid ${T.border}`,
@@ -609,18 +641,21 @@ export default function CuratorsPage() {
             <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '3px', color: '#1a1a1a' }}>OTONAMI</span>
           </a>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', border: `1px solid ${T.border}` }}>
+        <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="lang-toggle" style={{ display: 'flex', alignItems: 'stretch', height: 36, borderRadius: 8, overflow: 'hidden', border: `1px solid ${T.border}` }}>
             {['EN','JP'].map(l => (
-              <button key={l} onClick={() => { const v = l==='JP'?'ja':'en'; setLang(v); try{localStorage.setItem('otonami_locale',v);}catch{} }} style={{
-                padding: '6px 12px', fontSize: 12, fontWeight: 600, fontFamily: T.font, border: 'none', cursor: 'pointer',
+              <button key={l} className="lang-btn" onClick={() => { const v = l==='JP'?'ja':'en'; setLang(v); try{localStorage.setItem('otonami_locale',v);}catch{} }} style={{
+                padding: '6px 12px', fontSize: 12, fontWeight: 600, fontFamily: T.font, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
                 background: (l==='JP'?lang==='ja':lang==='en') ? T.text : 'transparent',
                 color:      (l==='JP'?lang==='ja':lang==='en') ? '#fff' : T.textSub,
-              }}>{l==='JP'?'日本語':l}</button>
+              }}>
+                {l === 'JP' ? (<><span className="lang-full">日本語</span><span className="lang-short">JA</span></>) : 'EN'}
+              </button>
             ))}
           </div>
-          <a href="/curator" style={{ padding: '8px 16px', fontSize: 13, fontWeight: 600, background: T.accent, color: '#fff', borderRadius: T.radius, textDecoration: 'none', fontFamily: T.font }}>
-            {lang==='ja'?'キュレーター登録':'Join as Curator'}
+          <a href="/curator" className="join-cta" style={{ padding: '8px 16px', fontSize: 13, fontWeight: 600, background: T.accent, color: '#fff', borderRadius: T.radius, textDecoration: 'none', fontFamily: T.font, whiteSpace: 'nowrap' }}>
+            <span className="cta-full">{lang==='ja'?'キュレーター登録':'Join as Curator'}</span>
+            <span className="cta-short">{lang==='ja'?'登録':'Join'}</span>
           </a>
         </div>
       </header>
@@ -630,17 +665,17 @@ export default function CuratorsPage() {
 
         {/* ── Page Title ── */}
         <div className="hero-block" style={{ textAlign: 'center', marginBottom: 48 }}>
-          <h1 style={{
+          <h1 className={`hero-title ${lang === 'ja' ? 'lang-jp-primary' : 'lang-en-primary'}`} style={{
             fontFamily: T.fontDisplay, fontSize: 'clamp(1.5rem, 6vw, 2.375rem)', fontWeight: 700,
             color: T.text, letterSpacing: -0.5, marginBottom: 12,
             lineHeight: 1.2,
           }}>
-            キュレーター一覧<span className="hero-sep"> / </span><br className="hero-break" />Curator Network
+            <span className="hero-jp">キュレーター一覧</span><span className="hero-sep"> / </span><span className="hero-en">Curator Network</span>
           </h1>
           <p className="hero-lead" style={{ fontSize: 16, color: T.textSub, fontFamily: T.font, maxWidth: 560, margin: '0 auto', lineHeight: 1.7 }}>
             {lang === 'ja'
-              ? '世界中のプレイリストキュレーター・音楽メディアを探して、あなたの音楽を届けよう。'
-              : 'Discover playlist curators and music media outlets worldwide. Select curators and start your campaign.'}
+              ? '世界のキュレーターを探して、ピッチキャンペーンを始めよう。'
+              : 'Discover curators worldwide. Select yours and start your campaign.'}
           </p>
         </div>
 
@@ -649,12 +684,7 @@ export default function CuratorsPage() {
           display: 'flex', gap: 24, alignItems: 'center', justifyContent: 'center',
           marginBottom: 36, flexWrap: 'wrap',
         }}>
-          {[
-            { icon: '○', label: lang === 'ja' ? '世界各国のキュレーター' : 'Curators from around the world' },
-            { icon: '♫', label: lang === 'ja' ? 'Spotifyプレイリスト収録' : 'Spotify playlists included' },
-            { icon: '•', label: lang === 'ja' ? 'メディア・ブログ多数'   : 'Media & blogs coverage'  },
-            { icon: '✓', label: lang === 'ja' ? 'キュレーター登録無料' : 'Free to join for curators' },
-          ].map((stat, i) => (
+          {STATS.map((stat, i) => (
             <div key={i} className="stat-pill" style={{
               display: 'flex', alignItems: 'center', gap: 8,
               padding: '8px 16px', background: T.white,
@@ -663,7 +693,14 @@ export default function CuratorsPage() {
               boxShadow: T.shadow,
             }}>
               <span style={{ fontSize: 16 }}>{stat.icon}</span>
-              {stat.label}
+              {stat.jaMobile ? (
+                <>
+                  <span className="pill-label-full">{lang === 'ja' ? stat.ja : stat.en}</span>
+                  <span className="pill-label-mobile">{lang === 'ja' ? stat.jaMobile : stat.en}</span>
+                </>
+              ) : (
+                <span>{lang === 'ja' ? stat.ja : stat.en}</span>
+              )}
             </div>
           ))}
         </div>

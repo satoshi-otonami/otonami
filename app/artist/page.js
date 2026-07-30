@@ -318,28 +318,6 @@ export default function ArtistRegistrationPage() {
           {/* ── STEP 1: Basic Info ── */}
           {step === 1 && (
             <>
-              {/* Founding Artist 限定枠は満枠につき受付終了。通常登録は受付中。 */}
-              <div style={{
-                marginBottom: 24,
-                padding: '20px 18px',
-                borderRadius: 14,
-                border: `1.5px solid ${THEME.gold}`,
-                background: 'linear-gradient(135deg, rgba(196,149,106,0.10) 0%, rgba(196,149,106,0.03) 100%)',
-              }}>
-                <div style={{
-                  color: THEME.goldDark,
-                  fontSize: 11,
-                  letterSpacing: '0.18em',
-                  fontWeight: 700,
-                  fontFamily: THEME.font,
-                  marginBottom: 10,
-                }}>
-                  ◆ FOUNDING ARTIST 限定枠 — 受付終了
-                </div>
-                <p style={{ fontSize: 14, lineHeight: 1.7, color: THEME.text, fontFamily: THEME.font, margin: 0 }}>
-                  Founding Artist 枠（20組限定）は受付を終了しました。ご参加ありがとうございました。現在は通常登録を受付中です。このまま登録を進めてください。
-                </p>
-              </div>
               <h2 style={{ fontFamily: THEME.fontDisplay, fontSize: 28, fontWeight: 700, color: THEME.text, margin: '0 0 6px' }}>アーティスト登録</h2>
               <p style={{ color: THEME.textSub, fontSize: 15, margin: '0 0 28px', fontFamily: THEME.font }}>あなたの音楽を世界に届けましょう</p>
 

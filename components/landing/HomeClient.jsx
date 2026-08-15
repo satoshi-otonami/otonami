@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import AnimatedSection from '@/components/AnimatedSection';
 import CuratorMarquee from '@/components/landing/CuratorMarquee';
 import WhatsNew from '@/components/landing/WhatsNew';
+import SavannahBanner from '@/components/SavannahBanner';
 /* OTONAMIPromo import kept for when promo section is restored */
 // import OTONAMIPromo from '@/components/OTONAMIPromo';
 import { DT as D } from '@/lib/design-tokens';
@@ -796,6 +797,9 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
             }}>☰</button>
           </div>
         </div>
+
+        {/* 期間限定の公募バー（締切後は SavannahBanner 側で自動的に消える） */}
+        <SavannahBanner lang={lang} />
       </header>
 
       {/* ========== SECTION 2: HERO ========== */}

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import SavannahBanner from '@/components/SavannahBanner';
 
 const THEME = {
   bg: '#f8f7f4',
@@ -278,6 +279,9 @@ export default function ArtistRegistrationPage() {
     <div style={{ minHeight: '100vh', background: THEME.bg, fontFamily: THEME.font }}>
       <style>{globalStyles}</style>
       {renderHeader()}
+
+      {/* 期間限定の公募バー（締切後は SavannahBanner 側で自動的に消える） */}
+      <SavannahBanner lang="ja" />
 
       {/* Progress bar */}
       <div style={{ maxWidth: 520, margin: '32px auto 0', padding: '0 20px' }}>

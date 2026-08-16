@@ -7,7 +7,8 @@
  */
 const DEADLINE = Date.parse('2026-10-15T23:59:59+09:00');
 
-const FORM_URL = 'https://forms.gle/VS7D1bcoAbZ4vAb36';
+/* 応募フォームには直リンクせず、募集要項をまとめた中継ページ /savannah を経由させる。 */
+const DETAIL_URL = '/savannah';
 
 const COPY = {
   ja: {
@@ -31,17 +32,14 @@ export default function SavannahBanner({ lang = 'ja' }) {
     <div className="sv-banner" role="region" aria-label={t.label}>
       <div className="sv-banner__inner">
         <span className="sv-banner__text">{t.text}</span>
-        <a
-          className="sv-banner__cta"
-          href={FORM_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a className="sv-banner__cta" href={DETAIL_URL}>
           {t.cta}
         </a>
       </div>
 
-      <style>{`
+      {/* CSS 内のクォートが SSR で &#x27; にエスケープされ hydration mismatch になるため、
+          dangerouslySetInnerHTML で流し込む（LegalPageLayout / SavannahPageClient と同じ方式）。 */}
+      <style dangerouslySetInnerHTML={{ __html: `
         .sv-banner {
           background: #FBF3E7;
           border-bottom: 1px solid rgba(196, 149, 106, 0.38);
@@ -78,7 +76,7 @@ export default function SavannahBanner({ lang = 'ja' }) {
           .sv-banner__text { font-size: 12px; line-height: 1.45; }
           .sv-banner__cta { font-size: 12px; line-height: 1.45; margin-left: 8px; }
         }
-      `}</style>
+      ` }} />
     </div>
   );
 }

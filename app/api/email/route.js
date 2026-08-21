@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { escapeHtml } from '@/lib/html-escape';
+import { buildPersonalLine } from '@/lib/pitch-personalization';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM = process.env.EMAIL_FROM || 'info@otonami.io';
@@ -33,6 +34,7 @@ export function pitchEmailHtml({
   foundingNumber,
   curatorName,
   pitchBody,
+  personalLine,
   artistBio,
   artistSocials,
   artistEmail,
@@ -42,6 +44,9 @@ export function pitchEmailHtml({
   const safeArtistName = escapeHtml(artistName);
   const safeTrackTitle = escapeHtml(trackTitle);
   const safeCuratorName = escapeHtml(curatorName);
+  // Per-curator opener (see lib/pitch-personalization). Empty string is the
+  // normal "we have nothing accurate to say" case — render no paragraph at all.
+  const safePersonalLine = escapeHtml(personalLine);
   const safeArtistBio = escapeHtml(artistBio);
   const safeArtistEmail = escapeHtml(artistEmail);
 
@@ -122,6 +127,7 @@ ${ctaButton}
           <td style="padding: 28px;">
             <p style="font-size: 11px; letter-spacing: 0.12em; color: #6b665d; margin: 0 0 14px; text-transform: uppercase;">The pitch</p>
             <p style="font-size: 15px; color: #1a1612; line-height: 1.7; margin: 0 0 12px;">Hi ${safeCuratorName || 'there'},</p>
+            ${safePersonalLine ? `<p style="font-size: 15px; color: #1a1612; line-height: 1.7; margin: 0 0 12px;">${safePersonalLine}</p>` : ''}
             <div style="font-size: 15px; color: #1a1612; line-height: 1.7;">
               ${bodyParagraphs}
             </div>
@@ -221,18 +227,38 @@ export async function POST(request) {
 
         // Track title from pitches.subject — distinct from the AI-generated
         // email Subject line. Falls back to null (template hides the row).
+        //
+        // The same row also carries what the per-curator opener needs:
+        // curator_id (to resolve the recipient's type/genres) and artist_genre
+        // (the track's genres, stored as a comma-separated string). Widened
+        // rather than queried separately so this stays one round trip.
         let trackTitle = null;
+        let personalLine = '';
         if (pitchId) {
           try {
             const db = getServiceSupabase();
             const { data: pitchRow } = await db
               .from('pitches')
-              .select('subject')
+              .select('subject, curator_id, artist_genre')
               .eq('id', pitchId)
               .maybeSingle();
             trackTitle = pitchRow?.subject?.trim() || null;
+
+            if (pitchRow?.curator_id) {
+              const { data: curatorRow } = await db
+                .from('curators')
+                .select('type, genres, accepts')
+                .eq('id', pitchRow.curator_id)
+                .maybeSingle();
+              // match_reasons is passed as null on purpose: the column exists on
+              // pitches but is NULL on every row in production — nothing writes
+              // it — so there is no stored reasoning to draw on.
+              personalLine = buildPersonalLine(curatorRow, null, pitchRow.artist_genre);
+            }
           } catch (e) {
-            console.warn('Pitch subject lookup failed (non-fatal):', e?.message);
+            // Non-fatal by design: a failed lookup costs the opener, never the
+            // pitch. personalLine stays '' and the paragraph is simply omitted.
+            console.warn('Pitch/curator lookup failed (non-fatal):', e?.message);
           }
         }
 
@@ -271,6 +297,7 @@ export async function POST(request) {
           foundingNumber,
           curatorName,
           pitchBody: cleanBody,
+          personalLine,
           artistBio,
           artistSocials,
           artistEmail,

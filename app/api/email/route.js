@@ -270,10 +270,15 @@ export async function POST(request) {
 
         // Strip the "Subject: ..." prefix and any leading "Hi [Curator Name],"
         // line — the template renders its own greeting from curatorName.
+        // 2026/8/22: widened from "Hi" only to the other salutations the model
+        // actually emits. A body opening "Hey Pierre," slipped through and the
+        // email rendered two greetings — now with the personalization line
+        // wedged between them. Still anchored to the first line and still
+        // requires a short comma-terminated clause, so ordinary prose is safe.
         const rawBody = (pitchText || '')
           .replace(/^Subject:[^\n]*\n*/m, '')
-          .replace(/^\s*Hi\s+\[?Curator Name\]?[^\n]*\n+/i, '')
-          .replace(/^\s*Hi\s+[^,\n]+,\s*\n+/i, '')
+          .replace(/^\s*(?:Hi|Hey|Hello|Dear)\s+\[?Curator Name\]?[^\n]*\n+/i, '')
+          .replace(/^\s*(?:Hi|Hey|Hello|Dear)\s+[^,\n]{1,60},\s*\n+/i, '')
           .trimStart();
         const cleanBody = stripUrlsFromPitchBody(rawBody);
 

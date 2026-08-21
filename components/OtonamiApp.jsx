@@ -853,6 +853,52 @@ function loadArtistDraft() {
   } catch { return null; }
 }
 
+// ── Pitch wizard progress (survives a page reload) ──
+// The artist/links/followers slices are persisted above; this key covers the rest
+// of the wizard — which step you are on, who you picked, and any pitch text
+// already generated — so reloading mid-flow no longer drops the user back on
+// step 0 with an empty selection.
+// sessionStorage on purpose: it survives a reload but dies with the tab, so a
+// days-old draft can never resurrect the way a localStorage one would.
+// Keyed per artist id so switching accounts can't restore someone else's draft.
+// Server-derived data (curator list, credit balance, track analysis) is never
+// stored here — that is always re-fetched.
+const PITCH_WIZARD_KEY = "otonami_pitch_wizard_v1";
+const pitchWizardKey = (artistId) => `${PITCH_WIZARD_KEY}_${artistId}`;
+
+function loadPitchWizard(artistId) {
+  if (!artistId) return null;
+  try {
+    const raw = sessionStorage.getItem(pitchWizardKey(artistId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return isValidObject(parsed) ? parsed : null;
+  } catch { return null; } // corrupted payload → start fresh, silently
+}
+
+// Merge-write. PitchCreator owns most of the wizard state but `selected` lives in
+// ArtistApp (it is shared with CuratorBrowser), so two effects write this one key;
+// each re-reads before writing so neither clobbers the other's slice.
+function savePitchWizard(artistId, patch) {
+  if (!artistId) return;
+  try {
+    const curr = loadPitchWizard(artistId) || {};
+    sessionStorage.setItem(pitchWizardKey(artistId), JSON.stringify({ ...curr, ...patch, savedAt: new Date().toISOString() }));
+  } catch {}
+}
+
+function clearPitchWizard(artistId) {
+  if (!artistId) return;
+  try { sessionStorage.removeItem(pitchWizardKey(artistId)); } catch {}
+}
+
+// Restored values are only trusted when they match the shape the state expects —
+// a corrupted payload must never put a non-string into a controlled <textarea>.
+const restoredStr  = (v) => (typeof v === 'string' ? v : "");
+const restoredStep = (v) => (Number.isInteger(v) && v >= 0 && v <= 3 ? v : 0);
+// Mirrors the ピッチスタイル buttons in step 1 — keep in sync if a style is added.
+const PITCH_STYLES = ["professional", "casual", "storytelling"];
+
 function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, setCredits, notify, updatePitch, refreshPitches, loggedInArtist}) {
   // Tracks the live querystring so readUrlParams re-fires whenever the
   // dashboard hands off a new track. Plain `<a>` clicks usually do a full
@@ -860,7 +906,12 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
   // mounted ArtistApp with a new URL — without this we kept rendering the
   // previously analyzed track.
   const searchParams = useSearchParams();
-  const [selected, setSelected] = useState([]);
+  const artistId = user?.id || null;
+  // Wizard slice restored once, at mount, before any state is initialized.
+  const _wizard = useMemo(() => loadPitchWizard(artistId), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [selected, setSelected] = useState(() =>
+    Array.isArray(_wizard?.selectedCuratorIds) ? _wizard.selectedCuratorIds.filter(Boolean) : []
+  );
   const [trackData, setTrackData] = useState(null);
 
   // ── Persistent artist form state (survives page navigation) ──
@@ -879,6 +930,26 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
   useEffect(() => {
     try { sessionStorage.setItem("otonami_artist_draft", JSON.stringify({artist, links, followers})); } catch {}
   }, [artist, links, followers]);
+
+  // Persist the curator selection alongside the rest of the wizard progress.
+  useEffect(() => {
+    savePitchWizard(artistId, { selectedCuratorIds: selected });
+  }, [artistId, selected]);
+
+  // Reconcile a restored selection against the live curator list exactly once,
+  // as soon as it loads: ids that no longer exist (unpublished, filtered out)
+  // are dropped silently so the wizard can't carry a phantom recipient into the
+  // credit cost or the send loop.
+  const reconciledSelectionRef = useRef(false);
+  useEffect(() => {
+    if (reconciledSelectionRef.current) return;
+    if (!curators || curators.length === 0) return; // list still loading
+    reconciledSelectionRef.current = true;
+    setSelected(prev => {
+      const valid = prev.filter(id => curators.some(c => c.id === id));
+      return valid.length === prev.length ? prev : valid;
+    });
+  }, [curators]);
 
   // ── Auto-fill from URL params (dashboard → studio handoff) ──
   const [pendingCuratorId, setPendingCuratorId] = useState(null);
@@ -2250,17 +2321,23 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 
 // ─── Pitch Creator (Template Engine + Social Links + Followers) ───
 function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, setCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft, refreshPitches, linkedTrackId, linkedTrackAiStatus}) {
-  const [pitchText, setPitchText] = useState("");
-  const [pitchJa, setPitchJa] = useState("");
-  const [pitchTab, setPitchTab] = useState("ja"); // "en" | "ja"
+  // Wizard progress restored from sessionStorage (see loadPitchWizard). Read once
+  // at mount so a reload — or a hop over to the curators tab and back — resumes
+  // where the user left off instead of resetting to step 0.
+  const _wizard = useMemo(() => loadPitchWizard(user?.id), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const [pitchText, setPitchText] = useState(() => restoredStr(_wizard?.pitchText));
+  const [pitchJa, setPitchJa] = useState(() => restoredStr(_wizard?.pitchJa));
+  const [pitchTab, setPitchTab] = useState(() => (_wizard?.pitchTab === "en" ? "en" : "ja")); // "en" | "ja"
   const [translating, setTranslating] = useState(false);
-  const [epk, setEpk] = useState("");
-  const [step, setStep] = useState(0);
+  const [epk, setEpk] = useState(() => restoredStr(_wizard?.epk));
+  const [step, setStep] = useState(() => restoredStep(_wizard?.step));
   const [savedArtists, setSavedArtists] = useState([]);
   const [showSaved, setShowSaved] = useState(false);
   const [showSamples, setShowSamples] = useState(false);
   const [showLinks, setShowLinks] = useState(true);
-  const [pitchStyle, setPitchStyle] = useState("professional");
+  const [pitchStyle, setPitchStyle] = useState(() =>
+    PITCH_STYLES.includes(_wizard?.pitchStyle) ? _wizard.pitchStyle : "professional"
+  );
   const [quickUrl, setQuickUrl] = useState("");
   const [validationError, setValidationError] = useState(false);
   const [pitchSent, setPitchSent] = useState(false);
@@ -2419,8 +2496,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const [trackAnalysisStatus, setTrackAnalysisStatus] = useState(trackData?.audioFeatures ? 'done' : 'idle'); // 'idle'|'loading'|'done'|'error'
   const analyzeInFlightRef = useRef(false);
   // Separate title for the specific track being pitched (vs artist.songTitle = 代表曲)
-  const [pitchSongTitle, setPitchSongTitle] = useState('');
-  const [pitchSongTitleAuto, setPitchSongTitleAuto] = useState(false);
+  const [pitchSongTitle, setPitchSongTitle] = useState(() => restoredStr(_wizard?.pitchSongTitle));
+  // Restored together with the title: the oEmbed effect below only overwrites an
+  // auto-filled title, so losing this flag would let it clobber a manual edit.
+  const [pitchSongTitleAuto, setPitchSongTitleAuto] = useState(() => _wizard?.pitchSongTitleAuto === true);
   const [customGenre, setCustomGenre] = useState("");
   const parseGenreTags = (str) => (str||'').split(',').map(s=>s.trim()).filter(Boolean);
   const toggleGenreTag = (tag) => {
@@ -2531,6 +2610,30 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       setPitchSongTitleAuto(true);
     }
   }, [trackData?.songName]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Persist wizard progress on every change (restored by the initializers above) ──
+  // `selected` is written into the same key by ArtistApp; savePitchWizard merges.
+  useEffect(() => {
+    savePitchWizard(user?.id, { step, pitchText, pitchJa, pitchTab, epk, pitchStyle, pitchSongTitle, pitchSongTitleAuto });
+  }, [user?.id, step, pitchText, pitchJa, pitchTab, epk, pitchStyle, pitchSongTitle, pitchSongTitleAuto]);
+
+  // A restored step past the first one only makes sense while recipients remain.
+  // If reconciliation against the live curator list emptied the selection, fall
+  // back to step 0 (which renders the "pick a curator" screen) rather than
+  // stranding the user on a review/send screen addressed to nobody.
+  useEffect(() => {
+    if (!curators || curators.length === 0) return; // list still loading
+    if (targets.length === 0 && step > 0) setStep(0);
+  }, [curators, targets.length, step]);
+
+  // Time box for the "waiting on the curator list" state used before the render
+  // below — a curator fetch that fails or returns [] must not spin forever.
+  const [curatorFetchTimedOut, setCuratorFetchTimedOut] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setCuratorFetchTimedOut(true), 6000);
+    return () => clearTimeout(t);
+  }, []);
+  const awaitingCurators = selected.length > 0 && curators.length === 0 && !curatorFetchTimedOut;
 
   // ── Auto-fetch followers from API ──
   // Spotify is intentionally excluded: their Client Credentials API no longer
@@ -2844,6 +2947,10 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     const skipNote = skippedCount > 0
       ? `（同一連絡先のキュレーターには既にこのトラックをピッチ済みのため、${skippedCount}件をスキップしました（クレジット消費なし）。/ ${skippedCount} pitch(es) skipped: the same curator contact was already pitched for this track. No credits were used.）`
       : "";
+    // The flow is over the moment anything was saved or deliberately skipped —
+    // drop the persisted wizard so re-opening pitch creation starts clean rather
+    // than restoring a sent draft. (In-memory state stays put for the success screen.)
+    if (savedCount > 0 || skippedCount > 0) clearPitchWizard(user?.id);
     if (savedCount > 0) {
       setPitchSent(true);
       notify("✓ " + emailsSent + "件送信完了" + skipNote);
@@ -2865,8 +2972,16 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     }
   };
 
-  const resetForm = () => { setSelected([]); setStep(0); setPitchText(""); setPitchJa(""); setEpk(""); setPitchSent(false); };
+  const resetForm = () => { clearPitchWizard(user?.id); setSelected([]); setStep(0); setPitchText(""); setPitchJa(""); setEpk(""); setPitchSent(false); };
   const useSample = (s) => { setArtist({name:s.name,nameEn:s.nameEn,genre:s.genre,mood:s.mood,description:s.description,songTitle:s.songTitle,songLink:s.songLink,influences:s.influences,achievements:s.achievements,sns:""}); setLinks({spotify:s.songLink||"",apple:"",youtube:"",soundcloud:"",instagram:"",twitter:"",facebook:"",website:""}); setFollowers({spotify:0,youtube:0,soundcloud:0,instagram:0,twitter:0,facebook:0}); };
+
+  // A restored selection outruns the curator fetch on reload. Until the list
+  // arrives, show a neutral loading state — otherwise the screen below flashes
+  // "pick a curator" at someone who already picked, or the wizard renders
+  // 送信先 (0人). Time-boxed so a failed curator fetch can't strand the user here.
+  if (awaitingCurators) {
+    return <div style={{textAlign:"center",padding:"3rem 1rem",color:"#9a958e",fontSize:14,fontFamily:"'DM Sans',sans-serif"}}>読み込み中...</div>;
+  }
 
   if (targets.length === 0 && step === 0) {
     return <div style={{textAlign:"center",padding:"3rem 1rem"}}><div style={{fontSize:"2.5rem",marginBottom:"1rem"}}>◎</div><h2 style={{fontWeight:700}}>キュレーターを選択してください</h2><p style={{color:"#9a958e",marginBottom:"1.5rem"}}>まずキュレーター検索で送信先を選んでください</p><button style={css.btnPrimary} onClick={()=>setPage("curators")}>キュレーターを探す</button></div>;

@@ -899,6 +899,65 @@ const restoredStep = (v) => (Number.isInteger(v) && v >= 0 && v <= 3 ? v : 0);
 // Mirrors the ピッチスタイル buttons in step 1 — keep in sync if a style is added.
 const PITCH_STYLES = ["professional", "casual", "storytelling"];
 
+// The listening URL a pitch is keyed on. Single definition so the "already
+// pitched" check in the curator list and the song_link actually sent by
+// PitchCreator can never disagree about which track we mean.
+const resolveSongLink = (artist, links) =>
+  artist?.songLink || links?.spotify || links?.youtube || links?.apple || links?.soundcloud || "";
+
+// A prior pitch only blocks re-pitching while it is still live. 'declined' and
+// 'expired' are deliberately absent: re-pitching after a decision or a lapsed
+// deadline is a legitimate use. Mirrors the status filter in POST /api/pitches.
+const ACTIVE_PITCH_STATUSES = ['sent', 'accepted', 'feedback'];
+
+// Curator ids that already hold an active pitch for this track from this artist.
+//
+// This MUST mirror the same-contact duplicate guard in POST /api/pitches
+// (song_link + active status + artist identity, matched across every curator
+// profile sharing the target's contact email). If the two drift, the UI either
+// hides a curator the server would happily accept, or offers one the server
+// will silently skip. The server remains the authority — this only stops the
+// artist from spending the click.
+function buildPitchedCuratorIds({ curators, pitches, songLink, artistEmail, artistName }) {
+  const blocked = new Set();
+  // No link to key on → the server skips its dedup too, so we must not block.
+  if (!songLink) return blocked;
+
+  const activePitchedIds = new Set(
+    (pitches || [])
+      .filter(p =>
+        p.songLink === songLink &&
+        ACTIVE_PITCH_STATUSES.includes(p.status) &&
+        // Same artist condition as the server: email when we have one, else name.
+        (artistEmail ? p.artistEmail === artistEmail : p.artistName === artistName)
+      )
+      .map(p => p.curatorId)
+      .filter(Boolean)
+  );
+  if (!activePitchedIds.size) return blocked;
+
+  for (const c of curators || []) {
+    if (activePitchedIds.has(c.id)) { blocked.add(c.id); continue; }
+    // One person may hold several curator profiles under one email; the server
+    // resolves the target's email and dedups across all of them.
+    const email = c.email?.trim();
+    if (!email) continue;
+    const siblingPitched = (curators || []).some(
+      sib => sib.id !== c.id && sib.email === email && activePitchedIds.has(sib.id)
+    );
+    if (siblingPitched) blocked.add(c.id);
+  }
+  return blocked;
+}
+
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Pacing for a bulk pitch send.
+const SEND_STAGGER_MS = 150;   // between /api/pitches calls
+const EMAIL_STAGGER_MS = 600;  // between /api/email calls — Resend allows ~2/sec
+const MAX_RATE_LIMIT_RETRIES = 2;
+const MAX_RATE_LIMIT_WAIT_SEC = 60;
+
 function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, setCredits, notify, updatePitch, refreshPitches, loggedInArtist}) {
   // Tracks the live querystring so readUrlParams re-fires whenever the
   // dashboard hands off a new track. Plain `<a>` clicks usually do a full
@@ -1074,6 +1133,17 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     }));
   }, [loggedInArtist]); // eslint-disable-line
 
+  // Curators that already hold a live pitch for the track currently in the form.
+  // Recomputed whenever the pitch list or the song link changes, so a curator
+  // flips to 送信済み the moment their pitch lands — no refetch needed.
+  const pitchedCuratorIds = useMemo(() => buildPitchedCuratorIds({
+    curators,
+    pitches,
+    songLink: resolveSongLink(artist, links),
+    artistEmail: user?.email || null,
+    artistName: artist?.name || '',
+  }), [curators, pitches, artist, links, user]);
+
   const clearArtistDraft = () => {
     setArtist(EMPTY_ARTIST); setLinks(EMPTY_LINKS); setFollowers(EMPTY_FOLLOWERS);
     // Also clear analyzed-track state. The PitchCreator mount-once effect
@@ -1226,8 +1296,8 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     )}
     <main style={css.main}>
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify} loggedInArtist={loggedInArtist}/>}
-      {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist}/>}
-      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitches={pitches} savePitches={savePitches} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches} linkedTrackId={linkedTrackId} linkedTrackAiStatus={linkedTrackAiStatus}/>}
+      {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist} pitchedCuratorIds={pitchedCuratorIds}/>}
+      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitchedCuratorIds={pitchedCuratorIds} pitches={pitches} savePitches={savePitches} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches} linkedTrackId={linkedTrackId} linkedTrackAiStatus={linkedTrackAiStatus}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches} refreshPitches={refreshPitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches}/>}
       {page==="shop" && <CreditShop user={user} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage}/>}
@@ -1698,7 +1768,8 @@ function getMatchCircleStyle(score) {
 }
 
 // ─── Curator Browser ───
-function CuratorBrowser({curators, selected, setSelected, setPage, trackData, setTrackData, notify, artist}) {
+function CuratorBrowser({curators, selected, setSelected, setPage, trackData, setTrackData, notify, artist, pitchedCuratorIds}) {
+  const isPitched = (id) => !!pitchedCuratorIds?.has(id);
   const [q, setQ] = useState(""); const [genre, setGenre] = useState(""); const [type, setType] = useState("");
   const [sortByMatch, setSortByMatch] = useState(false);
   const [detailCurator, setDetailCurator] = useState(null);
@@ -1856,7 +1927,16 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   }, [scoredCurators, sortByMatch]);
 
   const list = ranked.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||c.platform.toLowerCase().includes(q.toLowerCase())).filter(c=>!genre||c.genres.includes(genre)).filter(c=>!type||c.type===type);
-  const toggle = id => setSelected(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
+  // Selecting a curator who already has a live pitch for this track is a dead
+  // end — the server would skip the send as a same-contact duplicate. Refuse it
+  // here (both the card and the detail modal route through this) and say why.
+  const toggle = id => {
+    if (isPitched(id) && !selected.includes(id)) {
+      notify('この楽曲は既にこのキュレーターへ送信済みです。回答または期限切れの後に再送信できます');
+      return;
+    }
+    setSelected(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
+  };
 
   const matchColor = (score) => score >= 85 ? "#16a34a" : score >= 70 ? "#2563eb" : score >= 50 ? "#0ea5e9" : score >= 30 ? "#d97706" : "#dc2626";
 
@@ -2034,6 +2114,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
         const regionFlags = {'Japan':'🇯🇵','US':'🇺🇸','USA':'🇺🇸','UK':'🇬🇧','France':'🇫🇷','Germany':'🇩🇪','Australia':'🇦🇺','Global':'○'};
         const renderCard = (c, isRecommended) => {
           const on = selected.includes(c.id);
+          const pitched = isPitched(c.id);
           const ms = c.matchScore;
           const ml = ms != null ? getMatchLabel(ms) : null;
           const mcs = ms != null ? getMatchCircleStyle(ms) : null;
@@ -2056,6 +2137,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
             <div style={{flex:1,minWidth:0}}>
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>
                 <span style={{fontSize:16,fontWeight:600,color:'#1a1a1a'}}>{c.name}</span>
+                {pitched && <span style={{background:'rgba(0,0,0,0.05)',border:'1px solid rgba(0,0,0,0.1)',color:'#6b6560',fontSize:10,fontWeight:600,padding:'2px 8px',borderRadius:999}}>送信済み</span>}
                 {isRecommended && <span style={{background:'#c4956a',color:'#fff',fontSize:10,fontWeight:500,padding:'2px 8px',borderRadius:999}}>おすすめ</span>}
                 {flag && <span style={{fontSize:14}}>{flag}</span>}
                 {typeBadge && <span style={{padding:'3px 10px',borderRadius:20,fontSize:11,background:typeBadge.bg,color:typeBadge.text,fontWeight:500}}>{typeBadge.label}</span>}
@@ -2087,7 +2169,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
               </div>
             </div>
             {/* Right: match gauge + select button */}
-            <div onClick={e=>{e.stopPropagation();toggle(c.id);}} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,flexShrink:0,borderRadius:10,padding:'6px',transition:'background 0.15s',cursor:'pointer',touchAction:'manipulation'}} title={on?'選択解除':'選択する'}>
+            <div onClick={e=>{e.stopPropagation();toggle(c.id);}} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,flexShrink:0,borderRadius:10,padding:'6px',transition:'background 0.15s',cursor:pitched?'not-allowed':'pointer',touchAction:'manipulation',opacity:pitched?0.5:1}} title={pitched?'この楽曲は送信済みです':on?'選択解除':'選択する'}>
               {ms != null && mcs ? (
                 <div style={{position:'relative',width:mcs.size,height:mcs.size,display:'flex',alignItems:'center',justifyContent:'center'}}>
                   <svg width={mcs.size} height={mcs.size} style={{position:'absolute',transform:'rotate(-90deg)'}}>
@@ -2099,8 +2181,8 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
               ) : (
                 <div style={{width:44,height:44}}/>
               )}
-              <span style={{fontSize:14,color:'#c4956a',fontWeight:600}}>{c.creditCost||2} クレジット</span>
-              <div style={{width:22,height:22,borderRadius:'50%',background:on?'#c4956a':'rgba(0,0,0,0.06)',border:on?'none':'1px solid rgba(0,0,0,0.1)',color:on?'#fff':'#9a958e',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700,transition:'all 0.15s'}}>{on?'✓':'+'}</div>
+              <span style={{fontSize:14,color:pitched?'#9a958e':'#c4956a',fontWeight:600}}>{pitched ? '送信済み' : `${c.creditCost||2} クレジット`}</span>
+              <div style={{width:22,height:22,borderRadius:'50%',background:pitched?'rgba(0,0,0,0.04)':on?'#c4956a':'rgba(0,0,0,0.06)',border:(pitched||!on)?'1px solid rgba(0,0,0,0.1)':'none',color:pitched?'#9a958e':on?'#fff':'#9a958e',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700,transition:'all 0.15s'}}>{pitched?'✓':on?'✓':'+'}</div>
             </div>
           </div>;
         };
@@ -2151,6 +2233,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
     {detailCurator && (() => {
       const dc = detailCurator;
       const dcOn = selected.includes(dc.id);
+      const dcPitched = isPitched(dc.id);
       const dcMs = dc.matchScore;
       const dcMsColor = dcMs >= 85 ? '#4ade80' : dcMs >= 70 ? '#60a5fa' : '#fbbf24';
       const dcAv = [{bg:'rgba(196,149,106,0.15)',text:'#c4956a'},{bg:'rgba(232,93,58,0.15)',text:'#e85d3a'},{bg:'rgba(74,222,128,0.12)',text:'#4ade80'},{bg:'rgba(96,165,250,0.12)',text:'#60a5fa'},{bg:'rgba(251,191,36,0.12)',text:'#fbbf24'},{bg:'rgba(168,85,247,0.12)',text:'#a855f7'}][dc.name.charCodeAt(0) % 6];
@@ -2308,8 +2391,12 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
           {/* Footer */}
           <div style={{padding:'16px 24px',borderTop:'1px solid rgba(0,0,0,0.05)',display:'flex',justifyContent:'flex-end',gap:12}}>
             <button onClick={()=>setDetailCurator(null)} style={{background:'transparent',border:'1px solid rgba(255,255,255,0.12)',color:'#6b6560',borderRadius:8,padding:'10px 20px',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>閉じる</button>
-            <button onClick={()=>{toggle(dc.id);setDetailCurator(null);}} style={{background:dcOn?'transparent':'#c4956a',border:dcOn?'1px solid #ef4444':'none',color:dcOn?'#ef4444':'#fff',borderRadius:8,padding:'10px 20px',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit',touchAction:'manipulation'}}>
-              {dcOn ? '選択解除' : `選択 · ${dc.creditCost||2}クレジット`}
+            <button
+              onClick={()=>{ if (dcPitched && !dcOn) return; toggle(dc.id); setDetailCurator(null); }}
+              disabled={dcPitched && !dcOn}
+              title={dcPitched ? 'この楽曲は既にこのキュレーターへ送信済みです' : undefined}
+              style={{background:(dcPitched&&!dcOn)?'rgba(0,0,0,0.05)':dcOn?'transparent':'#c4956a',border:dcOn?'1px solid #ef4444':'none',color:(dcPitched&&!dcOn)?'#9a958e':dcOn?'#ef4444':'#fff',borderRadius:8,padding:'10px 20px',fontSize:13,fontWeight:600,cursor:(dcPitched&&!dcOn)?'not-allowed':'pointer',fontFamily:'inherit',touchAction:'manipulation'}}>
+              {(dcPitched && !dcOn) ? 'この楽曲は送信済み' : dcOn ? '選択解除' : `選択 · ${dc.creditCost||2}クレジット`}
             </button>
           </div>
 
@@ -2320,7 +2407,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 }
 
 // ─── Pitch Creator (Template Engine + Social Links + Followers) ───
-function PitchCreator({user, curators, selected, setSelected, pitches, savePitches, credits, setCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft, refreshPitches, linkedTrackId, linkedTrackAiStatus}) {
+function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds, pitches, savePitches, credits, setCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft, refreshPitches, linkedTrackId, linkedTrackAiStatus}) {
   // Wizard progress restored from sessionStorage (see loadPitchWizard). Read once
   // at mount so a reload — or a hop over to the curators tab and back — resumes
   // where the user left off instead of resetting to step 0.
@@ -2342,6 +2429,23 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const [validationError, setValidationError] = useState(false);
   const [pitchSent, setPitchSent] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  // Curators this batch already reached (inserted, or skipped server-side as a
+  // duplicate). Restored with the rest of the wizard so a reload in the middle
+  // of a partial failure can't re-send — and re-charge — the ones that landed.
+  const [sentCuratorIds, setSentCuratorIds] = useState(() =>
+    Array.isArray(_wizard?.sentCuratorIds) ? _wizard.sentCuratorIds.filter(Boolean) : []
+  );
+  // { done, total, phase, waitingSec } while a send is running; null otherwise.
+  const [sendProgress, setSendProgress] = useState(null);
+  // The curator name baked into pitchText/pitchJa by substitutePreviewName at
+  // generation time. personalizePitch rewrites that name per recipient, so it
+  // must survive `targets` shrinking (already-pitched curators drop out) —
+  // reading targets[0] at send time would rewrite against the wrong name and
+  // every retried pitch would greet whoever the list happens to start with now.
+  const [previewCuratorName, setPreviewCuratorName] = useState(() => restoredStr(_wizard?.previewCuratorName));
+  // Frozen counts for the success screen. `targets` shrinks the moment the sent
+  // pitches land in local state, so it can't be the source for "◯人に送信".
+  const [sentSummary, setSentSummary] = useState(null);
   // 2026/5/25: sample picker hidden (continuation of case D / template-button hide).
   // Reported by chihiro sato — the DEMO_ARTISTS picker overwrote the persisted draft
   // with no undo, so sample content stuck across navigation. useSample / DEMO_ARTISTS
@@ -2355,10 +2459,25 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   useEffect(() => {
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'auto' });
   }, [step]);
-  const targets = curators.filter(c => selected.includes(c.id));
-  const cost = targets.reduce((sum, c) => sum + (c.creditCost || 2), 0);
+  // Recipients = selected curators minus any that already hold a live pitch for
+  // this track (the server would skip those as same-contact duplicates, so they
+  // must not show up in 送信先 or in the credit cost).
+  const targets = curators.filter(c => selected.includes(c.id) && !pitchedCuratorIds?.has(c.id));
+  // Recipients still owed a pitch in this batch. After a partial failure the
+  // successful ones drop out, so the cost and the send loop cover only the rest.
+  const pendingTargets = targets.filter(c => !sentCuratorIds.includes(c.id));
+  const cost = pendingTargets.reduce((sum, c) => sum + (c.creditCost || 2), 0);
   const remaining = credits - cost;
   const insufficientCredits = credits < cost; // mirrors the server RPC floor + sendAll() guard
+  const partialSend = sentCuratorIds.length > 0 && pendingTargets.length > 0;
+  // Button label while a batch runs: 28 sequential inserts + 28 staggered emails
+  // take the better part of a minute, so it has to show movement.
+  const sendProgressLabel = (() => {
+    if (!sendProgress) return "送信中…";
+    if (sendProgress.waitingSec) return `混雑のため${sendProgress.waitingSec}秒待機中…`;
+    const phase = sendProgress.phase === 'email' ? 'メール送信中' : '送信中';
+    return `${phase}… ${sendProgress.done}/${sendProgress.total}`;
+  })();
   // Build effective track for match scoring (same logic as CuratorBrowser)
   const effectiveTrack = useMemo(() => {
     const trackGenre = trackData?.genre || artist?.genre || '';
@@ -2485,7 +2604,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     setFollowers(p._followers || {spotify:0,youtube:0,soundcloud:0,instagram:0,twitter:0,facebook:0});
   };
 
-  const getSongLink = () => artist.songLink || links.spotify || links.youtube || links.apple || links.soundcloud || "";
+  const getSongLink = () => resolveSongLink(artist, links);
   const linkCount = Object.values(links).filter(Boolean).length;
   const folCount = Object.values(followers).filter(v => v > 0).length;
   const fmtK = (n) => { if (!n) return ""; if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,"") + "M"; if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,"") + "K"; return String(n); };
@@ -2614,8 +2733,8 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   // ── Persist wizard progress on every change (restored by the initializers above) ──
   // `selected` is written into the same key by ArtistApp; savePitchWizard merges.
   useEffect(() => {
-    savePitchWizard(user?.id, { step, pitchText, pitchJa, pitchTab, epk, pitchStyle, pitchSongTitle, pitchSongTitleAuto });
-  }, [user?.id, step, pitchText, pitchJa, pitchTab, epk, pitchStyle, pitchSongTitle, pitchSongTitleAuto]);
+    savePitchWizard(user?.id, { step, pitchText, pitchJa, pitchTab, epk, pitchStyle, pitchSongTitle, pitchSongTitleAuto, sentCuratorIds, previewCuratorName });
+  }, [user?.id, step, pitchText, pitchJa, pitchTab, epk, pitchStyle, pitchSongTitle, pitchSongTitleAuto, sentCuratorIds, previewCuratorName]);
 
   // A restored step past the first one only makes sense while recipients remain.
   // If reconciliation against the live curator list emptied the selection, fall
@@ -2623,8 +2742,12 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   // stranding the user on a review/send screen addressed to nobody.
   useEffect(() => {
     if (!curators || curators.length === 0) return; // list still loading
+    // A send in flight (or already done) empties `targets` by design — the sent
+    // curators become "already pitched". Bailing to step 0 there would yank the
+    // user off the success / retry screen.
+    if (isSending || pitchSent || sentCuratorIds.length > 0) return;
     if (targets.length === 0 && step > 0) setStep(0);
-  }, [curators, targets.length, step]);
+  }, [curators, targets.length, step, isSending, pitchSent, sentCuratorIds.length]);
 
   // Time box for the "waiting on the curator list" state used before the render
   // below — a curator fetch that fails or returns [] must not spin forever.
@@ -2685,6 +2808,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
   const substitutePreviewName = (text) => {
     const name = targets[0]?.name?.trim();
     if (!name || !text) return text;
+    setPreviewCuratorName(name);
     return text
       .replace(/\[Curator Name\]/gi, name)
       .replace(/\[キュレーター名\]/g, name)
@@ -2824,6 +2948,25 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     }
   };
 
+  // One pitch insert, retried on 429 using the server's Retry-After. The raised
+  // /api/pitches limits fit a whole batch, but a second batch inside the same
+  // window can still trip them — a bounded wait beats making the artist re-send
+  // by hand. Every other error propagates untouched.
+  const insertPitchWithRetry = async (p) => {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await insertPitchGetUUID(p);
+      } catch (e) {
+        const rateLimited = e instanceof ApiError && e.status === 429;
+        if (!rateLimited || attempt >= MAX_RATE_LIMIT_RETRIES) throw e;
+        const waitSec = Math.min(Math.max(e.retryAfter || 5, 1), MAX_RATE_LIMIT_WAIT_SEC);
+        setSendProgress(prev => (prev ? { ...prev, waitingSec: waitSec } : prev));
+        await sleep(waitSec * 1000);
+        setSendProgress(prev => (prev ? { ...prev, waitingSec: null } : prev));
+      }
+    }
+  };
+
   const sendAll = async () => {
     if (isPreLaunch()) {
       notify(`ピッチ送信は${LAUNCH_DATE_LABEL_JA}のローンチ後に利用可能になります`, "error");
@@ -2846,7 +2989,9 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     // generations or model slip-ups may have hardcoded the first curator's name.
     // Detect and rewrite it for each recipient before the pitch goes out.
     const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const firstCuratorName = targets[0]?.name?.trim() || '';
+    // The name actually written into pitchText at generation time — NOT
+    // targets[0], which moves as curators drop out of the list.
+    const firstCuratorName = previewCuratorName?.trim() || targets[0]?.name?.trim() || '';
     const personalizePitch = (rawText, curator) => {
       // Primary AI-intended placeholder
       let out = rawText.replace(/\[Curator Name\]/gi, curator.name);
@@ -2867,7 +3012,12 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       return out;
     };
 
-    const tempPitches = targets.map(c => ({
+    // Only the recipients still owed a pitch. On a retry after a partial
+    // failure this is just the ones that did not go out — `targets` (and with
+    // it `firstCuratorName` above) stays whole, so the greeting rewrite keeps
+    // working against the name actually baked into pitchText.
+    const batch = pendingTargets;
+    const tempPitches = batch.map(c => ({
       id: "p_" + Date.now() + "_" + c.id,
       artistId: user.id, artistEmail: user.email, artistName: artist.name, artistNameEn: artist.nameEn||artist.name,
       songTitle: pitchSongTitle || artist.songTitle, songLink: getSongLink(), genre: artist.genre, mood: artist.mood, description: artist.description, influences: artist.influences, achievements: artist.achievements, trackId: linkedTrackId || null,
@@ -2883,13 +3033,27 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     // Insert each pitch to DB individually to get the actual Supabase UUID.
     // insertPitchGetUUID also auto-translates Japanese content to English.
     // Replace the temporary local id with the real UUID so email links work.
+    //
+    // Strictly sequential, not concurrent: the server's same-contact dedup is a
+    // read-then-insert, so two sibling profiles sent in parallel could both pass
+    // the check and both charge. A small stagger keeps the burst civil even
+    // though the raised /api/pitches limits (60/min) fit a whole batch.
     const newPitches = [];
+    const reachedCuratorIds = [];   // inserted OR server-skipped → do not retry
+    const failedCurators = [];      // still owed a pitch
     let latestCredits = credits;
     let insufficientCreditsHit = false;
     let skippedCount = 0;
-    for (const p of tempPitches) {
+    let abortError = null;
+    let abortIndex = -1;
+    setSendProgress({ done: 0, total: tempPitches.length, phase: 'save' });
+
+    for (let i = 0; i < tempPitches.length; i++) {
+      const p = tempPitches[i];
+      const c = batch[i];
+      if (i > 0) await sleep(SEND_STAGGER_MS);
       try {
-        const result = await insertPitchGetUUID(p);
+        const result = await insertPitchWithRetry(p);
         if (result?.skipped) {
           // Same-contact duplicate: the server already holds an active pitch
           // for this track to this curator's email (another of their profiles).
@@ -2897,37 +3061,58 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           // first-write-wins; send order here is the curators-array order, not
           // match_score, so the kept pitch is the first reached, not the best.
           skippedCount++;
-          continue;
-        }
-        if (result?.id) {
+          reachedCuratorIds.push(c.id);
+        } else if (result?.id) {
           // Use translated pitchText (if translation occurred) for the email body
           newPitches.push({ ...p, id: result.id, pitchText: result.pitchText ?? p.pitchText, _hasUUID: true });
+          reachedCuratorIds.push(c.id);
           // Authoritative balance comes from the server
           if (typeof result.new_credits === 'number') latestCredits = result.new_credits;
         } else {
-          // Insert failed — keep custom ID for local state but mark as no UUID
+          // Insert failed server-side. Do NOT push it into local state: the
+          // pitch row does not exist, no credit was charged, and a local copy
+          // would be upserted back as a phantom "sent" row and light up the
+          // 送信済み badge. Count it as unsent so the artist can retry.
           console.warn("insertPitchGetUUID failed for curator:", p.curatorName);
-          newPitches.push({ ...p, _hasUUID: false });
+          failedCurators.push(c);
         }
       } catch (e) {
-        if (e instanceof ApiError) {
-          handleApiError(e, notify, 'ピッチ送信失敗');
-          return; // 401/413/429 の場合は送信ループ全体を中断
-        }
-        // 402 Payment Required: server-side balance check failed mid-loop
-        if (e?.status === 402) {
+        if (e instanceof ApiError && (e.status === 402 || e.name === 'InsufficientCredits')) {
+          // Server-side balance check failed mid-loop — nothing further can succeed.
           insufficientCreditsHit = true;
-          notify('クレジットが不足しています', 'error');
+          failedCurators.push(c);
+          abortError = e;
+          abortIndex = i;
+          break;
+        }
+        if (e instanceof ApiError) {
+          // 401 / 413 / a 429 that survived its retries. Stop the batch, but
+          // fall through to persist + email whatever already went out — the
+          // old code returned here, stranding inserted-and-charged pitches
+          // with no local record and no email.
+          failedCurators.push(c);
+          abortError = e;
+          abortIndex = i;
           break;
         }
         console.warn("insertPitchGetUUID exception:", e.message);
-        newPitches.push({ ...p, _hasUUID: false });
+        failedCurators.push(c);
+      } finally {
+        setSendProgress({ done: i + 1, total: tempPitches.length, phase: 'save' });
       }
     }
 
-    await savePitches([...newPitches, ...pitches]);
+    // Everything past the abort point was never attempted — also unsent.
+    if (abortIndex >= 0) failedCurators.push(...batch.slice(abortIndex + 1));
+
+    if (newPitches.length) await savePitches([...newPitches, ...pitches]);
     setCredits(latestCredits);
-    if (insufficientCreditsHit && newPitches.length === 0) return;
+    if (reachedCuratorIds.length) {
+      setSentCuratorIds(prev => [...prev, ...reachedCuratorIds.filter(id => !prev.includes(id))]);
+    }
+    if (abortError && !insufficientCreditsHit) handleApiError(abortError, notify, 'ピッチ送信失敗');
+    if (insufficientCreditsHit) notify('クレジットが不足しています', 'error');
+    if (insufficientCreditsHit && newPitches.length === 0) { setSendProgress(null); return; }
     saveToStorage(artist, links, followers);
     setStep(3);
     // Send emails ONLY for pitches whose DB row was actually inserted (_hasUUID).
@@ -2935,28 +3120,64 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     // matching DB row — the post-launch duplicate-send incident.
     const sendable = newPitches.filter(p => p._hasUUID && p.curatorEmail);
     let emailsSent = 0;
-    for (const p of sendable) {
+    const emailFailedNames = [];
+    for (let i = 0; i < sendable.length; i++) {
+      const p = sendable[i];
+      // Resend caps at ~2 requests/second; a 28-mail burst would otherwise get
+      // throttled and the failures were previously swallowed by a bare console
+      // log, leaving a charged pitch that never reached the curator's inbox.
+      if (i > 0) await sleep(EMAIL_STAGGER_MS);
+      setSendProgress({ done: i + 1, total: sendable.length, phase: 'email' });
+      const send = () => API.sendPitchEmail(p.id, p.curatorEmail, p.curatorName, p.pitchText, p.epk, p.artistNameEn || p.artistName, p.songLink, p.artistEmail);
       try {
-        await API.sendPitchEmail(p.id, p.curatorEmail, p.curatorName, p.pitchText, p.epk, p.artistNameEn || p.artistName, p.songLink, p.artistEmail);
+        await send();
         emailsSent++;
-      } catch (e) { console.log("Email send skipped:", e.message); }
+      } catch (e) {
+        console.warn("Email send failed, retrying once:", e.message);
+        try {
+          await sleep(1200);
+          await send();
+          emailsSent++;
+        } catch (e2) {
+          console.warn("Email send failed after retry:", e2.message);
+          emailFailedNames.push(p.curatorName);
+        }
+      }
     }
+    setSendProgress(null);
     // Show the "sent" success state only when at least one pitch was actually saved.
     const savedCount = newPitches.filter(p => p._hasUUID).length;
+    const reachedCount = savedCount + skippedCount;
+    const unsentCount = failedCurators.length;
+    setSentSummary(prev => ({
+      reached: (prev?.reached || 0) + reachedCount,
+      emails: (prev?.emails || 0) + emailsSent,
+      skipped: (prev?.skipped || 0) + skippedCount,
+    }));
     // Neutral, no-emoji note when same-contact duplicates were skipped server-side.
     const skipNote = skippedCount > 0
       ? `（同一連絡先のキュレーターには既にこのトラックをピッチ済みのため、${skippedCount}件をスキップしました（クレジット消費なし）。/ ${skippedCount} pitch(es) skipped: the same curator contact was already pitched for this track. No credits were used.）`
       : "";
-    // The flow is over the moment anything was saved or deliberately skipped —
-    // drop the persisted wizard so re-opening pitch creation starts clean rather
-    // than restoring a sent draft. (In-memory state stays put for the success screen.)
-    if (savedCount > 0 || skippedCount > 0) clearPitchWizard(user?.id);
-    if (savedCount > 0) {
+    const emailNote = emailFailedNames.length > 0
+      ? `（${emailFailedNames.length}件はメール送信に失敗しました: ${emailFailedNames.join('、')}。ピッチは保存済みでクレジットも消費されています。サポートまでご連絡ください）`
+      : "";
+
+    if (unsentCount > 0 && reachedCount > 0) {
+      // Partial batch. Keep the wizard persisted so a reload can resume the
+      // retry, and stay on the confirm screen with only the unsent recipients.
+      notify(`${reachedCount}人に送信済み / ${unsentCount}人が未送信です。「未送信の${unsentCount}人に送信」で続きから再開できます${emailNote}`, 'error');
+    } else if (unsentCount > 0) {
+      notify(`送信できませんでした（未送信${unsentCount}人）。時間をおいて再度お試しください`, 'error');
+    } else if (savedCount > 0) {
+      // The flow is over — drop the persisted wizard so re-opening pitch
+      // creation starts clean rather than restoring a sent draft.
+      clearPitchWizard(user?.id);
       setPitchSent(true);
-      notify("✓ " + emailsSent + "件送信完了" + skipNote);
+      notify("✓ " + emailsSent + "件送信完了" + skipNote + emailNote);
     } else if (skippedCount > 0) {
       // Every selected profile resolved to an already-pitched contact: nothing
       // sent, nothing charged. This is not a failure — keep the tone neutral.
+      clearPitchWizard(user?.id);
       setPitchSent(true);
       notify(`同一連絡先のキュレーターには既にこのトラックをピッチ済みのため、${skippedCount}件をスキップしました（クレジット消費なし）。/ ${skippedCount} pitch(es) skipped: the same curator contact was already pitched for this track. No credits were used.`);
     } else {
@@ -2965,6 +3186,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     // 送信後にDBから最新データを取得してローカルとマージ
     if (refreshPitches) setTimeout(() => refreshPitches(), 1000);
     } finally {
+      setSendProgress(null);
       // Always release the guard so the button re-enables (retry on failure;
       // on success the success screen replaces the button anyway).
       sendingRef.current = false;
@@ -2972,7 +3194,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
     }
   };
 
-  const resetForm = () => { clearPitchWizard(user?.id); setSelected([]); setStep(0); setPitchText(""); setPitchJa(""); setEpk(""); setPitchSent(false); };
+  const resetForm = () => { clearPitchWizard(user?.id); setSelected([]); setStep(0); setPitchText(""); setPitchJa(""); setEpk(""); setPitchSent(false); setSentCuratorIds([]); setSentSummary(null); setSendProgress(null); setPreviewCuratorName(""); };
   const useSample = (s) => { setArtist({name:s.name,nameEn:s.nameEn,genre:s.genre,mood:s.mood,description:s.description,songTitle:s.songTitle,songLink:s.songLink,influences:s.influences,achievements:s.achievements,sns:""}); setLinks({spotify:s.songLink||"",apple:"",youtube:"",soundcloud:"",instagram:"",twitter:"",facebook:"",website:""}); setFollowers({spotify:0,youtube:0,soundcloud:0,instagram:0,twitter:0,facebook:0}); };
 
   // A restored selection outruns the curator fetch on reload. Until the list
@@ -3007,7 +3229,9 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         {["情報入力","キュレーター","確認&編集","送信"].map((l,i) => <div key={i} style={{flex:1,textAlign:"center",fontSize:11,fontFamily:"'DM Sans',sans-serif",color:i===step?"#1a1a1a":"#6b6560",fontWeight:i===step?500:400}}>{l}</div>)}
       </div>
     </div>
-    <div style={{background:"#ffffff",border:"1px solid #e5e2dc",borderRadius:14,padding:"20px 24px",marginBottom:20}}>
+    {/* Recipients still to be pitched. Hidden once the batch is done — every
+        recipient has moved into the 送信済み set, so this would read 送信先 (0人). */}
+    {!pitchSent && <div style={{background:"#ffffff",border:"1px solid #e5e2dc",borderRadius:14,padding:"20px 24px",marginBottom:20}}>
       <div style={{color:"#6b6560",fontSize:13,marginBottom:12,fontFamily:"'DM Sans',sans-serif",borderLeft:"3px solid #c4956a",paddingLeft:10}}>送信先 ({targets.length}人)</div>
       <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
         {targets.map(c => (
@@ -3020,7 +3244,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
           </div>
         ))}
       </div>
-    </div>
+    </div>}
 
     {/* ═══ STEP 0 ═══ */}
     {step === 0 && <div style={{background:"#ffffff",borderRadius:16,border:"1px solid rgba(0,0,0,0.05)",padding:"1.5rem"}}>
@@ -3372,7 +3596,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
       {/* Japanese tab */}
       {pitchTab === "ja" && <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderTop:"none",borderRadius:"0 0 12px 12px",padding:"0.8rem",marginBottom:"0.8rem"}}>
         <div style={{fontSize:"0.68rem",color:"#9a958e",fontWeight:600,marginBottom:6}}>確認用の日本語訳です（送信されません）</div>
-        {targets.length > 1 && targets[0]?.name && <div style={{fontSize:"0.62rem",color:"#c4956a",background:"rgba(196,149,106,0.06)",padding:"0.35rem 0.5rem",borderRadius:6,marginBottom:6,lineHeight:1.5}}>※ プレビューは「{targets[0].name}」様への送信例です。実際は各キュレーターの名前で個別に置換されて送信されます。</div>}
+        {targets.length > 1 && (previewCuratorName || targets[0]?.name) && <div style={{fontSize:"0.62rem",color:"#c4956a",background:"rgba(196,149,106,0.06)",padding:"0.35rem 0.5rem",borderRadius:6,marginBottom:6,lineHeight:1.5}}>※ プレビューは「{previewCuratorName || targets[0].name}」様への送信例です。実際は各キュレーターの名前で個別に置換されて送信されます。</div>}
         {translating && !pitchJa ? (
           <div style={{minHeight:120,display:"flex",alignItems:"center",justifyContent:"center",color:"#9a958e",fontSize:"0.8rem"}}>日本語訳を生成中...</div>
         ) : (
@@ -3392,7 +3616,7 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         <div>
           <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:16,padding:"2rem 1.5rem",textAlign:"center",marginBottom:"1.5rem"}}>
             <div style={{fontSize:"2rem",color:"#c4956a",marginBottom:12,fontWeight:300}}>✓</div>
-            <h2 style={{fontSize:18,fontWeight:700,margin:"0 0 8px",color:"#c4956a",fontFamily:"'DM Sans',sans-serif"}}>{targets.length}人のキュレーターにピッチを送信しました</h2>
+            <h2 style={{fontSize:18,fontWeight:700,margin:"0 0 8px",color:"#c4956a",fontFamily:"'DM Sans',sans-serif"}}>{sentSummary?.reached ?? targets.length}人のキュレーターにピッチを送信しました</h2>
             <p style={{fontSize:14,color:"#6b6560",margin:"0 0 4px",fontFamily:"'DM Sans',sans-serif"}}>フィードバックは通常3〜7日以内に届きます</p>
             <p style={{fontSize:13,color:"#c4956a",marginTop:8}}>7日以内にFB保証 · 未回答はクレジット返還</p>
           </div>
@@ -3405,15 +3629,26 @@ function PitchCreator({user, curators, selected, setSelected, pitches, savePitch
         <div>
           <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:16,padding:"1.5rem",textAlign:"center",marginBottom:"1rem"}}>
             <div style={{width:48,height:2,background:"#c4956a",borderRadius:1,margin:"0 auto 14px"}}/>
-            <h2 style={{fontSize:"1.15rem",fontWeight:800,margin:"0 0 0.3rem",color:"#1a1a1a"}}>送信確認</h2>
-            <p style={{fontSize:"0.82rem",color:"#6b6560"}}>{targets.length}人に個別最適化ピッチを送信</p>
+            <h2 style={{fontSize:"1.15rem",fontWeight:800,margin:"0 0 0.3rem",color:"#1a1a1a"}}>{partialSend ? "送信の続き" : "送信確認"}</h2>
+            <p style={{fontSize:"0.82rem",color:"#6b6560"}}>{pendingTargets.length}人に個別最適化ピッチを送信</p>
+            {partialSend && (
+              <p style={{fontSize:13,color:"#c4956a",marginTop:8,fontWeight:600,lineHeight:1.6}}>
+                {sentSummary?.reached ?? sentCuratorIds.length}人に送信済み / {pendingTargets.length}人が未送信<br/>
+                <span style={{fontSize:12,color:"#6b6560",fontWeight:400}}>送信済みの分は再送信されず、クレジットも再消費されません。</span>
+              </p>
+            )}
             {insufficientCredits ? (
               <p style={{fontSize:14,color:"#e85d3a",marginTop:8,fontWeight:700}}>クレジット不足: あと {cost-credits}cr 必要（残 {credits}cr / 必要 {cost}cr）</p>
             ) : (
               <p style={{fontSize:14,color:"#c4956a",marginTop:8,fontWeight:600}}>消費 {cost}cr（残: {credits}→{remaining}）</p>
             )}
           </div>
-          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button disabled={isPreLaunch() || isSending || insufficientCredits} style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem",opacity:(isPreLaunch()||isSending||insufficientCredits)?0.5:1,cursor:(isPreLaunch()||isSending||insufficientCredits)?"not-allowed":"pointer",background:(isPreLaunch()||isSending||insufficientCredits)?"#e5e2dc":undefined,color:(isPreLaunch()||isSending||insufficientCredits)?"#6b6560":undefined}} onClick={sendAll}>{isPreLaunch() ? `${LAUNCH_DATE_LABEL_JA}のローンチ後に送信可能` : insufficientCredits ? `クレジット不足（あと ${cost-credits}cr）` : (isSending ? "送信中…" : `送信 (${cost}クレジット)`)}</button><button style={css.btnGhost} onClick={()=>setStep(2)}>← 戻る</button></div>
+          <div style={{display:"flex",gap:8,justifyContent:"center"}}><button disabled={isPreLaunch() || isSending || insufficientCredits} style={{...css.btnPrimary,padding:"0.8rem 2rem",fontSize:"1rem",opacity:(isPreLaunch()||isSending||insufficientCredits)?0.5:1,cursor:(isPreLaunch()||isSending||insufficientCredits)?"not-allowed":"pointer",background:(isPreLaunch()||isSending||insufficientCredits)?"#e5e2dc":undefined,color:(isPreLaunch()||isSending||insufficientCredits)?"#6b6560":undefined}} onClick={sendAll}>{isPreLaunch() ? `${LAUNCH_DATE_LABEL_JA}のローンチ後に送信可能` : insufficientCredits ? `クレジット不足（あと ${cost-credits}cr）` : (isSending ? sendProgressLabel : partialSend ? `未送信の${pendingTargets.length}人に送信 (${cost}クレジット)` : `送信 (${cost}クレジット)`)}</button><button style={css.btnGhost} disabled={isSending} onClick={()=>setStep(2)}>← 戻る</button></div>
+          {isSending && sendProgress && (
+            <p style={{fontSize:12,color:"#6b6560",marginTop:10,textAlign:"center",lineHeight:1.6}}>
+              {sendProgress.phase === 'email' ? 'キュレーターへメールを配信しています。' : 'ピッチを保存しています。'}この画面を閉じずにお待ちください。
+            </p>
+          )}
           {insufficientCredits && <p style={{fontSize:13,color:"#6b6560",marginTop:10,textAlign:"center",lineHeight:1.6}}><button onClick={()=>setPage("shop")} style={{background:"transparent",border:"none",color:"#c4956a",textDecoration:"underline",cursor:"pointer",padding:0,font:"inherit"}}>クレジットを追加購入</button>するか、送信先を減らしてください。</p>}
         </div>
       )}

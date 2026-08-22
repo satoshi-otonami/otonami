@@ -2856,14 +2856,17 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
     setAiLoading(true);
     try {
       const lnk = {...links, songLink: getSongLink()};
-      const rep = targets[0] || {name:"Curator",type:"blog",platform:"Music Platform"};
+      // No curator is sent. The generated body goes unchanged to every selected
+      // target, so passing targets[0] as a "representative" made the AI write
+      // lines that fit that one curator ("Given your focus on jazz fusion...")
+      // and were wrong for the other 20+. Per-curator wording is handled at the
+      // email layer (name substitution + lib/pitch-personalization.js opener).
       // Use pitchSongTitle (track-specific) over artist.songTitle (representative track)
       const pitchArtist = pitchSongTitle ? { ...artist, songTitle: pitchSongTitle } : artist;
       const res = await authFetch('/api/pitch', {
         method: 'POST',
         body: JSON.stringify({
           artist: pitchArtist,
-          curator: rep,
           style: pitchStyle,
           links: lnk,
           followers,
@@ -3596,7 +3599,7 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
       {/* Japanese tab */}
       {pitchTab === "ja" && <div style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderTop:"none",borderRadius:"0 0 12px 12px",padding:"0.8rem",marginBottom:"0.8rem"}}>
         <div style={{fontSize:"0.68rem",color:"#9a958e",fontWeight:600,marginBottom:6}}>確認用の日本語訳です（送信されません）</div>
-        {targets.length > 1 && (previewCuratorName || targets[0]?.name) && <div style={{fontSize:"0.62rem",color:"#c4956a",background:"rgba(196,149,106,0.06)",padding:"0.35rem 0.5rem",borderRadius:6,marginBottom:6,lineHeight:1.5}}>※ プレビューは「{previewCuratorName || targets[0].name}」様への送信例です。実際は各キュレーターの名前で個別に置換されて送信されます。</div>}
+        {targets.length > 1 && (previewCuratorName || targets[0]?.name) && <div style={{fontSize:"0.62rem",color:"#c4956a",background:"rgba(196,149,106,0.06)",padding:"0.35rem 0.5rem",borderRadius:6,marginBottom:6,lineHeight:1.5}}>※ プレビューは「{previewCuratorName || targets[0].name}」様への送信例です。宛名と冒頭の紹介文は各キュレーターに合わせて自動調整されます。本文は全員に共通です。 / The greeting and opening line are tailored per curator; the body is the same for everyone.</div>}
         {translating && !pitchJa ? (
           <div style={{minHeight:120,display:"flex",alignItems:"center",justifyContent:"center",color:"#9a958e",fontSize:"0.8rem"}}>日本語訳を生成中...</div>
         ) : (

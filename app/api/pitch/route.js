@@ -26,7 +26,9 @@ export async function POST(request) {
       );
     }
 
-    const { artist, curator, style, links, followers, userName, trackFeatures } = await request.json();
+    // `curator` may still be present in the body from older clients; it is
+    // intentionally not read — see the TARGET CURATOR note below.
+    const { artist, style, links, followers, userName, trackFeatures } = await request.json();
 
     if (!artist?.name || !artist?.genre) {
       return NextResponse.json({ error: 'Artist name and genre required' }, { status: 400 });
@@ -43,11 +45,15 @@ export async function POST(request) {
     const SOMBER_PATTERNS = /melanchol|sad|sorrow|grief|brooding|somber|mournful|dark|gloom|寂し|さみし|悲し|かなし|暗い|くらい|憂鬱|ゆううつ|内省|メランコリ|シリアス/;
     const isPositive = POSITIVE_PATTERNS.test(toneSource);
     const isSomber = SOMBER_PATTERNS.test(toneSource);
-    // Only enforce when the artist's tone is unambiguous AND the curator's
-    // preferred mood would push the AI in the opposite direction.
-    const curatorMoodsLower = (curator?.preferredMoods || []).join(' ').toLowerCase();
-    const curatorWantsSomber = /melanchol|sad|dark|brooding|introspective|reflective|contemplative/.test(curatorMoodsLower);
-    const curatorWantsPositive = /happy|joy|upbeat|cheerful|uplifting|energetic|bright/.test(curatorMoodsLower);
+    // The generated body is sent verbatim to EVERY selected curator, so no
+    // single curator's preferences may shape it — including their moods. These
+    // flags are kept (permanently false) so the TONE LOCK conditions below read
+    // exactly as before: a positive artist description now always locks tone,
+    // which is what happened anyway whenever the curator listed no moods.
+    // The somber branch is consequently unreachable — it only ever existed to
+    // counter a curator mood preference that no longer reaches the prompt.
+    const curatorWantsSomber = false;
+    const curatorWantsPositive = false;
     let toneOverride = '';
     if (isPositive && (curatorWantsSomber || !curatorWantsPositive)) {
       toneOverride = `
@@ -60,7 +66,7 @@ FORBIDDEN — these words MUST NOT appear anywhere in the pitch or EPK (not even
 REQUIRED — use words like these to carry the song's character (pick what fits naturally):
   joyful, uplifting, warm, bright, cheerful, sunny, playful, optimistic, feel-good, life-affirming, radiant, buoyant, exuberant
 
-If the curator's profile says they prefer "Melancholic" or similar, that preference is IGNORED for tone. The artist's truth wins. You may still use the curator's similar-artists or bio focus as your personalization anchor, but NEVER reframe the song as melancholic/reflective/contemplative to flatter the curator.
+The song's character comes from the artist's own words and nothing else. NEVER reframe it as melancholic/reflective/contemplative for any reason, including to flatter a recipient.
 `;
     } else if (isSomber && curatorWantsPositive) {
       toneOverride = `
@@ -108,33 +114,16 @@ The artist's Description states the song is somber/melancholic/reflective. Do NO
     }
 
     // Build comprehensive prompt
-    // NOTE: We deliberately do NOT pass the curator's actual name into the prompt.
-    // The same generated pitch may be sent to multiple curators, so the AI must use
-    // the literal placeholder "[Curator Name]" everywhere a name would appear; the
-    // frontend (sendAll) substitutes the real name per recipient before sending.
-    const curatorLines = [];
-    if (curator) {
-      curatorLines.push(`Platform: ${curator.platform || 'unknown'}`);
-      curatorLines.push(`Type: ${curator.type || 'unknown'}`);
-      if (curator.audience || curator.followers) {
-        curatorLines.push(`Audience: ${(curator.audience ?? curator.followers).toLocaleString()}`);
-      }
-      if (curator.region) curatorLines.push(`Region: ${curator.region}`);
-      if (curator.genres?.length) curatorLines.push(`Genres they champion: ${curator.genres.join(', ')}`);
-      // similarArtists is canonical; preferredArtists is the legacy alias for
-      // older curator records. Read both defensively.
-      const similar = curator.similarArtists?.length ? curator.similarArtists : (curator.preferredArtists || []);
-      if (similar.length) curatorLines.push(`Artists they have featured: ${similar.join(', ')}`);
-      if (curator.preferredMoods?.length) curatorLines.push(`Moods they prefer: ${curator.preferredMoods.join(', ')}`);
-      if (curator.opportunities?.length) curatorLines.push(`Opportunities they offer: ${curator.opportunities.join(', ')}`);
-      if (curator.bio) {
-        const bioTrimmed = curator.bio.trim().slice(0, 500);
-        curatorLines.push(`Curator bio (may be in Japanese — extract meaning, NEVER quote raw Japanese):\n${bioTrimmed}`);
-      }
-    }
-    const curatorInfo = curatorLines.length > 0 ? curatorLines.join('\n') : 'General music industry curator';
-    const similarForCheck = curator?.similarArtists?.length ? curator.similarArtists : (curator?.preferredArtists || []);
-    const hasCuratorPersonality = !!(curator?.bio || similarForCheck.length || curator?.preferredMoods?.length);
+    // NOTE: NO curator data reaches the prompt — not the name, not the type,
+    // genres, moods, audience or bio. One generated body is sent unchanged to
+    // every curator the artist selected (often 20+), so any recipient-specific
+    // sentence in it ("Given your focus on jazz fusion…") is wrong for all but
+    // one of them. Per-recipient matching is the email layer's job: the
+    // greeting token "[Curator Name]" is substituted at send time and
+    // lib/pitch-personalization.js prepends one deterministic, data-backed
+    // opening line per curator. The request still accepts a `curator` field for
+    // backward compatibility with older clients; it is deliberately unused.
+    const curatorInfo = 'NONE. No information about the recipient is provided, and none will be. This section is intentionally empty.';
 
     // Build social proof section
     const socialLines = [];
@@ -229,7 +218,7 @@ The single biggest failure mode of music-pitch AI is inventing curator credentia
 
 3. ARTIST CREDENTIALS BELONG TO THE ARTIST, NOT THE CURATOR. The ARTIST PROFILE section below lists the artist's bio, achievements, label, influences. NEVER attribute any of those to the curator. If you see "ROUTE14band's bio mentions Sony Music" — that belongs to the BAND, not to the person you're emailing. The curator is a stranger receiving an email; assume they have only the credentials in TARGET CURATOR and nothing more.
 
-4. WHEN THE CURATOR BIO IS EMPTY OR THIN: Personalize by genre alignment or playlist focus ONLY ("a fit for your [genre listed] rotation", "the kind of [mood listed] you tend to feature"). Do NOT invent background to fill the gap. A pitch with no curator-specific reference is better than a pitch with a fabricated reference.
+4. THE CURATOR SECTION IS EMPTY BY DESIGN — you have NO recipient data at all. Do not fill that gap with anything: not background, not genre alignment, not "a fit for your [genre] rotation", not "the kind of thing you tend to feature". A pitch with ZERO curator-specific references is the CORRECT output here, not a compromise.
 
 5. SELF-CHECK BEFORE OUTPUT: For every claim you make about the curator, ask "Is this in the TARGET CURATOR section verbatim?" If NO → delete the claim. Paraphrasing curator background = inventing it. Only use what's explicitly stated.
 
@@ -258,6 +247,7 @@ ${audioSection}
 
 ═══ TARGET CURATOR ═══
 ${curatorInfo}
+This body is sent, word for word, to MANY curators at once — playlist editors, radio programmers, bloggers, label scouts, across different countries and genres. Write something that is equally true and equally natural for every one of them.
 
 ═══ STYLE: ${style?.toUpperCase() || 'PROFESSIONAL'} ═══
 ${style === 'casual' ? 'Warm, personal tone — like messaging a fellow music fan who happens to have influence. Genuine, not corporate. Use contractions.' : style === 'storytelling' ? 'Open with a vivid, sensory description of the music — what it sounds like, what it evokes. Paint a picture before the pitch. Make the curator feel the music through words.' : 'Polished, industry-standard tone. Concise. Lead with strongest credential. Respect the curator\'s time.'}
@@ -284,7 +274,7 @@ You MUST do ALL of the following:
 
 5. USE THE BIO FOR SUPPORTING DETAIL ONLY. The Bio supplies extra context (formation year, member names, signature concept) when the Description doesn't already cover it. Do NOT let the Bio's narrative voice dominate when the Description has its own message. If the Description carries the lead, the Bio is a supporting paragraph at most.
 
-6. NEVER REFRAME THE ARTIST'S MUSIC TO FLATTER THE CURATOR. If the curator's preferred mood does not match the Description's stated tone, do NOT invent a fake bridge ("this melancholic track will fit your melancholic playlist" when the artist said the song is joyful). You may acknowledge the curator's taste only when the song genuinely aligns.
+6. NEVER REFRAME THE ARTIST'S MUSIC TO FLATTER A RECIPIENT. Do NOT invent a fake bridge to anyone's taste ("this melancholic track will fit your melancholic playlist" when the artist said the song is joyful). You know nothing about the recipient's taste, and the same text goes to all of them — describe the song as the artist described it, and stop there.
 
 If the text is in Japanese, translate the meaning into natural English; never quote the raw Japanese.
 
@@ -308,20 +298,11 @@ The Description reflects the artist's actual voice and ambition. When incorporat
 5. NO FORMALIZATION OF CASUAL TONE — If the artist's intro is casual and warm (greeting + casual invitation), the pitch opening should feel casual and warm. Don't formalize. "Hi! Hope you're doing well!" type openers are perfectly professional for indie music pitching — formality is NOT what makes a pitch professional, specificity and authenticity do.
 
 6. THE PITCH IS THE ARTIST'S VOICE THROUGH A TRANSLATOR, NOT A PR REWRITE. You are translating + arranging the artist's own words, not rewriting them in your own publicist voice. When in doubt, stay closer to what the artist literally said.
-` : ''}${hasCuratorPersonality ? `
-═══ CURATOR PERSONALIZATION (MANDATORY — DO NOT SKIP) ═══
-The TARGET CURATOR section above contains real data about this specific curator. You MUST anchor the pitch to that data so it reads as researched, not templated. In the Hook OR Body, include AT LEAST ONE concrete reference drawn from:
-  • an artist in "Artists they have featured" (e.g. "fans of [ArtistX] in your rotation will find a familiar texture here")
-  • a specific detail from the "Curator bio" (their stated focus, format, label, geography, philosophy) — QUOTE OR DIRECTLY PARAPHRASE the bio's actual words; do NOT extrapolate to credentials/companies/roles not mentioned
-  • a mood listed in "Moods they prefer" — BUT ONLY IF that mood is genuinely compatible with the song character described in the Description. If there is a mood mismatch, choose one of the other two anchors instead.
-A generic statement like "fits your playlist's vibe" does NOT satisfy this rule. NEVER name the curator personally (use [Curator Name] in the greeting only). NEVER quote raw Japanese from the bio.
-
-REMINDER: The ANTI-HALLUCINATION rules at the top of this prompt take precedence. If the curator profile is too thin for a researched reference, fall back to genre-alignment language ("a natural fit for your [genre] rotation") — do NOT invent a fabricated background to satisfy this personalization requirement. Personalization with FABRICATED detail is worse than no personalization.
 ` : ''}
 ═══ PITCH STRUCTURE (120-180 words) ═══
 1. Subject line: Compelling, under 60 characters, include genre + "from Japan"
 2. Greeting: "Hi [Curator Name]," — use the literal placeholder text "[Curator Name]" exactly as written. Do NOT substitute a real name. The system replaces this token per recipient before sending.
-3. Hook: ${style === 'storytelling' ? 'Vivid sensory description of the sound' : style === 'casual' ? 'Personal connection to the curator\'s work' : 'Strongest credential or unique angle'}
+3. Hook: ${style === 'storytelling' ? 'Vivid sensory description of the sound' : style === 'casual' ? 'The artist\'s own reason for writing — what the song means to them, in their voice (NOT a reference to the recipient\'s work)' : 'Strongest credential or unique angle'}
 4. Body: FIRST sentence should echo the Description's personal voice/opener if it has one (see ARTIST NARRATIVE rule 3). Then weave in EVERY specific fact, number, award, and ambition from the Description (see ARTIST NARRATIVE rule 1) — these are non-negotiable. Describe the SOUND in vivid language that MATCHES the Description's stated tone. Reference achievements ONLY if in profile. ${socialLines.length > 0 ? 'Include social proof numbers naturally.' : ''}${trackDesc.characteristics ? ` Use the track analysis data above to give specific sound descriptions (e.g. energy level, tempo feel) — but defer to the Description's stated mood if the analysis appears to contradict it.` : ''}
 5. CTA — MANDATORY CLOSING INVITATION: The pitch body MUST end with a direct, warm invitation to the curator to actually listen. This is NOT optional. Choose phrasing that matches the artist's Description tone:
    • If the Description contains "ぜひ聞いてください" / "ぜひ聞いてみてください" / "please listen" / "I'd love for you to hear" → end with "Would love for you to give it a listen." / "I'd really love for you to hear it." / "Please give it a listen — it would mean a lot."
@@ -336,6 +317,9 @@ REMINDER: The ANTI-HALLUCINATION rules at the top of this prompt take precedence
 - NEVER OMIT a specific fact, number, award, or ambition that the artist wrote in the Description. If the Description mentions a specific thing (Grammy, SXSW count, monthly streams, signed to label X), it MUST appear in the pitch body with the same specificity. Silently dropping a Description fact is a failure.
 - NEVER use vague superlatives without evidence
 - NEVER write a real curator name. ANYWHERE you would refer to the curator personally — greeting, hook, mid-sentence — use the literal text "[Curator Name]". The frontend substitutes this token per recipient. Writing a real name will cause every recipient of a multi-curator pitch to receive the wrong salutation.
+- DO NOT reference or address any specific curator, their name, their playlist/station/show/blog/label, their genre focus, their audience, their past features, or why this track fits them. The body must read naturally and truthfully for ANY recipient — a jazz blogger, an EDM playlister, a sync supervisor — because the identical text is sent to all of them. Recipient-specific matching lines are inserted separately by the system, after your text.
+  FORBIDDEN phrasings (non-exhaustive — the rule is the principle, not the list): "Given your focus on…", "Your playlist's focus on…", "your station", "your show", "your blog", "your rotation", "your readers", "your listeners", "your audience", "your editorial lens", "fans of [X] in your rotation", "I've been following your work", "this fits what you cover", "a natural fit for your [genre] playlist", "knowing your taste for…".
+  The ONLY permitted reference to the recipient in the entire body is the literal greeting line "Hi [Curator Name],". Second person is otherwise allowed ONLY for the listening invitation ("would love for you to give it a listen", "hope you enjoy it") — which says nothing about who they are.
 - DO NOT include any URLs, links, or labels like "Stream:", "Listen:", "Spotify:", "YouTube:", "Apple Music:", "SoundCloud:", "Website:", "Instagram:", "X:", "Twitter:" in the pitch body or EPK. The OTONAMI email template renders a dedicated "Listen & respond" CTA and the artist's social links as buttons. Including URLs in the body creates duplicate CTAs and breaks the layout. Talk about the music and the artist; do NOT paste links.
 - ALL output text must be 100% English. ZERO Japanese characters allowed in the pitch or EPK.
 - If the artist description/bio is in Japanese, translate the MEANING into natural English. NEVER include the original Japanese text, not even in parentheses like "(楽しいバンドです)".

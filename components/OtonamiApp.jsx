@@ -4250,29 +4250,22 @@ function Analytics({pitches}) {
   const total = pitches.length || 1;
   const stats = {sent:0,opened:0,listened:0,feedback:0,accepted:0,declined:0,expired:0};
   pitches.forEach(p => { stats[p.status] = (stats[p.status]||0) + 1; });
-  const cumulOpen = (stats.opened||0)+(stats.listened||0)+(stats.feedback||0)+(stats.accepted||0)+(stats.declined||0);
-  const cumulListen = (stats.listened||0)+(stats.feedback||0)+(stats.accepted||0)+(stats.declined||0);
-  const cumulFB = (stats.feedback||0)+(stats.accepted||0)+(stats.declined||0);
+  // 返答率 = (feedback+accepted+declined) / 全ピッチ。expired・sent は無返答扱い
+  const responded = (stats.feedback||0)+(stats.accepted||0)+(stats.declined||0);
   const data = [
     {label:"送信",value:pitches.length,color:"#9a958e"},
-    {label:"開封",value:cumulOpen,color:"#3b82f6"},
-    {label:"試聴",value:cumulListen,color:"#8b5cf6"},
-    {label:"FB",value:cumulFB,color:"#06b6d4"},
+    {label:"返答",value:responded,color:"#06b6d4"},
     {label:"採用",value:stats.accepted||0,color:"#10b981"},
   ];
 
-  // Response time (average time from sent to first feedback)
-  const withFB = pitches.filter(p => p.feedbackAt && p.sentAt);
-  const avgResponseMs = withFB.length > 0 ? withFB.reduce((sum, p) => sum + (new Date(p.feedbackAt) - new Date(p.sentAt)), 0) / withFB.length : 0;
-  const avgResponseH = Math.round(avgResponseMs / 3600000 * 10) / 10;
+  // 平均応答日数。responded_at（実在列）と送信日時の差。未返答の行は除外する
+  const withResponse = pitches.filter(p => p.respondedAt && p.sentAt);
+  const avgResponseMs = withResponse.length > 0
+    ? withResponse.reduce((sum, p) => sum + (new Date(p.respondedAt) - new Date(p.sentAt)), 0) / withResponse.length
+    : 0;
+  const avgResponseD = Math.round(avgResponseMs / 86400000 * 10) / 10;
 
-  // Average listen duration
-  const withListen = pitches.filter(p => p.listenDuration > 0);
-  const avgListen = withListen.length > 0 ? Math.round(withListen.reduce((s, p) => s + p.listenDuration, 0) / withListen.length) : 0;
-
-  // Average rating
-  const withRating = pitches.filter(p => p.rating);
-  const avgRating = withRating.length > 0 ? Math.round(withRating.reduce((s, p) => s + p.rating, 0) / withRating.length * 10) / 10 : 0;
+  // 平均試聴・平均評価は listen_duration / rating 列の新設+キュレーターUI実装後に復活(2026-08-23 削除)
 
   // Genre breakdown
   const genreMap = {};
@@ -4302,10 +4295,8 @@ function Analytics({pitches}) {
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(100px,1fr))",gap:8,marginBottom:"1.5rem"}}>
       {[
         {v:Math.round(stats.accepted/total*100)+"%",l:"採用率",c:"#10b981"},
-        {v:Math.round(cumulOpen/total*100)+"%",l:"開封率",c:"#3b82f6"},
-        {v:avgResponseH?avgResponseH+"h":"—",l:"平均応答",c:"#8b5cf6"},
-        {v:avgListen?avgListen+"秒":"—",l:"平均試聴",c:"#06b6d4"},
-        {v:avgRating?avgRating+"★":"—",l:"平均評価",c:"#f59e0b"},
+        {v:Math.round(responded/total*100)+"%",l:"返答率",c:"#06b6d4"},
+        {v:avgResponseD?avgResponseD+"日":"—",l:"平均応答",c:"#8b5cf6"},
       ].map((s,i) => <div key={i} style={{background:"#ffffff",borderRadius:12,padding:"0.8rem",border:"1px solid rgba(0,0,0,0.05)",textAlign:"center"}}>
         <div style={{fontSize:"1.2rem",fontWeight:800,color:s.c}}>{s.v}</div>
         <div style={{fontSize:"0.65rem",color:"#9a958e"}}>{s.l}</div>

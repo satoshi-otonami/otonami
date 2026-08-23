@@ -88,16 +88,13 @@ function mapCurator(c) {
   };
 }
 
-/* ── Match score (genre overlap + response-rate bonus) ── */
-const calcMatch = (curator, trackGenres) => {
-  if (!trackGenres || trackGenres.length === 0) return null;
-  const all = [...(curator.genres || []), ...(curator.genresOpen || [])];
-  const overlap = trackGenres.filter(g =>
-    all.some(cg => cg.toLowerCase() === g.toLowerCase())
-  ).length;
-  if (overlap === 0) return null;
-  return Math.min(100, Math.round(overlap / trackGenres.length * 100 + (curator.responseRate || 0) * 0.5));
-};
+/* ── Match score ──
+   This is the public directory: there is no signed-in artist and no track to
+   score against, so no match score is shown here. The former local calcMatch()
+   was a third scoring formula that was only ever called with an empty genre
+   list — it always returned null. Scoring lives in lib/match-score.js and runs
+   on /studio and the artist dashboard, where an artist profile exists. */
+const NO_MATCH_SCORE = null;
 
 /* ── Avatar component ── */
 function Avatar({ name, color, size = 48, iconUrl }) {
@@ -521,7 +518,7 @@ export default function CuratorsPage() {
         if (searchQ && !c.name.toLowerCase().includes(searchQ.toLowerCase())) return false;
         return true;
       })
-      .map(c => ({ ...c, matchScore: calcMatch(c, []) }));
+      .map(c => ({ ...c, matchScore: NO_MATCH_SCORE }));
   }, [curators, genreFilter, typeFilter, searchQ]);
 
   const hasFilters = genreFilter || typeFilter || searchQ;
@@ -619,7 +616,7 @@ export default function CuratorsPage() {
       {modal && (
         <CuratorModal
           c={modal}
-          score={calcMatch(modal, [])}
+          score={NO_MATCH_SCORE}
           selected={selected.has(modal.id)}
           onClose={() => setModal(null)}
           onToggle={toggle}

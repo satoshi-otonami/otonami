@@ -6,7 +6,7 @@ import { initSession, loadCurators, loadPitches,
 import API, { authFetch, ApiError } from '@/lib/api-client';
 import { analyzeTrack } from '@/lib/api-track';
 import { describeTrackCharacteristics } from '@/lib/track-description';
-import { getMatchLabel, rankCurators, calculateMatchScore } from '@/lib/match-score';
+import { getMatchLabel, rankCurators, calculateMatchScore, compareByMatch, MATCH_INSUFFICIENT_LABEL } from '@/lib/match-score';
 import { externalHref } from '@/lib/url';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -1923,7 +1923,9 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   // sortByMatch controls ORDER only, not score visibility
   const ranked = useMemo(() => {
     if (!sortByMatch) return scoredCurators;
-    return [...scoredCurators].sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+    // compareByMatch keeps rejected-genre curators at the bottom and curators we
+    // cannot judge (null score) just above them, instead of treating both as 0.
+    return [...scoredCurators].sort(compareByMatch);
   }, [scoredCurators, sortByMatch]);
 
   const list = ranked.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||c.platform.toLowerCase().includes(q.toLowerCase())).filter(c=>!genre||c.genres.includes(genre)).filter(c=>!type||c.type===type);
@@ -2162,7 +2164,8 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
                 </div>;
               })()}
               {c.bio && <p style={{fontSize:14,color:'#9a958e',margin:'0 0 10px',lineHeight:1.5}}>{c.bio.length>80?c.bio.substring(0,80)+'…':c.bio}</p>}
-              {ml && c.matchReasons?.length > 0 && <div style={{fontSize:'0.62rem',color:'#c4956a',marginBottom:8}}>{c.matchReasons.slice(0,2).join(' · ')}</div>}
+              {c.matchExcludedLabel && <div style={{fontSize:'0.66rem',color:'#dc2626',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.18)',borderRadius:8,padding:'4px 10px',marginBottom:8,display:'inline-block'}}>{c.matchExcludedLabel}</div>}
+              {ml && !c.matchExcludedLabel && c.matchReasons?.length > 0 && <div style={{fontSize:'0.62rem',color:'#c4956a',marginBottom:8}}>{c.matchReasons.slice(0,2).join(' · ')}</div>}
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                 {c.genres.slice(0,4).map(g => <span key={g} style={{fontSize:12,padding:'4px 10px',borderRadius:20,background:'rgba(196,149,106,0.06)',border:'1px solid rgba(196,149,106,0.1)',color:'#c4956a'}}>{g}</span>)}
                 {c.genres.length > 4 && <span style={{fontSize:'0.62rem',color:'#9a958e',alignSelf:'center'}}>+{c.genres.length-4}</span>}
@@ -2178,6 +2181,9 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
                   </svg>
                   <span style={{fontSize:mcs.fontSize,fontWeight:mcs.fontWeight,color:mcs.color}}>{ms}%</span>
                 </div>
+              ) : c.matchInsufficient ? (
+                // Never print "0%" for missing data — 0% is a claim, absence of data is not.
+                <div style={{width:60,textAlign:'center',fontSize:'0.58rem',lineHeight:1.3,color:'#9a958e'}}>{MATCH_INSUFFICIENT_LABEL}</div>
               ) : (
                 <div style={{width:44,height:44}}/>
               )}
@@ -2188,8 +2194,10 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
         };
         // Group by recommended (score>=50) vs others
         const hasAnalysis = !!trackData?.audioFeatures;
-        const recommended = hasAnalysis ? list.filter(c => typeof c.matchScore === 'number' && c.matchScore >= 50) : [];
-        const others = hasAnalysis ? list.filter(c => typeof c.matchScore !== 'number' || c.matchScore < 50) : list;
+        // A curator who rejects this track's genre is never "recommended", whatever the number says.
+        const isRecommendable = (c) => typeof c.matchScore === 'number' && c.matchScore >= 50 && !c.matchExcluded?.length;
+        const recommended = hasAnalysis ? list.filter(isRecommendable) : [];
+        const others = hasAnalysis ? list.filter(c => !isRecommendable(c)) : list;
         return (<>
           {recommended.length > 0 && (<>
             <div style={{display:'flex',alignItems:'center',gap:8,margin:'20px 0 12px'}}>
@@ -2243,6 +2251,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       const matchingGenres = artistGenres.length > 0
         ? (dc.genres || []).filter(g => artistGenres.includes(g.toLowerCase()))
         : [];
+      const dcExcludedLabel = dc.matchExcludedLabel || null;
       return <div onClick={()=>setDetailCurator(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.72)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}}>
         <div onClick={e=>e.stopPropagation()} style={{background:'#ffffff',borderRadius:16,border:'1px solid rgba(0,0,0,0.06)',maxWidth:560,width:'100%',maxHeight:'90vh',overflowY:'auto',animation:'curatorModalIn 0.2s ease'}}>
 
@@ -2265,7 +2274,9 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
           <div style={{padding:'24px',display:'flex',flexDirection:'column',gap:24}}>
 
             {/* Match section */}
-            {(dcMs != null || matchingGenres.length > 0) && <div style={{background:dcMs!=null?(dcMs>=85?'rgba(74,222,128,0.06)':dcMs>=70?'rgba(96,165,250,0.06)':'rgba(251,191,36,0.06)'):'rgba(255,255,255,0.03)',borderRadius:12,padding:16,border:'1px solid '+(dcMs!=null?(dcMs>=85?'rgba(74,222,128,0.15)':dcMs>=70?'rgba(96,165,250,0.15)':'rgba(251,191,36,0.15)'):'rgba(0,0,0,0.05)')}}>
+            {(dcMs != null || dc.matchInsufficient || dcExcludedLabel || matchingGenres.length > 0) && <div style={{background:dcMs!=null?(dcMs>=85?'rgba(74,222,128,0.06)':dcMs>=70?'rgba(96,165,250,0.06)':'rgba(251,191,36,0.06)'):'rgba(255,255,255,0.03)',borderRadius:12,padding:16,border:'1px solid '+(dcMs!=null?(dcMs>=85?'rgba(74,222,128,0.15)':dcMs>=70?'rgba(96,165,250,0.15)':'rgba(251,191,36,0.15)'):'rgba(0,0,0,0.05)')}}>
+              {dcExcludedLabel && <div style={{fontSize:13,fontWeight:500,color:'#dc2626',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.18)',borderRadius:8,padding:'8px 12px',marginBottom:12}}>{dcExcludedLabel}</div>}
+              {dcMs == null && dc.matchInsufficient && <div style={{fontSize:13,color:'#9a958e'}}>{MATCH_INSUFFICIENT_LABEL}</div>}
               {dcMs != null && <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:matchingGenres.length>0?12:0}}>
                 <div style={{fontSize:32,fontWeight:600,color:dcMsColor,lineHeight:1}}>{dcMs}%</div>
                 <div>

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { authFetch, ApiError } from '@/lib/api-client';
 import { externalHref } from '@/lib/url';
+import { evaluateMatch, excludedGenresLabel, MATCH_INSUFFICIENT_LABEL } from '@/lib/match-score';
 
 // 認証付きAPIエラーをユーザー向けアラートに変換
 function showApiError(e, fallbackMsg = 'エラーが発生しました') {
@@ -1306,13 +1307,18 @@ export default function ArtistDashboard() {
         ][(dc.name || '').charCodeAt(0) % 6];
         const dcInitials = (dc.name || '').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
         const dcFollowers = dc.followers;
-        // Simple match score: overlap between artist genres and curator genres
+        // Match score comes from lib/match-score — the same engine /studio uses.
+        // This screen used to run its own genre-overlap formula and reported a
+        // different (usually much lower) number for the same pair.
+        const matchEval = evaluateMatch(dc, {
+          genres: artist?.genres || [],
+          mood: (artist?.moods || []).join(', '),
+        });
+        const matchScore = matchEval.score;
+        const matchExcludedLabel = matchEval.excludedGenres.length ? excludedGenresLabel(matchEval.excludedGenres) : null;
         const artistGenres = (artist?.genres || []).map(g => g.toLowerCase());
         const curatorGenres = (dc.genres || []).map(g => g.toLowerCase());
         const matchingGenres = artistGenres.length > 0 ? curatorGenres.filter(g => artistGenres.includes(g)) : [];
-        const matchScore = (artistGenres.length > 0 && curatorGenres.length > 0)
-          ? Math.round((matchingGenres.length / Math.max(artistGenres.length, 1)) * 100)
-          : null;
         const msColor = matchScore >= 85 ? '#4ade80' : matchScore >= 70 ? '#60a5fa' : matchScore >= 50 ? '#fbbf24' : '#9b9590';
 
         return (
@@ -1342,12 +1348,20 @@ export default function ArtistDashboard() {
               <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 24 }}>
 
                 {/* Match Score section */}
-                {(matchScore != null || matchingGenres.length > 0) && (
+                {(matchScore != null || matchExcludedLabel || matchEval.insufficient || matchingGenres.length > 0) && (
                   <div style={{
                     background: matchScore >= 85 ? 'rgba(74,222,128,0.06)' : matchScore >= 70 ? 'rgba(96,165,250,0.06)' : 'rgba(251,191,36,0.06)',
                     borderRadius: 12, padding: 16,
                     border: `1px solid ${matchScore >= 85 ? 'rgba(74,222,128,0.15)' : matchScore >= 70 ? 'rgba(96,165,250,0.15)' : 'rgba(251,191,36,0.15)'}`,
                   }}>
+                    {matchExcludedLabel && (
+                      <div style={{ fontSize: 13, fontWeight: 500, color: '#dc2626', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.18)', borderRadius: 8, padding: '8px 12px', marginBottom: 12 }}>
+                        {matchExcludedLabel}
+                      </div>
+                    )}
+                    {matchScore == null && matchEval.insufficient && (
+                      <div style={{ fontSize: 13, color: THEME.textMuted }}>{MATCH_INSUFFICIENT_LABEL}</div>
+                    )}
                     {matchScore != null && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: matchingGenres.length > 0 ? 12 : 0 }}>
                         <div style={{ fontSize: 32, fontWeight: 600, color: msColor, lineHeight: 1 }}>{matchScore}%</div>

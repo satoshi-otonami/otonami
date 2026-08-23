@@ -544,6 +544,9 @@ export default function App() {
           });
           // Load real pitch data from API for studio stats
           if (data.recentPitches?.length) {
+            // トラック名は同レスポンスの artist.tracks から解決する
+            // （pitches 側に曲名カラムは無く track_id だけを持つ）
+            const trackTitleById = new Map((data.artist?.tracks || []).map(t => [t.id, t.title]));
             setPitches(prev => {
               if (prev.length > 0) return prev; // don't overwrite if already loaded
               return data.recentPitches.map(p => ({
@@ -552,6 +555,9 @@ export default function App() {
                 curatorName: p.curator_name,
                 songTitle: p.song_title,
                 songLink: p.song_link,
+                trackId: p.track_id || null,
+                trackTitle: trackTitleById.get(p.track_id) || null,
+                respondedAt: p.responded_at || null,
                 feedbackMessage: p.feedback_message,
                 placementUrl: p.placement_url,
                 sentAt: p.sent_at,
@@ -4018,12 +4024,60 @@ function PitchDetailModal({pitch, curators, savePitches, allPitches, onClose, no
 }
 
 // ─── Tracking ───
+// track_id を持たない旧ピッチをまとめる擬似グループキー
+const NO_TRACK_KEY = "__no_track__";
+
 function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPitches}) {
   const [expanded, setExpanded] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [detailPitchId, setDetailPitchId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  // null = 未初期化。トラック確定後に最新グループだけを開いた Set を入れる
+  const [openGroups, setOpenGroups] = useState(null);
+
+  // 楽曲別グループ。最終活動日時の降順、トラック情報なしは常に最下部。
+  const trackGroups = useMemo(() => {
+    const activityAt = p => Math.max(...[p.respondedAt, p.feedbackAt, p.sentAt, p.createdAt]
+      .map(d => { const t = d ? new Date(d).getTime() : 0; return Number.isNaN(t) ? 0 : t; }));
+    const byTrack = new Map();
+    pitches.forEach(p => {
+      const key = p.trackId || NO_TRACK_KEY;
+      if (!byTrack.has(key)) byTrack.set(key, {key, title: null, items: []});
+      const g = byTrack.get(key);
+      if (!g.title && p.trackTitle) g.title = p.trackTitle;
+      g.items.push(p);
+    });
+    const groups = [...byTrack.values()].map(g => ({
+      ...g,
+      lastActivity: g.items.reduce((max, p) => Math.max(max, activityAt(p)), 0),
+      // 集計は全体統計と同じ分類（新しいステータス分類は作らない）
+      stats: {
+        sent: g.items.length,
+        inProgress: g.items.filter(p => !["accepted","declined","expired"].includes(p.status)).length,
+        feedback: g.items.filter(p => p.status === "feedback").length,
+        accepted: g.items.filter(p => p.status === "accepted").length,
+      },
+    }));
+    groups.sort((a, b) => {
+      if (a.key === NO_TRACK_KEY) return 1;
+      if (b.key === NO_TRACK_KEY) return -1;
+      return b.lastActivity - a.lastActivity;
+    });
+    return groups;
+  }, [pitches]);
+
+  // ピッチは非同期ロードなので、グループが揃った時点で最新のものだけ展開する
+  useEffect(() => {
+    if (openGroups || trackGroups.length === 0) return;
+    setOpenGroups(new Set([trackGroups[0].key]));
+  }, [trackGroups, openGroups]);
+
+  const toggleGroup = key => setOpenGroups(prev => {
+    const next = new Set(prev || []);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    return next;
+  });
 
   // マウント時にDBから最新ステータスを取得
   useEffect(() => {
@@ -4104,8 +4158,25 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
       </button>
     </div>
     <p style={{color:"#6b6560",fontSize:"0.82rem",marginBottom:"1.5rem"}}>{pitches.length}件送信 · {inProgress}件進行中 · {accepted}件採用</p>
-    <div style={{display:"flex",flexDirection:"column",gap:8}}>
-      {pitches.map(p => {
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
+      {trackGroups.map(g => {
+        const groupOpen = openGroups ? openGroups.has(g.key) : false;
+        const badges = [
+          {label:"送信",   value:g.stats.sent,       color:"#6b6560"},
+          {label:"進行中", value:g.stats.inProgress, color:"#6b6560"},
+          {label:"Feedback", value:g.stats.feedback, color:"#10b981"},
+          {label:"採用",   value:g.stats.accepted,   color:"#059669"},
+        ];
+        return <div key={g.key}>
+        <div onClick={()=>toggleGroup(g.key)} style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",background:"#ffffff",border:"1px solid rgba(0,0,0,0.05)",borderRadius:14,padding:"0.8rem 1rem",cursor:"pointer"}}>
+          <span style={{fontSize:"0.7rem",color:"#9a958e",flexShrink:0}}>{groupOpen ? "▾" : "▸"}</span>
+          <div style={{fontWeight:700,fontSize:"0.9rem",color:"#1a1a1a",flex:"1 1 140px",minWidth:0,wordBreak:"break-word"}}>{g.title || "トラック情報なし"}</div>
+          <div style={{display:"flex",gap:5,flexWrap:"wrap",flexShrink:0}}>
+            {badges.map(b => <span key={b.label} style={{padding:"0.15rem 0.5rem",borderRadius:7,background:b.value>0?"rgba(0,0,0,0.04)":"transparent",border:"1px solid rgba(0,0,0,0.05)",fontSize:"0.68rem",fontWeight:600,color:b.value>0?b.color:"#b5b0a8",whiteSpace:"nowrap"}}>{b.label} {b.value}</span>)}
+          </div>
+        </div>
+        {groupOpen && <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:8}}>
+      {g.items.map(p => {
         const s = statusMap[p.status] || statusMap.sent;
         const isOpen = expanded === p.id;
         const actionInfo = p.actionType ? ACTION_TYPES.find(a=>a.id===p.actionType) : null;
@@ -4164,6 +4235,9 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
 
             <div style={{fontSize:"0.72rem",color:"#9a958e",marginTop:8}}>回答期限: {(() => { const d = p.deadline ? new Date(p.deadline) : (p.sentAt ? new Date(new Date(p.sentAt).getTime() + 7*24*60*60*1000) : null); return d && d.getFullYear() > 2000 ? d.toLocaleDateString("ja-JP") : "—"; })()}</div>
           </div>}
+        </div>;
+      })}
+        </div>}
         </div>;
       })}
     </div>

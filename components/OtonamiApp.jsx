@@ -1305,7 +1305,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
       {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist} pitchedCuratorIds={pitchedCuratorIds}/>}
       {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitchedCuratorIds={pitchedCuratorIds} pitches={pitches} savePitches={savePitches} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches} linkedTrackId={linkedTrackId} linkedTrackAiStatus={linkedTrackAiStatus}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches} refreshPitches={refreshPitches}/>}
-      {page==="analytics" && <Analytics pitches={myPitches}/>}
+      {page==="analytics" && <Analytics pitches={myPitches} refreshPitches={refreshPitches}/>}
       {page==="shop" && <CreditShop user={user} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage}/>}
       {/* Safety net: if `page` is ever a value none of the branches above
           handle (e.g. a stale "auth"/"landing" left over after async
@@ -4246,7 +4246,12 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
 }
 
 // ─── Analytics ───
-function Analytics({pitches}) {
+function Analytics({pitches, refreshPitches}) {
+  // マウント時にDBから最新ステータスを取得（トラッキングタブと同じ方式）
+  useEffect(() => {
+    if (refreshPitches) refreshPitches();
+  }, []); // eslint-disable-line
+
   const total = pitches.length || 1;
   const stats = {sent:0,opened:0,listened:0,feedback:0,accepted:0,declined:0,expired:0};
   pitches.forEach(p => { stats[p.status] = (stats[p.status]||0) + 1; });

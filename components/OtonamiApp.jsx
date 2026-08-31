@@ -3047,7 +3047,9 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
       status: "sent", sentAt: new Date().toISOString(),
       openedAt:null, listenedAt:null, feedbackAt:null, listenDuration:0,
       feedback:null, rating:null, decision:null,
-      deadline: new Date(Date.now()+7*24*60*60*1000).toISOString(),
+      // deadline はサーバが curators.response_time から算出する。
+      // INSERT レスポンスの deadline_at を下で受け取る。
+      deadline:null,
     }));
 
     // Insert each pitch to DB individually to get the actual Supabase UUID.
@@ -3084,7 +3086,7 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
           reachedCuratorIds.push(c.id);
         } else if (result?.id) {
           // Use translated pitchText (if translation occurred) for the email body
-          newPitches.push({ ...p, id: result.id, pitchText: result.pitchText ?? p.pitchText, _hasUUID: true });
+          newPitches.push({ ...p, id: result.id, pitchText: result.pitchText ?? p.pitchText, deadline: result.deadline_at ?? null, _hasUUID: true });
           reachedCuratorIds.push(c.id);
           // Authoritative balance comes from the server
           if (typeof result.new_credits === 'number') latestCredits = result.new_credits;
@@ -4233,7 +4235,7 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
               <a href={externalHref(p.placementUrl)} target="_blank" rel="noopener noreferrer" style={{color:"#c4956a",wordBreak:"break-all"}}>{p.placementUrl}</a>
             </div>}
 
-            <div style={{fontSize:"0.72rem",color:"#9a958e",marginTop:8}}>回答期限: {(() => { const d = p.deadline ? new Date(p.deadline) : (p.sentAt ? new Date(new Date(p.sentAt).getTime() + 7*24*60*60*1000) : null); return d && d.getFullYear() > 2000 ? d.toLocaleDateString("ja-JP") : "—"; })()}</div>
+            <div style={{fontSize:"0.72rem",color:"#9a958e",marginTop:8}}>回答期限: {(() => { const d = p.deadline ? new Date(p.deadline) : null; return d && !isNaN(d) && d.getFullYear() > 2000 ? d.toLocaleDateString("ja-JP") : "—"; })()}</div>
           </div>}
         </div>;
       })}
@@ -4664,7 +4666,8 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
     <p style={{color:"#c0bdb5",fontSize:"0.82rem",marginBottom:"1.5rem"}}>{pitches.length}件の未レビューピッチ · 7日以内にフィードバック必須</p>
     {pitches.length === 0 && <div style={{textAlign:"center",padding:"3rem",color:"#7a7870"}}><div style={{width:48,height:2,background:"#c4956a",borderRadius:1,margin:"0 auto 14px"}}/><p>新しいピッチはまだありません</p></div>}
     {pitches.map(p => {
-      const daysLeft = Math.max(0, Math.ceil((new Date(p.deadline) - Date.now()) / (24*60*60*1000)));
+      const dl = p.deadline ? new Date(p.deadline) : null;
+      const daysLeft = dl && !isNaN(dl) ? Math.max(0, Math.ceil((dl - Date.now()) / (24*60*60*1000))) : null;
       return <div key={p.id} onClick={()=>openPitch(p)} style={{background:"#2a2a2a",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"1rem",marginBottom:8,cursor:"pointer",transition:"all 0.12s"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:40,height:40,borderRadius:10,background:"rgba(196,149,106,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1rem",color:"#c4956a"}}>♪</div>
@@ -4673,7 +4676,7 @@ function CuratorInbox({user, pitches, allPitches, savePitches, notify, curators,
             <div style={{fontSize:"0.75rem",color:"#c0bdb5"}}>{p.genre} · "{p.songTitle}"</div>
           </div>
           <div style={{textAlign:"right"}}>
-            <div style={{fontSize:"0.72rem",color:daysLeft<=2?"#ef4444":"#c0bdb5",fontWeight:daysLeft<=2?700:400}}>{daysLeft}日残り</div>
+            <div style={{fontSize:"0.72rem",color:daysLeft!==null&&daysLeft<=2?"#ef4444":"#c0bdb5",fontWeight:daysLeft!==null&&daysLeft<=2?700:400}}>{daysLeft!==null?`${daysLeft}日残り`:"期限なし"}</div>
             <div style={{fontSize:"0.65rem",color:"#7a7870"}}>{new Date(p.sentAt || p.createdAt).toLocaleDateString("ja-JP")}</div>
           </div>
         </div>

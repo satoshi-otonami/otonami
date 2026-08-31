@@ -2,6 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { CL as T } from '@/lib/design-tokens';
 import { supabase } from '@/lib/supabase';
+// 回答時間の選択肢は pitches.deadline_at の算出元。lib/response-time.js が正。
+import { RESPONSE_TIME_OPTIONS } from '@/lib/response-time';
 
 // Persist curator registration progress so a mobile reload / tab switch
 // doesn't wipe an almost-finished form. Auth fields are never stored.
@@ -56,13 +58,6 @@ const OPPORTUNITY_OPTIONS = [
   { value: 'live_booking',       icon: '•', en: 'Live Booking',        ja: 'ライブブッキング' },
   { value: 'sync_licensing',     icon: '•', en: 'Sync / Licensing',    ja: 'シンク・楽曲使用' },
   { value: 'management_signing', icon: '○', en: 'Management / Signing', ja: 'マネジメント・契約' },
-];
-
-const RESPONSE_TIME_OPTIONS = [
-  { value: '24h',    en: 'Within 24 hours', ja: '24時間以内' },
-  { value: '3days',  en: '1–3 days',        ja: '1〜3日' },
-  { value: '7days',  en: '3–7 days',        ja: '3〜7日' },
-  { value: '2weeks', en: '1–2 weeks',       ja: '1〜2週間' },
 ];
 
 export default function CuratorRegistrationPage() {

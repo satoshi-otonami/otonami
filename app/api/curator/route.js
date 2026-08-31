@@ -4,6 +4,7 @@ import { Resend } from 'resend';
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 import crypto from 'crypto';
+import { sanitizeResponseTime } from '@/lib/response-time';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-otonami-secret-change-me'
@@ -105,7 +106,10 @@ export async function POST(request) {
         similar_artists: form.similarArtists || [],
         playlist_url: form.playlistUrl || null,
         rejected_genres: form.rejectedGenres || [],
-        response_time: form.responseTime || null,
+        // 不正値・未指定は '7days' に矯正。deadline_at の算出元なので
+        // 自由入力を DB に残さない（POST /api/pitches が正規化して読むが、
+        // 保存時点で揃えておく）。
+        response_time: sanitizeResponseTime(form.responseTime),
         social_links: form.socialLinks || null,
         submission_guidelines: form.submissionGuidelines || null,
         featured_track_url: form.featuredTrackUrl || null,
@@ -281,6 +285,9 @@ export async function PUT(request) {
     }
     if (updateData.tier !== undefined) {
       updateData.tier = Math.min(5, Math.max(1, parseInt(updateData.tier) || 2));
+    }
+    if (updateData.response_time !== undefined) {
+      updateData.response_time = sanitizeResponseTime(updateData.response_time);
     }
 
     const { data, error } = await supabase

@@ -4,6 +4,7 @@ import { getServiceSupabase } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth';
 import { pitchSubmitRatelimit, checkRatelimit } from '@/lib/ratelimit';
 import { INPUT_LIMITS, validateLength } from '@/lib/validate-input';
+import { deadlineFromNow } from '@/lib/response-time';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -71,7 +72,7 @@ const PITCHES_COLUMNS = new Set([
   'curator_name', 'subject', 'body', 'song_link', 'match_score',
   'feedback_message', 'placement_platform', 'placement_url', 'placement_date',
   'negotiation_status', 'messages', 'pitch_language', 'track_id',
-  'sent_at', 'deadline_at', 'credits_charged',
+  'sent_at', 'credits_charged',
 ]);
 
 function pickKnownColumns(row) {
@@ -160,9 +161,9 @@ export async function POST(request) {
     // (.neq('status','draft')) see the pitch.
     cleanRow.status = 'sent';
     cleanRow.sent_at = new Date().toISOString();
-    if (!cleanRow.deadline_at) {
-      cleanRow.deadline_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    }
+    // deadline_at is set below, once the curator row is loaded — it is derived
+    // from curators.response_time and is never taken from the client (that is
+    // why 'deadline_at' is absent from PITCHES_COLUMNS).
 
     const db = getServiceSupabase();
 
@@ -237,11 +238,17 @@ export async function POST(request) {
     // (per CLAUDE.md). Ignore any client-supplied credits_charged value.
     const { data: curator } = await db
       .from('curators')
-      .select('tier, email')
+      .select('tier, email, response_time')
       .eq('id', cleanRow.curator_id)
       .maybeSingle();
     const creditsRequired = curator?.tier || 2;
     cleanRow.credits_charged = creditsRequired;
+
+    // Pitch window follows the curator's declared turnaround: '2weeks' gets 14
+    // days, everything else (including an unknown slug or a missing curator
+    // row) gets 7. Without this a '2weeks' curator's pitches expired — and were
+    // refunded by the cron — before their own stated response window closed.
+    cleanRow.deadline_at = deadlineFromNow(curator?.response_time);
 
     // ── Same-contact duplicate guard (v1, first-write-wins) ──
     // One person (e.g. a curator named Dario) may hold several curator
@@ -376,6 +383,7 @@ export async function POST(request) {
       pitchText: englishBody,
       new_credits: newCredits,
       credits_charged: creditsRequired,
+      deadline_at: cleanRow.deadline_at,
     });
   } catch (e) {
     console.error('[pitches] Unexpected error:', e);

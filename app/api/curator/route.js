@@ -273,6 +273,12 @@ export async function PUT(request) {
     for (const key of ALLOWED) {
       if (body[key] !== undefined) updateData[key] = body[key];
     }
+    // A form field that never received its stored value must not be able to erase
+    // it: an edit screen seeds missing columns with '', so a plain save would send
+    // '' and wipe real text. For these free-text columns '' means "not sent".
+    for (const key of ['bio', 'submission_guidelines']) {
+      if (updateData[key] === '') delete updateData[key];
+    }
     if (updateData.name !== undefined) {
       const trimmed = (updateData.name || '').trim();
       if (!trimmed || trimmed.length > 100) {

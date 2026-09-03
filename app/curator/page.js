@@ -1068,10 +1068,10 @@ export default function CuratorRegistrationPage() {
                     {/* Submission guidelines */}
                     <div style={{ marginBottom: 24, paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
                       <div style={{ fontSize: 13, color: T.textMuted, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
-                        Submission guidelines <span style={{ fontWeight: 400, fontSize: 11 }}>受付ガイドライン（任意・最大300文字）</span>
+                        Submission guidelines <span style={{ fontWeight: 400, fontSize: 11 }}>受付ガイドライン（任意・最大500文字）</span>
                       </div>
-                      <textarea className="curator-input" value={form.submissionGuidelines} onChange={e => { if (e.target.value.length <= 300) set('submissionGuidelines', e.target.value); }} placeholder="Any specific instructions for artists submitting to you?" rows={3} style={{ ...inp, minHeight: 80, height: 80, resize: 'vertical', marginTop: 8 }} />
-                      {form.submissionGuidelines.length > 200 && <p style={{ color: form.submissionGuidelines.length > 280 ? '#ef4444' : T.textMuted, fontSize: 11, marginTop: 4, fontFamily: T.font }}>{form.submissionGuidelines.length}/300</p>}
+                      <textarea className="curator-input" value={form.submissionGuidelines} onChange={e => { if (e.target.value.length <= 500) set('submissionGuidelines', e.target.value); }} placeholder="Any specific instructions for artists submitting to you?" rows={3} style={{ ...inp, minHeight: 80, height: 80, resize: 'vertical', marginTop: 8 }} />
+                      {form.submissionGuidelines.length > 400 && <p style={{ color: form.submissionGuidelines.length > 480 ? '#ef4444' : T.textMuted, fontSize: 11, marginTop: 4, fontFamily: T.font }}>{form.submissionGuidelines.length}/500</p>}
                     </div>
 
                     {/* How you get paid — 報酬の仕組み */}

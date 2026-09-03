@@ -54,6 +54,7 @@ export async function GET(request) {
       responseTime: data.response_time || null,
       opportunities: data.opportunities || [],
       preferredAttributes: data.preferred_attributes || [],
+      submissionGuidelines: data.submission_guidelines || null,
       pitchesReceived: data.pitches_received || null,
       pitchesResponded: data.pitches_responded || null,
       pitchesAccepted: data.pitches_accepted || null,

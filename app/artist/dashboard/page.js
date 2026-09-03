@@ -1409,6 +1409,14 @@ export default function ArtistDashboard() {
                 {/* Bio */}
                 {dc.bio && <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.7, margin: 0 }}>{dc.bio}</p>}
 
+                {/* Submission guidelines — pre-line keeps the curator's paragraph breaks. */}
+                {dc.submissionGuidelines && (
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: THEME.textSub, marginBottom: 10 }}>Submission guidelines</div>
+                    <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-line', background: THEME.bg, border: `1px solid ${THEME.border}`, borderRadius: 10, padding: '12px 14px' }}>{dc.submissionGuidelines}</p>
+                  </div>
+                )}
+
                 {/* Platform URL */}
                 {dc.url && <a href={externalHref(dc.url)} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: THEME.gold, fontSize: 13, textDecoration: 'none', wordBreak: 'break-all' }}>→ {dc.url}</a>}
 

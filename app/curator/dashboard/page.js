@@ -290,6 +290,7 @@ export default function CuratorDashboard() {
       opportunities: [...(curator.opportunities || [])],
       similar_artists: (curator.similar_artists || []).join(', '),
       playlist_url: curator.playlist_url || '',
+      submission_guidelines: curator.submission_guidelines || '',
       payment_method: curator.payment_method || 'paypal',
       payment_info: curator.payment_info || '',
       tier: curator.tier || 2,
@@ -706,6 +707,12 @@ export default function CuratorDashboard() {
                   <label style={editLbl}>Bio / 自己紹介 <span style={{ fontSize: 10, fontWeight: 400, color: T.textMuted }}>最大500文字</span></label>
                   <textarea className="edit-input edit-bio-textarea" value={editForm.bio} onChange={e => { if (e.target.value.length <= 500) setEditForm(f => ({ ...f, bio: e.target.value })); }} placeholder="Tell artists about your platform..." rows={3} style={{ ...editInp, resize: 'vertical', height: 90 }} />
                   {editForm.bio?.length > 400 && <div style={{ color: editForm.bio.length > 480 ? '#ef4444' : T.textMuted, fontSize: 11, marginTop: 2, fontFamily: T.font }}>{editForm.bio.length}/500</div>}
+                </div>
+
+                <div style={{ marginBottom: 14 }}>
+                  <label style={editLbl}>Submission guidelines / 応募ガイドライン <span style={{ fontSize: 10, fontWeight: 400, color: T.textMuted }}>最大500文字</span></label>
+                  <textarea className="edit-input" value={editForm.submission_guidelines} onChange={e => { if (e.target.value.length <= 500) setEditForm(f => ({ ...f, submission_guidelines: e.target.value })); }} placeholder="Any specific instructions for artists submitting to you?" rows={3} style={{ ...editInp, resize: 'vertical', height: 90 }} />
+                  {editForm.submission_guidelines?.length > 400 && <div style={{ color: editForm.submission_guidelines.length > 480 ? '#ef4444' : T.textMuted, fontSize: 11, marginTop: 2, fontFamily: T.font }}>{editForm.submission_guidelines.length}/500</div>}
                 </div>
 
                 {/* Open to all genres toggle */}

@@ -2354,6 +2354,13 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
             {/* Bio */}
             {dc.bio && <p style={{fontSize:14,color:'#6b6560',lineHeight:1.7,margin:0}}>{dc.bio}</p>}
 
+            {/* Submission guidelines — curator-authored. pre-line keeps the
+                paragraph breaks they typed without preserving stray spaces. */}
+            {dc.submissionGuidelines && <div>
+              <div style={{fontSize:13,fontWeight:500,color:'#6b6560',marginBottom:10}}>Submission guidelines</div>
+              <p style={{fontSize:14,color:'#6b6560',lineHeight:1.7,margin:0,whiteSpace:'pre-line',background:'#ffffff',border:'1px solid rgba(0,0,0,0.05)',borderRadius:10,padding:'12px 14px'}}>{dc.submissionGuidelines}</p>
+            </div>}
+
             {/* Platform URL */}
             {dc.url && <a href={externalHref(dc.url)} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{display:'inline-flex',alignItems:'center',gap:6,color:'#c4956a',fontSize:13,textDecoration:'none',wordBreak:'break-all'}}>→ {dc.url}</a>}
 

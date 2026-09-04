@@ -75,7 +75,7 @@ export default function RefundInbox({ lang = 'ja' }) {
           fontSize: 11,
           letterSpacing: '1.5px',
           textTransform: 'uppercase',
-          color: 'rgba(240,237,230,0.45)',
+          color: '#b4b0a8',
         }}
       >
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round">
@@ -103,7 +103,7 @@ export default function RefundInbox({ lang = 'ja' }) {
               borderRadius: '50%',
               marginTop: 6,
               flexShrink: 0,
-              background: r.tone === 'good' ? '#4ade80' : 'rgba(240,237,230,0.35)',
+              background: r.tone === 'good' ? '#4ade80' : '#8f8b83',
             }}
           />
           <div style={{ minWidth: 0, flex: 1 }}>
@@ -112,22 +112,22 @@ export default function RefundInbox({ lang = 'ja' }) {
                 style={{
                   fontSize: 13.5,
                   fontWeight: 700,
-                  color: r.tone === 'good' ? '#f0ede6' : 'rgba(240,237,230,0.62)',
+                  color: r.tone === 'good' ? '#f0ede6' : '#d3cfc6',
                 }}
               >
                 {r.subject}
               </span>
-              <span style={{ fontSize: 11, color: 'rgba(240,237,230,0.38)', whiteSpace: 'nowrap' }}>{r.when}</span>
+              <span style={{ fontSize: 11, color: '#a5a199', whiteSpace: 'nowrap' }}>{r.when}</span>
             </div>
             <div
               style={{
                 fontSize: 12.5,
                 lineHeight: 1.6,
                 marginTop: 3,
-                color: r.tone === 'good' ? 'rgba(240,237,230,0.7)' : 'rgba(240,237,230,0.45)',
+                color: r.tone === 'good' ? '#ddd9d0' : '#b4b0a8',
               }}
             >
-              <span style={{ color: 'rgba(240,237,230,0.5)' }}>{r.from} — </span>
+              <span style={{ color: '#b4b0a8' }}>{r.from} — </span>
               {r.preview}
             </div>
           </div>

@@ -2179,7 +2179,7 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
               {/* Same four promises as the hero — restated where the money
                   question actually lands. */}
               <div style={{ marginTop: 28, display: 'flex', justifyContent: 'center' }}>
-                <TrustBar curatorCount={curatorMarquee?.count ?? null} lang={lang} tone="dark" />
+                <TrustBar curatorCount={curatorMarquee?.count ?? null} lang={lang} tone="light" />
               </div>
             </div>
           </div>

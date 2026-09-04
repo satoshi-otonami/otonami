@@ -13,6 +13,12 @@ import { RESPONSE_WINDOW_DAYS } from '@/lib/pricing';
  * already has it server-side (the landing page does, via the ISR marquee);
  * otherwise this fetches /api/curators/count, which applies the same is_seed
  * predicate as /api/curators/list.
+ *
+ * Colours are solid, never alpha. An earlier version used muted tokens
+ * (rgba(240,237,230,0.62) / #6b6560) which dropped to 2.5:1 the moment the
+ * dark tone landed on a light section, and the gold icon failed the 3:1
+ * non-text minimum on every light background. `tone` must match the
+ * section behind it.
  */
 export default function TrustBar({ curatorCount = null, lang = 'ja', tone = 'dark' }) {
   const [count, setCount] = useState(curatorCount);
@@ -89,12 +95,12 @@ export default function TrustBar({ curatorCount = null, lang = 'ja', tone = 'dar
         justifyContent: 'center',
         alignItems: 'center',
         gap: '8px 18px',
-        color: dark ? 'rgba(240,237,230,0.62)' : '#6b6560',
+        color: dark ? '#e8e4dc' : '#4a453f',
       }}
     >
       {items.map(item => (
-        <li key={item.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, lineHeight: 1.5 }}>
-          <span style={{ display: 'inline-flex', color: '#c4956a', flexShrink: 0 }}>{item.icon}</span>
+        <li key={item.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, lineHeight: 1.5 }}>
+          <span style={{ display: 'inline-flex', color: dark ? '#d8a878' : '#8a5f31', flexShrink: 0 }}>{item.icon}</span>
           <span>{item.label}</span>
         </li>
       ))}

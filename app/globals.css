@@ -1,3 +1,29 @@
+/* ─────────────────────────────────────────────────────────────
+   Motion tokens — the two-speed rule.
+
+   Interactive elements (buttons, links, tabs, form controls) must feel
+   like a switch: the response has to land inside the ~120ms window where
+   it still reads as "the click did that". Decorative motion (cards
+   lifting, section reveals) is atmosphere, so it takes its time.
+
+   Never introduce a third speed, and never animate a button at the
+   decorative duration — that is what made the old 0.2–0.3s blend feel
+   sluggish on tap and abrupt on hover at the same time.
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --t-ui: 0.12s;
+  --t-ui-ease: cubic-bezier(0.2, 0, 0.2, 1);
+  --t-decor: 0.55s;
+  --t-decor-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-ui: 0.01s;
+    --t-decor: 0.01s;
+  }
+}
+
 /* Prevent awkward Japanese line breaks — headings only, desktop only */
 @media (min-width: 768px) {
   h1, h2, h3 {

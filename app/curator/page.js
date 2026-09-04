@@ -4,6 +4,7 @@ import { CL as T } from '@/lib/design-tokens';
 import { supabase } from '@/lib/supabase';
 // 回答時間の選択肢は pitches.deadline_at の算出元。lib/response-time.js が正。
 import { RESPONSE_TIME_OPTIONS } from '@/lib/response-time';
+import { resolveReferralSource } from '@/lib/referral-source';
 
 // Persist curator registration progress so a mobile reload / tab switch
 // doesn't wipe an almost-finished form. Auth fields are never stored.
@@ -67,9 +68,11 @@ export default function CuratorRegistrationPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const avatarInputRef = useRef(null);
-  // Referral source (?ref=) captured on load; passed through to registration
-  // payload so we can attribute registrations to their outreach channel.
-  const referralSource = useRef(null);
+  // Referral source: resolved at submit time as ?ref= on this URL → the value
+  // captured on any earlier page (localStorage, first touch wins) → null. The
+  // site-wide capture lives in components/ReferralCapture.jsx; reading it here
+  // rather than at mount is what survives a landing-page → /curator hop and a
+  // leave-and-come-back-to-the-draft flow.
 
   // Login
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -163,8 +166,6 @@ export default function CuratorRegistrationPage() {
     try {
       const params = new URLSearchParams(window.location.search);
       if (params.get('tab') === 'login') setTab('login');
-      const ref = params.get('ref');
-      if (ref) referralSource.current = ref;
     } catch {}
   }, []);
 
@@ -389,7 +390,7 @@ export default function CuratorRegistrationPage() {
       if (form.socialInstagram.trim()) socialLinks.instagram = form.socialInstagram.trim();
       const res = await fetch('/api/curator', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, openToAllGenres, iconUrl, socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : null, referralSource: referralSource.current || null }),
+        body: JSON.stringify({ ...form, openToAllGenres, iconUrl, socialLinks: Object.keys(socialLinks).length > 0 ? socialLinks : null, referralSource: resolveReferralSource() }),
       });
       const data = await res.json();
       if (!res.ok) {

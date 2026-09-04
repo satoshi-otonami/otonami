@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
-import { isTestCurator } from '@/lib/curator-visibility';
+import { isSeedCurator } from '@/lib/curator-visibility';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,7 @@ export async function GET() {
     const supabase = getServiceSupabase();
     const { data, error } = await supabase
       .from('curators')
-      .select('id, name, type, playlist, url, genres, bio, followers, region, icon_url, accepts, preferred_moods, opportunities, similar_artists, tags, tier, open_to_all_genres')
+      .select('id, name, type, playlist, url, genres, bio, followers, region, icon_url, accepts, preferred_moods, opportunities, similar_artists, tags, tier, open_to_all_genres, is_seed')
       .or('is_seed.is.null,is_seed.eq.false')
       .order('created_at', { ascending: false });
 
@@ -37,9 +37,10 @@ export async function GET() {
       }
     }
 
-    // Test/dummy curators never appear on the public list (display-only exclusion;
-    // the DB row stays because past pitches reference it).
-    const curators = (data || []).filter(c => !isTestCurator(c)).map(c => {
+    // Seed/staff/test curators never appear on the public list (display-only
+    // exclusion; the DB rows stay because past pitches reference them).
+    // is_seed is in the select above so the predicate can actually read it.
+    const curators = (data || []).filter(c => !isSeedCurator(c)).map(c => {
       const s = stats[c.id] || { received: 0, responded: 0 };
       return {
         id: c.id,

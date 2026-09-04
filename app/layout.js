@@ -1,4 +1,5 @@
 import './globals.css';
+import ReferralCapture from '@/components/ReferralCapture';
 
 export const metadata = {
   metadataBase: new URL('https://otonami.io'),
@@ -47,6 +48,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body style={{ margin: 0, fontFamily: "'DM Sans', -apple-system, sans-serif" }}>
+        <ReferralCapture />
         {children}
       </body>
     </html>

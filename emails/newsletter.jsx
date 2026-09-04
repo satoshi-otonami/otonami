@@ -28,8 +28,8 @@ const NBSP = '\u00A0'; // &nbsp;
 const PREHEADER_PAD = '\u200C\u00A0'.repeat(10); // (zwnj + nbsp) x10
 
 const DEFAULT_CTA = {
-  match: 'https://otonami.io/studio',
-  epk: 'https://otonami.io/dashboard/epk',
+  match: 'https://otonami.io/studio?ref=newsletter',
+  epk: 'https://otonami.io/dashboard/epk?ref=newsletter',
 };
 
 const DEFAULT_CURATORS = [
@@ -344,7 +344,7 @@ export function Newsletter({
                     <tr>
                       <td align="center" style={{ padding: '6px 32px 0 32px' }}>
                         <a
-                          href="https://otonami.io/curators"
+                          href="https://otonami.io/curators?ref=newsletter"
                           target="_blank"
                           style={{ fontFamily: SANS, fontSize: '13px', color: '#8a8276', textDecoration: 'underline' }}
                         >
@@ -405,7 +405,7 @@ export function Newsletter({
                                 <p style={{ margin: '14px 0 0 0', fontSize: '12px', color: '#8a8276' }}>
                                   例：
                                   <a
-                                    href="https://otonami.io/epk/route14band"
+                                    href="https://otonami.io/epk/route14band?ref=newsletter"
                                     target="_blank"
                                     style={{ color: '#FF6B4A', textDecoration: 'underline' }}
                                   >
@@ -456,11 +456,11 @@ export function Newsletter({
                           運営：TYCompany合同会社
                         </p>
                         <p style={{ margin: 0, fontFamily: SANS, fontSize: '11px', color: '#9a9286', lineHeight: 1.7 }}>
-                          <a href="https://otonami.io" target="_blank" style={{ color: '#9a9286', textDecoration: 'underline' }}>
+                          <a href="https://otonami.io/?ref=newsletter" target="_blank" style={{ color: '#9a9286', textDecoration: 'underline' }}>
                             otonami.io
                           </a>
                           {'\u00A0\u30FB\u00A0'}
-                          <a href="https://otonami.io/tokushoho" target="_blank" style={{ color: '#9a9286', textDecoration: 'underline' }}>
+                          <a href="https://otonami.io/tokushoho?ref=newsletter" target="_blank" style={{ color: '#9a9286', textDecoration: 'underline' }}>
                             特定商取引法に基づく表記
                           </a>
                           {'\u00A0\u30FB\u00A0'}

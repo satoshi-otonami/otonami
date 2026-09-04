@@ -17,6 +17,13 @@ const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim()
 const testMode = process.env.EMAIL_TEST_MODE === 'true';
 const safeEmail = process.env.EMAIL_TEST_REDIRECT || 'satoshiy339@gmail.com';
 
+// Signup credit grant — single source of truth. The same helper feeds the
+// artists row and the credit_transactions ledger entry, so the balance and the
+// ledger can never disagree about how much was granted.
+const FOUNDING_GRANT = 10;
+const DEFAULT_GRANT = 3;
+const signupGrant = (isFounding) => (isFounding ? FOUNDING_GRANT : DEFAULT_GRANT);
+
 // Pick the smallest unused founding_number in 1..limit (gap-filling), so a slot
 // freed by a deleted founding artist is reused instead of colliding with an
 // existing higher number (count-based numbering hit idx_artists_founding_number).
@@ -109,7 +116,7 @@ export async function POST(request) {
       twitter_url: rest.twitter_url || null,
       facebook_url: rest.facebook_url || null,
       website_url: rest.website_url || null,
-      credits: isFoundingEligible ? 10 : 3,
+      credits: signupGrant(isFoundingEligible),
       is_founding: isFoundingEligible,
       founding_number: foundingNumber,
       founding_show_on_lp: false,
@@ -133,7 +140,7 @@ export async function POST(request) {
       const retrySlot = await pickFoundingSlot(adminDb, FOUNDING_LIMIT, FOUNDING_DEADLINE);
       insertData.is_founding = retrySlot.eligible;
       insertData.founding_number = retrySlot.foundingNumber;
-      insertData.credits = retrySlot.eligible ? 10 : 3;
+      insertData.credits = signupGrant(retrySlot.eligible);
 
       const retry = await adminDb
         .from('artists')
@@ -149,6 +156,33 @@ export async function POST(request) {
       return NextResponse.json(
         { error: insertError?.message || 'Failed to create artist' },
         { status: 500 }
+      );
+    }
+
+    // Record the signup grant in the credit ledger. artist.credits is the value
+    // the DB actually stored (the founding_number retry path can change it), so
+    // reading it back keeps the ledger row and the balance in lockstep.
+    //
+    // Non-fatal by design: registration is the primary function, the ledger is
+    // an audit record — never fail a signup because the audit write failed.
+    // Supabase .insert() resolves even on RLS/FK/CHECK failures, so the error
+    // field must be read explicitly; .catch() would swallow it silently.
+    const { error: grantTxError } = await adminDb
+      .from('credit_transactions')
+      .insert({
+        artist_id: artist.id,
+        amount: artist.credits,
+        type: 'initial_grant',
+        description: 'Initial signup grant',
+        metadata: {
+          is_founding: artist.is_founding,
+          founding_number: artist.founding_number,
+        },
+      });
+    if (grantTxError) {
+      console.error(
+        '[artists] CRITICAL: initial_grant ledger write failed — balance is correct but the ledger is now short a row.',
+        { artist_id: artist.id, email: artist.email, amount: artist.credits, error: grantTxError }
       );
     }
 

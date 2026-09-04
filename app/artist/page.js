@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import SavannahBanner from '@/components/SavannahBanner';
+import TrustBar from '@/components/landing/TrustBar';
 
 const THEME = {
   bg: '#f8f7f4',
@@ -332,7 +333,13 @@ export default function ArtistRegistrationPage() {
           {step === 1 && (
             <>
               <h2 style={{ fontFamily: THEME.fontDisplay, fontSize: 28, fontWeight: 700, color: THEME.text, margin: '0 0 6px' }}>アーティスト登録</h2>
-              <p style={{ color: THEME.textSub, fontSize: 15, margin: '0 0 28px', fontFamily: THEME.font }}>あなたの音楽を世界に届けましょう</p>
+              <p style={{ color: THEME.textSub, fontSize: 15, margin: '0 0 18px', fontFamily: THEME.font }}>あなたの音楽を世界に届けましょう</p>
+
+              {/* Same four promises as the landing hero, restated where the
+                  email field is. Curator figure is fetched, never a literal. */}
+              <div style={{ margin: '0 0 26px', padding: '14px 16px', background: THEME.bg, border: `1px solid ${THEME.borderLight}`, borderRadius: 12 }}>
+                <TrustBar lang="ja" tone="light" />
+              </div>
 
               <label style={lbl}>アーティスト名 / バンド名 <span style={{ color: THEME.coral, fontSize: 11 }}>*必須</span></label>
               <input className="artist-input" style={inp} value={form.name} onChange={e => set('name', e.target.value)} placeholder="例: Yuki Tanaka" />
@@ -351,7 +358,7 @@ export default function ArtistRegistrationPage() {
                     border: `1.5px solid ${form.artist_type === t.value ? THEME.gold : THEME.border}`,
                     background: form.artist_type === t.value ? THEME.gold : THEME.card,
                     color: form.artist_type === t.value ? '#fff' : THEME.text,
-                    cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s',
+                    cursor: 'pointer', fontFamily: THEME.font, transition: 'all var(--t-ui) var(--t-ui-ease)',
                   }}>{t.label}</button>
                 ))}
               </div>
@@ -361,7 +368,7 @@ export default function ArtistRegistrationPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 10 }}>
                 <div
                   onClick={() => avatarInputRef.current?.click()}
-                  style={{ width: 96, height: 96, borderRadius: '50%', border: `2px dashed ${avatarPreview ? THEME.gold : THEME.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', background: THEME.bg, flexShrink: 0, transition: 'all 0.15s' }}
+                  style={{ width: 96, height: 96, borderRadius: '50%', border: `2px dashed ${avatarPreview ? THEME.gold : THEME.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', background: THEME.bg, flexShrink: 0, transition: 'all var(--t-ui) var(--t-ui-ease)' }}
                 >
                   {avatarPreview
                     ? <img src={avatarPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -401,7 +408,7 @@ export default function ArtistRegistrationPage() {
                       border: `1.5px solid ${sel ? THEME.gold : THEME.border}`,
                       background: sel ? THEME.gold : THEME.card,
                       color: sel ? '#fff' : THEME.text,
-                      cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s',
+                      cursor: 'pointer', fontFamily: THEME.font, transition: 'all var(--t-ui) var(--t-ui-ease)',
                     }}>{g}</button>
                   );
                 })}
@@ -417,7 +424,7 @@ export default function ArtistRegistrationPage() {
                       border: `1.5px solid ${sel ? THEME.gold : THEME.border}`,
                       background: sel ? THEME.gold : THEME.card,
                       color: sel ? '#fff' : THEME.text,
-                      cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s',
+                      cursor: 'pointer', fontFamily: THEME.font, transition: 'all var(--t-ui) var(--t-ui-ease)',
                     }}>{m}</button>
                   );
                 })}
@@ -496,7 +503,7 @@ export default function ArtistRegistrationPage() {
               <label style={lbl}>カバー画像（任意）</label>
               <div
                 onClick={() => coverInputRef.current?.click()}
-                style={{ marginTop: 10, borderRadius: 10, overflow: 'hidden', border: `2px dashed ${coverPreview ? THEME.gold : THEME.border}`, background: THEME.bg, cursor: 'pointer', aspectRatio: '3 / 2', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+                style={{ marginTop: 10, borderRadius: 10, overflow: 'hidden', border: `2px dashed ${coverPreview ? THEME.gold : THEME.border}`, background: THEME.bg, cursor: 'pointer', aspectRatio: '3 / 2', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all var(--t-ui) var(--t-ui-ease)' }}
               >
                 {coverPreview
                   ? <img src={coverPreview} alt="cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -574,7 +581,7 @@ export default function ArtistRegistrationPage() {
           <span style={{ fontSize: 13, color: THEME.textMuted, fontFamily: THEME.font }}>
             <span className="hide-mobile">すでにアカウントをお持ちの方</span>
           </span>
-          <a href="/artist/login" style={{ padding: '8px 20px', borderRadius: 100, border: `1.5px solid ${THEME.gold}`, color: THEME.gold, textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font, transition: 'all 0.15s' }}>ログイン</a>
+          <a href="/artist/login" style={{ padding: '8px 20px', borderRadius: 100, border: `1.5px solid ${THEME.gold}`, color: THEME.gold, textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font, transition: 'all var(--t-ui) var(--t-ui-ease)' }}>ログイン</a>
         </div>
       </header>
     );
@@ -596,7 +603,7 @@ const globalStyles = `
   @keyframes spin { to { transform: rotate(360deg); } }
   .artist-input:focus { border-color: #c4956a !important; box-shadow: 0 0 0 3px rgba(196,149,106,0.12) !important; }
   .artist-input:hover { border-color: #9b9590 !important; }
-  .pill-tag { transition: all 0.15s; }
+  .pill-tag { transition: all var(--t-ui) var(--t-ui-ease); }
   .pill-tag:hover { border-color: #c4956a !important; }
   .btn-gold:hover { background: #b8845e !important; }
   .btn-coral:hover { background: #d04e2e !important; }

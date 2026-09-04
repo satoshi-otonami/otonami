@@ -7,6 +7,7 @@ import API, { authFetch, ApiError } from '@/lib/api-client';
 import { analyzeTrack } from '@/lib/api-track';
 import { describeTrackCharacteristics } from '@/lib/track-description';
 import { getMatchLabel, rankCurators, calculateMatchScore, compareByMatch, MATCH_INSUFFICIENT_LABEL } from '@/lib/match-score';
+import { CREDIT_PRICE_JPY, creditsToJpy } from '@/lib/pricing';
 import { externalHref } from '@/lib/url';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -1610,8 +1611,8 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify, loggedIn
             </div>
             <div style={{fontSize:12,color:"#6b6560",marginTop:2,fontFamily:"'DM Sans',sans-serif"}}>
               {isJa
-                ? "1クレジット = ¥160 · キュレーター1名あたり1〜5クレジット"
-                : "1 credit = ¥160 · 1-5 credits per curator"}
+                ? `1クレジット = ¥${CREDIT_PRICE_JPY} · キュレーター1名あたり1〜5クレジット`
+                : `1 credit = ¥${CREDIT_PRICE_JPY} · 1-5 credits per curator`}
             </div>
           </div>
         </div>
@@ -2098,7 +2099,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       <select style={{...css.filterSelect,flex:"1 1 120px",fontSize:14,height:40}} value={genre} onChange={e=>setGenre(e.target.value)}><option value="">全ジャンル</option>{GENRES.map(g=><option key={g}>{g}</option>)}</select>
       <select style={{...css.filterSelect,flex:"1 1 120px",fontSize:14,height:40}} value={type} onChange={e=>setType(e.target.value)}><option value="">全タイプ</option>{CURATOR_TYPES.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>
     </div>
-    {selected.length > 0 && <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.4)",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600}}>{selected.length}人選択中 · 合計{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}クレジット (¥{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)*160})</span><div style={{display:"flex",gap:6}}><button onClick={()=>{ if (isPreLaunch()) { notify(`ピッチ送信は${LAUNCH_DATE_LABEL_JA}のローンチ後に利用可能になります`, "error"); return; } setPage("pitch"); }} disabled={isPreLaunch()} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem",opacity:isPreLaunch()?0.5:1,cursor:isPreLaunch()?"not-allowed":"pointer"}}>{isPreLaunch() ? "ローンチ後に利用可" : "ピッチ作成へ →"}</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
+    {selected.length > 0 && <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.4)",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600}}>{selected.length}人選択中 · 合計{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}クレジット (¥{creditsToJpy(curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0))})</span><div style={{display:"flex",gap:6}}><button onClick={()=>{ if (isPreLaunch()) { notify(`ピッチ送信は${LAUNCH_DATE_LABEL_JA}のローンチ後に利用可能になります`, "error"); return; } setPage("pitch"); }} disabled={isPreLaunch()} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem",opacity:isPreLaunch()?0.5:1,cursor:isPreLaunch()?"not-allowed":"pointer"}}>{isPreLaunch() ? "ローンチ後に利用可" : "ピッチ作成へ →"}</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {(() => {
         const avatarColors = [
@@ -2135,7 +2136,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
           const cardBorder = on ? '1px solid rgba(196,149,106,0.4)' : isRecommended ? '1px solid #e5e2dc' : '1px solid rgba(0,0,0,0.05)';
           const cardBorderLeft = isRecommended ? '3px solid #c4956a' : undefined;
           const cardRadius = isRecommended ? '0 12px 12px 0' : '12px';
-          return <div key={c.id} onClick={()=>setDetailCurator(c)} className="curator-list-card" style={{background:cardBg,border:cardBorder,borderLeft:cardBorderLeft,borderRadius:cardRadius,padding:'20px',display:'flex',gap:16,alignItems:'flex-start',cursor:'pointer',transition:'all 0.2s ease'}}>
+          return <div key={c.id} onClick={()=>setDetailCurator(c)} className="curator-list-card" style={{background:cardBg,border:cardBorder,borderLeft:cardBorderLeft,borderRadius:cardRadius,padding:'20px',display:'flex',gap:16,alignItems:'flex-start',cursor:'pointer',transition:'all var(--t-ui) var(--t-ui-ease)'}}>
             {/* Avatar */}
             <div style={{width:48,height:48,borderRadius:'50%',flexShrink:0,position:'relative',overflow:'hidden'}}>
               {c.iconUrl && <img src={c.iconUrl} alt={c.name} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%',border:'2px solid rgba(0,0,0,0.06)'}} onError={e=>{e.target.style.display='none';}} />}
@@ -2178,7 +2179,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
               </div>
             </div>
             {/* Right: match gauge + select button */}
-            <div onClick={e=>{e.stopPropagation();toggle(c.id);}} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,flexShrink:0,borderRadius:10,padding:'6px',transition:'background 0.15s',cursor:pitched?'not-allowed':'pointer',touchAction:'manipulation',opacity:pitched?0.5:1}} title={pitched?'この楽曲は送信済みです':on?'選択解除':'選択する'}>
+            <div onClick={e=>{e.stopPropagation();toggle(c.id);}} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,flexShrink:0,borderRadius:10,padding:'6px',transition:'background var(--t-ui) var(--t-ui-ease)',cursor:pitched?'not-allowed':'pointer',touchAction:'manipulation',opacity:pitched?0.5:1}} title={pitched?'この楽曲は送信済みです':on?'選択解除':'選択する'}>
               {ms != null && mcs ? (
                 <div style={{position:'relative',width:mcs.size,height:mcs.size,display:'flex',alignItems:'center',justifyContent:'center'}}>
                   <svg width={mcs.size} height={mcs.size} style={{position:'absolute',transform:'rotate(-90deg)'}}>
@@ -2194,7 +2195,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
                 <div style={{width:44,height:44}}/>
               )}
               <span style={{fontSize:14,color:pitched?'#9a958e':'#c4956a',fontWeight:600}}>{pitched ? '送信済み' : `${c.creditCost||2} クレジット`}</span>
-              <div style={{width:22,height:22,borderRadius:'50%',background:pitched?'rgba(0,0,0,0.04)':on?'#c4956a':'rgba(0,0,0,0.06)',border:(pitched||!on)?'1px solid rgba(0,0,0,0.1)':'none',color:pitched?'#9a958e':on?'#fff':'#9a958e',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700,transition:'all 0.15s'}}>{pitched?'✓':on?'✓':'+'}</div>
+              <div style={{width:22,height:22,borderRadius:'50%',background:pitched?'rgba(0,0,0,0.04)':on?'#c4956a':'rgba(0,0,0,0.06)',border:(pitched||!on)?'1px solid rgba(0,0,0,0.1)':'none',color:pitched?'#9a958e':on?'#fff':'#9a958e',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700,transition:'all var(--t-ui) var(--t-ui-ease)'}}>{pitched?'✓':on?'✓':'+'}</div>
             </div>
           </div>;
         };
@@ -2204,6 +2205,16 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
         const isRecommendable = (c) => typeof c.matchScore === 'number' && c.matchScore >= 50 && !c.matchExcluded?.length;
         const recommended = hasAnalysis ? list.filter(isRecommendable) : [];
         const others = hasAnalysis ? list.filter(c => !isRecommendable(c)) : list;
+        if (list.length === 0 && curators.length > 0) {
+          return (
+            <div style={{textAlign:'center',padding:'3rem 1.5rem'}}>
+              <div style={{width:48,height:2,background:'#c4956a',borderRadius:1,margin:'0 auto 14px'}}/>
+              <p style={{color:'#6b6560',fontSize:14,lineHeight:1.7,margin:0}}>
+                この条件では静かなようです。ジャンルを1つ外すと候補が増えます。
+              </p>
+            </div>
+          );
+        }
         return (<>
           {recommended.length > 0 && (<>
             <div style={{display:'flex',alignItems:'center',gap:8,margin:'20px 0 12px'}}>
@@ -2231,7 +2242,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
         <div style={{maxWidth:680,margin:"0 auto",display:"flex",gap:8,alignItems:"center"}}>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontSize:"0.78rem",fontWeight:700,color:"#c4956a",lineHeight:1.3}}>{selected.length}人選択中 · {curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}クレジット</div>
-            <div style={{fontSize:"0.62rem",color:"#9a958e",lineHeight:1.3}}>¥{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)*160}相当</div>
+            <div style={{fontSize:"0.62rem",color:"#9a958e",lineHeight:1.3}}>¥{creditsToJpy(curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0))}相当</div>
           </div>
           {isPreLaunch() ? (
             <button disabled style={{...css.btnPrimary,padding:"0.7rem 1.1rem",fontSize:"0.82rem",opacity:0.5,cursor:"not-allowed",background:"#e5e2dc",color:"#6b6560",whiteSpace:"nowrap"}}>{LAUNCH_DATE_LABEL_JA}ローンチ後</button>
@@ -3692,7 +3703,7 @@ const CREDIT_PACKAGES = [
   { id: "pro",      credits: 40,  price: 5200,  unit: 130, label: { ja: "プロ",         en: "Pro" },                                                                    badge: { ja: "お得",     en: "Great Value" } },
   { id: "business", credits: 100, price: 12000, unit: 120, label: { ja: "ビジネス",     en: "Business" },                                                                badge: { ja: "最もお得", en: "Best Price" } },
 ];
-const CREDIT_PRICE = 160;
+const CREDIT_PRICE = CREDIT_PRICE_JPY;
 const CURATOR_PAY = {
   // Flat 50% across all review outcomes. The `accepted` arg is kept for
   // backwards compatibility with existing call sites but is ignored.
@@ -3855,7 +3866,7 @@ function CreditShop({ user, credits, setCredits, notify, setPage }) {
     {/* Tier Explanation */}
     <div style={{ background: "#fef9ee", border: "1px solid rgba(196,149,106,0.25)", borderRadius: 12, padding: "0.9rem 1rem", marginBottom: "1.2rem", fontFamily: "'DM Sans', sans-serif" }}>
       <div style={{ fontSize: "0.78rem", color: "#1a1a1a", lineHeight: 1.55 }}>
-        <strong style={{ color: "#c4956a" }}>{isJa ? "1クレジット = ¥160" : "1 credit = ¥160"}</strong>
+        <strong style={{ color: "#c4956a" }}>{isJa ? `1クレジット = ¥${CREDIT_PRICE_JPY}` : `1 credit = ¥${CREDIT_PRICE_JPY}`}</strong>
         <span style={{ color: "#6b6560" }}> · {isJa ? "キュレーター1名あたり1〜5クレジット" : "1-5 credits per curator"}</span>
         {tb && tb.t1 > 0 && <div style={{ marginTop: 6, color: "#6b6560", fontSize: "0.74rem" }}>
           <span style={{ fontWeight: 600, color: "#1a1a1a" }}>{activeCredits}{isJa ? "クレジット" : " credits"}</span>

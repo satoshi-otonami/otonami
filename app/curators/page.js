@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { T } from '@/lib/design-tokens';
+import { creditsToJpy } from '@/lib/pricing';
 
 /* ── Country flags ── */
 const FL = {
@@ -166,7 +167,7 @@ function CuratorCard({ c, score, selected, onToggle, onDetail, lang }) {
         border: `1.5px solid ${selected ? T.accent : hovered ? T.accentBorder : T.border}`,
         padding: 24,
         cursor: 'pointer',
-        transition: 'all 0.2s',
+        transition: 'all var(--t-ui) var(--t-ui-ease)',
         boxShadow: hovered ? T.shadowMd : T.shadow,
         transform: hovered ? 'translateY(-2px)' : 'none',
       }}
@@ -243,7 +244,7 @@ function CuratorCard({ c, score, selected, onToggle, onDetail, lang }) {
           style={{
             padding: '8px 16px', fontSize: 13, fontWeight: 600,
             fontFamily: T.font, borderRadius: T.radius, cursor: 'pointer',
-            transition: 'all 0.15s',
+            transition: 'all var(--t-ui) var(--t-ui-ease)',
             background: selected ? T.accent : 'transparent',
             color: selected ? '#fff' : T.textSub,
             border: `1.5px solid ${selected ? T.accent : T.border}`,
@@ -437,7 +438,7 @@ function CuratorModal({ c, score, selected, onClose, onToggle, lang }) {
               background: selected ? T.accentLight : T.accent,
               color: selected ? T.accent : '#fff',
               border: `1.5px solid ${selected ? T.accentBorder : T.accent}`,
-              borderRadius: T.radius, cursor: 'pointer', transition: 'all 0.15s',
+              borderRadius: T.radius, cursor: 'pointer', transition: 'all var(--t-ui) var(--t-ui-ease)',
             }}
           >{selected ? 'Deselect' : 'Select'}</button>
         </div>
@@ -821,8 +822,8 @@ export default function CuratorsPage() {
               </div>
               <div style={{ fontSize: 12, color: T.textSub, fontFamily: T.font, marginTop: 2 }}>
                 {lang === 'ja'
-                  ? `合計 ${selectedCredits}クレジット（¥${selectedCredits * 160}相当）でピッチ送信`
-                  : `${selectedCredits} credit${selectedCredits === 1 ? '' : 's'} total (≈¥${selectedCredits * 160}) to pitch`}
+                  ? `合計 ${selectedCredits}クレジット（¥${creditsToJpy(selectedCredits)}相当）でピッチ送信`
+                  : `${selectedCredits} credit${selectedCredits === 1 ? '' : 's'} total (≈¥${creditsToJpy(selectedCredits)}) to pitch`}
               </div>
             </div>
           </div>
@@ -844,7 +845,7 @@ export default function CuratorsPage() {
                 borderRadius: T.radius, background: T.accentGrad,
                 color: '#fff', cursor: 'pointer',
                 boxShadow: '0 4px 16px rgba(14,165,233,0.35)',
-                transition: 'transform 0.15s, box-shadow 0.15s',
+                transition: 'transform var(--t-decor) var(--t-decor-ease), box-shadow var(--t-decor) var(--t-decor-ease)',
               }}
               onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(14,165,233,0.45)'; }}
               onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(14,165,233,0.35)'; }}

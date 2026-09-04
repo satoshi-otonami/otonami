@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 // 回答時間の選択肢は pitches.deadline_at の算出元。lib/response-time.js が正。
 import { RESPONSE_TIME_OPTIONS } from '@/lib/response-time';
 import { resolveReferralSource } from '@/lib/referral-source';
+import { curatorPerReviewJpy } from '@/lib/pricing';
 
 // Persist curator registration progress so a mobile reload / tab switch
 // doesn't wipe an almost-finished form. Auth fields are never stored.
@@ -422,7 +423,7 @@ export default function CuratorRegistrationPage() {
     width: '100%', padding: '14px 16px', borderRadius: 10,
     border: `1px solid ${T.border}`, background: '#fff', color: '#1a1a1a',
     fontSize: 16, outline: 'none', marginTop: 6, boxSizing: 'border-box',
-    fontFamily: T.font, minHeight: 48, transition: 'border-color 0.2s',
+    fontFamily: T.font, minHeight: 48, transition: 'border-color var(--t-ui) var(--t-ui-ease)',
   };
   const lbl = { fontSize: 14, color: '#1a1a1a', display: 'block', marginTop: 18, fontWeight: 600, marginBottom: 6, fontFamily: T.font };
   const sub = { fontSize: 11, color: T.textMuted, marginLeft: 6, fontWeight: 400 };
@@ -521,12 +522,12 @@ export default function CuratorRegistrationPage() {
         .curator-input:hover { border-color: ${T.textMuted} !important; }
         .curator-otp-input:focus { border-color: #e85d3a !important; box-shadow: 0 0 0 3px rgba(232,93,58,0.15) !important; }
         .curator-otp-input::placeholder { color: #d4d0ca; }
-        .pill-tag { transition: all 0.15s; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
+        .pill-tag { transition: all var(--t-ui) var(--t-ui-ease); -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
         @media (hover: hover) and (pointer: fine) {
           .pill-tag:hover { border-color: ${T.accent} !important; background: ${T.accentLight} !important; color: ${T.accent} !important; }
           .pill-tag-sel:hover { opacity: 0.85 !important; }
         }
-        .curator-tab-btn { transition: all 0.2s; }
+        .curator-tab-btn { transition: all var(--t-ui) var(--t-ui-ease); }
         .curator-tab-btn:hover { color: ${T.accent} !important; }
         @media (max-width: 768px) {
           .curator-input { min-height: 48px !important; font-size: 16px !important; }
@@ -578,10 +579,10 @@ export default function CuratorRegistrationPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', border: `1px solid ${T.border}` }}>
             {['EN', 'JP'].map(l => (
-              <button key={l} className="lang-btn" onClick={() => switchLang(l === 'JP' ? 'ja' : 'en')} style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, fontFamily: T.font, border: 'none', cursor: 'pointer', transition: 'all 0.15s', background: (l === 'JP' ? lang === 'ja' : lang === 'en') ? T.text : 'transparent', color: (l === 'JP' ? lang === 'ja' : lang === 'en') ? '#fff' : T.textSub }}>{l === 'JP' ? '日本語' : l}</button>
+              <button key={l} className="lang-btn" onClick={() => switchLang(l === 'JP' ? 'ja' : 'en')} style={{ padding: '6px 12px', fontSize: 12, fontWeight: 600, fontFamily: T.font, border: 'none', cursor: 'pointer', transition: 'all var(--t-ui) var(--t-ui-ease)', background: (l === 'JP' ? lang === 'ja' : lang === 'en') ? T.text : 'transparent', color: (l === 'JP' ? lang === 'ja' : lang === 'en') ? '#fff' : T.textSub }}>{l === 'JP' ? '日本語' : l}</button>
             ))}
           </div>
-          <a href="/curator" className="header-cta" style={{ padding: '8px 16px', fontSize: 13, fontWeight: 600, background: T.accent, color: '#fff', borderRadius: T.radius, textDecoration: 'none', fontFamily: T.font, transition: 'background 0.15s', whiteSpace: 'nowrap' }}
+          <a href="/curator" className="header-cta" style={{ padding: '8px 16px', fontSize: 13, fontWeight: 600, background: T.accent, color: '#fff', borderRadius: T.radius, textDecoration: 'none', fontFamily: T.font, transition: 'background var(--t-ui) var(--t-ui-ease)', whiteSpace: 'nowrap' }}
           onMouseEnter={e => e.currentTarget.style.background = T.accentDark}
           onMouseLeave={e => e.currentTarget.style.background = T.accent}
           >
@@ -617,7 +618,7 @@ export default function CuratorRegistrationPage() {
               { key: 'register', en: 'Join as Curator', ja: '新規登録' },
               { key: 'login', en: 'Login', ja: 'ログイン' },
             ].map(t => (
-              <button key={t.key} onClick={() => { setTab(t.key); if (t.key === 'register') setRegisterStep(1); }} className="curator-tab-btn" style={{ flex: 1, padding: '12px 0', borderRadius: 9999, border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: tab === t.key ? 700 : 500, transition: 'all 0.2s', fontFamily: T.font, background: tab === t.key ? '#c4956a' : 'transparent', color: tab === t.key ? '#fff' : '#6b6560' }}>
+              <button key={t.key} onClick={() => { setTab(t.key); if (t.key === 'register') setRegisterStep(1); }} className="curator-tab-btn" style={{ flex: 1, padding: '12px 0', borderRadius: 9999, border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: tab === t.key ? 700 : 500, transition: 'all var(--t-ui) var(--t-ui-ease)', fontFamily: T.font, background: tab === t.key ? '#c4956a' : 'transparent', color: tab === t.key ? '#fff' : '#6b6560' }}>
                 {t.en} <span style={{ fontSize: 11, fontWeight: 400, opacity: 0.85 }}>/ {t.ja}</span>
               </button>
             ))}
@@ -649,7 +650,7 @@ export default function CuratorRegistrationPage() {
               )}
               {loginError && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 14, fontFamily: T.font }}>{loginError}</p>}
 
-              <button onClick={handleLogin} disabled={loginStatus === 'loading'} style={{ width: '100%', marginTop: 28, padding: '14px', height: 48, background: loginStatus === 'loading' ? T.border : T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: loginStatus === 'loading' ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
+              <button onClick={handleLogin} disabled={loginStatus === 'loading'} style={{ width: '100%', marginTop: 28, padding: '14px', height: 48, background: loginStatus === 'loading' ? T.border : T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: loginStatus === 'loading' ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background var(--t-ui) var(--t-ui-ease)' }}
               onMouseEnter={e => { if (loginStatus !== 'loading') e.currentTarget.style.background = T.accentDark; }}
               onMouseLeave={e => { if (loginStatus !== 'loading') e.currentTarget.style.background = T.accent; }}
               >
@@ -657,7 +658,7 @@ export default function CuratorRegistrationPage() {
               </button>
               <p style={{ textAlign: 'center', color: T.textMuted, fontSize: 12, marginTop: 18, fontFamily: T.font }}>
                 Not registered yet?{' '}
-                <button onClick={() => { setTab('register'); setRegisterStep(1); }} style={{ background: 'none', border: 'none', color: T.accent, cursor: 'pointer', fontSize: 12, textDecoration: 'underline', fontFamily: T.font }}>Join as a Curator / 新規登録</button>
+                <button onClick={() => { setTab('register'); setRegisterStep(1); }} style={{ background: 'none', border: 'none', color: T.accent, cursor: 'pointer', fontSize: 12, textDecoration: 'underline', fontFamily: T.font }}>Apply as a curator / キュレーターに応募</button>
               </p>
               <p style={{ textAlign: 'center', fontSize: 12, marginTop: 8 }}>
                 <a href="/curator/set-password" style={{ color: T.textMuted, textDecoration: 'none', fontFamily: T.font }}>Forgot password? / パスワードを忘れた方</a>
@@ -677,7 +678,7 @@ export default function CuratorRegistrationPage() {
                         onChange={e => handleLoginOtpChange(i, e.target.value)}
                         onKeyDown={e => handleLoginOtpKeyDown(i, e)}
                         onPaste={i === 0 ? handleLoginOtpPaste : undefined}
-                        style={{ width: 52, height: 60, textAlign: 'center', fontSize: 28, fontWeight: 700, fontFamily: 'monospace', border: `2px solid ${loginOtpError ? '#ef4444' : '#c4956a'}`, borderRadius: 12, outline: 'none', background: '#ffffff', color: '#1a1a1a', caretColor: '#e85d3a', transition: 'border-color 0.2s' }} />
+                        style={{ width: 52, height: 60, textAlign: 'center', fontSize: 28, fontWeight: 700, fontFamily: 'monospace', border: `2px solid ${loginOtpError ? '#ef4444' : '#c4956a'}`, borderRadius: 12, outline: 'none', background: '#ffffff', color: '#1a1a1a', caretColor: '#e85d3a', transition: 'border-color var(--t-ui) var(--t-ui-ease)' }} />
                     ))}
                   </div>
                   {loginOtpLoading && <p style={{ fontSize: 13, color: '#c4956a' }}>検証中...</p>}
@@ -707,7 +708,7 @@ export default function CuratorRegistrationPage() {
               <div style={{ marginBottom: 28 }}>
                 <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
                   {[1, 2, 3].map(s => (
-                    <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: registerStep >= s ? T.accent : '#e5e2dc', transition: 'background 0.3s' }} />
+                    <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: registerStep >= s ? T.accent : '#e5e2dc', transition: 'background var(--t-ui) var(--t-ui-ease)' }} />
                   ))}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
@@ -734,7 +735,7 @@ export default function CuratorRegistrationPage() {
                         onDragOver={e => { e.preventDefault(); setAvatarDragOver(true); }}
                         onDragLeave={() => setAvatarDragOver(false)}
                         onDrop={e => { e.preventDefault(); setAvatarDragOver(false); applyAvatarFile(e.dataTransfer.files?.[0]); }}
-                        style={{ width: 80, height: 80, borderRadius: '50%', border: `2px dashed ${avatarDragOver ? T.accentDark : avatarPreview ? T.accent : T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', background: avatarDragOver ? T.accentLight : T.bg, flexShrink: 0, transition: 'all 0.15s' }}
+                        style={{ width: 80, height: 80, borderRadius: '50%', border: `2px dashed ${avatarDragOver ? T.accentDark : avatarPreview ? T.accent : T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', background: avatarDragOver ? T.accentLight : T.bg, flexShrink: 0, transition: 'all var(--t-ui) var(--t-ui-ease)' }}
                       >
                         {avatarPreview
                           ? <img src={avatarPreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -794,7 +795,7 @@ export default function CuratorRegistrationPage() {
                     {REGION_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
 
-                  <button onClick={goToStep2} style={{ width: '100%', marginTop: 28, padding: '14px', height: 48, background: T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
+                  <button onClick={goToStep2} style={{ width: '100%', marginTop: 28, padding: '14px', height: 48, background: T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: T.font, transition: 'background var(--t-ui) var(--t-ui-ease)' }}
                   onMouseEnter={e => e.currentTarget.style.background = T.accentDark}
                   onMouseLeave={e => e.currentTarget.style.background = T.accent}
                   >Next → / 次へ</button>
@@ -808,9 +809,9 @@ export default function CuratorRegistrationPage() {
                   <p style={{ color: '#6b6560', fontSize: 14, marginBottom: 32, fontFamily: T.font }}>どんな音楽が好きですか？</p>
 
                   {/* Open to all genres toggle */}
-                  <div onClick={() => setOpenToAllGenres(!openToAllGenres)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', marginBottom: 20, background: openToAllGenres ? 'rgba(255,107,74,0.08)' : '#f8f7f4', borderRadius: 12, border: '1px solid', borderColor: openToAllGenres ? '#FF6B4A' : T.border, cursor: 'pointer', transition: 'all 0.2s' }}>
-                    <div style={{ width: 44, height: 24, borderRadius: 12, background: openToAllGenres ? '#FF6B4A' : '#d1d5db', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
-                      <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: openToAllGenres ? 22 : 2, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }} />
+                  <div onClick={() => setOpenToAllGenres(!openToAllGenres)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', marginBottom: 20, background: openToAllGenres ? 'rgba(255,107,74,0.08)' : '#f8f7f4', borderRadius: 12, border: '1px solid', borderColor: openToAllGenres ? '#FF6B4A' : T.border, cursor: 'pointer', transition: 'all var(--t-ui) var(--t-ui-ease)' }}>
+                    <div style={{ width: 44, height: 24, borderRadius: 12, background: openToAllGenres ? '#FF6B4A' : '#d1d5db', position: 'relative', transition: 'background var(--t-ui) var(--t-ui-ease)', flexShrink: 0 }}>
+                      <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: openToAllGenres ? 22 : 2, transition: 'left var(--t-ui) var(--t-ui-ease)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }} />
                     </div>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 13, color: '#1a1a1a', fontFamily: T.font }}>Open to all genres</div>
@@ -933,7 +934,7 @@ export default function CuratorRegistrationPage() {
                               fontFamily: T.font,
                               textAlign: 'center',
                               position: 'relative',
-                              transition: 'all 0.15s',
+                              transition: 'all var(--t-ui) var(--t-ui-ease)',
                             }}
                           >
                             <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>{t} cr</div>
@@ -976,7 +977,7 @@ export default function CuratorRegistrationPage() {
 
                   <div className="step-btns-row" style={{ display: 'flex', gap: 10, marginTop: 28 }}>
                     <button onClick={() => setRegisterStep(1)} className="step-btn-back" style={{ padding: '14px 20px', height: 48, border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>
-                    <button onClick={goToStep3} style={{ flex: 1, padding: '14px', height: 48, background: T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: T.font, transition: 'background 0.15s' }}
+                    <button onClick={goToStep3} style={{ flex: 1, padding: '14px', height: 48, background: T.accent, border: 'none', borderRadius: 10, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: T.font, transition: 'background var(--t-ui) var(--t-ui-ease)' }}
                     onMouseEnter={e => e.currentTarget.style.background = T.accentDark}
                     onMouseLeave={e => e.currentTarget.style.background = T.accent}
                     >Next → / 次へ</button>
@@ -1093,8 +1094,12 @@ export default function CuratorRegistrationPage() {
                           <strong>You get paid for every review</strong> — accept, decline, or feedback.
                           No obligation to add tracks to your playlist.
                         </div>
+                        <div style={{ marginBottom: 6 }}>
+                          <strong>Your editorial independence stays yours.</strong> We never ask you
+                          to feature anything, and the payment does not change with your verdict.
+                        </div>
                         <div style={{ color: '#6b6560', fontSize: 13 }}>
-                          レビューするたびに報酬が発生します（承認・却下・フィードバックいずれでもOK）。プレイリストへの追加義務はありません。
+                          採用・見送り・フィードバックのみ、どの判断でも報酬は同じです。掲載義務はありません。編集の独立性はあなたのものです。
                         </div>
                       </div>
                       <div style={{
@@ -1110,8 +1115,8 @@ export default function CuratorRegistrationPage() {
                         </div>
                         <div style={{ background: '#fff', borderRadius: 10, padding: '12px 6px', border: '1px solid #e8ddd0' }}>
                           <div style={{ fontSize: 10, color: '#998b7d', marginBottom: 4 }}>Per review</div>
-                          <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a2e' }}>¥{form.tier * 80}</div>
-                          <div style={{ fontSize: 10, color: '#998b7d' }}>~${(form.tier * 80 / 150).toFixed(2)}</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a2e' }}>¥{curatorPerReviewJpy(form.tier)}</div>
+                          <div style={{ fontSize: 10, color: '#998b7d' }}>~${(curatorPerReviewJpy(form.tier) / 150).toFixed(2)}</div>
                         </div>
                         <div style={{ background: '#fff', borderRadius: 10, padding: '12px 6px', border: '1px solid #e8ddd0' }}>
                           <div style={{ fontSize: 10, color: '#998b7d', marginBottom: 4 }}>Payment</div>
@@ -1120,7 +1125,7 @@ export default function CuratorRegistrationPage() {
                         </div>
                       </div>
                       <div style={{ fontSize: 12, color: '#998b7d', lineHeight: 1.5 }}>
-                        You chose {form.tier} credits — you&apos;ll earn ¥{form.tier * 80} (~${(form.tier * 80 / 150).toFixed(2)}) per review.
+                        You chose {form.tier} credits — you&apos;ll earn ¥{curatorPerReviewJpy(form.tier)} (~${(curatorPerReviewJpy(form.tier) / 150).toFixed(2)}) per review.
                         You can change this anytime from your dashboard.
                       </div>
                     </div>
@@ -1202,8 +1207,8 @@ export default function CuratorRegistrationPage() {
 
                     <div className="step-btns-row" style={{ display: 'flex', gap: 10, marginTop: 28 }}>
                       <button onClick={() => setRegisterStep(2)} className="step-btn-back" style={{ padding: '14px 20px', height: 48, border: `1px solid ${T.border}`, borderRadius: 10, background: T.white, color: T.textSub, fontSize: 14, cursor: 'pointer', fontFamily: T.font }}>← Back</button>
-                      <button onClick={handleSubmit} disabled={status === 'loading' || avatarUploading || !agreedToTerms} style={{ flex: 1, padding: '16px', height: 48, background: (status === 'loading' || avatarUploading || !agreedToTerms) ? T.border : '#c4956a', border: 'none', borderRadius: 12, color: '#fff', fontSize: 16, fontWeight: 600, cursor: (status === 'loading' || avatarUploading || !agreedToTerms) ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background 0.15s', boxShadow: (status === 'loading' || avatarUploading || !agreedToTerms) ? 'none' : '0 4px 16px rgba(196,149,106,0.25)' }}>
-                        {avatarUploading ? 'Uploading... / アップロード中...' : status === 'loading' ? 'Submitting... / 送信中...' : 'Complete Registration / 登録完了 →'}
+                      <button onClick={handleSubmit} disabled={status === 'loading' || avatarUploading || !agreedToTerms} style={{ flex: 1, padding: '16px', height: 48, background: (status === 'loading' || avatarUploading || !agreedToTerms) ? T.border : '#c4956a', border: 'none', borderRadius: 12, color: '#fff', fontSize: 16, fontWeight: 600, cursor: (status === 'loading' || avatarUploading || !agreedToTerms) ? 'not-allowed' : 'pointer', fontFamily: T.font, transition: 'background var(--t-ui) var(--t-ui-ease)', boxShadow: (status === 'loading' || avatarUploading || !agreedToTerms) ? 'none' : '0 4px 16px rgba(196,149,106,0.25)' }}>
+                        {avatarUploading ? 'Uploading... / アップロード中...' : status === 'loading' ? 'Submitting... / 送信中...' : 'Send my application / 応募する →'}
                       </button>
                     </div>
                   </div>
@@ -1228,9 +1233,9 @@ export default function CuratorRegistrationPage() {
           <span>TYCompany LLC</span>
         </div>
         <div style={{ marginTop: 8, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="/tokushoho" style={{ color: T.textMuted, textDecoration: 'none', fontSize: 12, transition: 'color 0.2s' }}>特定商取引法に基づく表記</a>
-          <a href="/privacy" style={{ color: T.textMuted, textDecoration: 'none', fontSize: 12, transition: 'color 0.2s' }}>プライバシーポリシー</a>
-          <a href="/terms" style={{ color: T.textMuted, textDecoration: 'none', fontSize: 12, transition: 'color 0.2s' }}>利用規約</a>
+          <a href="/tokushoho" style={{ color: T.textMuted, textDecoration: 'none', fontSize: 12, transition: 'color var(--t-ui) var(--t-ui-ease)' }}>特定商取引法に基づく表記</a>
+          <a href="/privacy" style={{ color: T.textMuted, textDecoration: 'none', fontSize: 12, transition: 'color var(--t-ui) var(--t-ui-ease)' }}>プライバシーポリシー</a>
+          <a href="/terms" style={{ color: T.textMuted, textDecoration: 'none', fontSize: 12, transition: 'color var(--t-ui) var(--t-ui-ease)' }}>利用規約</a>
         </div>
       </footer>
     </div>

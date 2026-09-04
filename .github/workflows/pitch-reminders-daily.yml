@@ -1,0 +1,56 @@
+name: Pitch reminders (daily)
+
+# Pre-deadline nudge to curators sitting on unanswered pitches.
+# Two stages off pitches.deadline_at: 48-72h left (reminder_t3) and <=24h left
+# (reminder_t24). One email per curator per stage, de-duplicated via email_log.
+#
+# 03:00 UTC (12:00 JST) deliberately avoids the existing schedules:
+#   Vercel cron  0 9 * * *    check-expired-pitches
+#   GH Actions   0 */12 * * * expire-pitches (00:00 / 12:00 UTC)
+#   GH Actions   0 0 * * 1    sns-intro-weekly
+#
+# The handler is idempotent — a pitch already logged for a stage is skipped —
+# so extra or overlapping runs are safe. Append ?dry=1 to inspect the targets
+# without sending anything.
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # daily 03:00 UTC = 12:00 JST
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'List targets without sending any email'
+        type: boolean
+        default: true
+
+concurrency:
+  group: pitch-reminders
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call pitch-reminders endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          # Scheduled runs always send; manual runs default to dry.
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET secret is not set in the repository"; exit 1
+          fi
+          url="https://otonami.io/api/cron/pitch-reminders"
+          if [ "$DRY_RUN" = "true" ]; then
+            url="${url}?dry=1"
+            echo "DRY RUN — no email will be sent"
+          fi
+          code=$(curl -sS -o /tmp/out.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "$url")
+          echo "HTTP ${code}"
+          cat /tmp/out.json || true
+          echo
+          if [ "$code" != "200" ]; then
+            echo "::error::pitch-reminders endpoint returned HTTP ${code}"; exit 1
+          fi

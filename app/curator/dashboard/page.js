@@ -196,6 +196,9 @@ export default function CuratorDashboard() {
   const [nameDraft, setNameDraft] = useState('');
   const [nameSaving, setNameSaving] = useState(false);
 
+  // Intake pause toggle
+  const [pausedSaving, setPausedSaving] = useState(false);
+
   // Edit profile state
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({});
@@ -272,6 +275,31 @@ export default function CuratorDashboard() {
     } catch (e) {
       showToast(e.message);
     } finally { setNameSaving(false); }
+  };
+
+  // ── Intake pause (curators.is_paused) ──
+  // Saves through its own one-field PUT rather than the profile edit form: that
+  // form seeds every field from `curator`, and posting the whole thing just to
+  // flip one boolean is how stored text has been overwritten with blanks before.
+  const toggleAccepting = async () => {
+    const nextPaused = !(curator.is_paused === true);
+    setPausedSaving(true);
+    try {
+      const token = localStorage.getItem('curator_token');
+      const res = await fetch('/api/curator', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ is_paused: nextPaused }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save');
+      setCurator(data.curator);
+      showToast(nextPaused
+        ? 'Pitches paused / ピッチ受付を停止しました'
+        : 'Now accepting pitches / ピッチ受付を再開しました');
+    } catch (e) {
+      showToast(e.message);
+    } finally { setPausedSaving(false); }
   };
 
   // ── Edit profile ──
@@ -967,6 +995,48 @@ export default function CuratorDashboard() {
                     {curator.bio}
                   </div>
                 )}
+
+                {/* Intake pause toggle */}
+                <div style={{
+                  display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+                  gap: 12, flexWrap: 'wrap', marginBottom: 16, padding: '14px 16px',
+                  background: curator.is_paused ? 'rgba(196,149,106,0.08)' : T.bg,
+                  borderRadius: 8,
+                  border: `1px solid ${curator.is_paused ? 'rgba(196,149,106,0.35)' : T.border}`,
+                }}>
+                  <div style={{ flex: 1, minWidth: 220 }}>
+                    <div style={{ color: T.text, fontSize: 13, fontWeight: 700, fontFamily: T.font }}>
+                      Accepting pitches <span style={{ color: T.textMuted, fontWeight: 400 }}>/ ピッチ受付</span>
+                    </div>
+                    {curator.is_paused && (
+                      <div style={{ color: T.textSub, fontSize: 12, lineHeight: 1.7, marginTop: 6, fontFamily: T.font }}>
+                        While paused, you will not receive new pitches. Pitches already in your inbox stay open with their original deadlines.
+                        <br />
+                        停止中は新しいピッチが届きません。受信済みのピッチは元の期限のままレビューできます。
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={toggleAccepting}
+                    disabled={pausedSaving}
+                    aria-pressed={!curator.is_paused}
+                    aria-label="Accepting pitches"
+                    style={{
+                      position: 'relative', width: 48, height: 26, flexShrink: 0,
+                      borderRadius: 13, border: 'none', padding: 0,
+                      background: curator.is_paused ? '#c9c4bd' : T.accent,
+                      cursor: pausedSaving ? 'wait' : 'pointer',
+                      opacity: pausedSaving ? 0.6 : 1,
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    <span style={{
+                      position: 'absolute', top: 3, left: curator.is_paused ? 3 : 25,
+                      width: 20, height: 20, borderRadius: '50%', background: T.white,
+                      transition: 'left 0.15s',
+                    }} />
+                  </button>
+                </div>
 
                 {/* Tags sections */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

@@ -267,7 +267,7 @@ export async function PUT(request) {
       'similar_artists', 'playlist_url', 'icon_url',
       'rejected_genres', 'response_time', 'social_links',
       'submission_guidelines', 'featured_track_url', 'open_to_all_genres',
-      'payment_method', 'payment_info', 'tier',
+      'payment_method', 'payment_info', 'tier', 'is_paused',
     ];
     const updateData = {};
     for (const key of ALLOWED) {
@@ -295,12 +295,19 @@ export async function PUT(request) {
     if (updateData.response_time !== undefined) {
       updateData.response_time = sanitizeResponseTime(updateData.response_time);
     }
+    // Intake pause. Coerce to a real boolean and reject anything that is not
+    // one: the column is NOT NULL, and a stray string would be written as true.
+    if (updateData.is_paused !== undefined) {
+      if (typeof updateData.is_paused !== 'boolean') {
+        return NextResponse.json({ error: 'is_paused must be a boolean' }, { status: 400 });
+      }
+    }
 
     const { data, error } = await supabase
       .from('curators')
       .update(updateData)
       .eq('id', payload.id)
-      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, rejected_genres, response_time, social_links, submission_guidelines, featured_track_url, open_to_all_genres, payment_method, payment_info, tier')
+      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, rejected_genres, response_time, social_links, submission_guidelines, featured_track_url, open_to_all_genres, payment_method, payment_info, tier, is_paused')
       .single();
 
     if (error) throw new Error(error.message);

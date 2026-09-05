@@ -276,7 +276,7 @@ export async function GET(request) {
       // Keep this list in sync with the PUT allowlist in /api/curator: a column the
       // dashboard can write but never reads back arrives as undefined, seeds its edit
       // field with '' and silently blanks the stored value on the next save.
-      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, rejected_genres, response_time, social_links, submission_guidelines, featured_track_url, open_to_all_genres, payment_method, payment_info, tier')
+      .select('id, name, email, type, playlist, url, genres, followers, region, accepts, icon, bio, icon_url, preferred_moods, opportunities, similar_artists, playlist_url, rejected_genres, response_time, social_links, submission_guidelines, featured_track_url, open_to_all_genres, payment_method, payment_info, tier, is_paused')
       .eq('id', payload.id)
       .single();
 

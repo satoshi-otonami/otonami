@@ -3084,6 +3084,7 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
     let latestCredits = credits;
     let insufficientCreditsHit = false;
     let skippedCount = 0;
+    const pausedNames = [];       // curator paused intake → not sent, not charged
     let abortError = null;
     let abortIndex = -1;
     setSendProgress({ done: 0, total: tempPitches.length, phase: 'save' });
@@ -3094,7 +3095,13 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
       if (i > 0) await sleep(SEND_STAGGER_MS);
       try {
         const result = await insertPitchWithRetry(p);
-        if (result?.skipped) {
+        if (result?.paused) {
+          // Curator turned intake off (409 curator_paused). No row, no charge,
+          // no email. Not a failure the artist can retry away, so it goes in
+          // neither reachedCuratorIds (that would badge it 送信済み) nor
+          // failedCurators (that would prompt a retry that 409s again).
+          pausedNames.push(c.name);
+        } else if (result?.skipped) {
           // Same-contact duplicate: the server already holds an active pitch
           // for this track to this curator's email (another of their profiles).
           // No DB row, no charge, no email — just tally it for the summary.
@@ -3198,6 +3205,9 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
     const skipNote = skippedCount > 0
       ? `（同一連絡先のキュレーターには既にこのトラックをピッチ済みのため、${skippedCount}件をスキップしました（クレジット消費なし）。/ ${skippedCount} pitch(es) skipped: the same curator contact was already pitched for this track. No credits were used.）`
       : "";
+    const pausedNote = pausedNames.length > 0
+      ? `（${pausedNames.length}件は受付停止中のため送信していません: ${pausedNames.join('、')}（クレジット消費なし）。/ ${pausedNames.length} curator(s) are not accepting pitches right now. No credits were used.）`
+      : "";
     const emailNote = emailFailedNames.length > 0
       ? `（${emailFailedNames.length}件はメール送信に失敗しました: ${emailFailedNames.join('、')}。ピッチは保存済みでクレジットも消費されています。サポートまでご連絡ください）`
       : "";
@@ -3205,7 +3215,7 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
     if (unsentCount > 0 && reachedCount > 0) {
       // Partial batch. Keep the wizard persisted so a reload can resume the
       // retry, and stay on the confirm screen with only the unsent recipients.
-      notify(`${reachedCount}人に送信済み / ${unsentCount}人が未送信です。「未送信の${unsentCount}人に送信」で続きから再開できます${emailNote}`, 'error');
+      notify(`${reachedCount}人に送信済み / ${unsentCount}人が未送信です。「未送信の${unsentCount}人に送信」で続きから再開できます${pausedNote}${emailNote}`, 'error');
     } else if (unsentCount > 0) {
       notify(`送信できませんでした（未送信${unsentCount}人）。時間をおいて再度お試しください`, 'error');
     } else if (savedCount > 0) {
@@ -3213,13 +3223,17 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
       // creation starts clean rather than restoring a sent draft.
       clearPitchWizard(user?.id);
       setPitchSent(true);
-      notify("✓ " + emailsSent + "件送信完了" + skipNote + emailNote);
+      notify("✓ " + emailsSent + "件送信完了" + skipNote + pausedNote + emailNote);
     } else if (skippedCount > 0) {
       // Every selected profile resolved to an already-pitched contact: nothing
       // sent, nothing charged. This is not a failure — keep the tone neutral.
       clearPitchWizard(user?.id);
       setPitchSent(true);
       notify(`同一連絡先のキュレーターには既にこのトラックをピッチ済みのため、${skippedCount}件をスキップしました（クレジット消費なし）。/ ${skippedCount} pitch(es) skipped: the same curator contact was already pitched for this track. No credits were used.`);
+    } else if (pausedNames.length > 0) {
+      // Every selected curator has intake paused: nothing sent, nothing
+      // charged. Not a failure — keep the tone neutral, no emoji.
+      notify(`選択したキュレーターは現在ピッチの受付を停止しています（クレジット消費なし）。/ The selected curator(s) are not accepting pitches right now. No credits were used.`, 'error');
     } else {
       notify("送信に失敗しました。時間をおいて再度お試しください", "error");
     }

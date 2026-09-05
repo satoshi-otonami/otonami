@@ -238,9 +238,25 @@ export async function POST(request) {
     // (per CLAUDE.md). Ignore any client-supplied credits_charged value.
     const { data: curator } = await db
       .from('curators')
-      .select('tier, email, response_time')
+      .select('tier, email, response_time, is_paused')
       .eq('id', cleanRow.curator_id)
       .maybeSingle();
+
+    // Intake pause (curators.is_paused). Checked here — after the curator row is
+    // loaded, before the credit RPC and the insert — so a paused curator costs
+    // the artist nothing. Only an explicit true blocks: a missing curator row
+    // falls through to the existing defaults rather than failing the send.
+    if (curator?.is_paused === true) {
+      return NextResponse.json(
+        {
+          error: 'Curator is not accepting pitches',
+          code: 'curator_paused',
+          message: 'This curator is not accepting pitches right now. / 現在このキュレーターは受付を停止しています',
+        },
+        { status: 409 }
+      );
+    }
+
     const creditsRequired = curator?.tier || 2;
     cleanRow.credits_charged = creditsRequired;
 

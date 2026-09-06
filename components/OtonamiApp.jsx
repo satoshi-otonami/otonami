@@ -1612,8 +1612,8 @@ function ArtistDash({user, pitches, curators, credits, setPage, notify, loggedIn
             </div>
             <div style={{fontSize:12,color:"#6b6560",marginTop:2,fontFamily:"'DM Sans',sans-serif"}}>
               {isJa
-                ? `1クレジット = ¥${CREDIT_PRICE_JPY} · キュレーター1名あたり1〜5クレジット`
-                : `1 credit = ¥${CREDIT_PRICE_JPY} · 1-5 credits per curator`}
+                ? `1クレジット = ¥${CREDIT_PRICE_JPY} · 1回のピッチに必要なクレジット数はキュレーターごとに異なります`
+                : `1 credit = ¥${CREDIT_PRICE_JPY} · credits per pitch vary by curator`}
             </div>
           </div>
         </div>
@@ -3882,7 +3882,7 @@ function CreditShop({ user, credits, setCredits, notify, setPage }) {
     <div style={{ background: "#fef9ee", border: "1px solid rgba(196,149,106,0.25)", borderRadius: 12, padding: "0.9rem 1rem", marginBottom: "1.2rem", fontFamily: "'DM Sans', sans-serif" }}>
       <div style={{ fontSize: "0.78rem", color: "#1a1a1a", lineHeight: 1.55 }}>
         <strong style={{ color: "#c4956a" }}>{isJa ? `1クレジット = ¥${CREDIT_PRICE_JPY}` : `1 credit = ¥${CREDIT_PRICE_JPY}`}</strong>
-        <span style={{ color: "#6b6560" }}> · {isJa ? "キュレーター1名あたり1〜5クレジット" : "1-5 credits per curator"}</span>
+        <span style={{ color: "#6b6560" }}> · {isJa ? "1回のピッチに必要なクレジット数はキュレーターごとに異なります" : "credits per pitch vary by curator"}</span>
         {tb && tb.t1 > 0 && <div style={{ marginTop: 6, color: "#6b6560", fontSize: "0.74rem" }}>
           <span style={{ fontWeight: 600, color: "#1a1a1a" }}>{activeCredits}{isJa ? "クレジット" : " credits"}</span>
           {" = "}

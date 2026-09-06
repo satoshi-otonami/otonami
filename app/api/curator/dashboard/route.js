@@ -238,7 +238,8 @@ export async function PATCH(request) {
             console.error('[dashboard] Earning insert error:', earningError);
           } else {
             // Balance just moved. Fires the 5,000 / 10,000 notice at most once
-            // per curator, ever; never throws, and the response does not wait.
+            // per curator, ever. Awaited rather than floated — a detached
+            // promise can be killed when the function returns — never throws.
             await notifyPayoutThresholds(db, cId);
           }
         }

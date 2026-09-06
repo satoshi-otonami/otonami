@@ -991,8 +991,8 @@ export default function CuratorRegistrationPage() {
                   <div className="payout-notice" style={{ background: T.accentLight, borderLeft: `3px solid ${T.accent}`, borderRadius: 4, padding: '14px 20px', marginBottom: 20 }}>
                     <p style={{ color: T.accent, fontWeight: 700, margin: 0, fontSize: 14, fontFamily: T.font }}>Curator Payout Policy</p>
                     <p style={{ color: T.textSub, fontSize: 12, margin: '4px 0 0', lineHeight: 1.6, fontFamily: T.font }}>
-                      Minimum payout: <strong style={{ color: T.text }}>¥5,000 / $50 USD</strong> via PayPal.<br />
-                      <span style={{ color: T.textMuted }}>最低支払い額：PayPal経由で5,000円 / 50ドル以上</span>
+                      Request a payout at <strong style={{ color: T.text }}>JPY 5,000</strong>, processed in 3 to 5 business days. At <strong style={{ color: T.text }}>JPY 10,000</strong> we pay out automatically. Your payment details must be registered before a payout can be requested.<br />
+                      <span style={{ color: T.textMuted }}>5,000円で支払いリクエスト可能（3〜5営業日で処理）。10,000円でリクエスト不要の自動支払い。リクエストには支払い先情報の登録が必要です。</span>
                     </p>
                   </div>
 
@@ -1119,8 +1119,8 @@ export default function CuratorRegistrationPage() {
                           <div style={{ fontSize: 10, color: '#998b7d' }}>~${(curatorPerReviewJpy(form.tier) / 150).toFixed(2)}</div>
                         </div>
                         <div style={{ background: '#fff', borderRadius: 10, padding: '12px 6px', border: '1px solid #e8ddd0' }}>
-                          <div style={{ fontSize: 10, color: '#998b7d', marginBottom: 4 }}>Payment</div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a2e' }}>Monthly</div>
+                          <div style={{ fontSize: 10, color: '#998b7d', marginBottom: 4 }}>Payout from</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a2e' }}>JPY 5,000</div>
                           <div style={{ fontSize: 10, color: '#998b7d' }}>PayPal/Wise</div>
                         </div>
                       </div>
@@ -1138,7 +1138,7 @@ export default function CuratorRegistrationPage() {
                       <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="number" value={form.followers} placeholder="e.g. 5000" onChange={e => set('followers', e.target.value)} />
                       <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginTop: 20 }}>
                         <div style={{ fontSize: 13, color: T.accent, fontWeight: 600, marginBottom: 4, fontFamily: T.font }}>
-                          Payment Method <span style={{ fontWeight: 400, fontSize: 11, color: T.textMuted }}>支払い受取方法（任意）</span>
+                          Payment Method <span style={{ fontWeight: 400, fontSize: 11, color: T.textMuted }}>支払い受取方法（登録時は任意 / 支払いリクエスト時に必須）</span>
                         </div>
                         <select className="curator-input" style={{ ...inp, marginTop: 8, appearance: 'none', WebkitAppearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23999\' d=\'M6 8L1 3h10z\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 14px center' }} value={form.paymentMethod} onChange={e => set('paymentMethod', e.target.value)}>
                           <option value="paypal">PayPal</option>
@@ -1152,14 +1152,17 @@ export default function CuratorRegistrationPage() {
                           <input className="curator-input" style={{ ...inp, marginTop: 8 }} type="text" value={form.paymentInfo} placeholder="Wise email or account ID" onChange={e => set('paymentInfo', e.target.value)} />
                         )}
                         {form.paymentMethod === 'bank_transfer' && (
+                          <textarea className="curator-input" style={{ ...inp, marginTop: 8, minHeight: 88, resize: 'vertical' }} value={form.paymentInfo} placeholder={'Bank name / Branch / Account number / Account holder'} onChange={e => set('paymentInfo', e.target.value)} />
+                        )}
+                        {form.paymentMethod === 'bank_transfer' && (
                           <p style={{ color: T.textMuted, fontSize: 12, marginTop: 10, lineHeight: 1.6, fontFamily: T.font }}>
-                            Bank transfer details will be collected after launch. You can update this later from your dashboard.<br />
-                            銀行振込の詳細はローンチ後に収集します。ダッシュボードからいつでも更新できます。
+                            Enter the account details we should transfer to (bank name, branch, account number, account holder). You can add or change them later from your dashboard, but a payout cannot be requested until they are registered.<br />
+                            振込先（銀行名・支店名・口座番号・口座名義）をご記入ください。ダッシュボードから後で登録・変更もできますが、登録が完了するまで支払いリクエストはできません。
                           </p>
                         )}
                         <p style={{ color: T.textMuted, fontSize: 11, marginTop: 8, lineHeight: 1.6, fontFamily: T.font }}>
-                          Payouts processed when balance reaches ¥5,000 / $50 USD.<br />
-                          残高が5,000円/$50に達した時点でお支払いします。
+                          Register your payment details before requesting a payout. Requests open at JPY 5,000; at JPY 10,000 we pay out without a request.<br />
+                          支払いリクエストの前に支払い先情報の登録が必要です。5,000円でリクエスト可能、10,000円でリクエスト不要の自動支払い。
                         </p>
                         <div style={{ paddingLeft: 0, color: '#a09890', fontSize: 12, marginTop: 6 }}>
                           You can change your payment method later from your dashboard.<br/>

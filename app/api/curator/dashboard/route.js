@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
+import { notifyPayoutThresholds } from '@/lib/payout-threshold';
 import { jwtVerify } from 'jose';
 import { Resend } from 'resend';
 import { escapeHtml } from '@/lib/html-escape';
@@ -235,6 +236,10 @@ export async function PATCH(request) {
 
           if (earningError) {
             console.error('[dashboard] Earning insert error:', earningError);
+          } else {
+            // Balance just moved. Fires the 5,000 / 10,000 notice at most once
+            // per curator, ever; never throws, and the response does not wait.
+            await notifyPayoutThresholds(db, cId);
           }
         }
       } catch (earningsErr) {

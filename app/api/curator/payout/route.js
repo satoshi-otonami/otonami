@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
+import { PAYOUT_REQUEST_THRESHOLD, hasPaymentInfo } from '@/lib/payout';
 import { jwtVerify } from 'jose';
 import { Resend } from 'resend';
 
@@ -34,19 +35,28 @@ export async function POST(request) {
     const curatorId = curator.id;
 
     // Get curator details
-    const { data: curatorData } = await db
+    const { data: curatorData, error: curatorError } = await db
       .from('curators')
-      .select('id, name, email, payment_method, payment_info, payout_method, minimum_payout')
+      .select('id, name, email, payment_method, payment_info')
       .eq('id', curatorId)
       .single();
 
+    if (curatorError) {
+      console.error('[payout] curator lookup failed:', curatorError.message);
+      return NextResponse.json({ error: curatorError.message }, { status: 500 });
+    }
     if (!curatorData) return NextResponse.json({ error: 'Curator not found' }, { status: 404 });
 
     const paymentMethod = curatorData.payment_method || 'paypal';
-    const paymentInfo = curatorData.payment_info;
-    if (!paymentInfo && paymentMethod !== 'bank_transfer') {
-      return NextResponse.json({ error: '支払い情報が設定されていません。プロフィールから設定してください。 / Payment info not set.' }, { status: 400 });
+    // Every method needs a destination on file — bank transfer included. It used
+    // to be exempt, which would have handed the admin a payout row with nowhere
+    // to send the money.
+    if (!hasPaymentInfo(curatorData)) {
+      return NextResponse.json({
+        error: 'Your payment details are not registered yet. Add them in your dashboard profile before requesting a payout. / 支払い先情報が未登録です。ダッシュボードのプロフィールから登録してください。',
+      }, { status: 400 });
     }
+    const paymentInfo = curatorData.payment_info.trim();
 
     // Check for existing pending payout
     const { data: existingPayout } = await db
@@ -69,7 +79,7 @@ export async function POST(request) {
       .eq('status', 'approved');
 
     const availableBalance = (approvedEarnings || []).reduce((sum, e) => sum + (e.amount || 0), 0);
-    const minimumPayout = curatorData.minimum_payout || 5000;
+    const minimumPayout = PAYOUT_REQUEST_THRESHOLD;
 
     if (availableBalance < minimumPayout) {
       return NextResponse.json({
@@ -86,7 +96,8 @@ export async function POST(request) {
         currency: 'JPY',
         method: paymentMethod,
         status: 'requested',
-        payment_method: paymentMethod,
+        // Snapshot of where the money goes as of the request, so a later profile
+        // edit cannot rewrite the destination of a payout already in flight.
         payment_info: paymentInfo,
       })
       .select()
@@ -117,7 +128,7 @@ export async function POST(request) {
               <tr><td style="padding:8px;color:#666;">キュレーター</td><td style="padding:8px;font-weight:bold;">${curatorData.name}</td></tr>
               <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;">金額</td><td style="padding:8px;font-weight:bold;">¥${availableBalance.toLocaleString()}</td></tr>
               <tr><td style="padding:8px;color:#666;">支払い方法</td><td style="padding:8px;">${paymentMethod.toUpperCase()}</td></tr>
-              <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;">支払い情報</td><td style="padding:8px;">${paymentInfo || '（銀行振込 — 詳細は別途確認）'}</td></tr>
+              <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;">支払い情報</td><td style="padding:8px;">${paymentInfo}</td></tr>
               <tr><td style="padding:8px;color:#666;">件数</td><td style="padding:8px;">${earningIds.length}件</td></tr>
             </table>
             <p style="margin-top:24px;color:#888;font-size:13px;">
@@ -125,7 +136,7 @@ export async function POST(request) {
             </p>
           </div>
         `,
-        text: `支払いリクエスト\n\nキュレーター: ${curatorData.name}\n金額: ¥${availableBalance.toLocaleString()}\n支払い方法: ${paymentMethod}\n支払い情報: ${paymentInfo || '銀行振込'}\n件数: ${earningIds.length}件`,
+        text: `支払いリクエスト\n\nキュレーター: ${curatorData.name}\n金額: ¥${availableBalance.toLocaleString()}\n支払い方法: ${paymentMethod}\n支払い情報: ${paymentInfo}\n件数: ${earningIds.length}件`,
       });
     } catch (e) { console.error('Payout admin email failed:', e); }
 
@@ -147,13 +158,13 @@ export async function POST(request) {
             </p>
             <div style="background:#f8f7f4;border-radius:12px;padding:20px;margin:24px 0;">
               <p style="font-size:14px;color:#1a1a1a;margin:0 0 8px;"><strong>金額:</strong> ¥${availableBalance.toLocaleString()}</p>
-              <p style="font-size:14px;color:#1a1a1a;margin:0;"><strong>支払い方法:</strong> ${paymentMethod.toUpperCase()} — ${paymentInfo || '銀行振込'}</p>
+              <p style="font-size:14px;color:#1a1a1a;margin:0;"><strong>支払い方法:</strong> ${paymentMethod.toUpperCase()} — ${paymentInfo}</p>
             </div>
             <hr style="border:none;border-top:1px solid #e5e2dc;margin:32px 0;" />
             <p style="color:#9b9590;font-size:14px;line-height:1.7;">Your payout request of ¥${availableBalance.toLocaleString()} has been received. Payment will be processed within 3-5 business days.</p>
           </div>
         `,
-        text: `支払いリクエストを受け付けました\n\n金額: ¥${availableBalance.toLocaleString()}\n支払い方法: ${paymentMethod} — ${paymentInfo || '銀行振込'}\n\n通常3〜5営業日以内にお支払いします。`,
+        text: `支払いリクエストを受け付けました\n\n金額: ¥${availableBalance.toLocaleString()}\n支払い方法: ${paymentMethod} — ${paymentInfo}\n\n通常3〜5営業日以内にお支払いします。`,
       });
     } catch (e) { console.error('Payout confirmation email failed:', e); }
 

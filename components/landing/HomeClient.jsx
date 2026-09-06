@@ -463,8 +463,8 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
     {
       q: lang === 'en' ? 'How do I get paid?' : '報酬はどのように受け取れますか？',
       a: lang === 'en'
-        ? 'You earn credits for every pitch you respond to — whether you accept, decline, or leave feedback. Compensation varies by tier. Payouts run monthly by bank transfer, Wise, or PayPal — you pick the method when you register, and can change it later from your dashboard.'
-        : 'ピッチへの回答ごとにクレジットを獲得できます。採用・不採用・フィードバックのいずれでも付与されます。報酬額はティアによって異なります。お支払いは毎月、銀行振込 / Wise / PayPal のいずれかで行います（登録時に選択、ダッシュボードから変更できます）。',
+        ? 'You earn credits for every pitch you respond to — whether you accept, decline, or leave feedback. Compensation varies by tier. Once your balance reaches JPY 5,000, you can request a payout from your dashboard (processed in 3 to 5 business days). At JPY 10,000, we pay out automatically, no request needed. You pick bank transfer, Wise, or PayPal when you register, and can change it later from your dashboard.'
+        : 'ピッチへの回答ごとにクレジットを獲得できます。採用・不採用・フィードバックのいずれでも付与されます。報酬額はティアによって異なります。報酬が5,000円に達すると、ダッシュボードから支払いリクエストが可能になります（3〜5営業日で処理）。10,000円に達した場合は、リクエスト不要で当社よりお支払いします。受取方法は銀行振込 / Wise / PayPal から登録時に選択でき、ダッシュボードから変更できます。',
     },
     {
       q: lang === 'en' ? 'What kind of music will I receive?' : 'どのような音楽が届きますか？',

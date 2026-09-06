@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { CL as T } from '@/lib/design-tokens';
 import { supabase } from '@/lib/supabase';
 import { externalHref } from '@/lib/url';
+import { hasPaymentInfo } from '@/lib/payout';
 
 const STATUS_LABELS = {
   sent:     { en: 'Pending',  ja: '未対応',  color: '#eab308', bg: 'rgba(234,179,8,0.12)' },
@@ -214,6 +215,9 @@ export default function CuratorDashboard() {
   const [earnings, setEarnings] = useState(null);
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [payoutLoading, setPayoutLoading] = useState(false);
+  // Mirrors the API gate in app/api/curator/payout/route.js: every method needs a
+  // destination on file, bank transfer included, and '' counts as missing.
+  const payoutInfoReady = hasPaymentInfo(curator);
   const [payoutError, setPayoutError] = useState('');
   const [showEarningsDetail, setShowEarningsDetail] = useState(false);
 
@@ -874,10 +878,16 @@ export default function CuratorDashboard() {
                     <input className="edit-input" style={{ ...editInp, marginTop: 8 }} type="text" value={editForm.payment_info} placeholder="Wise email or account ID" onChange={e => setEditForm(f => ({ ...f, payment_info: e.target.value }))} />
                   )}
                   {editForm.payment_method === 'bank_transfer' && (
-                    <p style={{ color: T.textMuted, fontSize: 12, marginTop: 8, lineHeight: 1.6, fontFamily: T.font }}>
-                      Bank transfer details will be collected after launch.<br />銀行振込の詳細はローンチ後に収集します。
-                    </p>
+                    <>
+                      <textarea className="edit-input" style={{ ...editInp, marginTop: 8, minHeight: 88, resize: 'vertical' }} value={editForm.payment_info} placeholder={'Bank name / Branch / Account number / Account holder'} onChange={e => setEditForm(f => ({ ...f, payment_info: e.target.value }))} />
+                      <p style={{ color: T.textMuted, fontSize: 12, marginTop: 8, lineHeight: 1.6, fontFamily: T.font }}>
+                        Bank name, branch, account number, and account holder.<br />銀行名・支店名・口座番号・口座名義をご記入ください。
+                      </p>
+                    </>
                   )}
+                  <p style={{ color: T.textMuted, fontSize: 12, marginTop: 8, lineHeight: 1.6, fontFamily: T.font }}>
+                    Required before a payout can be requested.<br />支払いリクエストには登録が必要です。
+                  </p>
                 </div>
 
                 {saveError && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 14, padding: '10px 14px', background: 'rgba(239,68,68,0.1)', borderRadius: 8, fontFamily: T.font }}>{saveError}</div>}
@@ -1124,7 +1134,7 @@ export default function CuratorDashboard() {
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>Available / 支払い可能額</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: (earnings.available_balance || 0) >= 5000 ? '#10b981' : T.accent, fontFamily: T.fontDisplay }}>¥{(earnings.available_balance || 0).toLocaleString()}</div>
-                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginTop: 2 }}>最低支払額: ¥5,000</div>
+                <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginTop: 2 }}>¥5,000でリクエスト可 / ¥10,000で自動支払い</div>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 11, color: T.textMuted, fontFamily: T.font, marginBottom: 4 }}>Paid / 支払い済み</div>
@@ -1439,18 +1449,18 @@ export default function CuratorDashboard() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 14, color: T.textSub, fontFamily: T.font }}>支払い方法</span>
-                <span style={{ fontSize: 14, color: T.text, fontFamily: T.font }}>{(curator?.payment_method || 'paypal').toUpperCase()}: {curator?.payment_info || '未設定'}</span>
+                <span style={{ fontSize: 14, color: T.text, fontFamily: T.font }}>{(curator?.payment_method || 'paypal').toUpperCase()}: {payoutInfoReady ? curator.payment_info : '未設定'}</span>
               </div>
             </div>
-            {!curator?.payment_info && curator?.payment_method !== 'bank_transfer' && (
-              <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12, fontFamily: T.font }}>支払い情報が設定されていません。プロフィールから設定してください。 / Payment info not set. Please update from your profile.</p>
+            {!payoutInfoReady && (
+              <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12, fontFamily: T.font }}>支払い先情報が未登録です。プロフィールから登録してください。 / Your payment details are not registered yet. Add them in your profile.</p>
             )}
             <p style={{ fontSize: 12, color: T.textMuted, marginBottom: 20, fontFamily: T.font }}>通常3〜5営業日以内にお支払いします。/ Payment within 3-5 business days.</p>
             {payoutError && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12, fontFamily: T.font }}>{payoutError}</p>}
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setShowPayoutModal(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid ${T.border}`, background: T.white, color: T.textSub, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: T.font }}>キャンセル</button>
-              <button onClick={handlePayoutRequest} disabled={payoutLoading || (!curator?.payment_info && curator?.payment_method !== 'bank_transfer')}
-                style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: payoutLoading || (!curator?.payment_info && curator?.payment_method !== 'bank_transfer') ? T.border : T.accent, color: '#fff', fontSize: 14, fontWeight: 700, cursor: payoutLoading ? 'not-allowed' : 'pointer', fontFamily: T.font }}>
+              <button onClick={handlePayoutRequest} disabled={payoutLoading || !payoutInfoReady}
+                style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: payoutLoading || !payoutInfoReady ? T.border : T.accent, color: '#fff', fontSize: 14, fontWeight: 700, cursor: payoutLoading ? 'not-allowed' : 'pointer', fontFamily: T.font }}>
                 {payoutLoading ? '送信中...' : 'リクエスト送信'}
               </button>
             </div>

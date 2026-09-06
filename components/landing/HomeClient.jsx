@@ -10,6 +10,19 @@ import RefundInbox from '@/components/landing/RefundInbox';
 // import OTONAMIPromo from '@/components/OTONAMIPromo';
 import { DT as D } from '@/lib/design-tokens';
 import { CREDIT_PRICE_JPY, RESPONSE_WINDOW_DAYS } from '@/lib/pricing';
+import { EXTENDED_DEADLINE_DAYS } from '@/lib/response-time';
+
+/* Lowest per-credit price on the shop's volume ladder: the 100-credit pack is
+   ¥12,000, i.e. ¥120/credit. lib/pricing.js carries only the list price, so
+   the discounted floor lives next to the copy that prints it. Mirrors
+   CREDIT_PACKAGES (components/OtonamiApp.jsx) and PACKAGES
+   (app/api/stripe/route.js) — change all three together. */
+const MIN_CREDIT_PRICE_JPY = 120;
+
+/* Credits for the priciest pitch on the roster. Unlike the floor (read from
+   the live curator list) this ceiling is the tier scale's own maximum, which
+   the curator signup form caps at 5. */
+const MAX_TIER = 5;
 
 /* ── Light section tokens ── */
 const L = {
@@ -254,6 +267,20 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
   const epkRef = useRef(null);
   const [epkVisible, setEpkVisible] = useState(false);
 
+  // What a pitch actually costs, derived — never typed.
+  //
+  // The old copy said "from ¥160", which is the price of ONE credit; no curator
+  // on the roster accepts a one-credit pitch, so the cheapest real pitch was
+  // twice the advertised figure. minTier comes from the same server read as the
+  // headcount, so a cheaper curator signing up moves this copy on its own.
+  // When the curator read fails outright, minTier is null and the copy drops
+  // the figure rather than guessing one.
+  const minTier = curatorMarquee?.minTier ?? null;
+  const minPitchJpy = minTier ? minTier * CREDIT_PRICE_JPY : null;
+  const minPitchJpyBulk = minTier ? minTier * MIN_CREDIT_PRICE_JPY : null;
+  const maxPitchJpy = MAX_TIER * CREDIT_PRICE_JPY;
+  const yen = (n) => `¥${n.toLocaleString('en-US')}`;
+
   /* ── Canvas waveform animation ── */
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -463,8 +490,8 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
     {
       q: lang === 'en' ? 'Does it cost money?' : 'いくらかかりますか？',
       a: lang === 'en'
-        ? `Yes, it is paid. One credit is ¥${CREDIT_PRICE_JPY} (volume discounts apply when you buy in bulk). How many credits a single pitch needs is shown on each curator — between 1 and 5.`
-        : `はい、有料です。1クレジット¥${CREDIT_PRICE_JPY}（まとめ買いの割引があります）。1回のピッチに必要なクレジット数は、キュレーターごとに表示されます（1〜5クレジット）。`,
+        ? `Yes, it is paid. One credit is ${yen(CREDIT_PRICE_JPY)}, down to ${yen(MIN_CREDIT_PRICE_JPY)} when you buy in bulk. How many credits a pitch takes is set by each curator and shown on their card${minTier ? ` — ${minTier} to ${MAX_TIER} on the current roster` : ''}.`
+        : `はい、有料です。1クレジット${yen(CREDIT_PRICE_JPY)}、まとめ買いで${yen(MIN_CREDIT_PRICE_JPY)}まで下がります。1回のピッチに必要なクレジット数はキュレーターごとに決まっており、各キュレーターのカードに表示されます${minTier ? `（現在は${minTier}〜${MAX_TIER}クレジット）` : ''}。`,
     },
     {
       q: lang === 'en' ? 'What is a "curator"?' : '「キュレーター」って何ですか？',
@@ -487,8 +514,8 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
     {
       q: lang === 'en' ? "What happens if I don't get a review?" : 'レビューがもらえなかったらどうなりますか？',
       a: lang === 'en'
-        ? `Nothing to chase. If no reply arrives within ${RESPONSE_WINDOW_DAYS} days, the credits you spent return to your balance automatically. You only pay when a curator actually reviews your track.`
-        : `追いかける必要はありません。${RESPONSE_WINDOW_DAYS}日以内にキュレーターから返信がなければ、使用したクレジットは自動で残高に戻ります。キュレーターが実際にレビューした場合のみ課金されます。`,
+        ? `Nothing to chase. Every pitch carries a response deadline — ${RESPONSE_WINDOW_DAYS} days as standard, up to ${EXTENDED_DEADLINE_DAYS} for curators who ask for a longer window. Once it passes without a review, the credits you spent return to your balance automatically. You only pay when a curator actually reviews your track.`
+        : `追いかける必要はありません。ピッチごとに回答期限があり（標準${RESPONSE_WINDOW_DAYS}日、長めの期限を選んだキュレーターは最長${EXTENDED_DEADLINE_DAYS}日）、レビューのないまま期限を過ぎると、使用したクレジットは自動で残高に戻ります。キュレーターが実際にレビューした場合のみ課金されます。`,
     },
   ];
 
@@ -1482,8 +1509,8 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
               </h3>
               <p style={{ fontSize: 14.5, lineHeight: 1.85, color: 'rgba(240,237,230,0.78)', margin: 0 }}>
                 {lang === 'en'
-                  ? `Accept, pass, or leave feedback — the payment is the same whichever you choose. Nothing obliges you to feature a track. Your editorial independence stays yours; we only ask that the reply reaches the artist within ${RESPONSE_WINDOW_DAYS} days.`
-                  : '採用・見送り・フィードバックのみ、どの判断でも報酬は同じです。掲載義務はありません。編集の独立性はあなたのものです。お願いしているのは、7日以内に返事が届くことだけです。'}
+                  ? 'Accept, pass, or leave feedback — the payment is the same whichever you choose. Nothing obliges you to feature a track. Your editorial independence stays yours; we only ask that the reply reaches the artist within the response window you choose when you sign up.'
+                  : '採用・見送り・フィードバックのみ、どの判断でも報酬は同じです。掲載義務はありません。編集の独立性はあなたのものです。お願いしているのは、登録時にあなたが選んだ回答期限までに返事が届くことだけです。'}
               </p>
               <p style={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(255,255,255,0.45)', margin: '12px 0 0' }}>
                 {lang === 'en'
@@ -1511,7 +1538,7 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
               </a>
               <div style={{ marginTop: 14 }}>
                 <a href="#curator-standards" className="cta-secondary-link">
-                  {lang === 'en' ? 'What are the standards?' : '審査基準を見る'}
+                  {lang === 'en' ? "What you're paid for" : '報酬と掲載義務について'}
                 </a>
               </div>
             </div>
@@ -1644,9 +1671,13 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
                 {
                   icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="1.5" strokeLinecap="round"><path d="M9 8h6M9 12h6M9 16h4"/><rect x="4" y="4" width="16" height="16" rx="2"/></svg>,
                   title: lang === 'en' ? 'Cost barrier' : 'コストの壁',
-                  desc: lang === 'en'
-                    ? 'From ¥160 per pitch. 1/100th the cost of a PR agency.'
-                    : '1件¥160〜。PR会社の1/100以下。',
+                  desc: minTier
+                    ? (lang === 'en'
+                        ? `From ${minTier} credits (${yen(minPitchJpy)}) per pitch — as low as ${yen(minPitchJpyBulk)} with volume discounts.`
+                        : `1件 ${minTier}クレジット（${yen(minPitchJpy)}）から。まとめ買い割引で最大 ${yen(minPitchJpyBulk)}/件。`)
+                    : (lang === 'en'
+                        ? `One credit is ${yen(CREDIT_PRICE_JPY)}, down to ${yen(MIN_CREDIT_PRICE_JPY)} in bulk. Each curator shows how many credits a pitch takes.`
+                        : `1クレジット${yen(CREDIT_PRICE_JPY)}、まとめ買いで${yen(MIN_CREDIT_PRICE_JPY)}まで。必要なクレジット数はキュレーターごとに表示されます。`),
                 },
                 {
                   icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c4956a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13.8 12H3"/></svg>,
@@ -1701,97 +1732,6 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
                   ? 'OTONAMI solves all three — so you can focus on making music.'
                   : 'OTONAMIは、この3つの壁をすべて解決します。'}
               </p>
-            </div>
-
-            {/* Success Metrics — proven model */}
-            <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <p style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: '#c4956a',
-                letterSpacing: '1px',
-                textTransform: 'uppercase',
-                marginBottom: 8,
-              }}>
-                {lang === 'en' ? 'Proven Model' : '実証済みのモデル'}
-              </p>
-              <p style={{
-                fontSize: 15,
-                color: '#6b6560',
-                maxWidth: 600,
-                margin: '0 auto 24px',
-                lineHeight: 1.6,
-              }}>
-                {lang === 'en'
-                  ? 'Over 300,000 artists use similar platforms overseas. OTONAMI brings this model to Japan — with AI matching, Japanese UI, and AI-generated English pitches.'
-                  : '海外では同様のプラットフォームで30万人以上のアーティストが活動中。OTONAMIはこの実証済みモデルに「日本語UI」「AIピッチ生成」「AIマッチング」を加えた日本初のサービスです。'}
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: 16,
-              marginBottom: 48,
-            }}>
-              {[
-                {
-                  num: '2X',
-                  title: lang === 'en' ? 'Spotify listeners' : 'Spotify月間リスナー増加',
-                  desc: lang === 'en'
-                    ? 'Artists who use curator pitching see double their monthly listeners on average.'
-                    : 'キュレーターピッチ活用で月間リスナーが倍増した事例。',
-                },
-                {
-                  num: '43K',
-                  title: lang === 'en' ? 'Plays in 1 month' : '1ヶ月での再生回数',
-                  desc: lang === 'en'
-                    ? 'A single playlist placement can generate tens of thousands of streams.'
-                    : '1つのプレイリスト掲載から短期間で獲得。',
-                },
-                {
-                  num: '40%',
-                  title: lang === 'en' ? 'Pitch acceptance rate' : 'ピッチ採用率',
-                  desc: lang === 'en'
-                    ? 'AI matching dramatically improves acceptance rates vs. cold emails.'
-                    : '従来のメール営業では考えられない採用率を記録。',
-                },
-                {
-                  num: '1/100',
-                  title: lang === 'en' ? 'Cost reduction' : 'コスト削減',
-                  desc: lang === 'en'
-                    ? 'Compared to hiring an overseas PR agency, costs are reduced by 99%.'
-                    : '海外PR会社と比較して1/100以下のコスト。',
-                },
-              ].map((item, i) => (
-                <div key={i} className="metric-card" style={{
-                  padding: '24px 20px',
-                  background: '#fff',
-                  borderRadius: 12,
-                  border: '1px solid #e5e2dc',
-                  textAlign: 'center',
-                }}>
-                  <div style={{
-                    fontSize: 36,
-                    fontWeight: 700,
-                    color: '#c4956a',
-                    lineHeight: 1,
-                    marginBottom: 8,
-                    fontStyle: 'italic',
-                  }}>{item.num}</div>
-                  <div style={{
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: '#1a1a1a',
-                    marginBottom: 6,
-                  }}>{item.title}</div>
-                  <div style={{
-                    fontSize: 12,
-                    color: '#6b6560',
-                    lineHeight: 1.5,
-                  }}>{item.desc}</div>
-                </div>
-              ))}
             </div>
 
             {/* Comparison Table */}
@@ -1892,14 +1832,26 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
                       },
                       {
                         label: lang === 'en' ? 'Feedback' : 'フィードバック',
-                        otonami: lang === 'en' ? 'Guaranteed within 7 days' : '7日以内に保証',
-                        overseas: lang === 'en' ? '7-48 hours' : '7日〜48時間',
+                        // What we actually guarantee is the refund, not the reply.
+                        otonami: lang === 'en'
+                          ? 'No review by the deadline — credits returned automatically'
+                          : '期限内に未レビューならクレジット自動返還',
+                        overseas: lang === 'en' ? '48 hours – 7 days' : '48時間〜7日',
                         diy: lang === 'en' ? '<3% reply rate' : '返信率3%以下',
                       },
                       {
                         label: lang === 'en' ? 'Price' : '価格',
-                        otonami: lang === 'en' ? '~¥160 per pitch' : '約¥160/件〜',
-                        overseas: lang === 'en' ? '~¥150-450 per pitch' : '約¥150〜450/件',
+                        otonami: minTier
+                          ? (lang === 'en'
+                              ? `${yen(minPitchJpy)}–${yen(maxPitchJpy)} per pitch (${yen(MIN_CREDIT_PRICE_JPY)}–${yen(CREDIT_PRICE_JPY)} per credit)`
+                              : `${yen(minPitchJpy)}〜${yen(maxPitchJpy)}/件（単価${yen(MIN_CREDIT_PRICE_JPY)}〜${yen(CREDIT_PRICE_JPY)}）`)
+                          : (lang === 'en'
+                              ? `${yen(MIN_CREDIT_PRICE_JPY)}–${yen(CREDIT_PRICE_JPY)} per credit`
+                              : `1クレジット${yen(MIN_CREDIT_PRICE_JPY)}〜${yen(CREDIT_PRICE_JPY)}`),
+                        // Groover is the one overseas price we can cite (see the
+                        // note under the table). The others stay blank rather
+                        // than carry a figure we cannot source.
+                        overseas: lang === 'en' ? 'Groover: from €2 per submission' : 'Groover：€2〜/送付',
                         diy: lang === 'en' ? 'Free (huge time cost)' : '無料（時間コスト大）',
                       },
                       {
@@ -1951,6 +1903,21 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
                 {lang === 'en'
                   ? 'OTONAMI advantage: Japanese UI + AI English pitch generation + AI Match Score'
                   : 'OTONAMIだけの強み：日本語UI + AI英語ピッチ自動生成 + AIマッチスコア'}
+              </p>
+
+              {/* The only competitor price on this table we can point at a
+                  source for. Anything we cannot cite stays off the table. */}
+              <p style={{
+                textAlign: 'center',
+                fontSize: 12,
+                lineHeight: 1.7,
+                color: '#9b9590',
+                maxWidth: 600,
+                margin: '10px auto 0',
+              }}>
+                {lang === 'en'
+                  ? 'Groover price: 1 Groover credit = €1, a standard submission costs 2 (groover.co/en/cgs, checked 2026-09-06). OTONAMI prices include tax.'
+                  : 'Groover価格の出典：1 Grooviz＝€1、標準の送付は2 Grooviz（groover.co/en/cgs・2026年9月6日確認）。OTONAMIの価格は税込です。'}
               </p>
             </div>
 
@@ -2369,26 +2336,10 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
       </section>
       ========== END HIDDEN ========== */}
 
-      {/* ========== PRELAUNCH: HIDDEN — Success Stories (restore after launch) ==========
-      <div style={{ marginTop: 72 }}>
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <h3>{lang === 'en' ? 'Real results from curator pitching' : 'キュレーターピッチで実現した成果'}</h3>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 48 }}>
-          {[
-            { number: '2x', label: lang === 'en' ? 'Spotify listeners gained' : 'Spotify月間リスナー増加' },
-            { number: '43K', label: lang === 'en' ? 'Plays in one month' : '1ヶ月での再生回数' },
-            { number: '40%', label: lang === 'en' ? 'Pitch acceptance rate' : 'ピッチ採用率' },
-            { number: '1/100', label: lang === 'en' ? 'Cost reduction' : 'コスト削減' },
-          ].map((s, i) => (
-            <div key={i} style={{ background: '#fff', border: '1px solid #e5e2dc', borderRadius: 16, padding: 24, textAlign: 'center' }}>
-              <div style={{ fontSize: 44, fontWeight: 700, color: '#c4956a' }}>{s.number}</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a' }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      ========== END HIDDEN ========== */}
+      {/* Success Stories: removed 2026-09-06 along with the live "Proven Model"
+          tiles. The four figures it parked (2x listeners, 43K plays, 40%
+          acceptance, 1/100 cost) had no source, and 40% was contradicted by our
+          own pitch table. Do not restore them; any replacement needs a citation. */}
 
       {/* ========== PRELAUNCH: HIDDEN — Comparison Table (restore after launch) ==========
       <div style={{ marginTop: 48 }}>

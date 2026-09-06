@@ -1,4 +1,5 @@
 import LegalPageLayout from '@/components/LegalPageLayout';
+import { CREDIT_PRICE_JPY, creditsToJpy } from '@/lib/pricing';
 
 export const metadata = {
   title: '特定商取引法に基づく表記 | OTONAMI',
@@ -51,17 +52,16 @@ export default function TokushohoPage() {
             <td>
               各サービス申込画面に表示される金額（消費税込み）
               <br /><br />
-              ピッチクレジット：1クレジット ¥80（税込）〜
+              ピッチクレジット：1クレジット ¥{CREDIT_PRICE_JPY}（税込・定価）
               <br />
-              Tier 1（1クレジット）：¥80 / ピッチ
+              クレジットはパッケージ購入で数量割引が適用される場合があり、実際に適用される単価および請求額は購入画面に表示されます。
               <br />
-              Tier 2（2クレジット）：¥160 / ピッチ
-              <br />
-              Tier 3（3クレジット）：¥240 / ピッチ
-              <br />
-              Tier 4（4クレジット）：¥320 / ピッチ
-              <br />
-              Tier 5（5クレジット）：¥400 / ピッチ
+              {[1, 2, 3, 4, 5].map(t => (
+                <span key={t}>
+                  Tier {t}（{t}クレジット）：¥{creditsToJpy(t).toLocaleString('en-US')} / ピッチ（定価）
+                  <br />
+                </span>
+              ))}
             </td>
           </tr>
           <tr>

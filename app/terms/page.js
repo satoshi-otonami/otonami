@@ -1,4 +1,5 @@
 import LegalPageLayout from '@/components/LegalPageLayout';
+import { CREDIT_PRICE_JPY, creditsToJpy } from '@/lib/pricing';
 
 export const metadata = {
   title: '利用規約 | OTONAMI',
@@ -65,12 +66,10 @@ export default function TermsPage() {
         <li>クレジットの価格は、サービス内に表示される金額（消費税込み）とします。</li>
         <li>クレジットの料金体系は以下のとおりです。
           <ul>
-            <li>1クレジット：¥80（税込）</li>
-            <li>Tier 1ピッチ：1クレジット（¥80）</li>
-            <li>Tier 2ピッチ：2クレジット（¥160）</li>
-            <li>Tier 3ピッチ：3クレジット（¥240）</li>
-            <li>Tier 4ピッチ：4クレジット（¥320）</li>
-            <li>Tier 5ピッチ：5クレジット（¥400）</li>
+            <li>1クレジット：¥{CREDIT_PRICE_JPY}（税込・定価。まとめ買いのパッケージには数量割引が適用される場合があります）</li>
+            {[1, 2, 3, 4, 5].map(t => (
+              <li key={t}>Tier {t}ピッチ：{t}クレジット（定価 ¥{creditsToJpy(t).toLocaleString('en-US')}）</li>
+            ))}
           </ul>
         </li>
         <li>支払い方法は、クレジットカード決済（Stripe）とします。支払いは購入時に即時決済されます。</li>

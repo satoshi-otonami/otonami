@@ -56,6 +56,19 @@ const TYPE_LABEL = {
   other: 'Curator',
 };
 
+/* ── Response rate: minimum sample before the figure is shown ──
+   Live aggregation divides responded by received, so a curator who has been
+   pitched once and replied once reads "100%". Of the 36 listed curators with
+   any pitch history, 22 sit below five — the number was decoration for most of
+   the roster. Below the floor we show nothing; at or above it the denominator
+   is printed alongside so the reader can weigh it. */
+const RESPONSE_RATE_MIN_SAMPLE = 5;
+
+function formatResponseRate(rate, received, lang) {
+  if (rate == null || (received || 0) < RESPONSE_RATE_MIN_SAMPLE) return null;
+  return lang === 'ja' ? `${rate}%（${received}件）` : `${rate}% (${received} pitches)`;
+}
+
 /* ── Deterministic color from name ── */
 const COLORS = ['#dc2626','#7c3aed','#059669','#0284c7','#ea580c','#4f46e5','#0d9488','#be123c','#f59e0b','#6366f1'];
 const nameColor = (name) => COLORS[Math.abs([...name].reduce((a,c) => a + c.charCodeAt(0), 0)) % COLORS.length];
@@ -267,6 +280,7 @@ function CuratorModal({ c, score, selected, onClose, onToggle, lang }) {
   if (!c) return null;
 
   const scoreColor = score >= 75 ? T.green : score >= 60 ? T.accent : '#b45309';
+  const responseRateText = formatResponseRate(c.responseRate, c.pitchesReceived, lang);
 
   return (
     <div
@@ -323,7 +337,15 @@ function CuratorModal({ c, score, selected, onClose, onToggle, lang }) {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px', background: T.bg, borderRadius: T.radius, border: `1px solid ${T.border}` }}>
             <span style={{ fontSize: 13, color: T.textSub, fontFamily: T.font }}>{lang === 'ja' ? '回答率' : 'Response rate'}</span>
-            <span style={{ fontWeight: 700, fontSize: 22, color: T.accent, fontFamily: T.font }}>{(c.responseRate == null) ? '—' : `${c.responseRate}%`}</span>
+            {responseRateText ? (
+              <span style={{ fontWeight: 700, fontSize: 22, color: T.accent, fontFamily: T.font }}>{responseRateText}</span>
+            ) : (
+              <span style={{ fontSize: 13, color: T.textMuted, fontFamily: T.font }}>
+                {lang === 'ja'
+                  ? `実績${RESPONSE_RATE_MIN_SAMPLE}件未満のため非表示`
+                  : `Fewer than ${RESPONSE_RATE_MIN_SAMPLE} pitches — not shown yet`}
+              </span>
+            )}
             {score != null && (
               <>
                 <span style={{ flex: 1 }} />

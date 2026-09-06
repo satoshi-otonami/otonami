@@ -7,7 +7,8 @@ import API, { authFetch, ApiError } from '@/lib/api-client';
 import { analyzeTrack } from '@/lib/api-track';
 import { describeTrackCharacteristics } from '@/lib/track-description';
 import { getMatchLabel, rankCurators, calculateMatchScore, compareByMatch, MATCH_INSUFFICIENT_LABEL } from '@/lib/match-score';
-import { CREDIT_PRICE_JPY, creditsToJpy } from '@/lib/pricing';
+import { CREDIT_PRICE_JPY, creditsToJpy, RESPONSE_WINDOW_DAYS } from '@/lib/pricing';
+import { EXTENDED_DEADLINE_DAYS } from '@/lib/response-time';
 import { externalHref } from '@/lib/url';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -694,7 +695,7 @@ function Landing({onArtist, onCurator}) {
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"1rem",marginBottom:"3rem"}}>
-        {[["100%","人間のアーティスト"],["7日","フィードバック保証"],["¥0","キュレーター登録無料"],["AI","英語ピッチ自動生成"]].map(([n,l],i) =>
+        {[["100%","人間のアーティスト"],[`${RESPONSE_WINDOW_DAYS}日`,"未回答ならクレジット返還"],["¥0","キュレーター登録無料"],["AI","英語ピッチ自動生成"]].map(([n,l],i) =>
           <div key={i} style={{background:"#ffffff",border:"1px solid rgba(0,0,0,0.06)",borderRadius:16,padding:"1.5rem",textAlign:"center"}}>
             <div style={{fontSize:"1.8rem",fontWeight:800,color:"#c4956a"}}>{n}</div>
             <div style={{fontSize:"0.78rem",color:"#6b6560",marginTop:4}}>{l}</div>
@@ -3671,8 +3672,8 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
           <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.3)",borderRadius:16,padding:"2rem 1.5rem",textAlign:"center",marginBottom:"1.5rem"}}>
             <div style={{fontSize:"2rem",color:"#c4956a",marginBottom:12,fontWeight:300}}>✓</div>
             <h2 style={{fontSize:18,fontWeight:700,margin:"0 0 8px",color:"#c4956a",fontFamily:"'DM Sans',sans-serif"}}>{sentSummary?.reached ?? targets.length}人のキュレーターにピッチを送信しました</h2>
-            <p style={{fontSize:14,color:"#6b6560",margin:"0 0 4px",fontFamily:"'DM Sans',sans-serif"}}>フィードバックは通常3〜7日以内に届きます</p>
-            <p style={{fontSize:13,color:"#c4956a",marginTop:8}}>7日以内にFB保証 · 未回答はクレジット返還</p>
+            <p style={{fontSize:14,color:"#6b6560",margin:"0 0 4px",fontFamily:"'DM Sans',sans-serif"}}>回答期限はキュレーターごとに設定されています（標準{RESPONSE_WINDOW_DAYS}日・最長{EXTENDED_DEADLINE_DAYS}日）</p>
+            <p style={{fontSize:13,color:"#c4956a",marginTop:8}}>期限内にレビューがなければクレジットを自動返還します</p>
           </div>
           <div style={{display:"flex",gap:8,justifyContent:"center"}}>
             <button style={{...css.btnPrimary,background:"#c4956a",padding:"0.8rem 2rem",fontSize:"0.95rem"}} onClick={()=>{resetForm();setPage("tracking");}}>トラッキングを見る →</button>

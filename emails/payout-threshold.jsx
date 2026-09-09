@@ -30,25 +30,39 @@ export function payoutThresholdSubject({ stage }) {
 // The paragraphs each stage says, in order. Shared by the HTML and text builders
 // so the two can never say different things.
 function bodyLines({ stage, balance, hasPaymentInfo }) {
+  const infoMissing = hasPaymentInfo === false;
   const lines = [];
   if (stage === 'auto') {
     lines.push(`Your balance is now ${yen(balance)}.`);
-    lines.push(`At ${yen(PAYOUT_AUTO_THRESHOLD)} we pay out without waiting for a request, so there is nothing you need to do. This message is the advance notice; the payment follows within 3 to 5 business days.`);
-  } else {
-    lines.push(`Your balance is now ${yen(balance)}.`);
-    lines.push(`At ${yen(PAYOUT_REQUEST_THRESHOLD)} you can request a payout yourself. The button is in your dashboard under Earnings. Requested payouts are processed within 3 to 5 business days via your registered payment method.`);
-    lines.push(`If you would rather wait, nothing is lost. Your balance keeps accumulating, and once it reaches ${yen(PAYOUT_AUTO_THRESHOLD)} we pay it out without a request.`);
+    if (infoMissing) {
+      // The auto stage pays without a request, but it cannot pay to nowhere.
+      // Promising "the payment follows in 3 to 5 business days" to a curator
+      // with no destination on file would announce money that cannot move.
+      lines.push(`At ${yen(PAYOUT_AUTO_THRESHOLD)} we pay out without waiting for a request. Before we can send it we need somewhere to send it to, and we do not have your payment details on file yet. Open your dashboard profile and add your PayPal address, Wise account, or bank transfer details. Until they are registered your balance simply carries over, so nothing is lost.`);
+    } else {
+      lines.push(`At ${yen(PAYOUT_AUTO_THRESHOLD)} we pay out without waiting for a request, so there is nothing you need to do. This message is the advance notice; the payment typically follows within 3 to 5 business days.`);
+    }
+    return lines;
   }
-  if (!hasPaymentInfo) {
+  lines.push(`Your balance is now ${yen(balance)}.`);
+  lines.push(`At ${yen(PAYOUT_REQUEST_THRESHOLD)} you can request a payout yourself. The button is in your dashboard under Earnings. Requested payouts are processed within 3 to 5 business days via your registered payment method.`);
+  lines.push(`If you would rather wait, nothing is lost. Your balance keeps accumulating, and once it reaches ${yen(PAYOUT_AUTO_THRESHOLD)} we pay it out without a request.`);
+  if (infoMissing) {
     lines.push('One thing first: we do not have your payment details on file yet. Open your dashboard profile and add your PayPal address, Wise account, or bank transfer details. Until they are registered your balance simply carries over.');
   }
   return lines;
 }
 
+// One definition for both builders, so the button and the plain-text line can
+// never disagree about what the reader is being asked to do.
+function ctaLabel({ stage, hasPaymentInfo }) {
+  return stage === 'auto' || hasPaymentInfo === false ? 'Open your dashboard' : 'Request a payout';
+}
+
 export function payoutThresholdHtml({ curatorName, stage, balance, hasPaymentInfo }) {
   const name = escapeHtml(curatorName) || 'there';
   const loginUrl = `${APP_URL()}/curator/login`;
-  const cta = stage === 'auto' || hasPaymentInfo === false ? 'Open your dashboard' : 'Request a payout';
+  const cta = ctaLabel({ stage, hasPaymentInfo });
   const paras = bodyLines({ stage, balance, hasPaymentInfo })
     .map((l) => `<p style="color:#6b6560;font-size:15px;line-height:1.7;margin:0 0 16px;">${escapeHtml(l)}</p>`)
     .join('');
@@ -75,7 +89,7 @@ export function payoutThresholdHtml({ curatorName, stage, balance, hasPaymentInf
 export function payoutThresholdText({ curatorName, stage, balance, hasPaymentInfo }) {
   const name = curatorName || 'there';
   const loginUrl = `${APP_URL()}/curator/login`;
-  const cta = stage === 'auto' || hasPaymentInfo === false ? 'Open your dashboard' : 'Request a payout';
+  const cta = ctaLabel({ stage, hasPaymentInfo });
   return `Hi ${name},
 
 ${bodyLines({ stage, balance, hasPaymentInfo }).join('\n\n')}

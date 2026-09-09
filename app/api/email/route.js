@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { escapeHtml } from '@/lib/html-escape';
 import { buildPersonalLine } from '@/lib/pitch-personalization';
+import { verifyToken } from '@/lib/auth';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM = process.env.EMAIL_FROM || 'info@otonami.io';
@@ -179,6 +180,17 @@ ${trackingPixel}
 
 export async function POST(request) {
   try {
+    // Auth gate. This route sends mail as OTONAMI <info@otonami.io> with an
+    // arbitrary Reply-To, so an open endpoint is a brand-abuse and
+    // domain-reputation risk. The only live caller is the artist pitch-send
+    // flow (lib/api-client.js sendPitchEmail -> components/OtonamiApp.jsx),
+    // which always runs with an artist token, so artist is the only role that
+    // needs to get through.
+    const auth = await verifyToken(request);
+    if (!auth || auth.role !== 'artist') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { type, pitchId, toEmail: _toEmail, toName, subject, pitchText, epk, artistName, artistEmail, curatorName, trackUrl } = await request.json();
     let toEmail = _toEmail;
 

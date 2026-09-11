@@ -105,13 +105,59 @@ export async function POST(request) {
 
     if (payoutError) throw new Error(payoutError.message);
 
-    // Update earnings status to paid
+    // Update earnings status to paid.
+    //
+    // The payout row is already in. If these earnings do not actually flip to
+    // paid, they stay in availableBalance, and once the payout is marked
+    // completed the "already requested" guard above stops blocking — so the
+    // same money can be requested a second time. A silent miss here is a
+    // double-payment window, which is why the result is checked on both counts
+    // (error, and row count / amount) and nothing is emailed until it holds.
     const earningIds = (approvedEarnings || []).map(e => e.id);
     if (earningIds.length > 0) {
-      await db
+      const { data: paidRows, error: paidError } = await db
         .from('curator_earnings')
         .update({ status: 'paid', payout_id: payout.id, paid_at: new Date().toISOString() })
-        .in('id', earningIds);
+        .in('id', earningIds)
+        .select('id, amount');
+
+      const paidCount = (paidRows || []).length;
+      const paidTotal = (paidRows || []).reduce((sum, e) => sum + (e.amount || 0), 0);
+      const mismatch = paidCount !== earningIds.length || paidTotal !== payout.amount;
+
+      if (paidError || mismatch) {
+        console.error('[payout] earnings paid-update failed — rolling back payout', {
+          payout_id: payout.id,
+          curator_id: curatorId,
+          expected_count: earningIds.length,
+          expected_amount: payout.amount,
+          updated_count: paidCount,
+          updated_amount: paidTotal,
+          reason: paidError?.message || 'row count / amount mismatch',
+        });
+
+        // Put back any row that did flip, so a partial update cannot strand
+        // earnings as paid against a payout that never happens. Scoped by
+        // payout_id, which only this request's rows carry.
+        if (paidCount > 0) {
+          const { error: revertError } = await db
+            .from('curator_earnings')
+            .update({ status: 'approved', payout_id: null, paid_at: null })
+            .eq('payout_id', payout.id);
+          if (revertError) {
+            console.error('[payout] earnings revert failed:', revertError.message, { payout_id: payout.id });
+          }
+        }
+
+        // Drop the payout row so the curator can retry. Nothing references
+        // payouts.id by FK (curator_earnings.payout_id is a bare UUID column).
+        const { error: rollbackError } = await db.from('payouts').delete().eq('id', payout.id);
+        if (rollbackError) {
+          console.error('[payout] payout rollback failed:', rollbackError.message, { payout_id: payout.id });
+        }
+
+        return NextResponse.json({ error: 'payout_recording_failed' }, { status: 500 });
+      }
     }
 
     // Send admin notification

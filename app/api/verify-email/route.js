@@ -21,7 +21,10 @@ export async function GET(request) {
   }
 
   const supabase = getServiceSupabase();
-  const table = type === 'artist' ? 'artists' : 'curators';
+  // Artist verification now belongs to the account (one login, possibly several
+  // artists), so an artist token is looked up in `accounts`. Curators are
+  // unchanged — they have no accounts row.
+  const table = type === 'artist' ? 'accounts' : 'curators';
 
   // First try exact token match
   let record = null;
@@ -68,8 +71,28 @@ export async function GET(request) {
     return NextResponse.redirect(new URL(`/verify-error?reason=not_found&type=${type}`, baseUrl));
   }
 
+  // Keep the artist-level flag in step with the account, so any path still
+  // reading artists.email_verified agrees with the account's state.
+  let artistName = null;
+  if (type === 'artist') {
+    const { data: accountArtists, error: syncError } = await supabase
+      .from('artists')
+      .update({ email_verified: true, verification_token: null, verification_expires_at: null })
+      .eq('account_id', record.id)
+      .select('name, created_at');
+    if (syncError) {
+      console.warn('verify-email: artist sync failed (non-fatal):', syncError.message);
+    } else if (accountArtists?.length) {
+      // Greet with the artist the account registered with (the oldest row).
+      artistName = [...accountArtists]
+        .sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0))[0].name;
+    }
+  }
+
   // Send Welcome email now (moved from registration)
-  const name = record.name;
+  // `accounts` has no name column, so an artist greeting always comes from the
+  // synced artist rows; the literal is the last resort if that sync failed.
+  const name = artistName || record.name || (type === 'artist' ? 'アーティスト' : 'Curator');
   const email = record.email;
   const recipientEmail = testMode ? safeEmail : email;
 

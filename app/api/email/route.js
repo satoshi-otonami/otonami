@@ -213,16 +213,23 @@ export async function POST(request) {
         // Single artists-table lookup: bio + socials + founding_number.
         // is_founding is no longer a filter — we want the bio/socials for
         // every pitching artist; founding_number is only rendered when set.
+        //
+        // Keyed on the session's active artist id, not the posted artistEmail:
+        // a label account's artists share one contact address, so an email
+        // lookup would see two rows, return null through .maybeSingle(), and
+        // quietly send a pitch with no bio and no social links. The token is
+        // also the only trustworthy source here — artistEmail comes from the
+        // request body.
         let foundingNumber = null;
         let artistBio = null;
         const artistSocials = { spotify: null, youtube: null, instagram: null, x: null };
-        if (artistEmail) {
+        if (auth.artistId) {
           try {
             const db = getServiceSupabase();
             const { data: artistRow } = await db
               .from('artists')
               .select('bio, founding_number, is_founding, spotify_url, youtube_url, instagram_url, twitter_url')
-              .eq('email', artistEmail.toLowerCase().trim())
+              .eq('id', auth.artistId)
               .maybeSingle();
             if (artistRow) {
               if (artistRow.is_founding) foundingNumber = artistRow.founding_number ?? null;

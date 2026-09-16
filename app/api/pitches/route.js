@@ -298,8 +298,12 @@ export async function POST(request) {
           .eq('song_link', cleanRow.song_link)
           .in('status', ['sent', 'accepted', 'feedback'])
           .limit(1);
-        dupQuery = cleanRow.artist_email
-          ? dupQuery.eq('artist_email', cleanRow.artist_email)
+        // Key the dedup on the sending artist, not the contact email: a label
+        // account's artists share one address, so an email key would call a
+        // second artist's pitch of the same track a duplicate of the first and
+        // silently drop it. cleanRow.artist_id is set from the session above.
+        dupQuery = cleanRow.artist_id
+          ? dupQuery.eq('artist_id', cleanRow.artist_id)
           : dupQuery.eq('artist_name', cleanRow.artist_name);
         const { data: dup } = await dupQuery;
         if (dup && dup.length) {

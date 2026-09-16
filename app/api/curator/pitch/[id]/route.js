@@ -237,14 +237,17 @@ export async function GET(request, { params }) {
     track_ai_status = linkedTrack?.ai_status || null;
   }
 
-  // Attach Founding Artist info (server-side lookup; pitches table has no FK to artists)
+  // Attach Founding Artist info (server-side lookup; pitches table has no FK to artists).
+  // Keyed on artist_id: a label account's artists share one contact address, so
+  // an artist_email lookup would hit .maybeSingle() with two rows and drop the
+  // badge for everyone on that account.
   let artist_is_founding = false;
   let artist_founding_number = null;
-  if (data.artist_email) {
+  if (data.artist_id) {
     const { data: artistRow } = await db
       .from('artists')
       .select('is_founding, founding_number')
-      .eq('email', String(data.artist_email).toLowerCase().trim())
+      .eq('id', data.artist_id)
       .maybeSingle();
     artist_is_founding = artistRow?.is_founding === true;
     artist_founding_number = artistRow?.founding_number ?? null;

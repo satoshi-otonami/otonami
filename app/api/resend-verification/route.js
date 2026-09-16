@@ -42,13 +42,18 @@ export async function POST(request) {
     }
 
     const supabase = getServiceSupabase();
-    const table = type === 'artist' ? 'artists' : 'curators';
+    // Artist verification lives on the account, so the resend targets the
+    // accounts row. Curators are unchanged.
+    const table = type === 'artist' ? 'accounts' : 'curators';
+    const lookupEmail = type === 'artist' ? String(email).trim().toLowerCase() : email;
 
     const { data: record } = await supabase
       .from(table)
-      .select('id, name, email, email_verified, verification_expires_at')
-      .eq('email', email)
-      .single();
+      .select(type === 'artist'
+        ? 'id, email, email_verified, verification_expires_at'
+        : 'id, name, email, email_verified, verification_expires_at')
+      .eq('email', lookupEmail)
+      .maybeSingle();
 
     if (!record) {
       // Don't reveal if account exists
@@ -77,9 +82,20 @@ export async function POST(request) {
       verification_expires_at: verificationExpiresAt,
     }).eq('id', record.id);
 
-    // Send verification email
-    const { subject, html, text } = buildVerificationEmail(record.name, verificationToken, type);
-    const recipientEmail = testMode ? safeEmail : email;
+    // Send verification email. `accounts` has no name column, so an artist's
+    // greeting comes from the artist row the account registered with.
+    let displayName = record.name;
+    if (type === 'artist') {
+      const { data: artistRows } = await supabase
+        .from('artists')
+        .select('name')
+        .eq('account_id', record.id)
+        .order('created_at', { ascending: true })
+        .limit(1);
+      displayName = artistRows?.[0]?.name || 'アーティスト';
+    }
+    const { subject, html, text } = buildVerificationEmail(displayName, verificationToken, type);
+    const recipientEmail = testMode ? safeEmail : lookupEmail;
     await resend.emails.send({
       from: FROM,
       to: recipientEmail,

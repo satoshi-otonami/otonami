@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { signToken } from '@/lib/auth';
 import { getServiceSupabase } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
-import { getArtistByEmail } from '@/lib/db';
+import { getAccountByEmail, getArtistsByAccountId, normalizeEmail } from '@/lib/db';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
@@ -58,15 +58,19 @@ export async function POST(request) {
       );
     }
 
-    const artist = await getArtistByEmail(email);
-    if (!artist) {
+    // Credentials live on `accounts`, not `artists` — one login can own several
+    // artists. The OTP is still keyed on the login address, which is the
+    // account's email.
+    const loginEmail = normalizeEmail(email);
+    const account = await getAccountByEmail(loginEmail);
+    if (!account) {
       return NextResponse.json(
         { error: 'メールアドレスまたはパスワードが正しくありません' },
         { status: 401 }
       );
     }
 
-    const valid = await bcrypt.compare(password, artist.password_hash);
+    const valid = await bcrypt.compare(password, account.password_hash);
     if (!valid) {
       return NextResponse.json(
         { error: 'メールアドレスまたはパスワードが正しくありません' },
@@ -75,14 +79,19 @@ export async function POST(request) {
     }
 
     // Check email verification (for newly registered users)
-    // Note: existing users without email_verified field will have it as null/false
-    // They will be auto-verified after OTP
-    if (artist.email_verified === false && artist.verification_token) {
+    // Note: accounts backfilled from existing artists inherit their verified
+    // state, so no established user is suddenly asked to re-verify.
+    if (account.email_verified === false && account.verification_token) {
       return NextResponse.json({
         error: 'email_not_verified',
         message: 'メール認証が完了していません。登録時に送信された認証メールのリンクをクリックしてください。',
       }, { status: 403 });
     }
+
+    // The OTP mail greets someone by name; use the account's first artist.
+    // A label account with no artists yet still logs in (name falls back).
+    const artists = await getArtistsByAccountId(account.id);
+    const greetingName = artists[0]?.name || 'OTONAMI';
 
     const supabase = getServiceSupabase();
 
@@ -96,7 +105,7 @@ export async function POST(request) {
     const otpHash = await bcrypt.hash(otp, 10);
 
     const { error: otpInsertError } = await supabase.from('login_otps').insert({
-      email,
+      email: loginEmail,
       user_type: 'artist',
       otp_code: otpHash,
       expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
@@ -107,12 +116,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Failed to generate verification code. Please try again.' }, { status: 500 });
     }
 
-    await sendOTPEmail(email, artist.name, otp);
+    await sendOTPEmail(loginEmail, greetingName, otp);
 
     return NextResponse.json({
       success: true,
       step: 'otp_required',
-      email: maskEmail(email),
+      email: maskEmail(loginEmail),
     });
   } catch (e) {
     console.error('Artist login error:', e);

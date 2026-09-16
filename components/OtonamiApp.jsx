@@ -410,6 +410,8 @@ export default function App() {
   const [credits, setCredits] = useState(0);
   const [notif, setNotif] = useState(null);
   const [loggedInArtist, setLoggedInArtist] = useState(null);
+  // Every artist on the signed-in account — drives the /studio artist switcher.
+  const [accountArtists, setAccountArtists] = useState([]);
   // True on first render whenever an artist_token is present in storage,
   // so we can suppress the Demo/empty UI until /api/artists resolves with
   // the real artist. Synchronous so the initial paint never shows Demo
@@ -513,6 +515,7 @@ export default function App() {
       .then(data => {
         if (data?.artist) {
           setLoggedInArtist(data.artist);
+          setAccountArtists(data.artists || []);
           setCredits(data.artist.credits ?? 0);
           // Always overwrite otonami-user with the authoritative artist
           // record so a stale "Satoshi (Demo)" entry can't survive into the
@@ -586,8 +589,9 @@ const dbCurators = await loadCurators();
 setCurators(dbCurators && dbCurators.length > 0 ? dbCurators : []);
 await initSession();
 // Credits are loaded by the auto-login useEffect from artists.credits.
-const userEmail = user?.email || null;
-const savedPitches = await loadPitches(userEmail);
+// Pitches are scoped by artist id — `user.id` is the active artist's id, set
+// by the auto-login effect from /api/artists.
+const savedPitches = await loadPitches(user?.id || null);
 if (savedPitches?.length) setPitches(savedPitches);
     })();
     const s = document.createElement("style");
@@ -604,7 +608,7 @@ const savePitches = async (p) => {
 // DBから最新のピッチを再取得してstateを更新（キュレーター操作後の反映に使用）
 // DB結果とローカルstateをマージ — DB側にないピッチ（送信直後など）も保持する
 const refreshPitches = async () => {
-  const fresh = await loadPitches(user?.email || null);
+  const fresh = await loadPitches(user?.id || null);
   if (!fresh) return pitches;
   setPitches(prev => {
     if (!fresh.length) return prev; // DB空なら既存を保持
@@ -657,7 +661,7 @@ const saveCurators = async (c) => {
     <div style={css.shell}>
       {notif && <div style={{...css.toast, background: notif.type==="success" ? "linear-gradient(135deg,#c4956a,#e85d3a)" : "linear-gradient(135deg,#dc2626,#ea580c)"}}>{notif.type==="success"?"✓":"!"} {notif.msg}</div>}
       {mode === "artist" ? (
-        <ArtistApp user={user} curators={curators} pitches={pitches} credits={credits} page={page} setPage={setPage} savePitches={savePitches} setCredits={setCredits} notify={notify} updatePitch={updatePitch} refreshPitches={refreshPitches} loggedInArtist={loggedInArtist} />
+        <ArtistApp user={user} curators={curators} pitches={pitches} credits={credits} page={page} setPage={setPage} savePitches={savePitches} setCredits={setCredits} notify={notify} updatePitch={updatePitch} refreshPitches={refreshPitches} loggedInArtist={loggedInArtist} accountArtists={accountArtists} />
       ) : (
         <CuratorApp user={user} pitches={pitches} page={page} setPage={setPage} savePitches={savePitches} notify={notify} updatePitch={updatePitch} curators={curators} saveCurators={saveCurators} />
       )}
@@ -966,7 +970,7 @@ const EMAIL_STAGGER_MS = 600;  // between /api/email calls — Resend allows ~2/
 const MAX_RATE_LIMIT_RETRIES = 2;
 const MAX_RATE_LIMIT_WAIT_SEC = 60;
 
-function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, setCredits, notify, updatePitch, refreshPitches, loggedInArtist}) {
+function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches, setCredits, notify, updatePitch, refreshPitches, loggedInArtist, accountArtists = []}) {
   // Tracks the live querystring so readUrlParams re-fires whenever the
   // dashboard hands off a new track. Plain `<a>` clicks usually do a full
   // page reload, but browser back/forward + bfcache can land us back on a
@@ -1189,6 +1193,38 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
 
   const displayName = loggedInArtist ? loggedInArtist.name : user.name;
 
+  // Label accounts manage several artists from one login. Re-issue the session
+  // token against the picked artist and reload — /studio's pitch form, credits,
+  // tracks and pitch list all derive from the session, so a reload is the only
+  // way to guarantee nothing keeps rendering the previous artist.
+  const [switchingArtist, setSwitchingArtist] = useState(false);
+  const switchArtist = async (artistId) => {
+    if (!artistId || artistId === loggedInArtist?.id || switchingArtist) return;
+    setSwitchingArtist(true);
+    try {
+      const token = localStorage.getItem('artist_token');
+      const res = await fetch('/api/account/switch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ artist_id: artistId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.token) throw new Error(data.error || 'switch failed');
+      localStorage.setItem('artist_token', data.token);
+      window.location.reload();
+    } catch (e) {
+      console.error('Artist switch failed:', e);
+      setSwitchingArtist(false);
+      notify('アーティストの切り替えに失敗しました', 'error');
+    }
+  };
+
+  const artistSwitcherStyle = {
+    fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600,
+    color: '#1a1a1a', background: '#fff', border: '1px solid #e5e2dc',
+    borderRadius: 9999, padding: '5px 10px', cursor: 'pointer', maxWidth: 180,
+  };
+
   const handleLogout = () => {
     if (loggedInArtist) {
       localStorage.removeItem('artist_token');
@@ -1259,7 +1295,17 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
         {navItems.map(n => { const NIcon = n.Icon; return <button key={n.id} onClick={()=>setPage(n.id)} style={{...css.navBtn,...(page===n.id?css.navBtnActive:{}),display:"inline-flex",alignItems:"center",gap:6}}><NIcon size={14} strokeWidth={2}/>{n.label}{n.badge && <span style={css.navBadge}>{n.badge}</span>}</button>; })}
       </div>
       <div className="studio-nav-desktop-only" style={{fontSize:"0.75rem",color:"#6b6560",display:"flex",alignItems:"center",gap:8}}>
-        {loggedInArtist && <span style={{fontWeight:600,color:"#1a1a1a",fontSize:13}}>{displayName}</span>}
+        {loggedInArtist && (accountArtists.length > 1 ? (
+          <select value={loggedInArtist.id} disabled={switchingArtist}
+            onChange={(e) => switchArtist(e.target.value)}
+            aria-label="アーティストを切り替え"
+            style={artistSwitcherStyle}
+          >
+            {accountArtists.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+        ) : (
+          <span style={{fontWeight:600,color:"#1a1a1a",fontSize:13}}>{displayName}</span>
+        ))}
         <span style={{color:"#f59e0b",fontWeight:700}}>{credits}</span> クレジット
         <button onClick={()=>setPage("shop")} style={{marginLeft:4,...css.btnSm,background:"linear-gradient(135deg,rgba(245,158,11,0.15),rgba(234,88,12,0.1))",color:"#f59e0b",border:"1px solid rgba(245,158,11,0.3)",fontWeight:600}}>+ 購入</button>
         <button onClick={handleLogout} style={{marginLeft:4,fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"rgba(26,26,26,0.5)",background:"none",border:"1px solid rgba(26,26,26,0.15)",borderRadius:9999,padding:"6px 16px",cursor:"pointer"}}>ログアウト</button>
@@ -1294,7 +1340,17 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
           ); })}
           <div className="studio-nav-mobile-divider" />
           <div className="studio-nav-mobile-meta">
-            {loggedInArtist && <span style={{fontWeight:600,color:"#1a1a1a"}}>{displayName} · </span>}
+            {loggedInArtist && (accountArtists.length > 1 ? (
+              <select value={loggedInArtist.id} disabled={switchingArtist}
+                onChange={(e) => switchArtist(e.target.value)}
+                aria-label="アーティストを切り替え"
+                style={{...artistSwitcherStyle, marginRight: 8}}
+              >
+                {accountArtists.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+            ) : (
+              <span style={{fontWeight:600,color:"#1a1a1a"}}>{displayName} · </span>
+            ))}
             <span style={{color:"#f59e0b",fontWeight:700}}>{credits}</span> クレジット
           </div>
           <button onClick={() => { setPage("shop"); setMobileMenuOpen(false); }}>+ クレジット購入</button>

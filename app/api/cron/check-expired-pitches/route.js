@@ -179,15 +179,18 @@ export async function GET(request) {
         // Nothing to refund — still mark expired below.
       }
 
-      // 1. Resolve artist_id (legacy pitches may only have artist_email).
-      let artistId = pitch.artist_id || null;
-      if (!artistId && pitch.artist_email) {
-        const { data: artist } = await supabase
-          .from('artists')
-          .select('id')
-          .eq('email', pitch.artist_email)
-          .maybeSingle();
-        artistId = artist?.id || null;
+      // 1. Resolve artist_id.
+      // Refunds must land on the artist that was actually charged, so the only
+      // trustworthy key is pitches.artist_id. The old artist_email fallback is
+      // gone: with label accounts several artists share one contact address, so
+      // an email lookup either credits the wrong artist or (on .maybeSingle()
+      // seeing two rows) returns null and silently drops the refund.
+      // Every pitch row carries artist_id — verified 180/180 before the change.
+      const artistId = pitch.artist_id || null;
+      if (!artistId) {
+        console.error(
+          `[cron] Pitch ${pitch.id} has no artist_id — cannot refund ${pitch.credits_charged} credit(s) safely. Needs manual review.`
+        );
       }
 
       // 2. Return credits to artist (atomic via RPC).

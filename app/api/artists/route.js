@@ -5,10 +5,13 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { Resend } from 'resend';
 import {
-  getArtistByEmail,
+  getAccountByEmail,
+  createAccount,
   getArtistById,
+  getArtistsByAccountId,
   updateArtist,
   getArtistTracks,
+  normalizeEmail,
 } from '@/lib/db';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
@@ -69,8 +72,10 @@ export async function POST(request) {
       );
     }
 
-    // メール重複チェック
-    const existing = await getArtistByEmail(email.toLowerCase().trim());
+    // メール重複チェック — 一意性は accounts 側が担保する。
+    // artists.email は連絡先であり、同一アカウント配下では重複しうる。
+    const loginEmail = normalizeEmail(email);
+    const existing = await getAccountByEmail(loginEmail);
     if (existing) {
       return NextResponse.json({
         error: 'already_registered',
@@ -93,9 +98,34 @@ export async function POST(request) {
     const { eligible: isFoundingEligible, foundingNumber } =
       await pickFoundingSlot(adminDb, FOUNDING_LIMIT, FOUNDING_DEADLINE);
 
+    // アカウントを先に作る。ここで作られる accounts 行がログインの実体で、
+    // artists 行はその配下の1組目になる。
+    let account;
+    try {
+      account = await createAccount({
+        email: loginEmail,
+        password_hash,
+        email_verified: false,
+        verification_token,
+        verification_expires_at,
+      });
+    } catch (e) {
+      // The duplicate check above can lose a race (a double-submitted form is
+      // the common case). The unique index is the real guard; translate its
+      // violation into the same 409 rather than a 500.
+      if (/duplicate key|accounts_email/i.test(e?.message || '')) {
+        return NextResponse.json({
+          error: 'already_registered',
+          message: 'This email is already registered. Please log in instead.\nこのメールアドレスは既に登録されています。ログインしてください。',
+        }, { status: 409 });
+      }
+      throw e;
+    }
+
     const insertData = {
+      account_id: account.id,
       name,
-      email,
+      email: loginEmail,
       password_hash,
       email_verified: false,
       verification_token,
@@ -153,6 +183,19 @@ export async function POST(request) {
 
     if (insertError || !artist) {
       console.error('Artist insert error:', insertError);
+      // Roll the account back. Without this the email stays claimed by an
+      // accounts row that owns no artist, and the user can neither sign up
+      // again (409) nor log in (no artist to act as).
+      const { error: rollbackError } = await adminDb
+        .from('accounts')
+        .delete()
+        .eq('id', account.id);
+      if (rollbackError) {
+        console.error(
+          '[artists] CRITICAL: orphan account left behind after a failed signup — this email cannot sign up again until the row is removed.',
+          { account_id: account.id, email: loginEmail, error: rollbackError }
+        );
+      }
       return NextResponse.json(
         { error: insertError?.message || 'Failed to create artist' },
         { status: 500 }
@@ -188,7 +231,7 @@ export async function POST(request) {
 
     // Send verification email instead of Welcome email
     const verifyUrl = `${APP_URL}/api/verify-email?token=${verification_token}&type=artist`;
-    const verifyTo = testMode ? safeEmail : email;
+    const verifyTo = testMode ? safeEmail : loginEmail;
     const foundingTag = artist.is_founding ? `Founding Artist #${artist.founding_number} — ` : '';
     const verifySubject = (testMode ? `[TEST] (→${email}) ` : '') +
       `${foundingTag}OTONAMIへようこそ — メールアドレスを認証してください / Verify your email`;
@@ -298,32 +341,25 @@ export async function GET(request) {
 
     const tracks = await getArtistTracks(payload.artistId);
 
-    // Fetch pitches by artist_email and artist_name separately
-    // Use select('*') to avoid column-not-found errors on varying schemas
+    // Pitches are fetched by artist_id, never by artist_email / artist_name.
+    // Under a label account several artists share one contact address, so an
+    // email match would pull a sibling artist's pitches into this dashboard,
+    // and a name match would do the same for any two artists with equal names.
+    // artist_id is set on every pitch row (verified: 180/180 at migration time)
+    // and is what POST /api/pitches writes from the session.
     const supabase = getServiceSupabase();
 
-    let pitches1 = [], pitches2 = [];
+    let pitchList = [];
     try {
-      const r1 = await supabase.from('pitches').select('*').eq('artist_email', artist.email);
-      if (r1.error) console.error('Pitch query (email) error:', r1.error);
-      else pitches1 = r1.data || [];
-    } catch (e) { console.error('Pitch query (email) exception:', e); }
+      const r = await supabase
+        .from('pitches')
+        .select('*')
+        .eq('artist_id', artist.id)
+        .order('sent_at', { ascending: false, nullsFirst: false });
+      if (r.error) console.error('Pitch query (artist_id) error:', r.error);
+      else pitchList = r.data || [];
+    } catch (e) { console.error('Pitch query (artist_id) exception:', e); }
 
-    try {
-      const r2 = await supabase.from('pitches').select('*').eq('artist_name', artist.name);
-      if (r2.error) console.error('Pitch query (name) error:', r2.error);
-      else pitches2 = r2.data || [];
-    } catch (e) { console.error('Pitch query (name) exception:', e); }
-
-    // Deduplicate and merge
-    const seenIds = new Set();
-    const pitchList = [];
-    for (const p of [...pitches1, ...pitches2]) {
-      if (!seenIds.has(p.id)) {
-        seenIds.add(p.id);
-        pitchList.push(p);
-      }
-    }
     pitchList.sort((a, b) => new Date(b.sent_at || b.created_at || 0) - new Date(a.sent_at || a.created_at || 0));
     const pitchStats = {
       total_sent: pitchList.length,
@@ -333,9 +369,24 @@ export async function GET(request) {
       listened: pitchList.filter(p => ['listened', 'feedback', 'interested', 'accepted'].includes(p.status)).length,
     };
 
+    // The artist switcher needs every artist on this account, so the dashboard
+    // can render the list without a second round trip on first paint.
+    // The artist row is already loaded, so read account_id off it rather than
+    // paying for resolveAccountId's extra lookup on legacy tokens.
+    const accountId = payload.accountId || artist.account_id || null;
+    const siblings = accountId ? await getArtistsByAccountId(accountId) : [artist];
+
     const { password_hash, ...safeArtist } = artist;
     return NextResponse.json({
       artist: { ...safeArtist, tracks },
+      account: accountId ? { id: accountId, email: payload.email || artist.email } : null,
+      artists: siblings.map((a) => ({
+        id: a.id,
+        name: a.name,
+        avatar_url: a.avatar_url,
+        credits: a.credits,
+        is_active: a.id === artist.id,
+      })),
       pitchStats,
       recentPitches: pitchList.slice(0, 20),
     });

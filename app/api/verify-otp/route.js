@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
-import { signToken } from '@/lib/auth';
+import { signToken, signArtistSession } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+import { getAccountByEmail, getArtistsByAccountId, normalizeEmail } from '@/lib/db';
 import { SignJWT } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -10,7 +11,12 @@ const JWT_SECRET = new TextEncoder().encode(
 
 export async function POST(request) {
   try {
-    const { email, otp_code, type } = await request.json();
+    const { email: rawEmail, otp_code, type } = await request.json();
+
+    // Artist login stores the OTP under the normalized account address, so the
+    // lookup has to use the same shape or a mixed-case retype misses the row.
+    // Curator OTPs are still written with the address as typed — leave those be.
+    const email = type === 'artist' ? normalizeEmail(rawEmail) : rawEmail;
 
     if (!email || !otp_code || !['artist', 'curator'].includes(type)) {
       return NextResponse.json({ error: 'Email, OTP code, and type are required' }, { status: 400 });
@@ -69,33 +75,49 @@ export async function POST(request) {
 
     // Get user and generate JWT
     if (type === 'artist') {
-      const { data: artists } = await supabase
-        .from('artists')
-        .select('id, name, email, avatar_url, email_verified')
-        .eq('email', email)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      const artist = artists?.[0];
-      if (!artist) {
+      // Credentials and verification live on `accounts`; the artists under it
+      // are what the session actually acts as.
+      const account = await getAccountByEmail(email);
+      if (!account) {
         return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
       }
 
-      // Auto-verify email for existing users who pass OTP
-      if (!artist.email_verified) {
-        await supabase.from('artists').update({ email_verified: true }).eq('id', artist.id);
+      // Auto-verify email for existing users who pass OTP. Passing the OTP
+      // proves control of the inbox, which is exactly what verification asserts.
+      if (!account.email_verified) {
+        await supabase.from('accounts')
+          .update({ email_verified: true, updated_at: new Date().toISOString() })
+          .eq('id', account.id);
       }
 
-      const token = await signToken({
+      const artists = await getArtistsByAccountId(account.id);
+      if (artists.length === 0) {
+        return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
+      }
+
+      // Keep artists.email_verified in step with the account so anything still
+      // reading the artist-level flag (legacy paths, admin queries) agrees.
+      const unverified = artists.filter((a) => !a.email_verified).map((a) => a.id);
+      if (unverified.length > 0) {
+        await supabase.from('artists').update({ email_verified: true }).in('id', unverified);
+      }
+
+      // Oldest artist is the default active one — for a solo account that is
+      // the only one, and for a label it is the artist they registered with.
+      const artist = artists[0];
+
+      const token = await signArtistSession({
+        accountId: account.id,
         artistId: artist.id,
-        email: artist.email,
-        role: 'artist',
+        email: account.email,
       });
 
       return NextResponse.json({
         success: true,
         token,
         artist: { id: artist.id, name: artist.name, email: artist.email, avatar_url: artist.avatar_url },
+        account: { id: account.id, email: account.email },
+        artists: artists.map((a) => ({ id: a.id, name: a.name, avatar_url: a.avatar_url })),
       });
     } else {
       // Curator

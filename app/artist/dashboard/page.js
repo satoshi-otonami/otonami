@@ -287,6 +287,14 @@ export default function ArtistDashboard() {
   const [headerMenu, setHeaderMenu] = useState(false);
   const headerMenuRef = useRef(null);
 
+  // Artist switcher (label accounts manage several artists from one login)
+  const [accountArtists, setAccountArtists] = useState([]);
+  const [switchingTo, setSwitchingTo] = useState(null);
+  const [showAddArtist, setShowAddArtist] = useState(false);
+  const [addForm, setAddForm] = useState({ name: '', email: '' });
+  const [addBusy, setAddBusy] = useState(false);
+  const [addError, setAddError] = useState('');
+
   // Strip ?add=1 once the modal has opened so reloading the page does not
   // reopen the sheet on top of a track the user already saved. The `tab=`
   // sibling is preserved so the Tracks view stays selected.
@@ -323,6 +331,7 @@ export default function ArtistDashboard() {
       if (!res.ok) { localStorage.removeItem('artist_token'); window.location.href = '/artist/login'; return; }
       const data = await res.json();
       setArtist(data.artist);
+      setAccountArtists(data.artists || []);
       setTracks(data.artist.tracks || []);
       if (data.pitchStats) setPitchStats(data.pitchStats);
       if (data.recentPitches) setRecentPitches(data.recentPitches);
@@ -371,6 +380,52 @@ export default function ArtistDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('artist_token');
     window.location.href = '/artist/login';
+  };
+
+  // Switching artist re-issues the session token with a different active
+  // artist. A full reload rather than local state juggling: tracks, pitches,
+  // credits, EPK and the promo toolkit all key off the session, and a reload is
+  // the only way to guarantee none of them keeps showing the previous artist.
+  const switchArtist = async (artistId) => {
+    if (!artistId || artistId === artist?.id || switchingTo) return;
+    setSwitchingTo(artistId);
+    try {
+      const res = await fetch('/api/account/switch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ artist_id: artistId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.token) throw new Error(data.error || 'switch failed');
+      localStorage.setItem('artist_token', data.token);
+      window.location.reload();
+    } catch (e) {
+      console.error('Artist switch failed:', e);
+      setSwitchingTo(null);
+      alert('アーティストの切り替えに失敗しました。もう一度お試しください。');
+    }
+  };
+
+  const addArtist = async () => {
+    const name = addForm.name.trim();
+    if (!name || addBusy) return;
+    setAddBusy(true);
+    setAddError('');
+    try {
+      const res = await fetch('/api/account/artists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name, email: addForm.email.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.token) throw new Error(data.message || data.error || '追加に失敗しました');
+      // The API already switched the session to the new artist.
+      localStorage.setItem('artist_token', data.token);
+      window.location.reload();
+    } catch (e) {
+      setAddError(e.message || '追加に失敗しました');
+      setAddBusy(false);
+    }
   };
 
   const openCuratorProfile = useCallback(async (curatorName) => {
@@ -486,6 +541,51 @@ export default function ArtistDashboard() {
                 onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
                 onMouseLeave={e => e.currentTarget.style.background = 'none'}
               >プロフィール編集</button>
+
+              {/* Artist switcher — only shown once an account has more than one
+                  artist, so a solo artist's menu looks exactly as before. */}
+              {accountArtists.length > 1 && (
+                <>
+                  <div style={{ height: 1, background: THEME.borderLight }} />
+                  <div style={{ padding: '10px 16px 4px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: THEME.textMuted, fontFamily: THEME.font }}>
+                    アーティストを切り替え
+                  </div>
+                  {accountArtists.map((a) => {
+                    const active = a.id === artist.id;
+                    return (
+                      <button key={a.id} onClick={() => { setHeaderMenu(false); switchArtist(a.id); }}
+                        disabled={active || !!switchingTo}
+                        style={{
+                          width: '100%', padding: '10px 16px', border: 'none',
+                          background: active ? THEME.goldLight : 'none', textAlign: 'left',
+                          cursor: active ? 'default' : 'pointer', fontSize: 13,
+                          color: THEME.text, fontFamily: THEME.font,
+                          display: 'flex', alignItems: 'center', gap: 8,
+                        }}
+                        onMouseEnter={e => { if (!active) e.currentTarget.style.background = THEME.bg; }}
+                        onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'none'; }}
+                      >
+                        <div style={{ width: 22, height: 22, borderRadius: '50%', background: THEME.goldLight, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                          {a.avatar_url
+                            ? <img src={a.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : <span style={{ fontSize: 11, color: THEME.gold }}>♪</span>}
+                        </div>
+                        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: active ? 700 : 400 }}>{a.name}</span>
+                        <span style={{ fontSize: 10, color: THEME.textMuted }}>{a.credits ?? 0} cr</span>
+                        {active && <span style={{ fontSize: 11, color: THEME.gold }}>✓</span>}
+                        {switchingTo === a.id && <span style={{ fontSize: 10, color: THEME.textMuted }}>…</span>}
+                      </button>
+                    );
+                  })}
+                </>
+              )}
+              <div style={{ height: 1, background: THEME.borderLight }} />
+              <button onClick={() => { setHeaderMenu(false); setAddError(''); setAddForm({ name: '', email: '' }); setShowAddArtist(true); }}
+                style={{ width: '100%', padding: '12px 16px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.text, fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 8 }}
+                onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+              >+ アーティストを追加</button>
+
               <div style={{ height: 1, background: THEME.borderLight }} />
               <a href="/dashboard/epk" style={{ width: '100%', padding: '12px 16px', textDecoration: 'none', cursor: 'pointer', fontSize: 13, color: THEME.text, fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 8, boxSizing: 'border-box' }}
                 onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
@@ -1285,6 +1385,57 @@ export default function ArtistDashboard() {
           onClose={() => setShowEditProfile(false)}
           onSuccess={() => { setShowEditProfile(false); fetchProfile(token); }}
         />
+      )}
+
+      {/* ── アーティストを追加（レーベル/事務所向け） ── */}
+      {showAddArtist && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 500, padding: 20 }}
+          onClick={() => { if (!addBusy) setShowAddArtist(false); }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ background: THEME.card, borderRadius: 16, padding: 28, width: '100%', maxWidth: 440, boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
+            <h2 style={{ fontFamily: THEME.fontDisplay, fontSize: 20, fontWeight: 700, color: THEME.text, margin: '0 0 6px' }}>アーティストを追加</h2>
+            <p style={{ fontSize: 13, lineHeight: 1.7, color: THEME.textMuted, fontFamily: THEME.font, margin: '0 0 20px' }}>
+              同じログインで複数のアーティストを管理できます。追加したアーティストにはクレジットは付与されません（購入または個別付与でご利用ください）。
+            </p>
+
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: THEME.text, fontFamily: THEME.font, marginBottom: 6 }}>アーティスト名 *</label>
+            <input
+              value={addForm.name}
+              onChange={(e) => setAddForm(f => ({ ...f, name: e.target.value }))}
+              placeholder="例: 蜷川べに"
+              disabled={addBusy}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${THEME.border}`, fontSize: 14, fontFamily: THEME.font, marginBottom: 16, boxSizing: 'border-box' }}
+            />
+
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: THEME.text, fontFamily: THEME.font, marginBottom: 6 }}>連絡先メール（任意）</label>
+            <input
+              value={addForm.email}
+              onChange={(e) => setAddForm(f => ({ ...f, email: e.target.value }))}
+              placeholder={artist?.email || 'アカウントのメールアドレス'}
+              disabled={addBusy}
+              type="email"
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${THEME.border}`, fontSize: 14, fontFamily: THEME.font, marginBottom: 6, boxSizing: 'border-box' }}
+            />
+            <p style={{ fontSize: 11, lineHeight: 1.6, color: THEME.textMuted, fontFamily: THEME.font, margin: '0 0 20px' }}>
+              キュレーターからの返信や通知の宛先です。未入力ならログイン中のアカウントのメールアドレスを使います。ログインには影響しません。
+            </p>
+
+            {addError && (
+              <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(232,93,58,0.1)', color: THEME.coral, fontSize: 13, fontFamily: THEME.font, marginBottom: 16 }}>
+                {addError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowAddArtist(false)} disabled={addBusy}
+                style={{ padding: '10px 18px', borderRadius: 9999, border: `1px solid ${THEME.border}`, background: 'none', fontSize: 14, fontFamily: THEME.font, color: THEME.text, cursor: addBusy ? 'default' : 'pointer' }}
+              >キャンセル</button>
+              <button onClick={addArtist} disabled={addBusy || !addForm.name.trim()}
+                style={{ padding: '10px 22px', borderRadius: 9999, border: 'none', background: addForm.name.trim() ? THEME.coral : THEME.border, color: '#fff', fontSize: 14, fontWeight: 600, fontFamily: THEME.font, cursor: addBusy || !addForm.name.trim() ? 'default' : 'pointer' }}
+              >{addBusy ? '追加中…' : '追加する'}</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Curator Profile Modal (Groover-style) ── */}

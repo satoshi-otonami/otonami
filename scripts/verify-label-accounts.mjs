@@ -2,11 +2,16 @@
  * レーベルアカウント対応の検証スクリプト。
  *
  *   node scripts/verify-label-accounts.mjs            # 読み取りのみ（既定）
- *   node scripts/verify-label-accounts.mjs --e2e      # 書込あり（要 GO）
+ *   node scripts/verify-label-accounts.mjs --e2e      # DB直書きE2E（要 GO・メール送信なし）
  *
- * 既定モードは SELECT しか撃たない。--e2e を付けたときだけ、使い捨ての
- * テストアカウントを作って「サインアップ → アーティスト追加 → 切替 →
- * ピッチ帰属」まで通し、最後に自分が作った行だけを削除する。
+ * 実APIを踏む E2E（認証メール・OTPメールが実際に飛ぶ）は別スクリプト
+ * scripts/e2e-label-accounts-api.mjs を使う。
+ *
+ * 使い捨てアカウントのメールは山下さんが受信できる実在アドレスを使う
+ * （E2E_EMAIL 環境変数、既定は satoshiy339+e2e-<timestamp>@gmail.com）。
+ * 実在しない宛先に Resend から送るのは送信ドメイン評価を傷めるので禁止。
+ * このスクリプト自体は service_role で直接 DB に書くだけでメールは送らないが、
+ * 経路が変わったときに事故らないようアドレスの規約は揃えておく。
  *
  * .env.local の SUPABASE_SERVICE_ROLE_KEY を読む。
  */
@@ -87,7 +92,9 @@ if (anonArtists?.length) {
 if (E2E) {
   console.log('\n── E2E（使い捨てアカウント・書込あり）──');
   const stamp = Date.now();
-  const email = `label-test-${stamp}@example.invalid`;
+  // 実在アドレス（+タグ付き）。このスクリプトはメールを送らないが、
+  // 宛先の規約は実APIのE2Eと揃えておく。
+  const email = process.env.E2E_EMAIL || `satoshiy339+e2e-${stamp}@gmail.com`;
   const hash = await bcrypt.hash('test-password-1234', 10);
   const created = { accounts: [], artists: [] };
 

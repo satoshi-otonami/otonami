@@ -13,3 +13,4 @@ node_modules/
 .agents/
 .aidesigner/
 supabase/.temp/
+.e2e-label-accounts.json

@@ -113,11 +113,24 @@ if (E2E) {
     if (e1) throw new Error(`artist 1 insert: ${e1.message}`);
     created.artists.push(a1.id);
 
-    // 同一アカウント配下で連絡先メールが重複できること
-    // （Phase 2 の UNIQUE 解除が効いていないとここで 23505）
-    const { data: a2, error: e2 } = await db.from('artists').insert(mk('TEST Artist Two')).select().single();
-    check('同一メールで2組目のアーティストを作れる（Phase 2 適用済み）', !e2, e2?.message || '');
-    if (e2) throw new Error('Phase 2 未適用のため E2E を中断');
+    // 同一アカウント配下で連絡先メールが重複できること。
+    // Phase 2（artists.email の UNIQUE 解除）は「artist_id 基準化が本番に出てから」が
+    // 前提条件なので、デプロイ前は未適用でよい。その場合は別アドレスで続行し、
+    // 重複可否の検証だけを Phase 2 適用後に回す。
+    let { data: a2, error: e2 } = await db.from('artists').insert(mk('TEST Artist Two')).select().single();
+    const phase2Applied = !e2;
+    if (e2 && /duplicate key|23505|artists_email/i.test(e2.message || '')) {
+      console.log('NOTE  Phase 2 未適用。別アドレスで続行します（重複可否は Phase 2 適用後に確認）。');
+      ({ data: a2, error: e2 } = await db.from('artists')
+        .insert({ ...mk('TEST Artist Two'), email: email.replace('@', '-b@') }).select().single());
+    }
+    if (phase2Applied) {
+      check('同一メールで2組目のアーティストを作れる（Phase 2 適用済み）', true);
+    } else {
+      console.log('SKIP  同一メールでの2組目作成（Phase 2 適用後に要確認）');
+    }
+    check('2組目のアーティストを作成できる', !e2, e2?.message || '');
+    if (e2) throw new Error('2組目の作成に失敗したため E2E を中断');
     created.artists.push(a2.id);
 
     const { data: under } = await db.from('artists').select('id, name').eq('account_id', acc.id);

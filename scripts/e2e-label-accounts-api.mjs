@@ -28,7 +28,7 @@ const env = Object.fromEntries(
 
 const BASE = process.env.E2E_BASE || 'http://localhost:3000';
 const STATE = new URL('../.e2e-label-accounts.json', import.meta.url).pathname;
-const MARKER = 'TEMP-TEST-REVERT-ME';
+const MARKER = 'E2E-DISPOSABLE';
 const args = process.argv.slice(2);
 const flag = (n) => args.includes(`--${n}`);
 const val = (n) => args.find((a) => a.startsWith(`--${n}=`))?.split('=')[1];

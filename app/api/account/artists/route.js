@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { verifyToken, signArtistSession } from '@/lib/auth';
+import { Resend } from 'resend';
 import {
   getAccountById,
   getArtistsByAccountId,
@@ -9,6 +10,11 @@ import {
   normalizeEmail,
   MAX_ARTISTS_PER_ACCOUNT,
 } from '@/lib/db';
+
+const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
+const FROM = `OTONAMI <${process.env.EMAIL_FROM || 'info@otonami.io'}>`;
+const testMode = process.env.EMAIL_TEST_MODE === 'true';
+const safeEmail = process.env.EMAIL_TEST_REDIRECT || 'satoshiy339@gmail.com';
 
 // Fields an account owner may set on a new artist. Deliberately the same shape
 // PATCH /api/artists allows, minus anything that grants value (credits,
@@ -142,6 +148,52 @@ export async function POST(request) {
     });
     if (txError) {
       console.warn('[account/artists] initial_grant ledger write failed (non-fatal):', txError.message);
+    }
+
+    // Admin notification. Signup (POST /api/artists) has always sent one; this
+    // route never did, so the 蜷川べに row added on 9/17 went unnoticed and its
+    // credits were not granted until the next day. Added artists start at 0 by
+    // design, which only works if someone is told they exist — hence the
+    // subject says "レーベル" and the body states the balance outright.
+    // Non-fatal, like every other notification: a Resend outage must not cost
+    // the account owner the artist they just created.
+    try {
+      const subject = (testMode ? '[TEST] ' : '') +
+        `【OTONAMI】アーティスト追加（レーベル）: ${name}`;
+      const rows = [
+        ['アーティスト名', name],
+        ['連絡先メール', contactEmail],
+        ['アカウント', account.email],
+        ['account_id', auth.accountId],
+        ['artist_id', artist.id],
+        ['クレジット', '0（付与なし — 必要なら手動で付与してください）'],
+        ['このアカウントのアーティスト数', `${current + 1} / ${MAX_ARTISTS_PER_ACCOUNT}`],
+      ];
+      await resend.emails.send({
+        from: FROM,
+        to: testMode ? safeEmail : 'info@otonami.io',
+        reply_to: 'info@otonami.io',
+        subject,
+        html: `
+          <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
+            <h2 style="color:#c4956a;">アーティスト追加通知（レーベルアカウント経由）</h2>
+            <p style="color:#666;font-size:13px;">既存アカウント配下への追加です。新規サインアップではありません。</p>
+            <table style="width:100%;border-collapse:collapse;">
+              ${rows.map(([k, v], i) => `
+              <tr${i % 2 ? ' style="background:#f9f9f9;"' : ''}>
+                  <td style="padding:8px;color:#666;width:200px;">${k}</td>
+                  <td style="padding:8px;">${v}</td></tr>`).join('')}
+            </table>
+            <p style="margin-top:24px;color:#888;font-size:13px;">
+              Supabaseで確認:
+              <a href="https://supabase.com/dashboard/project/jroudvjksouqnmlhzhzr/editor">テーブルを開く</a>
+            </p>
+          </div>
+        `,
+        text: `アーティスト追加（レーベルアカウント経由）\n\n${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}`,
+      });
+    } catch (e) {
+      console.error('[account/artists] admin notification failed (non-fatal):', e);
     }
 
     // Switch the session to the artist that was just created — the UI lands on

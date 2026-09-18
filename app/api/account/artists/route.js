@@ -169,7 +169,13 @@ export async function POST(request) {
         ['クレジット', '0（付与なし — 必要なら手動で付与してください）'],
         ['このアカウントのアーティスト数', `${current + 1} / ${MAX_ARTISTS_PER_ACCOUNT}`],
       ];
-      await resend.emails.send({
+      // resend.emails.send resolves with { data, error } instead of throwing on
+      // an API error (verified against an invalid key: 401 validation_error came
+      // back as a resolved value). A bare try/catch therefore sees nothing, and
+      // a notification whose whole job is "tell someone this artist exists"
+      // would vanish without a trace — the exact failure this route was added
+      // to prevent. Read the returned error explicitly.
+      const { error: sendError } = await resend.emails.send({
         from: FROM,
         to: testMode ? safeEmail : 'info@otonami.io',
         reply_to: 'info@otonami.io',
@@ -192,8 +198,14 @@ export async function POST(request) {
         `,
         text: `アーティスト追加（レーベルアカウント経由）\n\n${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}`,
       });
+      if (sendError) {
+        console.error(
+          '[account/artists] admin notification REJECTED (non-fatal) — nobody was told this artist exists:',
+          { artist_id: artist.id, name, account_id: auth.accountId, error: sendError }
+        );
+      }
     } catch (e) {
-      console.error('[account/artists] admin notification failed (non-fatal):', e);
+      console.error('[account/artists] admin notification threw (non-fatal):', e);
     }
 
     // Switch the session to the artist that was just created — the UI lands on

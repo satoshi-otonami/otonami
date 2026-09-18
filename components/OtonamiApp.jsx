@@ -1368,7 +1368,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     )}
     <main style={css.main}>
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify} loggedInArtist={loggedInArtist}/>}
-      {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist} pitchedCuratorIds={pitchedCuratorIds}/>}
+      {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist} pitchedCuratorIds={pitchedCuratorIds} credits={credits}/>}
       {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitchedCuratorIds={pitchedCuratorIds} pitches={pitches} savePitches={savePitches} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches} linkedTrackId={linkedTrackId} linkedTrackAiStatus={linkedTrackAiStatus}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches} refreshPitches={refreshPitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches} refreshPitches={refreshPitches}/>}
@@ -1840,7 +1840,7 @@ function getMatchCircleStyle(score) {
 }
 
 // ─── Curator Browser ───
-function CuratorBrowser({curators, selected, setSelected, setPage, trackData, setTrackData, notify, artist, pitchedCuratorIds}) {
+function CuratorBrowser({curators, selected, setSelected, setPage, trackData, setTrackData, notify, artist, pitchedCuratorIds, credits = 0}) {
   const isPitched = (id) => !!pitchedCuratorIds?.has(id);
   const [q, setQ] = useState(""); const [genre, setGenre] = useState(""); const [type, setType] = useState("");
   const [sortByMatch, setSortByMatch] = useState(false);
@@ -2260,6 +2260,14 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
                 <div style={{width:44,height:44}}/>
               )}
               <span style={{fontSize:14,color:pitched?'#9a958e':'#c4956a',fontWeight:600}}>{pitched ? '送信済み' : `${c.creditCost||2} クレジット`}</span>
+              {/* A tier-4/5 curator costs more than a new artist's whole opening
+                  balance, so the cost alone doesn't tell them they can't send.
+                  Say the shortfall here rather than letting them find out two
+                  screens later. The card stays listed and stays selectable —
+                  hiding it would just make the curator invisible. */}
+              {!pitched && credits < (c.creditCost||2) && (
+                <span style={{fontSize:'0.58rem',color:'#e85d3a',fontWeight:600,whiteSpace:'nowrap',lineHeight:1.2,marginTop:-4}}>あと {(c.creditCost||2)-credits}cr 必要</span>
+              )}
               <div style={{width:22,height:22,borderRadius:'50%',background:pitched?'rgba(0,0,0,0.04)':on?'#c4956a':'rgba(0,0,0,0.06)',border:(pitched||!on)?'1px solid rgba(0,0,0,0.1)':'none',color:pitched?'#9a958e':on?'#fff':'#9a958e',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.68rem',fontWeight:700,transition:'all var(--t-ui) var(--t-ui-ease)'}}>{pitched?'✓':on?'✓':'+'}</div>
             </div>
           </div>;

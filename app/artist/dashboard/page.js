@@ -291,7 +291,7 @@ export default function ArtistDashboard() {
   const [accountArtists, setAccountArtists] = useState([]);
   const [switchingTo, setSwitchingTo] = useState(null);
   const [showAddArtist, setShowAddArtist] = useState(false);
-  const [addForm, setAddForm] = useState({ name: '', email: '' });
+  const [addForm, setAddForm] = useState({ name: '', email: '', genres: [] });
   const [addBusy, setAddBusy] = useState(false);
   const [addError, setAddError] = useState('');
 
@@ -415,7 +415,7 @@ export default function ArtistDashboard() {
       const res = await fetch('/api/account/artists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name, email: addForm.email.trim() || undefined }),
+        body: JSON.stringify({ name, email: addForm.email.trim() || undefined, genres: addForm.genres }),
       });
       const data = await res.json();
       if (!res.ok || !data.token) throw new Error(data.message || data.error || '追加に失敗しました');
@@ -580,7 +580,7 @@ export default function ArtistDashboard() {
                 </>
               )}
               <div style={{ height: 1, background: THEME.borderLight }} />
-              <button onClick={() => { setHeaderMenu(false); setAddError(''); setAddForm({ name: '', email: '' }); setShowAddArtist(true); }}
+              <button onClick={() => { setHeaderMenu(false); setAddError(''); setAddForm({ name: '', email: '', genres: [] }); setShowAddArtist(true); }}
                 style={{ width: '100%', padding: '12px 16px', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer', fontSize: 13, color: THEME.text, fontFamily: THEME.font, display: 'flex', alignItems: 'center', gap: 8 }}
                 onMouseEnter={e => e.currentTarget.style.background = THEME.bg}
                 onMouseLeave={e => e.currentTarget.style.background = 'none'}
@@ -1418,6 +1418,39 @@ export default function ArtistDashboard() {
             />
             <p style={{ fontSize: 11, lineHeight: 1.6, color: THEME.textMuted, fontFamily: THEME.font, margin: '0 0 20px' }}>
               キュレーターからの返信や通知の宛先です。未入力ならログイン中のアカウントのメールアドレスを使います。ログインには影響しません。
+            </p>
+
+            {/* Same pill list and cap as プロフィール編集 below — an artist added
+                here used to start with genres [], and matching runs on genres,
+                so they were created invisible to every curator search. Optional
+                on purpose: the note below says what skipping it costs. */}
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: THEME.text, fontFamily: THEME.font, marginBottom: 6 }}>ジャンル（任意・最大8つ）</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
+              {GENRE_OPTIONS.map(g => {
+                const sel = addForm.genres.includes(g);
+                const maxed = !sel && addForm.genres.length >= 8;
+                return (
+                  <button key={g} disabled={addBusy || maxed}
+                    onClick={() => setAddForm(f => ({
+                      ...f,
+                      genres: f.genres.includes(g) ? f.genres.filter(x => x !== g)
+                            : f.genres.length >= 8 ? f.genres
+                            : [...f.genres, g],
+                    }))}
+                    style={{
+                      padding: '5px 12px', borderRadius: 100, fontSize: 11, fontWeight: 500,
+                      border: `1.5px solid ${sel ? THEME.gold : THEME.border}`,
+                      background: sel ? THEME.gold : THEME.card, color: sel ? '#fff' : THEME.text,
+                      cursor: (addBusy || maxed) ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
+                      opacity: maxed ? 0.4 : 1, transition: 'all 0.15s',
+                    }}>{g}</button>
+                );
+              })}
+            </div>
+            <p style={{ fontSize: 11, lineHeight: 1.6, color: addForm.genres.length === 0 ? THEME.coral : THEME.textMuted, fontFamily: THEME.font, margin: '0 0 20px' }}>
+              {addForm.genres.length === 0
+                ? 'ジャンルを設定しないとキュレーターとマッチしません。あとからプロフィール編集でも設定できます。'
+                : `${addForm.genres.length}/8 選択中`}
             </p>
 
             {addError && (

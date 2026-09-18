@@ -10,7 +10,7 @@ export async function GET() {
     const supabase = getServiceSupabase();
     const { data, error } = await supabase
       .from('curators')
-      .select('id, name, type, playlist, url, genres, bio, followers, region, icon_url, accepts, preferred_moods, opportunities, similar_artists, tags, tier, open_to_all_genres, is_seed')
+      .select('id, name, type, playlist, url, genres, bio, followers, region, icon_url, accepts, preferred_moods, opportunities, similar_artists, tags, tier, open_to_all_genres, rejected_genres, is_seed')
       .or('is_seed.is.null,is_seed.eq.false')
       .order('created_at', { ascending: false });
 
@@ -61,6 +61,11 @@ export async function GET() {
         tier: c.tier,
         creditCost: c.tier || 2,
         openToAllGenres: c.open_to_all_genres || false,
+        // lib/match-score.js caps a score when the track hits one of these. This
+        // endpoint feeds /curators, which shows no score today — carried anyway
+        // so the first screen that does score here doesn't silently skip the
+        // curator's own "don't send me this".
+        rejectedGenres: c.rejected_genres || [],
         pitchesReceived: s.received,
         pitchesResponded: s.responded,
         // null (not 0) when no pitches received yet → UI shows "—" instead of 0%

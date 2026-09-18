@@ -3444,7 +3444,16 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
           })}
         </div>
         {genreAtMax && <div style={{fontSize:"0.62rem",color:"#6b6560",marginBottom:4}}>最大{MAX_GENRE_TAGS}つまで — 追加するには、どれかを外してください</div>}
-        {artist.genre && <div style={{fontSize:"0.62rem",color:"#c4956a",marginBottom:4}}>選択中: {artist.genre}</div>}
+        {/* Chips, not plain text: a custom genre has no pill of its own, so
+            before this there was no way to take one back out of the list. */}
+        {genreTags.length > 0 && <div style={{display:"flex",flexWrap:"wrap",gap:4,marginBottom:4}}>
+          {genreTags.map(g => (
+            <span key={g} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"0.18rem 0.4rem 0.18rem 0.5rem",borderRadius:6,fontSize:"0.7rem",background:"rgba(196,149,106,0.15)",color:"#c4956a",border:"1px solid #c4956a",fontWeight:600}}>
+              {g}
+              <button type="button" aria-label={`${g} を外す`} onClick={()=>removeGenreTag(g)} style={{background:"transparent",border:"none",color:"#c4956a",cursor:"pointer",padding:"0 2px",fontSize:"0.8rem",lineHeight:1,fontFamily:"inherit"}}>×</button>
+            </span>
+          ))}
+        </div>}
         {artist.genre && <div style={{fontSize:"0.62rem",color:genreOverLimit?"#e85d3a":"#9a958e",fontWeight:genreOverLimit?700:400,marginBottom:4}}>
           選択中 {genreTags.length}/{MAX_GENRE_TAGS}件 · {genreCharCount}/{INPUT_LIMITS.GENRE}文字
           {genreOverLimit && <div style={{fontWeight:400,marginTop:2,lineHeight:1.5}}>合計文字数が上限を超えています。ジャンルを減らすか、長い名前を短くしてください。このままではAIピッチを生成できません。</div>}

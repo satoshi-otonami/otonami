@@ -104,7 +104,18 @@ The artist's Description states the song is somber/melancholic/reflective. Do NO
 
     const lengthError = validateAllLengths([
       { value: artist.name, max: INPUT_LIMITS.ARTIST_NAME, name: 'アーティスト名' },
-      { value: artist.genre, max: INPUT_LIMITS.GENRE, name: 'ジャンル' },
+      // artist.genre は選択済みジャンルを ", " で連結した1本の文字列なので、効いて
+      // いるのは「個数」ではなく合計文字数。既定文言（「ジャンルは100文字以内で
+      // 入力してください」）は個数制限と誤読され、実際に顧客が「ジャンルが多すぎる」
+      // と解釈した（2026-09 クリムゾンテクノロジー）。汎用バリデータは触らず、この
+      // フィールドだけ呼び出し側で文言を上書きする。
+      {
+        value: artist.genre,
+        max: INPUT_LIMITS.GENRE,
+        name: 'ジャンル',
+        message: (len, max) =>
+          `ジャンルの合計文字数が上限を超えています（現在${len} / ${max}文字）。選択しているジャンルを減らしてください。`,
+      },
       { value: artist.description, max: INPUT_LIMITS.ARTIST_DESCRIPTION, name: '自己紹介' },
       { value: artist.influences, max: INPUT_LIMITS.ARTIST_INFLUENCES, name: '影響を受けたアーティスト' },
       { value: artist.achievements, max: INPUT_LIMITS.ARTIST_ACHIEVEMENTS, name: '実績' },

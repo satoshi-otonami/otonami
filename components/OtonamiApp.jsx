@@ -10,6 +10,10 @@ import { getMatchLabel, rankCurators, calculateMatchScore, compareByMatch, MATCH
 import { CREDIT_PRICE_JPY, creditsToJpy, RESPONSE_WINDOW_DAYS } from '@/lib/pricing';
 import { EXTENDED_DEADLINE_DAYS } from '@/lib/response-time';
 import { externalHref } from '@/lib/url';
+// 同じ上限をクライアントにも持たせる。ピッチ生成APIが artist.genre を検査している
+// 値そのものを画面でも数えるため、定数をコピーせず共有する（ズレると「99文字なのに
+// エラー」が起きて、上限に当たるより体験が悪い）。
+import { INPUT_LIMITS } from '@/lib/validate-input';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useSearchParams } from 'next/navigation';
@@ -90,6 +94,10 @@ function PreLaunchBanner({ variant = 'pitch' }) {
 const GENRES = ["Jazz","Fusion","Funk","City Pop","Lo-Fi","Electronic","Indie Rock","Alt Rock","Pop","Math Rock","Shoegaze","J-Rock","Hip-Hop","R&B","Experimental","Noise","Metal","Post Rock","Dream Pop","Neo-Soul","Soul","Instrumental","Prog","Punk","Visual Kei","World"];
 const CURATOR_TYPES = [{id:"playlist",label:"プレイリスト",icon:"♪"},{id:"label",label:"レコードレーベル",icon:"♫"},{id:"management",label:"マネジメント",icon:"•"},{id:"publisher",label:"出版社・パブリッシャー",icon:"•"},{id:"blog",label:"ブログ・メディア",icon:"•"},{id:"radio",label:"ラジオ・ポッドキャスト",icon:"•"}];
 const ARTIST_GENRES = ["Jazz","Funk","Latin","Soul","R&B","Pop","Indie Rock","Alt Rock","Electronic","Ambient","Hip-Hop","Classical","Folk","Country","Metal","Punk","J-Pop","J-Rock","K-Pop","Anime","Experimental","World Music","Reggae","Blues"];
+// アーティスト登録フォーム / プロフィール編集（どちらも最大8）に揃えた個数上限。
+// ここだけ無制限だったため、固定pillを大量に選ぶだけで INPUT_LIMITS.GENRE の
+// 100文字に到達しえた。8個なら pill の最長組み合わせでも89文字で収まる。
+const MAX_GENRE_TAGS = 8;
 const BADGES = {high_answer:"高回答率",high_accept:"高採用率",selective:"厳選",quality_fb:"良質FB",verified:"✓ 認証済"};
 
 // ─── Seed Curators (removed — all curators now come from Supabase) ───
@@ -2713,15 +2721,31 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
   const [pitchSongTitleAuto, setPitchSongTitleAuto] = useState(() => _wizard?.pitchSongTitleAuto === true);
   const [customGenre, setCustomGenre] = useState("");
   const parseGenreTags = (str) => (str||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const genreTags = parseGenreTags(artist.genre);
+  // POST /api/pitch が INPUT_LIMITS.GENRE で検査するのは artist.genre そのもの
+  // （", " 区切りを含む連結後の1本の文字列）。区切り文字を除いて数えるとサーバと
+  // ズレるので、画面でも同じ文字列をそのまま数える。
+  const genreCharCount = (artist.genre || '').length;
+  const genreOverLimit = genreCharCount > INPUT_LIMITS.GENRE;
+  const genreAtMax = genreTags.length >= MAX_GENRE_TAGS;
+  // 上限は「これ以上増やせない」であって「既にある分を切り捨てる」ではない。
+  // 登録フォーム側の toggleArray と同じ挙動で、引き継いだ値を黙って落とさない。
   const toggleGenreTag = (tag) => {
     const curr = parseGenreTags(artist.genre);
-    setF('genre', (curr.includes(tag) ? curr.filter(t=>t!==tag) : [...curr, tag]).join(', '));
+    if (curr.includes(tag)) { setF('genre', curr.filter(t=>t!==tag).join(', ')); return; }
+    if (curr.length >= MAX_GENRE_TAGS) return;
+    setF('genre', [...curr, tag].join(', '));
+  };
+  const removeGenreTag = (tag) => {
+    setF('genre', parseGenreTags(artist.genre).filter(t=>t!==tag).join(', '));
   };
   const applyCustomGenre = () => {
     const g = customGenre.trim();
     if (!g) return;
     const curr = parseGenreTags(artist.genre);
-    if (!curr.includes(g)) setF('genre', [...curr, g].join(', '));
+    if (curr.includes(g)) { setCustomGenre(''); return; }
+    if (curr.length >= MAX_GENRE_TAGS) { notify(`ジャンルは最大${MAX_GENRE_TAGS}つまでです`, 'error'); return; }
+    setF('genre', [...curr, g].join(', '));
     setCustomGenre('');
   };
 
@@ -3411,15 +3435,17 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
       </div>
       {/* ── Genre Tag Selector ── */}
       <div style={{marginTop:4}}>
-        <label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>ジャンル <span style={{color:"#e85d3a"}}>*</span>（複数選択可）</label>
+        <label style={{fontSize:"0.66rem",color:"#6b6560",fontWeight:600}}>ジャンル <span style={{color:"#e85d3a"}}>*</span>（最大{MAX_GENRE_TAGS}つ）</label>
         <div style={{display:"flex",flexWrap:"wrap",gap:4,margin:"5px 0 6px"}}>
           {ARTIST_GENRES.map(g => {
-            const sel = parseGenreTags(artist.genre).includes(g);
-            return <button key={g} type="button" onClick={()=>toggleGenreTag(g)} style={{padding:"0.18rem 0.5rem",borderRadius:6,fontSize:"0.7rem",cursor:"pointer",fontFamily:"inherit",background:sel?"rgba(196,149,106,0.15)":"#ffffff",color:sel?"#c4956a":"#6b6560",border:sel?"1px solid #c4956a":"1px solid rgba(0,0,0,0.06)",fontWeight:sel?600:400}}>{g}</button>;
+            const sel = genreTags.includes(g);
+            const maxed = !sel && genreAtMax;
+            return <button key={g} type="button" disabled={maxed} onClick={()=>toggleGenreTag(g)} style={{padding:"0.18rem 0.5rem",borderRadius:6,fontSize:"0.7rem",cursor:maxed?"not-allowed":"pointer",fontFamily:"inherit",background:sel?"rgba(196,149,106,0.15)":"#ffffff",color:sel?"#c4956a":"#6b6560",border:sel?"1px solid #c4956a":"1px solid rgba(0,0,0,0.06)",fontWeight:sel?600:400,opacity:maxed?0.4:1}}>{g}</button>;
           })}
         </div>
+        {genreAtMax && <div style={{fontSize:"0.62rem",color:"#6b6560",marginBottom:4}}>最大{MAX_GENRE_TAGS}つまで — 追加するには、どれかを外してください</div>}
         {artist.genre && <div style={{fontSize:"0.62rem",color:"#c4956a",marginBottom:4}}>選択中: {artist.genre}</div>}
-        <input style={{...css.input,fontSize:"0.78rem",marginBottom:0}} value={customGenre} onChange={e=>setCustomGenre(e.target.value)} onBlur={applyCustomGenre} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();applyCustomGenre();}}} placeholder="カスタムジャンルを追加（Enterで確定）"/>
+        <input style={{...css.input,fontSize:"0.78rem",marginBottom:0}} value={customGenre} disabled={genreAtMax} onChange={e=>setCustomGenre(e.target.value)} onBlur={applyCustomGenre} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();applyCustomGenre();}}} placeholder={genreAtMax ? `ジャンルは最大${MAX_GENRE_TAGS}つまでです` : "カスタムジャンルを追加（Enterで確定）"}/>
       </div>
 
       {/* ── Pitch Track URL ── */}

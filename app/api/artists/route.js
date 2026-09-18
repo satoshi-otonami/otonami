@@ -251,7 +251,12 @@ export async function POST(request) {
       : '';
 
     try {
-      await resend.emails.send({
+      // resend.emails.send resolves with { data, error } instead of throwing on
+      // an API error, so the catch below only ever sees network/programmer
+      // faults. Without reading the returned error, a rejected send is
+      // invisible — and this one is the mail the artist needs to finish
+      // signing up at all.
+      const { error: verifyMailError } = await resend.emails.send({
         from: FROM,
         to: verifyTo,
         reply_to: 'info@otonami.io',
@@ -272,15 +277,21 @@ export async function POST(request) {
         `,
         text: `${name}さん、OTONAMIへの登録ありがとうございます。${foundingBlockText}\n\n以下のリンクをクリックしてメールアドレスを認証してください:\n${verifyUrl}\n\nこのリンクは24時間有効です。\n\n---\n\nHi ${name}, thank you for signing up for OTONAMI.\nPlease verify your email: ${verifyUrl}\n\nThis link expires in 24 hours.`,
       });
+      if (verifyMailError) {
+        console.error(
+          '[artists] verification email REJECTED (non-fatal) — this artist cannot verify without it:',
+          { artist_id: artist.id, to: verifyTo, error: verifyMailError }
+        );
+      }
     } catch (e) {
-      console.error('Verification email failed (non-fatal):', e);
+      console.error('Verification email threw (non-fatal):', e);
     }
 
     // Admin notification email
     try {
       const adminSubject = (testMode ? '[TEST] ' : '') +
         `【OTONAMI】新規アーティスト登録: ${name}`;
-      await resend.emails.send({
+      const { error: adminMailError } = await resend.emails.send({
         from: FROM,
         to: testMode ? safeEmail : 'info@otonami.io',
         reply_to: 'info@otonami.io',
@@ -313,8 +324,14 @@ export async function POST(request) {
         `,
         text: `新規アーティスト登録\n\n名前: ${name}\nメール: ${email}\nタイプ: ${rest.artist_type || 'solo'}\nリージョン: ${rest.region || 'JP'}\nジャンル: ${(rest.genres || []).join(', ') || '-'}\nメール認証: 未認証`,
       });
+      if (adminMailError) {
+        console.error(
+          '[artists] admin notification REJECTED (non-fatal) — nobody was told this artist signed up:',
+          { artist_id: artist.id, name, error: adminMailError }
+        );
+      }
     } catch (e) {
-      console.error('Admin notification failed (non-fatal):', e);
+      console.error('Admin notification threw (non-fatal):', e);
     }
 
     // Don't issue JWT yet - email verification required first

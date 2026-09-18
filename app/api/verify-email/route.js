@@ -96,11 +96,15 @@ export async function GET(request) {
   const email = record.email;
   const recipientEmail = testMode ? safeEmail : email;
 
+  // resend.emails.send resolves with { data, error } instead of throwing on an
+  // API error, so the catch below only ever sees network/programmer faults and a
+  // rejected welcome mail left no trace at all.
+  let welcomeMailError = null;
   try {
     if (type === 'artist') {
       const welcomeSubject = (testMode ? `[TEST] (→${email}) ` : '') +
         'Welcome to OTONAMI! あなたの音楽を世界へ';
-      await resend.emails.send({
+      ({ error: welcomeMailError } = await resend.emails.send({
         from: FROM,
         to: recipientEmail,
         reply_to: 'info@otonami.io',
@@ -128,11 +132,11 @@ export async function GET(request) {
           </div>
         `,
         text: `ようこそ、${name}さん！\n\nメール認証が完了しました。OTONAMIへのご登録ありがとうございます。\n\nダッシュボード: ${APP_URL}/artist/dashboard\n\n---\n\nWelcome, ${name}!\n\nYour email has been verified. Thank you for joining OTONAMI.\n\nDashboard: ${APP_URL}/artist/dashboard`,
-      });
+      }));
     } else {
       const curatorSubject = (testMode ? `[TEST] (→${email}) ` : '') +
         `Welcome to OTONAMI! Your curator profile is ready`;
-      await resend.emails.send({
+      ({ error: welcomeMailError } = await resend.emails.send({
         from: FROM,
         to: recipientEmail,
         reply_to: 'info@otonami.io',
@@ -157,10 +161,16 @@ export async function GET(request) {
           </div>
         `,
         text: `Welcome to OTONAMI, ${name}!\n\nYour email has been verified. Thank you for joining our curator network.\n\nLog in: ${APP_URL}/curator?tab=login`,
-      });
+      }));
+    }
+    if (welcomeMailError) {
+      console.error(
+        '[verify-email] welcome email REJECTED (non-fatal) — verification still succeeded:',
+        { type, id: record.id, to: recipientEmail, error: welcomeMailError }
+      );
     }
   } catch (e) {
-    console.error('Welcome email after verification failed (non-fatal):', e);
+    console.error('Welcome email after verification threw (non-fatal):', e);
   }
 
   return NextResponse.redirect(new URL(`/verify-success?type=${type}`, baseUrl));

@@ -3445,6 +3445,10 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
         </div>
         {genreAtMax && <div style={{fontSize:"0.62rem",color:"#6b6560",marginBottom:4}}>最大{MAX_GENRE_TAGS}つまで — 追加するには、どれかを外してください</div>}
         {artist.genre && <div style={{fontSize:"0.62rem",color:"#c4956a",marginBottom:4}}>選択中: {artist.genre}</div>}
+        {artist.genre && <div style={{fontSize:"0.62rem",color:genreOverLimit?"#e85d3a":"#9a958e",fontWeight:genreOverLimit?700:400,marginBottom:4}}>
+          選択中 {genreTags.length}/{MAX_GENRE_TAGS}件 · {genreCharCount}/{INPUT_LIMITS.GENRE}文字
+          {genreOverLimit && <div style={{fontWeight:400,marginTop:2,lineHeight:1.5}}>合計文字数が上限を超えています。ジャンルを減らすか、長い名前を短くしてください。このままではAIピッチを生成できません。</div>}
+        </div>}
         <input style={{...css.input,fontSize:"0.78rem",marginBottom:0}} value={customGenre} disabled={genreAtMax} onChange={e=>setCustomGenre(e.target.value)} onBlur={applyCustomGenre} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();applyCustomGenre();}}} placeholder={genreAtMax ? `ジャンルは最大${MAX_GENRE_TAGS}つまでです` : "カスタムジャンルを追加（Enterで確定）"}/>
       </div>
 
@@ -3702,7 +3706,8 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
       </div>
       <div style={{fontSize:12,color:"#6b6560",textAlign:"center",marginBottom:8,fontFamily:"'DM Sans',sans-serif"}}>AIが英語のプロフェッショナルな紹介文を生成します（約30秒）</div>
       {/* Hidden 2026/5/23: AI generation is now the primary UI path; generatePitch() is kept as internal fallback only (template button removed). */}
-      <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(0)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} disabled={aiLoading || tplLoading} onClick={generateAIPitch}>{aiLoading ? "AI生成中..." : "AIピッチ生成"}</button></div>
+      <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(0)}>← 戻る</button><button style={{...css.btnPrimary,flex:1,...(genreOverLimit?{opacity:0.5,cursor:"not-allowed",background:"#e5e2dc",color:"#6b6560"}:{})}} disabled={aiLoading || tplLoading || genreOverLimit} onClick={generateAIPitch}>{genreOverLimit ? `ジャンルが長すぎます（${genreCharCount}/${INPUT_LIMITS.GENRE}文字）` : aiLoading ? "AI生成中..." : "AIピッチ生成"}</button></div>
+      {genreOverLimit && <div style={{fontSize:12,color:"#6b6560",marginTop:8,textAlign:"center",lineHeight:1.6}}>「← 戻る」からジャンルを減らしてください。</div>}
     </div>}
 
     {/* ═══ STEP 2 ═══ */}
@@ -3744,7 +3749,7 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
       </div>}
 
       {epk && <details style={{marginBottom:"0.8rem"}}><summary style={{cursor:"pointer",fontSize:"0.78rem",fontWeight:600,color:"#c4956a"}}>EPK（英語・確認用）</summary><pre style={{whiteSpace:"pre-wrap",fontFamily:"inherit",fontSize:"0.74rem",background:"#ffffff",padding:"0.7rem",borderRadius:8,marginTop:6,color:"#6b6560"}}>{epk}</pre></details>}
-      <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(1)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} onClick={()=>setStep(3)}>送信へ →</button><button style={css.btnGhost} disabled={aiLoading || tplLoading} onClick={generateAIPitch}>{aiLoading ? "AI生成中..." : tplLoading ? "翻訳中..." : "再生成"}</button></div>
+      <div style={{display:"flex",gap:8}}><button style={css.btnGhost} onClick={()=>setStep(1)}>← 戻る</button><button style={{...css.btnPrimary,flex:1}} onClick={()=>setStep(3)}>送信へ →</button><button style={css.btnGhost} disabled={aiLoading || tplLoading || genreOverLimit} title={genreOverLimit ? `ジャンルが長すぎます（${genreCharCount}/${INPUT_LIMITS.GENRE}文字）` : undefined} onClick={generateAIPitch}>{aiLoading ? "AI生成中..." : tplLoading ? "翻訳中..." : "再生成"}</button></div>
     </div>}
 
     {/* ═══ STEP 3 ═══ */}

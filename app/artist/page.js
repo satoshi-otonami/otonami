@@ -402,17 +402,37 @@ export default function ArtistRegistrationPage() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
                 {GENRE_OPTIONS.map(g => {
                   const sel = form.genres.includes(g);
+                  // 上限に達したら押せないことを見せる。toggleArray は上限で黙って何も
+                  // 返さないので、以前は9つ目を押しても無反応な理由が画面に出なかった。
+                  const maxed = !sel && form.genres.length >= 8;
                   return (
-                    <button key={g} onClick={() => toggleArray('genres', g, 8)} className="pill-tag" style={{
+                    <button key={g} disabled={maxed} onClick={() => toggleArray('genres', g, 8)} className="pill-tag" style={{
                       padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 500,
                       border: `1.5px solid ${sel ? THEME.gold : THEME.border}`,
                       background: sel ? THEME.gold : THEME.card,
                       color: sel ? '#fff' : THEME.text,
-                      cursor: 'pointer', fontFamily: THEME.font, transition: 'all var(--t-ui) var(--t-ui-ease)',
+                      cursor: maxed ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
+                      opacity: maxed ? 0.4 : 1, transition: 'all var(--t-ui) var(--t-ui-ease)',
                     }}>{g}</button>
                   );
                 })}
               </div>
+              {/* 選択済みをチップで出して × で外せるようにする（影響を受けた
+                  アーティスト欄と同じ形）。固定リストに無い値は pill が無く、
+                  外す手段がなかった。 */}
+              {form.genres.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                  {form.genres.map(g => (
+                    <span key={g} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 100, fontSize: 12, background: THEME.goldLight, color: THEME.gold, border: `1px solid ${THEME.gold}30`, fontFamily: THEME.font }}>
+                      {g}
+                      <button aria-label={`${g} を外す`} onClick={() => toggleArray('genres', g, 8)} style={{ background: 'none', border: 'none', color: THEME.gold, cursor: 'pointer', fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p style={{ fontSize: 12, lineHeight: 1.6, color: THEME.textMuted, fontFamily: THEME.font, margin: '8px 0 0' }}>
+                {form.genres.length >= 8 ? '最大8つまで — 追加するには、どれかを外してください' : `${form.genres.length}/8 選択中`}
+              </p>
 
               <label style={lbl}>ムード（最大5つ）</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>

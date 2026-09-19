@@ -1447,10 +1447,32 @@ export default function ArtistDashboard() {
                 );
               })}
             </div>
+            {/* プロフィール編集と同じチップ×。pill の再クリックでも外せるが、
+                選択済みがどれかを一列で見せた方が8つ埋まった時に外しやすい。 */}
+            {addForm.genres.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
+                {addForm.genres.map(g => (
+                  <span key={g} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    padding: '5px 8px 5px 12px', borderRadius: 100, fontSize: 11, fontWeight: 500,
+                    background: THEME.goldLight, color: THEME.gold,
+                    border: `1px solid ${THEME.gold}`, fontFamily: THEME.font,
+                  }}>
+                    {g}
+                    <button type="button" aria-label={`${g} を外す`} disabled={addBusy}
+                      onClick={() => setAddForm(f => ({ ...f, genres: f.genres.filter(x => x !== g) }))}
+                      style={{ background: 'none', border: 'none', color: THEME.gold, cursor: addBusy ? 'default' : 'pointer', padding: '0 2px', fontSize: 13, lineHeight: 1, fontFamily: THEME.font }}
+                    >×</button>
+                  </span>
+                ))}
+              </div>
+            )}
             <p style={{ fontSize: 11, lineHeight: 1.6, color: addForm.genres.length === 0 ? THEME.coral : THEME.textMuted, fontFamily: THEME.font, margin: '0 0 20px' }}>
               {addForm.genres.length === 0
                 ? 'ジャンルを設定しないとキュレーターとマッチしません。あとからプロフィール編集でも設定できます。'
-                : `${addForm.genres.length}/8 選択中`}
+                : addForm.genres.length >= 8
+                  ? '最大8つまで — 追加するには、どれかを外してください'
+                  : `${addForm.genres.length}/8 選択中`}
             </p>
 
             {addError && (
@@ -2795,16 +2817,42 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
           {GENRE_OPTIONS.map(g => {
             const sel = form.genres.includes(g);
+            // 上限に達したら押せないことを見せる。toggleArray は上限で黙って何も
+            // 返さないので、以前は9つ目を押しても無反応な理由が画面に出なかった。
+            const maxed = !sel && form.genres.length >= 8;
             return (
-              <button key={g} onClick={() => toggleArray('genres', g, 8)} style={{
+              <button key={g} disabled={maxed} onClick={() => toggleArray('genres', g, 8)} style={{
                 padding: '5px 12px', borderRadius: 100, fontSize: 11, fontWeight: 500,
                 border: `1.5px solid ${sel ? THEME.gold : THEME.border}`,
                 background: sel ? THEME.gold : THEME.card, color: sel ? '#fff' : THEME.text,
-                cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s',
+                cursor: maxed ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
+                opacity: maxed ? 0.4 : 1, transition: 'all 0.15s',
               }}>{g}</button>
             );
           })}
         </div>
+        {/* 選択済みをチップで出して × で外せるようにする。固定リストに無い値
+            （API 経由で入った任意ジャンル）は pill が無く、外す手段がなかった。 */}
+        {form.genres.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
+            {form.genres.map(g => (
+              <span key={g} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '5px 8px 5px 12px', borderRadius: 100, fontSize: 11, fontWeight: 500,
+                background: THEME.goldLight, color: THEME.gold,
+                border: `1px solid ${THEME.gold}`, fontFamily: THEME.font,
+              }}>
+                {g}
+                <button type="button" aria-label={`${g} を外す`} onClick={() => toggleArray('genres', g, 8)}
+                  style={{ background: 'none', border: 'none', color: THEME.gold, cursor: 'pointer', padding: '0 2px', fontSize: 13, lineHeight: 1, fontFamily: THEME.font }}
+                >×</button>
+              </span>
+            ))}
+          </div>
+        )}
+        <p style={{ fontSize: 11, lineHeight: 1.6, color: THEME.textMuted, fontFamily: THEME.font, margin: '6px 0 0' }}>
+          {form.genres.length >= 8 ? '最大8つまで — 追加するには、どれかを外してください' : `${form.genres.length}/8 選択中`}
+        </p>
 
         <label style={lbl}>ムード（最大5つ）</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>

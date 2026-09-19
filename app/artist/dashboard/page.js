@@ -2411,8 +2411,33 @@ function TrackModal({ token, track, onClose, onSuccess }) {
   const [coverPreview, setCoverPreview] = useState(track?.cover_image_url || '');
   const [coverUploading, setCoverUploading] = useState(false);
   const coverInputRef = useRef(null);
+  const [customGenre, setCustomGenre] = useState('');
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  // artist_tracks.genre は text 1列（artists.genres の text[] とは型が違う）。
+  // pill 化しても保存は文字列のまま行い、区切りは開いた行の形をそのまま使う:
+  // 本番は "J-Rock, J-pop" 形式が大多数で、スペース無しは1件だけある。どちらの
+  // 行を編集しても区切りが書き換わらないので、表示も既存の読み取り側も不変。
+  // 読み取りは , 区切りを trim + 空除去で寛容に受ける。
+  const genreSep = /,\s/.test(track?.genre || '') ? ', ' : (track?.genre || '').includes(',') ? ',' : ', ';
+  const parseGenres = (str) => (str || '').split(',').map(x => x.trim()).filter(Boolean);
+  const genreList = parseGenres(form.genre);
+  const genreAtMax = genreList.length >= 8;
+  const setGenreList = (arr) => set('genre', arr.join(genreSep));
+  // 上限は「これ以上増やせない」であって、引き継いだ分を切り捨てるものではない。
+  const toggleGenre = (g) => {
+    if (genreList.includes(g)) { setGenreList(genreList.filter(x => x !== g)); return; }
+    if (genreAtMax) return;
+    setGenreList([...genreList, g]);
+  };
+  const applyCustomGenre = () => {
+    const added = parseGenres(customGenre).filter(g => !genreList.includes(g));
+    if (added.length === 0) { setCustomGenre(''); return; }
+    if (genreAtMax) { setError('ジャンルは最大8つまでです'); return; }
+    setGenreList([...genreList, ...added].slice(0, 8));
+    setCustomGenre('');
+  };
 
   const handleYoutubeUrlChange = async (url) => {
     set('youtube_url', url);
@@ -2534,8 +2559,48 @@ function TrackModal({ token, track, onClose, onSuccess }) {
         <label style={lbl}>Bandcamp リンク（任意）</label>
         <input className="modal-input" style={inp} value={form.bandcamp_url} onChange={e => set('bandcamp_url', e.target.value)} placeholder="https://artist.bandcamp.com/track/..." />
 
-        <label style={lbl}>ジャンル（任意）</label>
-        <input className="modal-input" style={inp} value={form.genre} onChange={e => set('genre', e.target.value)} placeholder="例: J-Rock" />
+        <label style={lbl}>ジャンル（任意・最大8つ）</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
+          {GENRE_OPTIONS.map(g => {
+            const sel = genreList.includes(g);
+            const maxed = !sel && genreAtMax;
+            return (
+              <button key={g} type="button" disabled={maxed} onClick={() => toggleGenre(g)} style={{
+                padding: '5px 12px', borderRadius: 100, fontSize: 11, fontWeight: 500,
+                border: `1.5px solid ${sel ? THEME.gold : THEME.border}`,
+                background: sel ? THEME.gold : THEME.card, color: sel ? '#fff' : THEME.text,
+                cursor: maxed ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
+                opacity: maxed ? 0.4 : 1, transition: 'all 0.15s',
+              }}>{g}</button>
+            );
+          })}
+        </div>
+        {/* 固定リストに無い値（「ボカロ」「Synthwave」など実データに多数ある）は
+            pill が無いので、チップの × が唯一の削除手段になる。 */}
+        {genreList.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
+            {genreList.map(g => (
+              <span key={g} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '5px 8px 5px 12px', borderRadius: 100, fontSize: 11, fontWeight: 500,
+                background: THEME.goldLight, color: THEME.gold,
+                border: `1px solid ${THEME.gold}`, fontFamily: THEME.font,
+              }}>
+                {g}
+                <button type="button" aria-label={`${g} を外す`} onClick={() => setGenreList(genreList.filter(x => x !== g))}
+                  style={{ background: 'none', border: 'none', color: THEME.gold, cursor: 'pointer', padding: '0 2px', fontSize: 13, lineHeight: 1, fontFamily: THEME.font }}
+                >×</button>
+              </span>
+            ))}
+          </div>
+        )}
+        <p style={{ fontSize: 11, lineHeight: 1.6, color: THEME.textMuted, fontFamily: THEME.font, margin: '6px 0 0' }}>
+          {genreAtMax ? '最大8つまで — 追加するには、どれかを外してください' : `${genreList.length}/8 選択中`}
+        </p>
+        <input className="modal-input" style={{ ...inp, marginTop: 8 }} value={customGenre} disabled={genreAtMax}
+          onChange={e => setCustomGenre(e.target.value)} onBlur={applyCustomGenre}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomGenre(); } }}
+          placeholder={genreAtMax ? 'ジャンルは最大8つまでです' : 'リストに無いジャンルを追加（Enterで確定）'} />
 
         <label style={lbl}>リリース日（任意）</label>
         <input className="modal-input" style={{ ...inp, colorScheme: 'light' }} type="date" value={form.release_date} onChange={e => set('release_date', e.target.value)} />

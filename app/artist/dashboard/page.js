@@ -58,6 +58,10 @@ const MOOD_OPTIONS = [
   'Ethereal', 'Powerful', 'Playful', 'Intense',
 ];
 
+// artist_tracks.genre は text 1列にカンマ区切りで入っている。読み取りはこの1本に
+// 寄せる: 曲編集の pill もプロモ素材への受け渡しも同じ分解を使う。
+const parseTrackGenres = (str) => (str || '').split(',').map(x => x.trim()).filter(Boolean);
+
 const TYPE_LABELS = { solo: 'Solo Artist', band: 'Band', label: 'Label', producer: 'Producer' };
 
 /* ── SVG Icons for SNS ── */
@@ -2007,7 +2011,10 @@ function PromoToolkitModal({ track, artist, onClose }) {
           trackTitle: track.title,
           artistName: artist.name,
           releaseDate: track.release_date,
-          genres: track.genre ? [track.genre] : [],
+          // 1列に複数ジャンルが入っているので分解して渡す。1要素のまま送ると
+          // カード側の genres.slice(0, 3).join(' • ') が効かず、"Pop, Jazz,
+          // Fusion, Instrumental" が1タグとしてそのまま焼き込まれていた。
+          genres: parseTrackGenres(track.genre),
           imageUrl: track.cover_image_url || null,
           palette: palette?.name,
           audioFeatures: track.audio_features || {},
@@ -2037,7 +2044,7 @@ function PromoToolkitModal({ track, artist, onClose }) {
         body: JSON.stringify({
           trackTitle: track.title,
           artistName: artist.name,
-          genres: track.genre ? [track.genre] : [],
+          genres: parseTrackGenres(track.genre),
           moods: track.audio_features?.moods || [],
           releaseDate: track.release_date,
           bio: artist.bio,
@@ -2421,8 +2428,7 @@ function TrackModal({ token, track, onClose, onSuccess }) {
   // 行を編集しても区切りが書き換わらないので、表示も既存の読み取り側も不変。
   // 読み取りは , 区切りを trim + 空除去で寛容に受ける。
   const genreSep = /,\s/.test(track?.genre || '') ? ', ' : (track?.genre || '').includes(',') ? ',' : ', ';
-  const parseGenres = (str) => (str || '').split(',').map(x => x.trim()).filter(Boolean);
-  const genreList = parseGenres(form.genre);
+  const genreList = parseTrackGenres(form.genre);
   const genreAtMax = genreList.length >= 8;
   const setGenreList = (arr) => set('genre', arr.join(genreSep));
   // 上限は「これ以上増やせない」であって、引き継いだ分を切り捨てるものではない。
@@ -2432,7 +2438,7 @@ function TrackModal({ token, track, onClose, onSuccess }) {
     setGenreList([...genreList, g]);
   };
   const applyCustomGenre = () => {
-    const added = parseGenres(customGenre).filter(g => !genreList.includes(g));
+    const added = parseTrackGenres(customGenre).filter(g => !genreList.includes(g));
     if (added.length === 0) { setCustomGenre(''); return; }
     if (genreAtMax) { setError('ジャンルは最大8つまでです'); return; }
     setGenreList([...genreList, ...added].slice(0, 8));

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { CL as T } from '@/lib/design-tokens';
-import { supabase } from '@/lib/supabase';
+import { supabaseStorage } from '@/lib/supabase';
 // 回答時間の選択肢は pitches.deadline_at の算出元。lib/response-time.js が正。
 import { RESPONSE_TIME_OPTIONS } from '@/lib/response-time';
 import { resolveReferralSource } from '@/lib/referral-source';
@@ -376,10 +376,10 @@ export default function CuratorRegistrationPage() {
         const ext = avatarFile.name.split('.').pop().toLowerCase();
         const slug = form.email.replace(/[^a-z0-9]/gi, '-').toLowerCase();
         const fileName = `curator-${slug}-${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabaseStorage.storage
           .from('avatars').upload(fileName, avatarFile, { contentType: avatarFile.type, upsert: true });
         if (!uploadError) {
-          const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+          const { data: { publicUrl } } = supabaseStorage.storage.from('avatars').getPublicUrl(fileName);
           iconUrl = publicUrl;
         }
       } catch { /* skip */ } finally { setAvatarUploading(false); }

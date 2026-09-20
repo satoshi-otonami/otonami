@@ -5,6 +5,7 @@ import { verifyToken } from '@/lib/auth';
 import { pitchSubmitRatelimit, checkRatelimit } from '@/lib/ratelimit';
 import { INPUT_LIMITS, validateLength } from '@/lib/validate-input';
 import { deadlineFromNow } from '@/lib/response-time';
+import { getAccountArtist, resolveAccountId } from '@/lib/db';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -93,6 +94,63 @@ function isPreLaunchLocked() {
 }
 
 // POST /api/pitches — ピッチをDBに保存（日本語があれば英語に翻訳してから保存）
+// GET /api/pitches — the signed-in artist's own pitches, for the tracking tab.
+//
+// Replaces lib/db.js `loadPitches()`, which read `pitches` from the browser with
+// the public anon key. That table's SELECT policy is `USING (true)`, so the anon
+// read returned every row in the table to anyone holding the public key — 187
+// pitches, 23 distinct artist email addresses, every pitch body and every piece
+// of curator feedback. Scoping happened only in the client-side filter, which is
+// no protection at all. Here the scope is the JWT.
+//
+// Shape: raw `pitches` rows plus the `artist_tracks(title)` embed, exactly what
+// the anon query returned, so mapPitchFromDB on the client is unchanged.
+export async function GET(request) {
+  try {
+    const payload = await verifyToken(request);
+    if (!payload || payload.role !== 'artist') {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'ログインが必要です' },
+        { status: 401 }
+      );
+    }
+
+    // The token's artistId is the active artist. A label account may ask for a
+    // sibling instead (the switcher re-issues the token, but a request can race
+    // that); honour ?artistId= only after confirming it sits under the same
+    // account, otherwise fall back to the token's own artist.
+    const requested = new URL(request.url).searchParams.get('artistId');
+    let artistId = payload.artistId;
+    if (requested && requested !== payload.artistId) {
+      const accountId = await resolveAccountId(payload);
+      const sibling = accountId ? await getAccountArtist(accountId, requested) : null;
+      if (!sibling) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      artistId = requested;
+    }
+
+    const db = getServiceSupabase();
+    // artist_tracks(title) is the pitches.track_id embed — the tracking tab
+    // groups by song and `pitches` has no title column of its own.
+    const { data, error } = await db
+      .from('pitches')
+      .select('*, artist_tracks(title)')
+      .eq('artist_id', artistId)
+      .order('created_at', { ascending: false })
+      .limit(300);
+    if (error) throw new Error(error.message);
+
+    return NextResponse.json(
+      { pitches: data || [] },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    );
+  } catch (e) {
+    console.error('Pitches GET error:', e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
+}
+
 export async function POST(request) {
   try {
     const payload = await verifyToken(request);
@@ -404,6 +462,12 @@ export async function POST(request) {
       new_credits: newCredits,
       credits_charged: creditsRequired,
       deadline_at: cleanRow.deadline_at,
+      // Recipient for the pitch email the client sends next (POST /api/email).
+      // The curator roster no longer carries email addresses — GET
+      // /api/curators/studio returns an opaque contactKey instead — so the
+      // address is handed over here, one curator at a time, and only for a
+      // pitch that was actually created and charged.
+      curator_email: curatorEmail,
     });
   } catch (e) {
     console.error('[pitches] Unexpected error:', e);

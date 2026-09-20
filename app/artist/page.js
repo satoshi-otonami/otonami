@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabaseStorage } from '@/lib/supabase';
 import SavannahBanner from '@/components/SavannahBanner';
 import TrustBar from '@/components/landing/TrustBar';
 
@@ -139,10 +139,10 @@ export default function ArtistRegistrationPage() {
           const ext = avatarFile.name.split('.').pop().toLowerCase();
           const slug = form.email.replace(/[^a-z0-9]/gi, '-').toLowerCase();
           const fileName = `artist-${slug}-${Date.now()}.${ext}`;
-          const { error: uploadError } = await supabase.storage
+          const { error: uploadError } = await supabaseStorage.storage
             .from('avatars').upload(fileName, avatarFile, { contentType: avatarFile.type, upsert: true });
           if (!uploadError) {
-            const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+            const { data: { publicUrl } } = supabaseStorage.storage.from('avatars').getPublicUrl(fileName);
             avatarUrl = publicUrl;
           }
         } catch { /* non-fatal: registration proceeds without the photo */ }
@@ -158,10 +158,10 @@ export default function ArtistRegistrationPage() {
           const ext = coverFile.name.split('.').pop().toLowerCase();
           const slug = form.email.replace(/[^a-z0-9]/gi, '-').toLowerCase();
           const fileName = `cover-${slug}-${Date.now()}.${ext}`;
-          const { error: uploadError } = await supabase.storage
+          const { error: uploadError } = await supabaseStorage.storage
             .from('avatars').upload(fileName, coverFile, { contentType: coverFile.type, upsert: true });
           if (!uploadError) {
-            const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+            const { data: { publicUrl } } = supabaseStorage.storage.from('avatars').getPublicUrl(fileName);
             coverUrl = publicUrl;
           }
         } catch { /* non-fatal: registration proceeds without the cover */ }

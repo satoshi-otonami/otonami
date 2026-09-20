@@ -1,7 +1,5 @@
 'use client';
-import { initSession, loadCurators, loadPitches,
-         savePitchesToDB, saveCuratorToDB,
-         logEmail, insertPitchGetUUID } from '@/lib/db';
+import { loadCurators, loadPitches, insertPitchGetUUID } from '@/lib/db';
 
 import API, { authFetch, ApiError } from '@/lib/api-client';
 import { analyzeTrack } from '@/lib/api-track';
@@ -595,7 +593,6 @@ export default function App() {
     (async () => {
 const dbCurators = await loadCurators();
 setCurators(dbCurators && dbCurators.length > 0 ? dbCurators : []);
-await initSession();
 // Credits are loaded by the auto-login useEffect from artists.credits.
 // Pitches are scoped by artist id — `user.id` is the active artist's id, set
 // by the auto-login effect from /api/artists.
@@ -611,7 +608,6 @@ if (savedPitches?.length) setPitches(savedPitches);
   // Save helpers
 const savePitches = async (p) => {
   setPitches(p);
-  await savePitchesToDB(p);
 };
 // DBから最新のピッチを再取得してstateを更新（キュレーター操作後の反映に使用）
 // DB結果とローカルstateをマージ — DB側にないピッチ（送信直後など）も保持する
@@ -632,20 +628,13 @@ const refreshPitches = async () => {
 };
 const saveCurators = async (c) => {
   setCurators(c);
-  for (const curator of c) {
-    if (!curator.isSeed) await saveCuratorToDB(curator);
-  }
 };
   // Expired-pitch refunds are handled server-side by the daily cron job
   // (app/api/cron/check-expired-pitches/route.js). The client no longer
   // optimistically refunds; the refreshed credits arrive on next /api/artists fetch.
 
   const updatePitch = async (id, updates) => {
-    setPitches(prev => {
-      const np = prev.map(p => p.id === id ? {...p, ...updates} : p);
-      savePitchesToDB(np);
-      return np;
-    });
+    setPitches(prev => prev.map(p => p.id === id ? {...p, ...updates} : p));
   };
 
   // ─── Auth-loading gate ───
@@ -763,11 +752,6 @@ function Auth({mode, curators, onLogin, onBack, onRegisterCurator}) {
 
   const handleLogin = () => {
     if (!name.trim() || !email.trim()) return;
-    if (mode === "curator") {
-      const found = curators.find(c => c.email.toLowerCase() === email.toLowerCase());
-if (found) { onLogin(found); return; }
-// パスワード認証は現在Supabase未対応のためメールのみで認証
-    }
     onLogin({ id: "u_" + Date.now(), name, email, type: mode });
   };
 
@@ -959,11 +943,13 @@ function buildPitchedCuratorIds({ curators, pitches, songLink, artistEmail, arti
   for (const c of curators || []) {
     if (activePitchedIds.has(c.id)) { blocked.add(c.id); continue; }
     // One person may hold several curator profiles under one email; the server
-    // resolves the target's email and dedups across all of them.
-    const email = c.email?.trim();
-    if (!email) continue;
+    // resolves the target's email and dedups across all of them. The client only
+    // gets contactKey — a salted digest of that address — which is enough to tell
+    // "same human" without the roster carrying anyone's email.
+    const key = c.contactKey;
+    if (!key) continue;
     const siblingPitched = (curators || []).some(
-      sib => sib.id !== c.id && sib.email === email && activePitchedIds.has(sib.id)
+      sib => sib.id !== c.id && sib.contactKey === key && activePitchedIds.has(sib.id)
     );
     if (siblingPitched) blocked.add(c.id);
   }
@@ -3150,7 +3136,7 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
       songTitle: pitchSongTitle || artist.songTitle, songLink: getSongLink(), genre: artist.genre, mood: artist.mood, description: artist.description, influences: artist.influences, achievements: artist.achievements, trackId: linkedTrackId || null,
       pitchText: personalizePitch(pitchText, c), epk,
       matchScore: effectiveTrack ? calculateMatchScore(c, effectiveTrack) : null,
-      curatorId: c.id, curatorName: c.name, curatorPlatform: c.platform, curatorEmail: c.email, creditCost: c.creditCost||2,
+      curatorId: c.id, curatorName: c.name, curatorPlatform: c.platform, creditCost: c.creditCost||2,
       status: "sent", sentAt: new Date().toISOString(),
       openedAt:null, listenedAt:null, feedbackAt:null, listenDuration:0,
       feedback:null, rating:null, decision:null,
@@ -3200,7 +3186,11 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
           reachedCuratorIds.push(c.id);
         } else if (result?.id) {
           // Use translated pitchText (if translation occurred) for the email body
-          newPitches.push({ ...p, id: result.id, pitchText: result.pitchText ?? p.pitchText, deadline: result.deadline_at ?? null, _hasUUID: true });
+          // curatorEmail is the server's answer, not the client's: the roster no
+          // longer carries addresses, so POST /api/pitches hands back the
+          // recipient for this one pitch. Without it the send loop below skips
+          // the email, so it is attached here rather than derived locally.
+          newPitches.push({ ...p, id: result.id, pitchText: result.pitchText ?? p.pitchText, deadline: result.deadline_at ?? null, curatorEmail: result.curator_email ?? null, _hasUUID: true });
           reachedCuratorIds.push(c.id);
           // Authoritative balance comes from the server
           if (typeof result.new_credits === 'number') latestCredits = result.new_credits;
@@ -4268,7 +4258,6 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
     if (!replyText.trim()) return;
     const pitch = pitches.find(p=>p.id===pitchId);
     if (!pitch) return;
-    const cur = curators.find(c=>c.id===pitch.curatorId);
     // Save reply to pitch
     if (allPitches && savePitches) {
       const np = allPitches.map(p => p.id === pitchId ? {...p, artistReply: replyText.trim(), artistReplyAt: new Date().toISOString()} : p);
@@ -4277,7 +4266,7 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
     // Send email to curator
     sendEmail(EMAIL_TEMPLATES.artistReply(
       {name: pitch.artistName, email: pitch.artistEmail||"artist@example.com"},
-      {email: cur?.email||"curator@example.com", name: pitch.curatorName},
+      {email: null, name: pitch.curatorName},
       replyText.trim()
     ));
     notify("✓ 返信を送信しました（メールも送信済み）");

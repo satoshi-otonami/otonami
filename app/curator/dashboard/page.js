@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { CL as T } from '@/lib/design-tokens';
-import { supabase } from '@/lib/supabase';
+import { supabaseStorage } from '@/lib/supabase';
 import { externalHref } from '@/lib/url';
 import { hasPaymentInfo } from '@/lib/payout';
 
@@ -365,11 +365,11 @@ export default function CuratorDashboard() {
         const ext = editAvatarFile.name.split('.').pop().toLowerCase();
         const slug = curator.email.replace(/[^a-z0-9]/gi, '-').toLowerCase();
         const fileName = `curator-${slug}-${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabaseStorage.storage
           .from('avatars')
           .upload(fileName, editAvatarFile, { contentType: editAvatarFile.type, upsert: true });
         if (!uploadError) {
-          const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+          const { data: { publicUrl } } = supabaseStorage.storage.from('avatars').getPublicUrl(fileName);
           iconUrl = publicUrl;
         }
       } catch { /* skip on error */ } finally { setEditAvatarUploading(false); }

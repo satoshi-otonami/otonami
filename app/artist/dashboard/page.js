@@ -2929,16 +2929,39 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
           {MOOD_OPTIONS.map(m => {
             const sel = form.moods.includes(m);
+            // ジャンルと同じ上限の見せ方。5つ埋まった状態の6つ目も黙って無反応だった。
+            const maxed = !sel && form.moods.length >= 5;
             return (
-              <button key={m} onClick={() => toggleArray('moods', m, 5)} style={{
+              <button key={m} disabled={maxed} onClick={() => toggleArray('moods', m, 5)} style={{
                 padding: '5px 12px', borderRadius: 100, fontSize: 11, fontWeight: 500,
                 border: `1.5px solid ${sel ? THEME.gold : THEME.border}`,
                 background: sel ? THEME.gold : THEME.card, color: sel ? '#fff' : THEME.text,
-                cursor: 'pointer', fontFamily: THEME.font, transition: 'all 0.15s',
+                cursor: maxed ? 'not-allowed' : 'pointer', fontFamily: THEME.font,
+                opacity: maxed ? 0.4 : 1, transition: 'all 0.15s',
               }}>{m}</button>
             );
           })}
         </div>
+        {form.moods.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 8 }}>
+            {form.moods.map(m => (
+              <span key={m} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '5px 8px 5px 12px', borderRadius: 100, fontSize: 11, fontWeight: 500,
+                background: THEME.goldLight, color: THEME.gold,
+                border: `1px solid ${THEME.gold}`, fontFamily: THEME.font,
+              }}>
+                {m}
+                <button type="button" aria-label={`${m} を外す`} onClick={() => toggleArray('moods', m, 5)}
+                  style={{ background: 'none', border: 'none', color: THEME.gold, cursor: 'pointer', padding: '0 2px', fontSize: 13, lineHeight: 1, fontFamily: THEME.font }}
+                >×</button>
+              </span>
+            ))}
+          </div>
+        )}
+        <p style={{ fontSize: 11, lineHeight: 1.6, color: THEME.textMuted, fontFamily: THEME.font, margin: '6px 0 0' }}>
+          {form.moods.length >= 5 ? '最大5つまで — 追加するには、どれかを外してください' : `${form.moods.length}/5 選択中`}
+        </p>
 
         <label style={lbl}>影響を受けたアーティスト（最大5つ）</label>
         <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>

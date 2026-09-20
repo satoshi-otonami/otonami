@@ -107,7 +107,7 @@ export async function GET(request) {
       ({ error: welcomeMailError } = await resend.emails.send({
         from: FROM,
         to: recipientEmail,
-        reply_to: 'info@otonami.io',
+        replyTo: 'info@otonami.io',
         subject: welcomeSubject,
         html: `
           <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
@@ -139,7 +139,7 @@ export async function GET(request) {
       ({ error: welcomeMailError } = await resend.emails.send({
         from: FROM,
         to: recipientEmail,
-        reply_to: 'info@otonami.io',
+        replyTo: 'info@otonami.io',
         subject: curatorSubject,
         html: `
           <div style="max-width:600px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif;background:#1a1a1a;color:#f0ede6;padding:0;">

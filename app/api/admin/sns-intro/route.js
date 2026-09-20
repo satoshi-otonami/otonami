@@ -140,7 +140,7 @@ async function handle(request) {
     const { data, error } = await resend.emails.send({
       from: FROM,
       to: [DRAFT_TO],
-      reply_to: 'info@otonami.io',
+      replyTo: 'info@otonami.io',
       subject,
       html,
       text,

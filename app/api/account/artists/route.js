@@ -178,7 +178,7 @@ export async function POST(request) {
       const { error: sendError } = await resend.emails.send({
         from: FROM,
         to: testMode ? safeEmail : 'info@otonami.io',
-        reply_to: 'info@otonami.io',
+        replyTo: 'info@otonami.io',
         subject,
         html: `
           <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">

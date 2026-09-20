@@ -215,7 +215,7 @@ export async function GET(request) {
         const { data: sent, error: sendError } = await resend.emails.send({
           from: FROM,
           to: recipient,
-          reply_to: 'info@otonami.io',
+          replyTo: 'info@otonami.io',
           subject: finalSubject,
           html: pitchReminderHtml({
             curatorName: b.curatorName,

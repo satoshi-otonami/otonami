@@ -67,7 +67,7 @@ export async function POST(request) {
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: `OTONAMI <${FROM}>`,
       to: [toEmail],
-      reply_to: 'info@otonami.io',
+      replyTo: 'info@otonami.io',
       subject: `${subjectPrefix}OTONAMI — Set Your Password / パスワード設定`,
       text: `Hi ${info.name || email},\n\nClick the link below to set your OTONAMI curator password. This link is valid for 1 hour.\n\n${link}\n\nIf you didn't request this, you can safely ignore this email.\n\nOTONAMI — Connecting Japanese Music to the World`,
       headers: {

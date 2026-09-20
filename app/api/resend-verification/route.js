@@ -99,7 +99,7 @@ export async function POST(request) {
     await resend.emails.send({
       from: FROM,
       to: recipientEmail,
-      reply_to: 'info@otonami.io',
+      replyTo: 'info@otonami.io',
       subject,
       html,
       text,

@@ -165,7 +165,7 @@ export async function POST(request) {
       await resend.emails.send({
         from: FROM,
         to: testMode ? safeEmail : 'info@otonami.io',
-        reply_to: 'info@otonami.io',
+        replyTo: 'info@otonami.io',
         subject: (testMode ? '[TEST] ' : '') + `【OTONAMI】支払いリクエスト: ${curatorData.name} ¥${availableBalance.toLocaleString()}`,
         html: `
           <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
@@ -192,7 +192,7 @@ export async function POST(request) {
       await resend.emails.send({
         from: FROM,
         to: curatorTo,
-        reply_to: 'info@otonami.io',
+        replyTo: 'info@otonami.io',
         subject: (testMode ? `[TEST] (→${curatorData.email}) ` : '') + 'OTONAMI — 支払いリクエストを受け付けました / Payout Request Received',
         html: `
           <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">

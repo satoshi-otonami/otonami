@@ -151,7 +151,7 @@ export async function POST(request) {
         await resend.emails.send({
           from: FROM_EMAIL,
           to: recipientEmail,
-          reply_to: 'info@otonami.io',
+          replyTo: 'info@otonami.io',
           subject: otpSubject,
           html: `
             <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
@@ -229,7 +229,7 @@ export async function POST(request) {
         const adminSendResult = await notifier.emails.send({
           from: `OTONAMI <${process.env.EMAIL_FROM || 'info@otonami.io'}>`,
           to: adminTo,
-          reply_to: 'info@otonami.io',
+          replyTo: 'info@otonami.io',
           subject: (isTest ? '[TEST] ' : '') + `【OTONAMI】新規キュレーター登録: ${name}`,
           text: `新規キュレーター登録 (via login route)\n\n名前: ${name}\nメール: ${email}`,
         });

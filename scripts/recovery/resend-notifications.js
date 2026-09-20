@@ -88,7 +88,7 @@ function buildText(d) {
       body: JSON.stringify({
         from: `OTONAMI <${FROM}>`,
         to: [d.artist_email],
-        reply_to: 'info@otonami.io',
+        replyTo: 'info@otonami.io',
         subject: `OTONAMI — ${d.curator_name || 'A curator'} responded to your pitch`,
         html: buildHtml(d),
         text: buildText(d),

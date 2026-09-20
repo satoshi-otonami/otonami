@@ -147,7 +147,7 @@ export async function POST(request) {
     const adminSendResult = await resend.emails.send({
       from: FROM,
       to: safeEmail,
-      reply_to: 'info@otonami.io',
+      replyTo: 'info@otonami.io',
       subject: adminSubject,
       html: `
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
@@ -216,7 +216,7 @@ export async function POST(request) {
       await resend.emails.send({
         from: FROM,
         to: curatorTo,
-        reply_to: 'info@otonami.io',
+        replyTo: 'info@otonami.io',
         subject: verifySubject,
         html: `
           <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">

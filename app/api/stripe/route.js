@@ -193,7 +193,7 @@ export async function PUT(request) {
         const { error: mailErr } = await resend.emails.send({
           from: FROM,
           to: recipient,
-          reply_to: 'info@otonami.io',
+          replyTo: 'info@otonami.io',
           subject: `OTONAMI クレジット購入完了 — ${credits} クレジット / Purchase Confirmation`,
           html: `
             <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;color:#1a1a1a;">

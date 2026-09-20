@@ -282,7 +282,7 @@ export async function PATCH(request) {
         const { data: emailResult, error: emailError } = await resend.emails.send({
         from: `OTONAMI <${FROM}>`,
         to: [data.artist_email],
-        reply_to: curatorEmail || 'info@otonami.io',
+        replyTo: curatorEmail || 'info@otonami.io',
         subject: `OTONAMI — ${data.curator_name || 'A curator'} responded to your pitch`,
         text: `${data.curator_name || 'A curator'} responded to your pitch "${data.subject || ''}".\n\nStatus: ${statusLabel}${data.feedback_message ? `\n\nFeedback: ${data.feedback_message}` : ''}${data.placement_url ? `\n\nPlacement: ${data.placement_url}` : ''}${curatorEmail ? `\n\nReply directly to ${data.curator_name || 'the curator'}: ${curatorEmail}` : ''}${curatorContactUrl ? `\nContact: ${curatorContactUrl}` : ''}\n\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
         headers: {

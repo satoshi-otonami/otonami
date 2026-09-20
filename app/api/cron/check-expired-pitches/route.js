@@ -66,7 +66,7 @@ async function sendRefundEmail({ to, artistName, curatorName, credits, newBalanc
   await resend.emails.send({
     from: FROM,
     to: recipient,
-    reply_to: 'info@otonami.io',
+    replyTo: 'info@otonami.io',
     subject,
     html: refundEmailHtml({ artistName, curatorName, credits, newBalance }),
     text: refundEmailText({ artistName, curatorName, credits, newBalance }),
@@ -109,7 +109,7 @@ async function sendInconsistencyAlert(rows) {
   await resend.emails.send({
     from: FROM,
     to: admin,
-    reply_to: 'info@otonami.io',
+    replyTo: 'info@otonami.io',
     subject: '[OTONAMI] Pitch status inconsistency detected',
     html: htmlBody,
     text: body,

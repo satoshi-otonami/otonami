@@ -26,7 +26,7 @@ async function sendOTPEmail(email, name, otp) {
   await resend.emails.send({
     from: FROM,
     to: recipientEmail,
-    reply_to: 'info@otonami.io',
+    replyTo: 'info@otonami.io',
     subject,
     html: `
       <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">

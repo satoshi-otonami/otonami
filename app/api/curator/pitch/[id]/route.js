@@ -157,7 +157,7 @@ async function sendFeedbackNotification(pitch) {
     const { data, error } = await resend.emails.send({
       from: `OTONAMI <${FROM}>`,
       to: [artistEmail],
-      reply_to: curatorEmail || 'info@otonami.io',
+      replyTo: curatorEmail || 'info@otonami.io',
       subject: `OTONAMI — ${curatorName} responded to your pitch "${subject}"`,
       html,
       text: `${curatorName} responded to your pitch "${subject}".\n\nStatus: ${sc.label}\n${pitch.feedback_message ? `\nFeedback: ${pitch.feedback_message}\n` : ''}${pitch.placement_url ? `\nPlacement: ${pitch.placement_url}\n` : ''}${curatorEmail ? `\nReply directly to ${curatorName}: ${curatorEmail}\n` : ''}${curatorContactUrl ? `Contact: ${curatorContactUrl}\n` : ''}\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,

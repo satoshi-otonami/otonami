@@ -371,7 +371,7 @@ export async function POST(request) {
     const { data, error } = await resend.emails.send({
       from: `OTONAMI <${FROM}>`,
       to: [toEmail],
-      reply_to: replyTo,
+      replyTo: replyTo,
       subject: emailSubject || 'OTONAMI Notification',
       html: htmlBody,
       headers: {

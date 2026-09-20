@@ -429,7 +429,15 @@ export default function App() {
   const [page, setPage] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
-      const hasUser = !!localStorage.getItem('otonami-user');
+      // Both, not either. otonami-user outlives the token — it is written on
+      // login and never cleared on expiry — so a 30-day-old session leaves a
+      // user object with no artist_token behind. That used to still render the
+      // app body, and the roster filled in anyway because loadCurators read
+      // `curators` with the anon key. Now that the roster needs a token, the
+      // same state paints an empty studio with no explanation, so a user
+      // object without a token counts as no session and goes to login.
+      const hasToken = !!localStorage.getItem('artist_token');
+      const hasUser = !!localStorage.getItem('otonami-user') && hasToken;
       if (hasUser) {
         // auto_analyze=true → go straight to curators tab
         if (params.get('auto_analyze') === 'true') return "curators";
@@ -447,7 +455,6 @@ export default function App() {
       // to the real login page: /studio is the signed-in app body; new-user
       // signup lives on otonami.io / /artist. "redirecting" renders the loading
       // screen so the Landing registration buttons never flash.
-      const hasToken = !!localStorage.getItem('artist_token');
       if (!hasToken && !params.get('role')) return "redirecting";
     } catch {}
     return "landing";

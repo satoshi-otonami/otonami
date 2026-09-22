@@ -8,6 +8,13 @@ import { jwtVerify } from 'jose';
 import { Resend } from 'resend';
 import { escapeHtml } from '@/lib/html-escape';
 import { normalizePlacementUrl } from '@/lib/url-normalize';
+import {
+  RESPONSE_STATUSES,
+  CLOSED_RESPONSE_ARTIST_NOTE_TEXT,
+  CLOSED_RESPONSE_ARTIST_NOTE_HTML,
+  shouldCreateEarning,
+  writeCuratorResponse,
+} from '@/lib/pitch-closure';
 
 const resend  = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM    = process.env.EMAIL_FROM || 'onboarding@resend.dev';
@@ -127,7 +134,7 @@ export async function PATCH(request) {
     // 1. ピッチを取得
     const { data: existingPitch } = await db
       .from('pitches')
-      .select('id, curator_id, status')
+      .select('id, curator_id, status, refunded_at')
       .eq('id', pitchId)
       .single();
 
@@ -144,17 +151,6 @@ export async function PATCH(request) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    // Guard: an accepted pitch cannot be reverted to 'sent' (Undo). Reverting
-    // left the acceptance trace intact and let the expiry cron wrongly refund
-    // it. UI hides Undo on accepted rows; this blocks direct/API/multi-tab
-    // bypass. Curators must contact info@otonami.io to change an acceptance.
-    if (status === 'sent' && existingPitch.status === 'accepted') {
-      return NextResponse.json(
-        { error: 'An accepted pitch cannot be reverted. Contact info@otonami.io to make changes.' },
-        { status: 409 }
-      );
-    }
-
     // 3. 認可済み — 更新
     const updates = { status };
     if (feedback_message) updates.feedback_message = feedback_message;
@@ -163,6 +159,7 @@ export async function PATCH(request) {
       if (placement_platform) updates.placement_platform = placement_platform;
       if (placement_date) updates.placement_date = placement_date;
     }
+    if (RESPONSE_STATUSES.includes(status)) updates.responded_at = now;
     // Undo of a feedback-only pitch → return to a clean pending state:
     // clear the response trace in the SAME update so the row is truly
     // "unanswered" again (else the cron guard would skip it forever).
@@ -170,36 +167,18 @@ export async function PATCH(request) {
       updates.responded_at = null;
       updates.feedback_message = null;
     }
-    let { data, error } = await db
-      .from('pitches')
-      .update(updates)
-      .eq('id', pitchId)
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error(`[dashboard] PATCH update error for pitch ${pitchId}:`, error.message);
-      throw new Error(error.message);
+    // Undo of an accepted or refunded pitch is refused with 409 here; see
+    // lib/pitch-closure.js.
+    const written = await writeCuratorResponse(db, pitchId, existingPitch, status, updates);
+    if (written.error) {
+      console.error(`[dashboard] PATCH update refused for pitch ${pitchId}:`, written.error);
+      return NextResponse.json({ error: written.error }, { status: written.httpStatus });
     }
-    if (!data) {
-      return NextResponse.json({ error: 'Pitch not found or not authorized' }, { status: 404 });
-    }
-
-    // responded_at を別途更新
-    if (['accepted', 'declined', 'feedback'].includes(status)) {
-      const { error: respError } = await db
-        .from('pitches')
-        .update({ responded_at: now })
-        .eq('id', data.id);
-      if (respError) {
-        console.error(`[dashboard] responded_at update failed:`, respError.message);
-      } else {
-        data.responded_at = now;
-      }
-    }
+    const { data, closed } = written;
 
     // ── 報酬レコード作成（フィードバック提供時）──
-    if (['accepted', 'declined', 'feedback'].includes(status) && feedback_message) {
+    // A response to a pitch the expiry cron has closed earns nothing.
+    if (shouldCreateEarning({ closed, status, feedbackMessage: feedback_message, updatedRow: data })) {
       try {
         // Check if earnings already exist for this pitch+curator to prevent duplicates
         const { data: existingEarning } = await db
@@ -284,7 +263,7 @@ export async function PATCH(request) {
         to: [data.artist_email],
         replyTo: curatorEmail || 'info@otonami.io',
         subject: `OTONAMI — ${data.curator_name || 'A curator'} responded to your pitch`,
-        text: `${data.curator_name || 'A curator'} responded to your pitch "${data.subject || ''}".\n\nStatus: ${statusLabel}${data.feedback_message ? `\n\nFeedback: ${data.feedback_message}` : ''}${data.placement_url ? `\n\nPlacement: ${data.placement_url}` : ''}${curatorEmail ? `\n\nReply directly to ${data.curator_name || 'the curator'}: ${curatorEmail}` : ''}${curatorContactUrl ? `\nContact: ${curatorContactUrl}` : ''}\n\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
+        text: `${data.curator_name || 'A curator'} responded to your pitch "${data.subject || ''}".\n\nStatus: ${statusLabel}${closed ? `\n\n${CLOSED_RESPONSE_ARTIST_NOTE_TEXT}` : ''}${data.feedback_message ? `\n\nFeedback: ${data.feedback_message}` : ''}${data.placement_url ? `\n\nPlacement: ${data.placement_url}` : ''}${curatorEmail ? `\n\nReply directly to ${data.curator_name || 'the curator'}: ${curatorEmail}` : ''}${curatorContactUrl ? `\nContact: ${curatorContactUrl}` : ''}\n\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
         headers: {
           'List-Unsubscribe': '<mailto:info@otonami.io?subject=unsubscribe>',
         },
@@ -298,6 +277,7 @@ export async function PATCH(request) {
             <div style="background:#13132a;border-radius:10px;padding:14px 18px;margin-bottom:16px;text-align:center;">
               <span style="font-size:16px;font-weight:800;">${statusLabel}</span>
             </div>
+            ${closed ? `<div style="background:#13132a;border-radius:10px;padding:12px 18px;margin-bottom:16px;color:#94a3b8;font-size:13px;line-height:1.7;">${CLOSED_RESPONSE_ARTIST_NOTE_HTML}</div>` : ''}
             ${safeFeedback ? `<div style="background:#13132a;border-radius:10px;padding:14px 18px;margin-bottom:16px;color:#ccc;font-size:14px;line-height:1.7;">${safeFeedback}</div>` : ''}
             ${safeUrl ? `<div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:10px;padding:14px 18px;margin-bottom:16px;"><p style="color:#38bdf8;font-weight:700;margin:0 0 6px;">Your pitch was accepted! / ピッチが承認されました！</p><p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0 0 8px;">The curator plans to add your track to this playlist:<br>キュレーターがプレイリストへの追加を予定しています:</p><a href="${safeUrl}" style="color:#0ea5e9;font-size:13px;">${safeUrl}</a><p style="color:#64748b;font-size:12px;line-height:1.6;margin:10px 0 0;">It may take some time to appear on the playlist. / 反映までに時間がかかることがあります。</p></div>` : ''}
             ${(safeCuratorEmail || safeCuratorContactUrl) ? `<div style="background:#13132a;border:1px solid #1e1e3a;border-radius:10px;padding:14px 18px;margin-bottom:16px;"><div style="color:#a78bfa;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:8px;">REPLY DIRECTLY / 直接返信</div>${safeCuratorEmail ? `<div style="color:#ccc;font-size:14px;line-height:1.7;">Reply directly to ${safeCuratorName}: <a href="mailto:${safeCuratorEmail}" style="color:#FF6B4A;text-decoration:underline;">${safeCuratorEmail}</a></div>` : ''}${safeCuratorContactUrl ? `<div style="color:#ccc;font-size:13px;line-height:1.7;margin-top:6px;">Contact: <a href="${safeCuratorContactUrl}" style="color:#FF6B4A;text-decoration:underline;word-break:break-all;">${safeCuratorContactUrl}</a></div>` : ''}</div>` : ''}

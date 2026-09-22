@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { CL as T } from '@/lib/design-tokens';
 import { externalHref } from '@/lib/url';
+import { isResponseClosed } from '@/lib/pitch-closure';
 
 function renderBody(text) {
   if (!text) return null;
@@ -19,7 +20,17 @@ const STATUS_COLORS = {
   accepted: { color: '#34d399', bg: 'rgba(16,185,129,0.12)',   label: 'Accepted / 承認済み' },
   declined: { color: '#f87171', bg: 'rgba(248,113,113,0.12)',  label: 'Declined / 却下済み' },
   feedback: { color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',   label: 'Feedback Sent / FB送信済み' },
+  // Without this entry an expired pitch fell back to 'sent' and read as
+  // "Pending", inviting a response the curator would not be paid for.
+  expired:  { color: '#f87171', bg: 'rgba(248,113,113,0.12)',  label: 'Expired / 期限切れ' },
 };
+
+const CLOSED_BANNER_EN =
+  "This pitch has expired and the artist's credits have been automatically refunded. " +
+  "You can still send your response — the artist will be notified — but it won't be counted toward your earnings.";
+const CLOSED_BANNER_JA =
+  'このピッチは回答期限（7日）を過ぎたため期限切れとなり、アーティストのクレジットは自動で返還済みです。' +
+  '回答は引き続き送信でき、アーティストに通知されますが、報酬の対象にはなりません。';
 
 /* ── ログインフォーム ── */
 function LoginForm({ onLogin }) {
@@ -193,7 +204,11 @@ function PitchView({ pitchId }) {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
-      if (!res.ok) { showToast('Failed to submit. Please try again.'); return; }
+      if (!res.ok) {
+        const msg = await res.json().catch(() => null);
+        showToast(msg?.error || 'Failed to submit. Please try again.');
+        return;
+      }
       setPitch(prev => ({ ...prev, status, feedback_message: feedbackText.trim(), placement_url: body.placement_url, placement_platform: body.placement_platform }));
       setDone(true);
       showToast('✓ Feedback submitted!');
@@ -377,6 +392,12 @@ function PitchView({ pitchId }) {
         ) : (
           /* フィードバック入力フォーム */
           <>
+            {isResponseClosed(pitch) && (
+              <div style={{ marginBottom: 14, padding: '12px 14px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 10, color: T.textSub, fontSize: 13, lineHeight: 1.6, fontFamily: T.font }}>
+                {CLOSED_BANNER_EN}
+                <br /><span style={{ fontSize: 12 }}>{CLOSED_BANNER_JA}</span>
+              </div>
+            )}
             <div style={{ marginBottom: 14 }}>
               <div style={{ color: T.textSub, fontSize: 12, marginBottom: 8, fontFamily: T.font }}>
                 Comments <span style={{ color: '#ef4444' }}>*</span>

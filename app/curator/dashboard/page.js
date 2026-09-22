@@ -4,6 +4,7 @@ import { CL as T } from '@/lib/design-tokens';
 import { supabaseStorage } from '@/lib/supabase';
 import { externalHref } from '@/lib/url';
 import { hasPaymentInfo } from '@/lib/payout';
+import { isResponseClosed } from '@/lib/pitch-closure';
 
 const STATUS_LABELS = {
   sent:     { en: 'Pending',  ja: '未対応',  color: '#eab308', bg: 'rgba(234,179,8,0.12)' },
@@ -12,6 +13,8 @@ const STATUS_LABELS = {
   feedback: { en: 'Feedback', ja: 'FB受信',   color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
   expired:  { en: 'Expired',  ja: '期限切れ', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
 };
+
+const CLOSED_ROW_LABEL = 'Expired · Credits refunded';
 
 const FILTER_TABS = [
   { key: 'all',      en: 'All',      ja: 'すべて' },
@@ -1328,7 +1331,14 @@ export default function CuratorDashboard() {
                     onMouseEnter={e => e.currentTarget.style.background = T.accentLight}
                     onMouseLeave={e => e.currentTarget.style.background = T.white}
                     >{isExpanded ? 'Close / 閉じる' : 'Read / 読む'}</button>
-                    {pitch.status === 'accepted' ? (
+                    {pitch.status === 'expired' ? (
+                      // Closed by the expiry cron (credits refunded). Undo would
+                      // reopen a refunded pitch, so it is not offered; the API
+                      // refuses it with 409 as well.
+                      <span style={{ fontSize: 11, color: '#f87171', fontFamily: T.font, fontWeight: 600, textAlign: 'right' }}>
+                        {CLOSED_ROW_LABEL}
+                      </span>
+                    ) : pitch.status === 'accepted' ? (
                       // Accepted pitches cannot be undone (reverting to 'sent'
                       // left the acceptance trace intact and caused the expiry
                       // cron to wrongly refund). Direct the curator to support.
@@ -1336,7 +1346,7 @@ export default function CuratorDashboard() {
                         Need to change this?{' '}
                         <a href="mailto:info@otonami.io" style={{ color: T.accent, textDecoration: 'underline' }}>Contact info@otonami.io</a>
                       </span>
-                    ) : pitch.status !== 'sent' ? (
+                    ) : pitch.status !== 'sent' && !isResponseClosed(pitch) ? (
                       <button
                         onClick={() => {
                           if (window.confirm('This will withdraw your response and delete your feedback. The pitch will return to pending. Continue?')) {

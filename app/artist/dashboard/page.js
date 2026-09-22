@@ -928,6 +928,12 @@ export default function ArtistDashboard() {
                           期限切れ — {pitch.refund_credits} credits 返還済み
                         </div>
                       )}
+                      {/* Curator answered after the 7-day refund: the refund stands. */}
+                      {pitch.status !== 'expired' && pitch.refunded_at && pitch.refund_credits > 0 && (
+                        <div style={{ marginTop: 6, fontSize: 12, color: THEME.textMuted, fontFamily: THEME.font }}>
+                          期限後の回答 — {pitch.refund_credits} credits は返還済みのままです（再課金はありません）
+                        </div>
+                      )}
                       {pitch.status === 'sent' && pitch.deadline_at && (() => {
                         const hoursLeft = Math.max(0, Math.floor((new Date(pitch.deadline_at) - new Date()) / (1000 * 60 * 60)));
                         const daysLeft = Math.floor(hoursLeft / 24);

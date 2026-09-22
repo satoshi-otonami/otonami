@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { escapeHtml } from '@/lib/html-escape';
+import { PITCH_FIELDS, claimPitch, finalizeRefund } from '@/lib/pitch-expiry';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -116,6 +117,22 @@ async function sendInconsistencyAlert(rows) {
   });
 }
 
+async function notifyRefund({ pitch, artistId, refundCredits }) {
+  if (!pitch.artist_email) return;
+  const { data: a } = await supabase
+    .from('artists')
+    .select('credits')
+    .eq('id', artistId)
+    .maybeSingle();
+  await sendRefundEmail({
+    to: pitch.artist_email,
+    artistName: pitch.artist_name || null,
+    curatorName: pitch.curator_name || null,
+    credits: refundCredits,
+    newBalance: a?.credits ?? null,
+  });
+}
+
 export async function GET(request) {
   // Vercel Cron authentication
   const authHeader = request.headers.get('authorization');
@@ -126,7 +143,7 @@ export async function GET(request) {
   try {
     const nowIso = new Date().toISOString();
 
-    // Fetch expired pitches (sent, past deadline, not yet refunded).
+    // Fetch pitches due to expire (sent, past deadline, not yet refunded).
     // GUARD: never expire/refund a pitch that carries any response trace —
     // responded_at / placement_url / feedback_message. A curator "Undo" that
     // reverts status to 'sent' leaves those fields intact, which previously
@@ -135,7 +152,7 @@ export async function GET(request) {
     // admin alert below instead of being processed.
     const { data: expiredPitches, error: fetchError } = await supabase
       .from('pitches')
-      .select('id, artist_id, artist_email, artist_name, credits_charged, curator_id, subject, curator_name')
+      .select(PITCH_FIELDS)
       .eq('status', 'sent')
       .is('refunded_at', null)
       .is('responded_at', null)
@@ -167,114 +184,46 @@ export async function GET(request) {
       console.error('[cron] inconsistency alert failed:', alertErr?.message || alertErr);
     }
 
-    if (!expiredPitches || expiredPitches.length === 0) {
-      return Response.json({ message: 'No expired pitches', processed: 0 });
+    const results = [];
+    const skipped = [];
+
+    // ── Recovery: claimed on an earlier run but never stamped ──────────────
+    // status='expired' with refunded_at NULL means a run claimed the pitch and
+    // then died before stamping it. The pitch is already closed to curators,
+    // so finish the refund now. finalizeRefund's conditional stamp makes this
+    // safe to repeat and safe against an overlapping run.
+    const { data: stranded, error: strandedError } = await supabase
+      .from('pitches')
+      .select(PITCH_FIELDS)
+      .eq('status', 'expired')
+      .is('refunded_at', null);
+    if (strandedError) throw strandedError;
+
+    for (const pitch of stranded || []) {
+      try {
+        const r = await finalizeRefund(supabase, pitch, { onRefunded: notifyRefund });
+        if (r) results.push({ ...r, recovered: true });
+      } catch (pitchErr) {
+        console.error(`[cron] Unexpected error recovering pitch ${pitch.id}:`, pitchErr?.message || pitchErr);
+      }
     }
 
-    const results = [];
-
-    for (const pitch of expiredPitches) {
-     try {
-      if (!(pitch.credits_charged > 0)) {
-        // Nothing to refund — still mark expired below.
-      }
-
-      // 1. Resolve artist_id.
-      // Refunds must land on the artist that was actually charged, so the only
-      // trustworthy key is pitches.artist_id. The old artist_email fallback is
-      // gone: with label accounts several artists share one contact address, so
-      // an email lookup either credits the wrong artist or (on .maybeSingle()
-      // seeing two rows) returns null and silently drops the refund.
-      // Every pitch row carries artist_id — verified 180/180 before the change.
-      const artistId = pitch.artist_id || null;
-      if (!artistId) {
-        console.error(
-          `[cron] Pitch ${pitch.id} has no artist_id — cannot refund ${pitch.credits_charged} credit(s) safely. Needs manual review.`
-        );
-      }
-
-      // 2. Return credits to artist (atomic via RPC).
-      let refundOk = false;
-      if (artistId && pitch.credits_charged > 0) {
-        const { error: rpcErr } = await supabase.rpc('increment_artist_credits', {
-          p_artist_id: artistId,
-          p_amount: pitch.credits_charged,
-        });
-        if (rpcErr) {
-          console.error(`[cron] Refund RPC failed for pitch ${pitch.id}:`, rpcErr);
-        } else {
-          refundOk = true;
-          const { error: txErr } = await supabase.from('credit_transactions').insert({
-            artist_id: artistId,
-            amount: pitch.credits_charged,
-            type: 'expiry_refund',
-            description: 'Expired pitch refund',
-            metadata: { pitch_id: pitch.id, curator_id: pitch.curator_id },
-          });
-          if (txErr) {
-            console.warn('[cron] credit_transactions log failed (non-fatal):', txErr.message);
-          }
+    for (const pitch of expiredPitches || []) {
+      try {
+        // Claim first: close the pitch to curators before any credit moves.
+        if (!(await claimPitch(supabase, pitch.id))) {
+          skipped.push(pitch.id);
+          continue;
         }
+        const r = await finalizeRefund(supabase, pitch, { onRefunded: notifyRefund });
+        if (r) results.push(r);
+      } catch (pitchErr) {
+        console.error(`[cron] Unexpected error processing pitch ${pitch.id}:`, pitchErr?.message || pitchErr);
       }
+    }
 
-      // 3. Mark pitch as expired (regardless of refund success — avoid retry storms).
-      const { error: updateError } = await supabase
-        .from('pitches')
-        .update({
-          status: 'expired',
-          refunded_at: new Date().toISOString(),
-          refund_credits: refundOk ? pitch.credits_charged : 0,
-        })
-        .eq('id', pitch.id);
-
-      if (!updateError) {
-        const refundCredits = refundOk ? pitch.credits_charged : 0;
-        results.push({
-          pitch_id: pitch.id,
-          artist_id: artistId,
-          artist_email: pitch.artist_email,
-          credits_returned: refundCredits,
-          refund_ok: refundOk,
-          curator: pitch.curator_name,
-        });
-
-        // Notify the artist — only when credits were actually returned.
-        // Placed AFTER refunded_at is set, so this pitch is never re-selected
-        // by the WHERE clause again: a failed send cannot cause a double email,
-        // and a thrown error here must not roll back the (already-committed)
-        // refund. Hence email failures are logged, never rethrown.
-        if (refundOk && refundCredits > 0 && pitch.artist_email) {
-          try {
-            let newBalance = null;
-            if (artistId) {
-              const { data: a } = await supabase
-                .from('artists')
-                .select('credits')
-                .eq('id', artistId)
-                .maybeSingle();
-              newBalance = a?.credits ?? null;
-            }
-            await sendRefundEmail({
-              to: pitch.artist_email,
-              artistName: pitch.artist_name || null,
-              curatorName: pitch.curator_name || null,
-              credits: refundCredits,
-              newBalance,
-            });
-          } catch (e) {
-            console.error('[cron] refund email failed', {
-              pitchId: pitch.id,
-              artist_email: pitch.artist_email,
-              error: e?.message || e,
-            });
-          }
-        }
-      } else {
-        console.error(`[cron] Mark-expired failed for pitch ${pitch.id}:`, updateError.message);
-      }
-     } catch (pitchErr) {
-       console.error(`[cron] Unexpected error processing pitch ${pitch.id}:`, pitchErr?.message || pitchErr);
-     }
+    if (skipped.length > 0) {
+      console.log(`[cron] ${skipped.length} pitch(es) answered before claim — not expired`, skipped);
     }
 
     console.log(`[cron] Processed ${results.length} expired pitches`, results);
@@ -282,6 +231,7 @@ export async function GET(request) {
     return Response.json({
       message: `Processed ${results.length} expired pitches`,
       processed: results.length,
+      skipped: skipped.length,
       results,
     });
   } catch (error) {

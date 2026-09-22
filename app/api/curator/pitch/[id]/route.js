@@ -8,6 +8,13 @@ import { jwtVerify } from 'jose';
 import { Resend } from 'resend';
 import { escapeHtml } from '@/lib/html-escape';
 import { normalizePlacementUrl } from '@/lib/url-normalize';
+import {
+  RESPONSE_STATUSES,
+  CLOSED_RESPONSE_ARTIST_NOTE_TEXT,
+  CLOSED_RESPONSE_ARTIST_NOTE_HTML,
+  shouldCreateEarning,
+  writeCuratorResponse,
+} from '@/lib/pitch-closure';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-otonami-secret-change-me'
@@ -28,7 +35,7 @@ async function getAuthCurator(request) {
 }
 
 // ── アーティストへのフィードバック通知メール ──
-async function sendFeedbackNotification(pitch) {
+async function sendFeedbackNotification(pitch, { closed = false } = {}) {
   const artistEmail = pitch.artist_email;
   if (!artistEmail) {
     console.log('[pitch-detail] No artist_email — skipping notification');
@@ -103,6 +110,11 @@ async function sendFeedbackNotification(pitch) {
           <span style="color:${sc.color};font-size:16px;font-weight:800;">${sc.label}</span>
         </div>
 
+        ${closed ? `
+        <!-- Refund stays in place -->
+        <div style="background:#13132a;border:1px solid #1e1e3a;border-radius:10px;padding:12px 18px;margin-bottom:20px;color:#94a3b8;font-size:13px;line-height:1.7;">${CLOSED_RESPONSE_ARTIST_NOTE_HTML}</div>
+        ` : ''}
+
         ${safeFeedback ? `
         <!-- Feedback message -->
         <div style="background:#13132a;border:1px solid #1e1e3a;border-radius:10px;padding:16px 18px;margin-bottom:20px;">
@@ -160,7 +172,7 @@ async function sendFeedbackNotification(pitch) {
       replyTo: curatorEmail || 'info@otonami.io',
       subject: `OTONAMI — ${curatorName} responded to your pitch "${subject}"`,
       html,
-      text: `${curatorName} responded to your pitch "${subject}".\n\nStatus: ${sc.label}\n${pitch.feedback_message ? `\nFeedback: ${pitch.feedback_message}\n` : ''}${pitch.placement_url ? `\nPlacement: ${pitch.placement_url}\n` : ''}${curatorEmail ? `\nReply directly to ${curatorName}: ${curatorEmail}\n` : ''}${curatorContactUrl ? `Contact: ${curatorContactUrl}\n` : ''}\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
+      text: `${curatorName} responded to your pitch "${subject}".\n\nStatus: ${sc.label}\n${closed ? `\n${CLOSED_RESPONSE_ARTIST_NOTE_TEXT}\n` : ''}${pitch.feedback_message ? `\nFeedback: ${pitch.feedback_message}\n` : ''}${pitch.placement_url ? `\nPlacement: ${pitch.placement_url}\n` : ''}${curatorEmail ? `\nReply directly to ${curatorName}: ${curatorEmail}\n` : ''}${curatorContactUrl ? `Contact: ${curatorContactUrl}\n` : ''}\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
       headers: {
         'List-Unsubscribe': '<mailto:info@otonami.io?subject=unsubscribe>',
       },
@@ -289,7 +301,7 @@ export async function PATCH(request, { params }) {
   // 1. ピッチを取得
   const { data: existingPitch } = await db
     .from('pitches')
-    .select('id, curator_id, status')
+    .select('id, curator_id, status, refunded_at')
     .eq('id', pitchId)
     .single();
 
@@ -306,17 +318,6 @@ export async function PATCH(request, { params }) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
   }
 
-  // Guard: an accepted pitch cannot be reverted to 'sent' (Undo). Reverting
-  // left the acceptance trace intact and let the expiry cron wrongly refund
-  // it. UI hides Undo on accepted rows; this blocks direct/API/multi-tab
-  // bypass. Curators must contact info@otonami.io to change an acceptance.
-  if (status === 'sent' && existingPitch.status === 'accepted') {
-    return NextResponse.json(
-      { error: 'An accepted pitch cannot be reverted. Contact info@otonami.io to make changes.' },
-      { status: 409 }
-    );
-  }
-
   // 3. 認可済み — 更新
   const updates = { status };
   if (feedback_message) updates.feedback_message = feedback_message;
@@ -325,6 +326,7 @@ export async function PATCH(request, { params }) {
     if (placement_platform) updates.placement_platform = placement_platform;
     if (placement_date) updates.placement_date = placement_date;
   }
+  if (RESPONSE_STATUSES.includes(status)) updates.responded_at = now;
   // Undo of a feedback-only pitch → return to a clean pending state:
   // clear the response trace in the SAME update so the row is truly
   // "unanswered" again (else the cron guard would skip it forever).
@@ -332,34 +334,18 @@ export async function PATCH(request, { params }) {
     updates.responded_at = null;
     updates.feedback_message = null;
   }
-
-  let { data, error } = await db
-    .from('pitches')
-    .update(updates)
-    .eq('id', pitchId)
-    .select('*')
-    .single();
-
-  if (error || !data) {
-    console.error(`[pitch-detail] PATCH update error for pitch ${pitchId}:`, error?.message);
-    return NextResponse.json({ error: error?.message || 'Update failed' }, { status: 500 });
+  // Undo of an accepted or refunded pitch is refused with 409 here; see
+  // lib/pitch-closure.js.
+  const written = await writeCuratorResponse(db, pitchId, existingPitch, status, updates);
+  if (written.error) {
+    console.error(`[pitch-detail] PATCH update refused for pitch ${pitchId}:`, written.error);
+    return NextResponse.json({ error: written.error }, { status: written.httpStatus });
   }
-
-  // responded_at を別途更新
-  if (['accepted', 'declined', 'feedback'].includes(status)) {
-    const { error: respError } = await db
-      .from('pitches')
-      .update({ responded_at: now })
-      .eq('id', data.id);
-    if (respError) {
-      console.error(`[pitch-detail] responded_at update failed:`, respError.message);
-    } else {
-      data.responded_at = now;
-    }
-  }
+  const { data, closed } = written;
 
   // ── 報酬レコード作成（フィードバック提供時）──
-  if (['accepted', 'declined', 'feedback'].includes(status) && feedback_message) {
+  // A response to a pitch the expiry cron has closed earns nothing.
+  if (shouldCreateEarning({ closed, status, feedbackMessage: feedback_message, updatedRow: data })) {
     try {
       // Check if earnings already exist for this pitch+curator to prevent duplicates
       const { data: existingEarning } = await db
@@ -409,7 +395,7 @@ export async function PATCH(request, { params }) {
   }
 
   // アーティストへの通知メール（失敗してもレスポンスには影響しない）
-  await sendFeedbackNotification(data);
+  await sendFeedbackNotification(data, { closed });
 
   return NextResponse.json({ success: true, pitch: { id: data.id, status: data.status } });
 }

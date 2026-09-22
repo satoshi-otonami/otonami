@@ -358,6 +358,9 @@ export default function CuratorDashboard() {
     setSaveStatus('loading');
     setSaveError('');
     let iconUrl = curator.icon_url || '';
+    // A failed upload keeps the stored icon_url, but it must never pass for a
+    // saved avatar: carry the reason through so the toast below can say so.
+    let avatarError = '';
 
     if (editAvatarFile) {
       setEditAvatarUploading(true);
@@ -368,11 +371,17 @@ export default function CuratorDashboard() {
         const { error: uploadError } = await supabaseStorage.storage
           .from('avatars')
           .upload(fileName, editAvatarFile, { contentType: editAvatarFile.type, upsert: true });
-        if (!uploadError) {
+        if (uploadError) {
+          console.error('Avatar upload failed:', uploadError);
+          avatarError = uploadError.message || 'Upload failed';
+        } else {
           const { data: { publicUrl } } = supabaseStorage.storage.from('avatars').getPublicUrl(fileName);
           iconUrl = publicUrl;
         }
-      } catch { /* skip on error */ } finally { setEditAvatarUploading(false); }
+      } catch (err) {
+        console.error('Avatar upload failed:', err);
+        avatarError = err?.message || 'Upload failed';
+      } finally { setEditAvatarUploading(false); }
     }
 
     try {
@@ -386,16 +395,30 @@ export default function CuratorDashboard() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ ...editForm, similar_artists: similarArtistsArr, icon_url: iconUrl }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to save');
+      let data = null;
+      try { data = await res.json(); } catch { /* non-JSON body */ }
+      if (!res.ok) throw new Error(data?.error || `Save failed (HTTP ${res.status})`);
+      // 200 with no row back means nothing was written — don't call that a save.
+      if (!data?.curator) throw new Error('The server did not return the updated profile.');
       setCurator(data.curator);
+      setEditAvatarFile(null);
+      setEditAvatarPreview(data.curator.icon_url || null);
       setEditMode(false);
-      showToast('✓ Profile updated! / プロフィールを更新しました');
+      setSaveStatus('idle');
+      if (avatarError) {
+        showToast(`Profile saved, but the image upload failed: ${avatarError}`);
+      } else {
+        showToast('✓ Profile updated! / プロフィールを更新しました');
+      }
     } catch (e) {
-      setSaveError(e.message);
+      console.error('Profile save failed:', e);
+      setSaveError(avatarError
+        ? `Image upload failed: ${avatarError}. Profile was not saved: ${e.message}`
+        : `Profile was not saved: ${e.message}`);
       setSaveStatus('error');
-    } finally {
-      if (saveStatus !== 'error') setSaveStatus('idle');
+      showToast(avatarError
+        ? 'Image upload failed and the profile was not saved.'
+        : 'Profile was not saved.');
     }
   };
 

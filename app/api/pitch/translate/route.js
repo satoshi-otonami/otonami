@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { translateRatelimit, checkRatelimit } from '@/lib/ratelimit';
 import { INPUT_LIMITS, validateLength } from '@/lib/validate-input';
+import { anthropicRequestBase } from '@/lib/anthropic-model';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder' });
 
@@ -106,7 +107,7 @@ When translating the Japanese pitch to English, preserve the artist's actual voi
       : `以下の英語の音楽ピッチメールを自然な日本語に翻訳してください。音楽業界の用語は適切に訳し、メールとしての丁寧さを保ってください。ただし、アーティスト本人の直球の野心・カジュアルな挨拶・直接的な誘いは婉曲化せず、そのままのトーンで訳してください（詳細は下記 VOICE PRESERVATION 参照）。Subject行がある場合は「件名:」として日本語で出力してください。翻訳のみ出力し、説明は不要です。${placeholderRule}${jaVoiceRule}\n\n${text}`;
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      ...anthropicRequestBase('pitchTranslate'),
       max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }],
     });

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { getServiceSupabase } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth';
+import { anthropicRequestBase } from '@/lib/anthropic-model';
 
 export const maxDuration = 60;
 
@@ -30,7 +31,7 @@ export async function POST(request) {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
     const promptResponse = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      ...anthropicRequestBase('lyricVideoPrompt'),
       max_tokens: 400,
       messages: [
         {

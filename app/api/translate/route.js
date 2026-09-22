@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { translateRatelimit, checkRatelimit } from '@/lib/ratelimit';
 import { INPUT_LIMITS, validateLength } from '@/lib/validate-input';
+import { anthropicRequestBase } from '@/lib/anthropic-model';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder' });
 
@@ -59,7 +60,7 @@ export async function POST(request) {
     }
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      ...anthropicRequestBase('translate'),
       max_tokens: 1024,
       system:
         'Translate the Japanese text to natural English for international music curators. ' +

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { translateRatelimit, checkRatelimit } from '@/lib/ratelimit';
 import { INPUT_LIMITS, validateLength } from '@/lib/validate-input';
+import { anthropicRequestBase } from '@/lib/anthropic-model';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder' });
 
@@ -72,7 +73,7 @@ export async function POST(request) {
     }
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      ...anthropicRequestBase('epkTranslate'),
       max_tokens: FIELD_CONFIG[field].max_tokens,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: textJp }],

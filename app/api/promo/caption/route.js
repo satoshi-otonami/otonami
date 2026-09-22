@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { verifyToken } from '@/lib/auth';
 import { promoRatelimit, checkRatelimit } from '@/lib/ratelimit';
 import { INPUT_LIMITS, validateLength } from '@/lib/validate-input';
+import { anthropicRequestBase } from '@/lib/anthropic-model';
 
 export async function POST(request) {
   try {
@@ -90,7 +91,7 @@ RULES:
 - Do NOT include the JSON backticks or markdown formatting`;
 
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      ...anthropicRequestBase('promoCaption'),
       max_tokens: 1500,
       messages: [{ role: 'user', content: prompt }]
     });

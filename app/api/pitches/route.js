@@ -6,6 +6,7 @@ import { pitchSubmitRatelimit, checkRatelimit } from '@/lib/ratelimit';
 import { INPUT_LIMITS, validateLength } from '@/lib/validate-input';
 import { deadlineFromNow } from '@/lib/response-time';
 import { getAccountArtist, resolveAccountId } from '@/lib/db';
+import { anthropicRequestBase } from '@/lib/anthropic-model';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -20,7 +21,7 @@ async function ensureEnglishPitch(pitchContent, artistName, trackTitle) {
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
+      ...anthropicRequestBase('pitchSend'),
       max_tokens: 1024,
       messages: [{
         role: 'user',
@@ -49,7 +50,7 @@ ${pitchContent}`,
     if (stillHasJapanese) {
       console.warn('[pitches] First translation still contains Japanese, retrying...');
       const retry = await anthropic.messages.create({
-        model: 'claude-haiku-4-5',
+        ...anthropicRequestBase('pitchSend'),
         max_tokens: 1024,
         messages: [{
           role: 'user',

@@ -30,6 +30,14 @@ const SYSTEM_PROMPT =
   'leave Japanese characters in the output, and never invent or reinterpret a spelling. ' +
   'When a proper noun already appears in English elsewhere in the text, match that form ' +
   'consistently. ' +
+  'Do not make proper nouns more specific than the source — translate or romanize only ' +
+  'what is written, and never supply an official name, stage name, venue, or place name ' +
+  'that the source does not state. The "established English form" rule above applies ONLY ' +
+  'to names the source actually writes; it never licenses you to upgrade a generic ' +
+  'description into an official name. If the source describes something generically ' +
+  '(a stage, a venue, a district), keep it generic in English. Example: a source that ' +
+  'says only "the rookie stage at Fuji Rock" must stay "the rookie stage at Fuji Rock" — ' +
+  "do not replace it with that stage's official name, even if you know it. " +
   'Preserve ALL numbers, counts, and years exactly as in the source ' +
   '(e.g. 「SXSWに10回」 → "ten times at SXSW" or "10 times"; never add, drop, or ' +
   'reinterpret a count). Do not introduce facts, opinions, or detail not present in ' +

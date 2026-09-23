@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import AnimatedSection from '@/components/AnimatedSection';
 import CuratorMarquee from '@/components/landing/CuratorMarquee';
 import WhatsNew from '@/components/landing/WhatsNew';
+import LpCases from '@/components/landing/LpCases';
 import SavannahBanner from '@/components/SavannahBanner';
 import TrustBar from '@/components/landing/TrustBar';
 import RefundInbox from '@/components/landing/RefundInbox';
@@ -1183,6 +1184,9 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
 
       {/* ========== TRUST / CURATOR MARQUEE (DB-driven, data via server page props) ========== */}
       <CuratorMarquee data={curatorMarquee} lang={lang} />
+
+      {/* ========== RESULTS (verified outcomes; copy + publish flags in lib/lp-cases.js) ========== */}
+      <LpCases lang={lang} />
 
       {/* ========== WHAT'S NEW (site_updates, data via server page props, ISR) ========== */}
       <WhatsNew updates={siteUpdates} lang={lang} />

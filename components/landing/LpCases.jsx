@@ -19,6 +19,41 @@ const P = {
 
 const FONT = "'DM Sans', sans-serif";
 
+/* Same rotation as the curator marquee's initial-circle avatars */
+const AVATAR_COLORS = ['#FF6B4A', '#4ECDC4', '#A78BFA', '#FF3D6E'];
+
+function Initials({ name, size = 44 }) {
+  const initial = (name || '?').trim().charAt(0).toUpperCase();
+  const color = AVATAR_COLORS[[...(name || '')].reduce((n, ch) => n + ch.charCodeAt(0), 0) % AVATAR_COLORS.length];
+  return (
+    <span aria-hidden="true" style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0, background: color,
+      color: '#fff', fontSize: Math.round(size * 0.42), fontWeight: 700,
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {initial}
+    </span>
+  );
+}
+
+/* Round icon, or the initial circle when there is no image */
+function Avatar({ image, name, size = 44 }) {
+  if (!image) return <Initials name={name} size={size} />;
+  return (
+    <img src={image.src} alt={name} width={size} height={size} loading="lazy" decoding="async"
+      style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, display: 'block' }} />
+  );
+}
+
+/* Wide photo in a fixed-ratio frame */
+function Photo({ image, alt, className }) {
+  return (
+    <div className={className}>
+      <img src={image.src} alt={alt} width={image.width} height={image.height} loading="lazy" decoding="async" />
+    </div>
+  );
+}
+
 const pick = (v, lang) => (v ? v[lang] ?? v.ja : null);
 
 /* JA「a」「b」 / EN "a" and "b" */
@@ -52,10 +87,7 @@ function CuratorCard({ card, lang }) {
   return (
     <div className="lpc-card lpc-card--curator">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        {card.photoUrl && (
-          <img src={card.photoUrl} alt={card.name} width={44} height={44} loading="lazy"
-            style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }} />
-        )}
+        <Avatar image={card.photoUrl ? { src: card.photoUrl } : null} name={card.name} />
         <div>
           <h3 className="lpc-card__subject" style={{ margin: 0 }}>{card.name}</h3>
           <p className="lpc-card__meta">{pick(card.descriptor, lang)}</p>
@@ -77,16 +109,24 @@ function CuratorCard({ card, lang }) {
 function StoryCard({ story, lang }) {
   return (
     <div className="lpc-card lpc-story">
-      <p className="lpc-story__names">
-        <span>{story.artist}</span>
-        <span aria-hidden="true" style={{ color: P.accent, fontWeight: 400 }}>×</span>
-        <span>{story.curator}</span>
-      </p>
-      <p className="lpc-card__body lpc-story__body">{pick(story.body, lang)}</p>
-      <div className="lpc-links">
-        {story.links.map((l) => (
-          <ExternalLink key={l.href} href={l.href}>{pick(l.label, lang)}</ExternalLink>
-        ))}
+      {story.artistPhoto
+        ? <Photo image={story.artistPhoto} alt={story.artist} className="lpc-photo lpc-story__photo" />
+        : <div className="lpc-story__photo lpc-story__photo--empty"><Initials name={story.artist} size={72} /></div>}
+      <div className="lpc-story__text">
+        <p className="lpc-story__names">
+          <span>{story.artist}</span>
+          <span aria-hidden="true" style={{ color: P.accent, fontWeight: 400 }}>×</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <Avatar image={story.curatorIcon} name={story.curator} size={32} />
+            {story.curator}
+          </span>
+        </p>
+        <p className="lpc-card__body lpc-story__body">{pick(story.body, lang)}</p>
+        <div className="lpc-links">
+          {story.links.map((l) => (
+            <ExternalLink key={l.href} href={l.href}>{pick(l.label, lang)}</ExternalLink>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -95,7 +135,10 @@ function StoryCard({ story, lang }) {
 function ArtistCard({ card, lang }) {
   const named = card.resultNamed;
   return (
-    <div className="lpc-card">
+    <div className={`lpc-card${card.photo ? ' lpc-card--artist' : ''}`}>
+      {card.photo
+        ? <Photo image={card.photo} alt={card.name} className="lpc-photo lpc-artist__photo" />
+        : <Initials name={card.name} />}
       <h3 className="lpc-card__subject" style={{ margin: 0 }}>{card.name}</h3>
       <p className="lpc-card__tracks">{formatTracks(card.tracks, lang)}</p>
       <p className="lpc-card__body">{named ? pick(named, lang) : pick(card.result, lang)}</p>
@@ -119,7 +162,7 @@ export default function LpCases({ data, lang }) {
         .lpc-card__body { margin: 0; font-size: 14px; line-height: 1.8; color: ${P.textSec}; }
         .lpc-card__meta { margin: 2px 0 0; font-size: 12px; color: ${P.textSec}; }
         .lpc-card__tracks { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.6; color: ${P.text}; }
-        .lpc-story__names { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px;
+        .lpc-story__names { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
           font-size: 18px; font-weight: 700; color: ${P.text}; }
         .lpc-links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
         .lpc-link { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; font-size: 14px;
@@ -127,12 +170,22 @@ export default function LpCases({ data, lang }) {
         .lpc-link:hover { color: #a87a52; text-decoration: underline; }
         .lpc-quote { margin: 0; padding: 0; font-size: 14px; line-height: 1.8; color: ${P.text}; font-style: italic; }
         .lpc-quote cite { display: block; margin-top: 6px; font-size: 12px; font-style: normal; color: ${P.textSec}; }
+        .lpc-photo { overflow: hidden; background: #f1ece4; }
+        .lpc-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .lpc-card--artist { padding-top: 0; overflow: hidden; }
+        .lpc-artist__photo { margin: 0 -22px 6px; aspect-ratio: 16 / 9; }
+        .lpc-story { padding: 0; overflow: hidden; gap: 0; }
+        .lpc-story__photo { aspect-ratio: 3 / 2; }
+        .lpc-story__photo--empty { display: flex; align-items: center; justify-content: center; background: #f1ece4; }
+        .lpc-story__text { padding: 22px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
         .lpc-guarantee { background: ${P.dark}; border-radius: 16px; padding: 22px 24px; margin-top: 8px; }
         .lpc-guarantee p { margin: 0; font-size: 14px; line-height: 1.8; color: ${P.darkSub}; }
         @media (min-width: 769px) {
           .lpc-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
           .lpc-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .lpc-story { padding: 28px 32px; }
+          .lpc-story { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+          .lpc-story__photo { aspect-ratio: auto; min-height: 100%; }
+          .lpc-story__text { padding: 28px 32px; justify-content: center; }
           .lpc-story__body { font-size: 15px; }
           .lpc-heading { word-break: keep-all; }
         }

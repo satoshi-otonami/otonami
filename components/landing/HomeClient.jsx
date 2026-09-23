@@ -256,7 +256,7 @@ const EPK_PERK_IMG = '/epk-themes/epk-theme-editorial-dark.webp';
 /* ─────────────────────────────────────────
    Page
 ───────────────────────────────────────── */
-export default function HomeClient({ curatorMarquee, siteUpdates }) {
+export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
   const [lang, setLang] = useState('ja');
   const [menuOpen, setMenuOpen] = useState(false);
   const [loginMenuOpen, setLoginMenuOpen] = useState(false);
@@ -1186,7 +1186,7 @@ export default function HomeClient({ curatorMarquee, siteUpdates }) {
       <CuratorMarquee data={curatorMarquee} lang={lang} />
 
       {/* ========== RESULTS (verified outcomes; copy + publish flags in lib/lp-cases.js) ========== */}
-      <LpCases lang={lang} />
+      <LpCases data={lpCases} lang={lang} />
 
       {/* ========== WHAT'S NEW (site_updates, data via server page props, ISR) ========== */}
       <WhatsNew updates={siteUpdates} lang={lang} />

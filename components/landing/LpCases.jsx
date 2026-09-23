@@ -1,14 +1,9 @@
 'use client';
 
 import { DT as D } from '@/lib/design-tokens';
-import {
-  LP_CASES_INTRO,
-  GUARANTEE_NOTE,
-  visibleAnonCases,
-  visibleCuratorCards,
-  visibleStories,
-  visibleArtistCards,
-} from '@/lib/lp-cases';
+
+/* Data comes pre-filtered from the server (getPublishedLpCases in lib/lp-cases.js).
+   Do not import lib/lp-cases here — that would ship unpublished cards in the client bundle. */
 
 /* LP palette (matches How it works / For Artists light sections) */
 const P = {
@@ -53,7 +48,7 @@ function AnonCard({ item, lang }) {
 }
 
 function CuratorCard({ card, lang }) {
-  const quote = card.quote?.published ? card.quote : null;
+  const quote = card.quote;
   return (
     <div className="lpc-card lpc-card--curator">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -98,7 +93,7 @@ function StoryCard({ story, lang }) {
 }
 
 function ArtistCard({ card, lang }) {
-  const named = card.resultNamed?.published ? card.resultNamed : null;
+  const named = card.resultNamed;
   return (
     <div className="lpc-card">
       <h3 className="lpc-card__subject" style={{ margin: 0 }}>{card.name}</h3>
@@ -109,11 +104,9 @@ function ArtistCard({ card, lang }) {
   );
 }
 
-export default function LpCases({ lang }) {
-  const anon = visibleAnonCases();
-  const curators = visibleCuratorCards();
-  const stories = visibleStories();
-  const artists = visibleArtistCards();
+export default function LpCases({ data, lang }) {
+  if (!data) return null;
+  const { intro, guarantee, anon, curators, stories, artists } = data;
 
   return (
     <section id="results" style={{ background: P.bg, padding: '72px 0', scrollMarginTop: 90, fontFamily: FONT }}>
@@ -148,13 +141,13 @@ export default function LpCases({ lang }) {
       <div className="lpc-wrap">
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '3px', color: P.accent, textTransform: 'uppercase', marginBottom: 16 }}>
-            {pick(LP_CASES_INTRO.eyebrow, lang)}
+            {pick(intro.eyebrow, lang)}
           </div>
           <h2 className="lpc-heading" style={{ fontFamily: D.fHead, fontSize: 'clamp(26px, 4.5vw, 38px)', fontWeight: 700, color: P.text, lineHeight: 1.3, margin: '0 0 16px' }}>
-            {pick(LP_CASES_INTRO.heading, lang)}
+            {pick(intro.heading, lang)}
           </h2>
           <p style={{ maxWidth: 680, margin: '0 auto', fontSize: 15, lineHeight: 1.9, color: P.textSec }}>
-            {pick(LP_CASES_INTRO.lead, lang)}
+            {pick(intro.lead, lang)}
           </p>
         </div>
 
@@ -181,7 +174,7 @@ export default function LpCases({ lang }) {
         )}
 
         <div className="lpc-guarantee">
-          <p>{pick(GUARANTEE_NOTE, lang)}</p>
+          <p>{pick(guarantee, lang)}</p>
         </div>
       </div>
     </section>

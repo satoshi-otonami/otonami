@@ -12,6 +12,21 @@ const P = {
 
 const FONT = "'DM Sans', sans-serif";
 
+const KIND_LABEL = {
+  curator:      { ja: 'キュレーター', en: 'Curator' },
+  result:       { ja: '掲載実績', en: 'Result' },
+  announcement: { ja: 'お知らせ', en: 'News' },
+  media:        { ja: 'メディア', en: 'Media' },
+};
+
+// Links into otonami.io (or relative ones) stay in the same tab.
+function internalHref(url) {
+  if (!url) return null;
+  if (url.startsWith('/') || url.startsWith('#')) return url;
+  const m = /^https?:\/\/(?:www\.)?otonami\.io(\/[^\s]*)?$/.exec(url);
+  return m ? (m[1] || '/') : null;
+}
+
 const X_URL = 'https://x.com/otonami_io';
 const IG_URL = 'https://www.instagram.com/otonami.io/';
 
@@ -32,15 +47,19 @@ function formatDate(iso, lang) {
 function UpdateRow({ update, lang }) {
   const title = (lang === 'en' ? update.titleEn : update.titleJa) || update.titleEn || update.titleJa;
   const dateStr = formatDate(update.publishedAt, lang);
+  const kind = KIND_LABEL[update.kind] || KIND_LABEL.announcement;
+  const internal = internalHref(update.linkUrl);
   return (
     <li className="lp-wn-item">
-      <span className="lp-wn-date">{dateStr}</span>
+      <span className="lp-wn-meta">
+        <span className="lp-wn-date">{dateStr}</span>
+        <span className="lp-wn-kind">{lang === 'en' ? kind.en : kind.ja}</span>
+      </span>
       {update.linkUrl ? (
         <a
           className="lp-wn-title lp-wn-title--link"
-          href={update.linkUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={internal || update.linkUrl}
+          {...(internal ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
         >
           {title}
         </a>
@@ -62,7 +81,7 @@ export default function WhatsNew({ updates, lang }) {
           fontSize: 13, fontWeight: 600, color: P.eyebrow, textTransform: 'uppercase',
           letterSpacing: '2px', marginBottom: 20, fontFamily: FONT, textAlign: 'center',
         }}>
-          {lang === 'en' ? "What's New" : '最新の紹介・アップデート'}
+          {lang === 'en' ? "What's New" : 'OTONAMIの最新情報'}
         </p>
 
         <ul className="lp-wn-list">
@@ -95,9 +114,26 @@ export default function WhatsNew({ updates, lang }) {
           padding: 14px 4px;
           border-bottom: 1px solid ${P.border};
         }
+        .lp-wn-meta {
+          flex-shrink: 0;
+          width: 196px;
+          display: inline-flex;
+          align-items: baseline;
+          gap: 10px;
+        }
+        .lp-wn-kind {
+          font-family: ${FONT};
+          font-size: 11px;
+          font-weight: 600;
+          color: #8a5f31;
+          background: #f6efe5;
+          border-radius: 999px;
+          padding: 2px 8px;
+          white-space: nowrap;
+        }
         .lp-wn-date {
           flex-shrink: 0;
-          width: 108px;
+          width: 100px;
           font-family: ${FONT};
           font-size: 12.5px;
           font-weight: 600;
@@ -134,6 +170,7 @@ export default function WhatsNew({ updates, lang }) {
         .lp-wn-sociallink:hover { text-decoration: underline; }
         @media (max-width: 520px) {
           .lp-wn-item { flex-direction: column; gap: 3px; }
+          .lp-wn-meta { width: auto; }
           .lp-wn-date { width: auto; }
         }
       `}</style>

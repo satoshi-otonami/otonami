@@ -1,5 +1,7 @@
 'use client';
 
+import { Eyebrow } from '@/components/landing/SectionType';
+
 /* Light-section palette (section background is white, matching the marquee above) */
 const P = {
   card:   '#FDF9F2',
@@ -7,7 +9,6 @@ const P = {
   title:  '#1a1a1a',
   date:   '#a89f92',
   accent: '#c4956a',
-  eyebrow:'#999',
 };
 
 const FONT = "'DM Sans', sans-serif";
@@ -77,12 +78,9 @@ export default function WhatsNew({ updates, lang }) {
   return (
     <section style={{ background: '#ffffff', padding: '8px 0 44px' }}>
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 20px' }}>
-        <p style={{
-          fontSize: 13, fontWeight: 600, color: P.eyebrow, textTransform: 'uppercase',
-          letterSpacing: '2px', marginBottom: 20, fontFamily: FONT, textAlign: 'center',
-        }}>
+        <Eyebrow style={{ marginBottom: 20, textAlign: 'center' }}>
           {lang === 'en' ? "What's New" : 'OTONAMIの最新情報'}
-        </p>
+        </Eyebrow>
 
         <ul className="lp-wn-list">
           {updates.map(u => (

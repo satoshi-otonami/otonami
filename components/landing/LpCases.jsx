@@ -1,6 +1,6 @@
 'use client';
 
-import { DT as D } from '@/lib/design-tokens';
+import { Eyebrow, H2_LG } from '@/components/landing/SectionType';
 
 /* Data comes pre-filtered from the server (getPublishedLpCases in lib/lp-cases.js).
    Do not import lib/lp-cases here — that would ship unpublished cards in the client bundle. */
@@ -206,10 +206,8 @@ export default function LpCases({ data, lang }) {
 
       <div className="lpc-wrap">
         <div style={{ textAlign: 'center', marginBottom: 8 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '3px', color: P.accent, textTransform: 'uppercase', marginBottom: 16 }}>
-            {pick(intro.eyebrow, lang)}
-          </div>
-          <h2 className="lpc-heading" style={{ fontFamily: D.fHead, fontSize: 'clamp(26px, 4.5vw, 38px)', fontWeight: 700, color: P.text, lineHeight: 1.3, margin: '0 0 16px' }}>
+          <Eyebrow>{pick(intro.eyebrow, lang)}</Eyebrow>
+          <h2 className="lpc-heading" style={{ ...H2_LG, color: P.text, margin: '0 0 16px' }}>
             {pick(intro.heading, lang)}
           </h2>
           <p style={{ maxWidth: 680, margin: '0 auto', fontSize: 15, lineHeight: 1.9, color: P.textSec }}>

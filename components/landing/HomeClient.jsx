@@ -4,6 +4,7 @@ import AnimatedSection from '@/components/AnimatedSection';
 import CuratorMarquee from '@/components/landing/CuratorMarquee';
 import WhatsNew from '@/components/landing/WhatsNew';
 import LpCases from '@/components/landing/LpCases';
+import { Eyebrow, H2_LG, H2_SM } from '@/components/landing/SectionType';
 import SavannahBanner from '@/components/SavannahBanner';
 import TrustBar from '@/components/landing/TrustBar';
 import RefundInbox from '@/components/landing/RefundInbox';
@@ -60,7 +61,7 @@ const COPY = {
       editEpkCta: 'Edit your EPK',
     },
     how: {
-      label: 'FOR ARTISTS & LABELS',
+      label: 'How it works',
       title: 'Reach international media in 3 simple steps',
       steps: [
         { num: '1', t: 'Paste your track URL', d: 'Just paste a Spotify or YouTube link. Track details such as BPM are read automatically.' },
@@ -106,7 +107,7 @@ const COPY = {
       editEpkCta: 'EPKを編集する',
     },
     how: {
-      label: 'アーティスト・レーベルの方へ',
+      label: '使い方',
       title: '3ステップで、あなたの音楽を海外メディアに届けます',
       steps: [
         { num: '1', t: '曲のURLを入力', d: 'SpotifyやYouTubeのリンクを貼るだけ。楽曲の情報（BPMなど）を自動で読み取ります。' },
@@ -620,13 +621,14 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
           0%, 100% { transform: scale(1); opacity: 1; }
           50% { transform: scale(1.07); opacity: 0.82; }
         }
+        /* Eyebrow + heading match components/landing/SectionType.jsx (Eyebrow / H2_SM). */
         .epk-perk__eyebrow {
-          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
-          font-weight: 700; font-size: 12px; letter-spacing: 0.16em; color: #c4956a; text-transform: uppercase;
+          font-family: 'DM Sans', sans-serif;
+          font-weight: 700; font-size: 12px; letter-spacing: 0.18em; color: #8a5f31; text-transform: uppercase;
         }
         .epk-perk__h {
-          font-family: 'Sora','Noto Sans JP','Hiragino Kaku Gothic ProN',sans-serif;
-          font-weight: 800; font-size: clamp(22px, 3.4vw, 30px); line-height: 1.24;
+          font-family: ${D.fHead};
+          font-weight: 700; font-size: clamp(24px, 3.2vw, 30px); line-height: 1.3;
           color: #1a1a1a; margin: 0 0 12px; word-break: auto-phrase;
         }
         .epk-perk__lead {
@@ -989,8 +991,8 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
           <AnimatedSection>
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
               <div style={{ width: 40, height: 3, borderRadius: 2, background: 'linear-gradient(90deg, #c4956a, #e85d3a)', margin: '0 auto 16px' }} />
-              <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '3px', color: '#c4956a', textTransform: 'uppercase', marginBottom: 20 }}>{t.how.label}</div>
-              <h2 style={{ fontFamily: D.fHead, fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 700, color: L.text, lineHeight: 1.25 }}>{t.how.title}</h2>
+              <Eyebrow>{t.how.label}</Eyebrow>
+              <h2 style={{ ...H2_LG, color: L.text }}>{t.how.title}</h2>
             </div>
           </AnimatedSection>
 
@@ -1232,28 +1234,8 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
         }}>
           <div style={{ maxWidth: 900, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '6px 16px',
-                borderRadius: 9999,
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.15)',
-                marginBottom: 20,
-              }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c4956a' }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(240,237,230,0.7)', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                  {lang === 'en' ? 'For Curators & Media' : 'キュレーター・メディア向け'}
-                </span>
-              </div>
-              <h2 style={{
-                fontSize: 32,
-                fontWeight: 700,
-                marginBottom: 12,
-                color: '#f0ede6',
-                fontFamily: D.fHead,
-              }}>
+              {/* No eyebrow here: the heading already names the audience. */}
+              <h2 style={{ ...H2_LG, marginBottom: 12, color: '#f0ede6' }}>
                 {lang === 'en' ? 'For Curators & Media' : 'キュレーター・メディアの方へ'}
               </h2>
               <p style={{
@@ -1558,28 +1540,8 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
         }}>
           <div style={{ maxWidth: 900, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '6px 16px',
-                borderRadius: 9999,
-                background: 'rgba(196,149,106,0.1)',
-                border: '1px solid rgba(196,149,106,0.2)',
-                marginBottom: 20,
-              }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#c4956a' }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: '#c4956a', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                  {lang === 'en' ? 'For Artists & Labels' : 'アーティスト・レーベル向け'}
-                </span>
-              </div>
-              <h2 style={{
-                fontSize: 32,
-                fontWeight: 700,
-                color: '#1a1a1a',
-                marginBottom: 12,
-                fontFamily: D.fHead,
-              }}>
+              <Eyebrow>{lang === 'en' ? 'For Artists & Labels' : 'アーティスト・レーベル向け'}</Eyebrow>
+              <h2 style={{ ...H2_LG, color: '#1a1a1a', marginBottom: 12 }}>
                 {lang === 'en' ? 'Beyond distribution.' : '配信したその先へ。'}
               </h2>
               <p style={{
@@ -2153,14 +2115,7 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
           background: '#fff',
         }}>
           <div style={{ maxWidth: 700, margin: '0 auto' }}>
-            <h2 style={{
-              fontSize: 28,
-              fontWeight: 700,
-              textAlign: 'center',
-              marginBottom: 48,
-              color: '#1a1a1a',
-              fontFamily: D.fHead,
-            }}>
+            <h2 style={{ ...H2_SM, textAlign: 'center', marginBottom: 48, color: '#1a1a1a' }}>
               {lang === 'en' ? 'Frequently Asked Questions' : 'よくあるご質問'}
             </h2>
 

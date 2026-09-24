@@ -1,17 +1,9 @@
 'use client';
 
-/* ── DB type → display label (same mapping as /curators, app/curators/page.js) ── */
-const TYPE_LABEL = {
-  playlist: 'Playlist Curator',
-  blog: 'Media Outlet/Journalist',
-  media: 'Media Outlet/Journalist',
-  radio: 'Radio/Podcast',
-  label: 'Label/Management',
-  booking_agent: 'Booking Agent',
-  sync: 'Sync / Licensing',
-  management: 'Artist Management',
-  other: 'Curator',
-};
+import { Eyebrow } from '@/components/landing/SectionType';
+import { curatorDisplayName, curatorRegionLabel, curatorTypeLabel } from '@/lib/curator-labels';
+
+/* Name / type / region wording is shared with the What's New feed (lib/curator-labels.js). */
 
 /* Brand-color rotation for initial-circle avatars (no icon_url) */
 const AVATAR_COLORS = ['#FF6B4A', '#4ECDC4', '#A78BFA', '#FF3D6E'];
@@ -39,7 +31,7 @@ function Avatar({ curator, index }) {
       />
     );
   }
-  const initial = (curator.playlist || curator.name || '?').trim().charAt(0).toUpperCase();
+  const initial = (curatorDisplayName(curator) || '?').trim().charAt(0).toUpperCase();
   return (
     <span style={{
       width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
@@ -52,10 +44,11 @@ function Avatar({ curator, index }) {
   );
 }
 
-function Pill({ curator, index }) {
-  const typeLabel = TYPE_LABEL[curator.type] || curator.type || 'Curator';
-  const meta = curator.region ? `${curator.region} ・ ${typeLabel}` : typeLabel;
-  const displayName = curator.playlist || curator.name;
+function Pill({ curator, index, lang }) {
+  const typeLabel = curatorTypeLabel(curator.type, lang);
+  const region = curatorRegionLabel(curator.region, lang);
+  const meta = region ? `${region} ・ ${typeLabel}` : typeLabel;
+  const displayName = curatorDisplayName(curator);
   return (
     <a href="/curators" style={{
       display: 'inline-flex', alignItems: 'center', gap: 10,
@@ -72,7 +65,7 @@ function Pill({ curator, index }) {
   );
 }
 
-function MarqueeRow({ curators, reverse, duration, offset }) {
+function MarqueeRow({ curators, reverse, duration, offset, lang }) {
   // Content duplicated twice; the 0→-50% (or -50%→0) loop lands exactly on the seam.
   const doubled = [...curators, ...curators];
   return (
@@ -82,7 +75,7 @@ function MarqueeRow({ curators, reverse, duration, offset }) {
         style={{ animationDuration: `${duration}s` }}
       >
         {doubled.map((c, i) => (
-          <Pill key={i} curator={c} index={(i % curators.length) + offset} />
+          <Pill key={i} curator={c} index={(i % curators.length) + offset} lang={lang} />
         ))}
       </div>
     </div>
@@ -99,12 +92,7 @@ export default function CuratorMarquee({ data, lang }) {
   return (
     <section style={{ background: '#ffffff', padding: '48px 0 32px' }}>
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px', textAlign: 'center' }}>
-        <p style={{
-          fontSize: 13, fontWeight: 600, color: '#999', textTransform: 'uppercase',
-          letterSpacing: '2px', marginBottom: 20, fontFamily: FONT,
-        }}>
-          {lang === 'en' ? 'Trusted by' : '信頼と実績'}
-        </p>
+        <Eyebrow style={{ marginBottom: 20 }}>{lang === 'en' ? 'Trusted by' : '信頼と実績'}</Eyebrow>
 
         {hasData && (
           <>
@@ -128,8 +116,8 @@ export default function CuratorMarquee({ data, lang }) {
             </p>
 
             <div className="lp-cm-mask" style={{ marginBottom: 20 }}>
-              <MarqueeRow curators={topHalf} reverse={false} duration={38} offset={0} />
-              <MarqueeRow curators={bottomHalf} reverse duration={44} offset={topHalf.length} />
+              <MarqueeRow curators={topHalf} reverse={false} duration={38} offset={0} lang={lang} />
+              <MarqueeRow curators={bottomHalf} reverse duration={44} offset={topHalf.length} lang={lang} />
             </div>
           </>
         )}

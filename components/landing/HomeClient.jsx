@@ -1380,7 +1380,6 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
                     : '主要部分をAIで生成した楽曲はピッチできません（アーティストの申告に基づきます）。',
                 },
                 {
-                  num: lang === 'en' ? '3 min' : '3分',
                   title: lang === 'en' ? 'Quick sign-up' : '登録はすぐ完了',
                   desc: lang === 'en'
                     ? 'Set your genres, moods, and preferences. Start receiving pitches.'
@@ -1536,7 +1535,7 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
       <AnimatedSection>
         <section id="for-artists" className="for-artists-section" style={{
           padding: '80px 20px',
-          background: '#f8f7f4',
+          background: '#faf8f5',
         }}>
           <div style={{ maxWidth: 900, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
@@ -1875,47 +1874,6 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
               </p>
             </div>
 
-            {/* Artist live photo — emotional connection */}
-            <div className="live-photo" style={{
-              marginBottom: 32,
-              borderRadius: 16,
-              overflow: 'hidden',
-              position: 'relative',
-            }}>
-              <img
-                src="/images/stage-performance.jpg"
-                alt={lang === 'en'
-                  ? 'Japanese indie band performing on international stage'
-                  : '海外ステージで演奏する日本のインディーバンド'}
-                style={{
-                  width: '100%',
-                  display: 'block',
-                  borderRadius: 16,
-                }}
-              />
-              <div style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                padding: '40px 20px 20px',
-                background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
-                borderRadius: '0 0 16px 16px',
-              }}>
-                <p style={{
-                  fontSize: 18,
-                  color: '#fff',
-                  margin: 0,
-                  textAlign: 'center',
-                  fontWeight: 700,
-                  letterSpacing: '0.5px',
-                }}>
-                  {lang === 'en'
-                    ? 'Your music could be on stages like these.'
-                    : 'あなたの音楽も、こんなステージに届けられる。'}
-                </p>
-              </div>
-            </div>
 
             {/* PRELAUNCH: HIDDEN — dashboard screenshot */}
             {/*

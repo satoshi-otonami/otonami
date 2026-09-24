@@ -129,7 +129,9 @@ function StoryCard({ story, lang }) {
           <span aria-hidden="true" style={{ color: P.accent, fontWeight: 400 }}>×</span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <Avatar image={story.curatorIcon} name={story.curator} size={22} />
-            {story.curator}
+            {story.curatorLink
+              ? <a href={story.curatorLink} target="_blank" rel="noopener noreferrer" className="lpc-namelink">{story.curator}</a>
+              : story.curator}
           </span>
         </>
       )}
@@ -180,6 +182,9 @@ export default function LpCases({ data, lang }) {
         .lpc-link { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; font-size: 13px;
           font-weight: 600; color: ${P.accent}; text-decoration: none; }
         .lpc-link:hover { color: #a87a52; text-decoration: underline; }
+        .lpc-namelink { color: inherit; text-decoration: underline; text-decoration-color: ${P.accent};
+          text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+        .lpc-namelink:hover { color: ${P.accent}; }
         .lpc-photo { overflow: hidden; background: #f1ece4; }
         .lpc-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
         .lpc-featured { padding: 0; overflow: hidden; gap: 0; }

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createHash } from 'node:crypto';
 import { getServiceSupabase } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth';
-import { isSeedCurator } from '@/lib/curator-visibility';
+import { isTestCurator } from '@/lib/curator-visibility';
 
 export const dynamic = 'force-dynamic';
 
@@ -112,7 +112,7 @@ export async function GET(request) {
     // Seed/staff/test curators are excluded from artist-facing lists entirely
     // (they used to slip through and could receive real pitches). Redundant with
     // the SQL filter above by design — a second guard on the same source of truth.
-    const visible = (data || []).filter(c => !isSeedCurator(c) && c.is_paused !== true);
+    const visible = (data || []).filter(c => !isTestCurator(c) && c.is_paused !== true);
     // Filter out curators with low response rate (5+ pitches received, <50% responded).
     // Note these columns are unmaintained (all zero today), so this has never
     // actually fired — kept as-is to avoid changing behaviour in a security change.

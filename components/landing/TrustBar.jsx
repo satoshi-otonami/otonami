@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { RESPONSE_WINDOW_DAYS } from '@/lib/pricing';
 
 /**
  * The four things a first-time visitor needs settled before they will read
@@ -11,8 +10,8 @@ import { RESPONSE_WINDOW_DAYS } from '@/lib/pricing';
  *
  * The curator figure is never a literal. Pass `curatorCount` when the page
  * already has it server-side (the landing page does, via the ISR marquee);
- * otherwise this fetches /api/curators/count, which applies the same is_seed
- * predicate as /api/curators/list.
+ * otherwise this fetches /api/curators/count, which applies the same
+ * isPublicCurator() predicate as /api/curators/list and the landing page.
  *
  * Colours are solid, never alpha. An earlier version used muted tokens
  * (rgba(240,237,230,0.62) / #6b6560) which dropped to 2.5:1 the moment the
@@ -56,8 +55,8 @@ export default function TrustBar({ curatorCount = null, lang = 'ja', tone = 'dar
         </svg>
       ),
       label: isJa
-        ? `${RESPONSE_WINDOW_DAYS}日以内に返信・なければクレジット自動返却`
-        : `A reply within ${RESPONSE_WINDOW_DAYS} days, or your credits come back automatically`,
+        ? '期限内に返信がなければクレジット自動返却'
+        : 'No reply by the deadline? Your credits come back automatically',
     },
     {
       key: 'nosub',

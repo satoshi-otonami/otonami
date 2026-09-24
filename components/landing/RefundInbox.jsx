@@ -1,7 +1,5 @@
 'use client';
 
-import { RESPONSE_WINDOW_DAYS } from '@/lib/pricing';
-
 /**
  * Static inbox mock for the guarantee section.
  *
@@ -21,12 +19,12 @@ export default function RefundInbox({ lang = 'ja' }) {
       tone: 'muted',
       from: isJa ? 'OTONAMI' : 'OTONAMI',
       subject: isJa
-        ? `${RESPONSE_WINDOW_DAYS}日経過・クレジットを返却しました`
-        : `${RESPONSE_WINDOW_DAYS} days passed — your credits are back`,
+        ? '回答期限切れ・クレジットを返却しました'
+        : 'Response window closed — your credits are back',
       preview: isJa
         ? '返信がなかったため、使用分は自動で残高に戻っています。'
         : 'No reply came in, so what you spent went back to your balance automatically.',
-      when: isJa ? `${RESPONSE_WINDOW_DAYS}日後` : `Day ${RESPONSE_WINDOW_DAYS}`,
+      when: isJa ? '期限後' : 'After the deadline',
     },
     {
       key: 'feedback',
@@ -55,8 +53,8 @@ export default function RefundInbox({ lang = 'ja' }) {
       role="img"
       aria-label={
         isJa
-          ? `受信箱のイメージ。${RESPONSE_WINDOW_DAYS}日経過によるクレジット返却、フィードバック、掲載の提案の3件。`
-          : `Illustrative inbox: a ${RESPONSE_WINDOW_DAYS}-day credit return, a feedback reply, and an offer.`
+          ? '受信箱の表示イメージ（文面は例です）。回答期限切れによるクレジット返却、フィードバック、掲載の提案の3件。'
+          : 'Illustrative inbox (sample wording): a credit return after the response window closed, a feedback reply, and an offer.'
       }
       style={{
         background: 'rgba(255,255,255,0.04)',
@@ -82,6 +80,9 @@ export default function RefundInbox({ lang = 'ja' }) {
           <rect x="1.5" y="3" width="13" height="10" rx="2" /><path d="M1.5 5l6.5 4 6.5-4" />
         </svg>
         {isJa ? '送信後に届くもの' : 'What lands after you send'}
+      </div>
+      <div style={{ padding: '6px 16px 0', fontSize: 11, color: '#a5a199' }}>
+        {isJa ? '表示イメージ（文面は例です）' : 'Illustration (sample wording)'}
       </div>
 
       {rows.map((r, i) => (

@@ -110,11 +110,21 @@ export default function CuratorMarquee({ data, lang }) {
           <>
             {/* Dynamic stat line — numbers come from the DB, never hardcoded */}
             <p style={{ fontSize: 16, color: '#64748b', marginBottom: 24, fontFamily: FONT }}>
-              <strong style={{ color: '#c4956a', fontWeight: 700 }}>{data.count}</strong> curators
-              &nbsp;・&nbsp;
-              listening worldwide
-              &nbsp;—&nbsp;
-              {lang === 'en' ? 'Recently joined curators' : '最近参加したキュレーター'}
+              {lang === 'en' ? (
+                <>
+                  <strong style={{ color: '#c4956a', fontWeight: 700 }}>{data.count}</strong> curators
+                  &nbsp;・&nbsp;
+                  listening worldwide
+                  &nbsp;—&nbsp;
+                  Recently joined curators
+                </>
+              ) : (
+                <>
+                  キュレーター<strong style={{ color: '#c4956a', fontWeight: 700 }}>{data.count}</strong>組
+                  &nbsp;—&nbsp;
+                  最近参加したキュレーター
+                </>
+              )}
             </p>
 
             <div className="lp-cm-mask" style={{ marginBottom: 20 }}>

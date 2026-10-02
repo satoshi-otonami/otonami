@@ -53,6 +53,8 @@ function Photo({ image, alt, className }) {
 }
 
 const pick = (v, lang) => (v ? v[lang] ?? v.ja : null);
+/* Names are a plain string, or { ja, en } when the artist goes by a different name in each language */
+const pickName = (v, lang) => (typeof v === 'string' ? v : pick(v, lang));
 
 /* JA「a」「b」 / EN "a" and "b" */
 function formatTracks(tracks, lang) {
@@ -108,8 +110,8 @@ function ArtistCard({ card, lang }) {
   return (
     <FeaturedCard
       photo={card.photo}
-      alt={card.name}
-      names={card.name}
+      alt={pickName(card.name, lang)}
+      names={pickName(card.name, lang)}
       tracks={card.tracks}
       result={named ? pick(named, lang) : pick(card.result, lang)}
       links={named?.link ? [{ href: named.link, label: 'NEO-CITY POP' }] : []}
@@ -205,6 +207,7 @@ export default function LpCases({ data, lang }) {
         .lpc-note a:hover { text-decoration: underline; }
         @media (min-width: 769px) {
           .lpc-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+          .lpc-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
           .lpc-heading { word-break: keep-all; }
         }
       `}</style>
@@ -223,7 +226,8 @@ export default function LpCases({ data, lang }) {
         {/* ① Named results, same size and shape. Artist cards first, the
             artist × curator story last (ROUTE14band closes the row). */}
         {(artists.length > 0 || stories.length > 0) && (
-          <div className="lpc-grid lpc-grid--3">
+          // Four cards would leave one alone on a second row of three, so go 2×2 instead
+          <div className={`lpc-grid ${artists.length + stories.length === 4 ? 'lpc-grid--2' : 'lpc-grid--3'}`}>
             {artists.map((card) => <ArtistCard key={card.id} card={card} lang={lang} />)}
             {stories.map((story) => <StoryCard key={story.id} story={story} lang={lang} />)}
           </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { authFetch, ApiError } from '@/lib/api-client';
+import ReplyAssist from '@/components/ReplyAssist';
 import { externalHref } from '@/lib/url';
 import { evaluateMatch, excludedGenresLabel, MATCH_INSUFFICIENT_LABEL } from '@/lib/match-score';
 
@@ -947,7 +948,14 @@ export default function ArtistDashboard() {
                       {pitch.feedback_message && (
                         <div style={{ marginTop: 10, padding: 12, background: THEME.bg, borderRadius: 8, borderLeft: `3px solid ${THEME.gold}` }}>
                           <p style={{ fontSize: 12, color: THEME.textMuted, marginBottom: 4, fontFamily: THEME.font }}>{pitch.curator_name} からのフィードバック</p>
-                          <p style={{ fontSize: 14, color: THEME.text, lineHeight: 1.5, margin: 0, fontFamily: THEME.font }}>{pitch.feedback_message}</p>
+                          <p style={{ fontSize: 14, color: THEME.text, lineHeight: 1.5, margin: 0, fontFamily: THEME.font }}>{pitch.feedback_ja || pitch.feedback_message}</p>
+                          {pitch.feedback_ja && (
+                            <details style={{ marginTop: 6 }}>
+                              <summary style={{ cursor: 'pointer', fontSize: 11, color: THEME.gold, fontWeight: 600, fontFamily: THEME.font }}>原文を表示 / Show original</summary>
+                              <p style={{ fontSize: 13, color: THEME.textMuted, lineHeight: 1.5, margin: '4px 0 0', fontFamily: THEME.font }}>{pitch.feedback_message}</p>
+                            </details>
+                          )}
+                          <ReplyAssist pitchId={pitch.id} curatorName={pitch.curator_name} />
                         </div>
                       )}
                       {pitch.placement_url && (
@@ -1308,10 +1316,17 @@ export default function ArtistDashboard() {
                               {trackPitches.filter(p => p.feedback_message).map(p => (
                                 <div key={`fb-${p.id}`} style={{ marginTop: 8, padding: 10, background: THEME.card, borderRadius: 8, borderLeft: `3px solid ${THEME.gold}` }}>
                                   <p style={{ fontSize: 11, color: THEME.textMuted, margin: '0 0 2px', fontFamily: THEME.font }}>{p.curator_name}:</p>
-                                  <p style={{ fontSize: 13, color: THEME.text, lineHeight: 1.5, margin: 0, fontFamily: THEME.font }}>{p.feedback_message}</p>
+                                  <p style={{ fontSize: 13, color: THEME.text, lineHeight: 1.5, margin: 0, fontFamily: THEME.font }}>{p.feedback_ja || p.feedback_message}</p>
+                                  {p.feedback_ja && (
+                                    <details style={{ marginTop: 4 }}>
+                                      <summary style={{ cursor: 'pointer', fontSize: 11, color: THEME.gold, fontWeight: 600, fontFamily: THEME.font }}>原文を表示 / Show original</summary>
+                                      <p style={{ fontSize: 12, color: THEME.textMuted, lineHeight: 1.5, margin: '4px 0 0', fontFamily: THEME.font }}>{p.feedback_message}</p>
+                                    </details>
+                                  )}
                                   {p.placement_url && (
                                     <a href={externalHref(p.placement_url)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: THEME.gold, display: 'block', marginTop: 4 }}>✓ {p.placement_url}</a>
                                   )}
+                                  <ReplyAssist pitchId={p.id} curatorName={p.curator_name} />
                                 </div>
                               ))}
                             </div>

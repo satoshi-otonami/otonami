@@ -15,6 +15,7 @@ import {
   shouldCreateEarning,
   writeCuratorResponse,
 } from '@/lib/pitch-closure';
+import { translateToJapanese } from '@/lib/translate-ja';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-otonami-secret-change-me'
@@ -78,6 +79,7 @@ async function sendFeedbackNotification(pitch, { closed = false } = {}) {
   const safeCuratorName = escapeHtml(curatorName);
   const safeSubject = escapeHtml(subject);
   const safeFeedback = escapeHtml(pitch.feedback_message);
+  const safeFeedbackJa = escapeHtml(pitch.feedback_ja);
   const safePlacementUrl = escapeHtml(pitch.placement_url);
   const safePlacementPlatform = escapeHtml(pitch.placement_platform);
   const safeCuratorEmail = escapeHtml(curatorEmail);
@@ -120,6 +122,12 @@ async function sendFeedbackNotification(pitch, { closed = false } = {}) {
         <div style="background:#13132a;border:1px solid #1e1e3a;border-radius:10px;padding:16px 18px;margin-bottom:20px;">
           <div style="color:#555;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:8px;">FEEDBACK / フィードバック</div>
           <div style="color:#ccc;font-size:14px;line-height:1.7;">${safeFeedback}</div>
+          ${safeFeedbackJa ? `
+          <div style="border-top:1px solid #1e1e3a;margin-top:12px;padding-top:12px;">
+            <div style="color:#555;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:8px;">和訳（自動翻訳）</div>
+            <div style="color:#ccc;font-size:14px;line-height:1.7;">${safeFeedbackJa}</div>
+          </div>
+          ` : ''}
         </div>
         ` : ''}
 
@@ -172,7 +180,7 @@ async function sendFeedbackNotification(pitch, { closed = false } = {}) {
       replyTo: curatorEmail || 'info@otonami.io',
       subject: `OTONAMI — ${curatorName} responded to your pitch "${subject}"`,
       html,
-      text: `${curatorName} responded to your pitch "${subject}".\n\nStatus: ${sc.label}\n${closed ? `\n${CLOSED_RESPONSE_ARTIST_NOTE_TEXT}\n` : ''}${pitch.feedback_message ? `\nFeedback: ${pitch.feedback_message}\n` : ''}${pitch.placement_url ? `\nPlacement: ${pitch.placement_url}\n` : ''}${curatorEmail ? `\nReply directly to ${curatorName}: ${curatorEmail}\n` : ''}${curatorContactUrl ? `Contact: ${curatorContactUrl}\n` : ''}\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
+      text: `${curatorName} responded to your pitch "${subject}".\n\nStatus: ${sc.label}\n${closed ? `\n${CLOSED_RESPONSE_ARTIST_NOTE_TEXT}\n` : ''}${pitch.feedback_message ? `\nFeedback: ${pitch.feedback_message}\n` : ''}${pitch.feedback_ja ? `\n和訳（自動翻訳）: ${pitch.feedback_ja}\n` : ''}${pitch.placement_url ? `\nPlacement: ${pitch.placement_url}\n` : ''}${curatorEmail ? `\nReply directly to ${curatorName}: ${curatorEmail}\n` : ''}${curatorContactUrl ? `Contact: ${curatorContactUrl}\n` : ''}\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
       headers: {
         'List-Unsubscribe': '<mailto:info@otonami.io?subject=unsubscribe>',
       },
@@ -320,7 +328,15 @@ export async function PATCH(request, { params }) {
 
   // 3. 認可済み — 更新
   const updates = { status };
-  if (feedback_message) updates.feedback_message = feedback_message;
+  if (feedback_message) {
+    updates.feedback_message = feedback_message;
+    // 英文フィードバックの和訳を保存時に1回だけ生成して併記（表示のたびに
+    // 翻訳しない）。原文が日本語なら null。翻訳失敗も null（原文表示に
+    // フォールバック）で、送信自体は絶対に止めない。
+    // レスポンスを返す前に await する: Vercel では関数 return 後の
+    // detached promise が殺されるため、ここで待つのが唯一確実。
+    updates.feedback_ja = await translateToJapanese(feedback_message, 'feedback');
+  }
   if (status === 'accepted' && normalizedPlacementUrl) {
     updates.placement_url = normalizedPlacementUrl;
     if (placement_platform) updates.placement_platform = placement_platform;
@@ -333,6 +349,7 @@ export async function PATCH(request, { params }) {
   if (status === 'sent') {
     updates.responded_at = null;
     updates.feedback_message = null;
+    updates.feedback_ja = null;
   }
   // Undo of an accepted or refunded pitch is refused with 409 here; see
   // lib/pitch-closure.js.

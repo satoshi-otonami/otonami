@@ -2228,7 +2228,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
                   {acc > 0 && <span style={{background:'rgba(196,149,106,0.12)',border:'1px solid rgba(196,149,106,0.25)',color:'#c4956a',fontSize:'0.62rem',fontWeight:600,padding:'1px 8px',borderRadius:999}}>{acc} placement{acc>1?'s':''}</span>}
                 </div>;
               })()}
-              {c.bio && <p style={{fontSize:14,color:'#9a958e',margin:'0 0 10px',lineHeight:1.5}}>{c.bio.length>80?c.bio.substring(0,80)+'…':c.bio}</p>}
+              {(c.bioJa || c.bio) && <p style={{fontSize:14,color:'#9a958e',margin:'0 0 10px',lineHeight:1.5}}>{(c.bioJa||c.bio).length>80?(c.bioJa||c.bio).substring(0,80)+'…':(c.bioJa||c.bio)}</p>}
               {c.matchExcludedLabel && <div style={{fontSize:'0.66rem',color:'#dc2626',background:'rgba(239,68,68,0.06)',border:'1px solid rgba(239,68,68,0.18)',borderRadius:8,padding:'4px 10px',marginBottom:8,display:'inline-block'}}>{c.matchExcludedLabel}</div>}
               {ml && !c.matchExcludedLabel && c.matchReasons?.length > 0 && <div style={{fontSize:'0.62rem',color:'#c4956a',marginBottom:8}}>{c.matchReasons.slice(0,2).join(' · ')}</div>}
               <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
@@ -2428,8 +2428,12 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
               );
             })()}
 
-            {/* Bio */}
-            {dc.bio && <p style={{fontSize:14,color:'#6b6560',lineHeight:1.7,margin:0}}>{dc.bio}</p>}
+            {/* Bio — 和訳があれば和訳を主表示し、原文はトグルで */}
+            {(dc.bioJa || dc.bio) && <p style={{fontSize:14,color:'#6b6560',lineHeight:1.7,margin:0}}>{dc.bioJa || dc.bio}</p>}
+            {dc.bioJa && dc.bio && <details>
+              <summary style={{cursor:'pointer',fontSize:12,color:'#c4956a',fontWeight:600}}>原文を表示 / Show original</summary>
+              <p style={{fontSize:13,color:'#9a958e',lineHeight:1.7,margin:'6px 0 0'}}>{dc.bio}</p>
+            </details>}
 
             {/* Submission guidelines — curator-authored. pre-line keeps the
                 paragraph breaks they typed without preserving stray spaces. */}
@@ -4100,7 +4104,11 @@ function PitchDetailModal({pitch, curators, savePitches, allPitches, onClose, no
         {activeTab==='feedback' && <div>
           {pitch.feedbackMessage ? <>
             <div style={{fontWeight:700,fontSize:'0.82rem',marginBottom:8,color:'#1a1a1a'}}>{pitch.curatorName}からのフィードバック</div>
-            <div style={{background:'#f0ede6',borderRadius:12,padding:'1rem',fontSize:'0.85rem',lineHeight:1.7,color:'#6b6560',marginBottom:10}}>{pitch.feedbackMessage}</div>
+            <div style={{background:'#f0ede6',borderRadius:12,padding:'1rem',fontSize:'0.85rem',lineHeight:1.7,color:'#6b6560',marginBottom:pitch.feedbackMessageJa?6:10}}>{pitch.feedbackMessageJa || pitch.feedbackMessage}</div>
+            {pitch.feedbackMessageJa && <details style={{marginBottom:10}}>
+              <summary style={{cursor:'pointer',fontSize:'0.72rem',color:'#c4956a',fontWeight:600}}>原文を表示 / Show original</summary>
+              <div style={{background:'#f8f7f4',borderRadius:10,padding:'0.8rem',fontSize:'0.8rem',lineHeight:1.6,color:'#9a958e',marginTop:6}}>{pitch.feedbackMessage}</div>
+            </details>}
             {pitch.placementUrl && <div style={{background:'rgba(196,149,106,0.06)',borderRadius:10,padding:'0.8rem',border:'1px solid rgba(196,149,106,0.25)',fontSize:'0.82rem',color:'#c4956a',marginBottom:8}}>
               <div style={{fontWeight:700,marginBottom:4}}>✓ 掲載済み{pitch.placementPlatform ? ` — ${pitch.placementPlatform}` : ''}</div>
               <a href={externalHref(pitch.placementUrl)} target="_blank" rel="noopener noreferrer" style={{color:'#2563eb',fontSize:'0.78rem',wordBreak:'break-all'}}>{pitch.placementUrl}</a>
@@ -4355,7 +4363,11 @@ function Tracking({pitches, curators, notify, savePitches, allPitches, refreshPi
                 <div style={{fontWeight:700,fontSize:"0.78rem",marginBottom:6,color:['accepted','interested'].includes(p.status)?"#c4956a":"#1a1a1a"}}>
                   {['accepted','interested'].includes(p.status)?"✓":"—"} {p.curatorName}からのフィードバック
                 </div>
-                <div style={{fontSize:"0.82rem",lineHeight:1.6,color:"#6b6560"}}>{p.feedbackMessage}</div>
+                <div style={{fontSize:"0.82rem",lineHeight:1.6,color:"#6b6560"}}>{p.feedbackMessageJa || p.feedbackMessage}</div>
+                {p.feedbackMessageJa && <details style={{marginTop:6}}>
+                  <summary style={{cursor:'pointer',fontSize:'0.7rem',color:'#c4956a',fontWeight:600}}>原文を表示 / Show original</summary>
+                  <div style={{fontSize:"0.78rem",lineHeight:1.6,color:"#9a958e",marginTop:4}}>{p.feedbackMessage}</div>
+                </details>}
               </div>
             ) : (
               ['feedback','accepted','interested','declined'].includes(p.status)

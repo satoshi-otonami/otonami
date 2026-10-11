@@ -34,6 +34,8 @@ The actual Supabase columns differ from schema.sql:
 - pitch_id type → TEXT (not UUID)
 - paypal_email → actual column is `payment_info`
 - payment_method column added (TEXT): PayPal / Wise / Bank Transfer
+- pitches.feedback_ja (TEXT, 2026-10-11): auto-JA translation of curator feedback, generated server-side on save (lib/translate-ja.js)
+- curators.bio_ja (TEXT, 2026-10-11): auto-JA translation of curator bio, generated on register/update; backfill via scripts/backfill-ja.mjs
 
 Curator earnings: tier × ¥160 × 0.7 (accepted) or tier × ¥160 × 0.5 (feedback/declined)
 JWT contains curator_id; old tokens fall back to email lookup.

@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 import crypto from 'crypto';
 import { sanitizeResponseTime } from '@/lib/response-time';
+import { translateToJapanese } from '@/lib/translate-ja';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-otonami-secret-change-me'
@@ -95,6 +96,9 @@ export async function POST(request) {
         url: form.url || null,
         genres: form.genres || [],
         bio: form.bio || null,
+        // 紹介文の和訳（/studioで日本のアーティスト向けに主表示）。
+        // 英文のみ翻訳・失敗時は null（表示側が原文にフォールバック）。
+        bio_ja: form.bio ? await translateToJapanese(form.bio, 'curator-bio') : null,
         followers: parseInt(form.followers) || 0,
         region: form.region || 'Global',
         payment_method: form.paymentMethod || (form.paypalEmail ? 'paypal' : null),
@@ -278,6 +282,10 @@ export async function PUT(request) {
     // '' and wipe real text. For these free-text columns '' means "not sent".
     for (const key of ['bio', 'submission_guidelines']) {
       if (updateData[key] === '') delete updateData[key];
+    }
+    // 紹介文が変わったら和訳も作り直す（古い和訳が残ると実態と食い違う）。
+    if (typeof updateData.bio === 'string' && updateData.bio.trim()) {
+      updateData.bio_ja = await translateToJapanese(updateData.bio, 'curator-bio');
     }
     if (updateData.name !== undefined) {
       const trimmed = (updateData.name || '').trim();

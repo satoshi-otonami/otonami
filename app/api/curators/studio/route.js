@@ -46,6 +46,7 @@ function mapCurator(c, stat) {
     url: c.url,
     genres: c.genres || [],
     bio: c.bio,
+    bioJa: c.bio_ja || null,
     followers: c.followers,
     region: c.region,
     icon: c.icon,
@@ -95,7 +96,7 @@ export async function GET(request) {
     const { data, error } = await db
       .from('curators')
       .select(
-        'id,name,email,type,playlist,url,genres,bio,followers,region,icon,icon_url,' +
+        'id,name,email,type,playlist,url,genres,bio,bio_ja,followers,region,icon,icon_url,' +
         'accepts,tags,tier,is_seed,is_paused,preferred_moods,similar_artists,' +
         'preferred_artists,rejected_genres,open_to_all_genres,playlist_url,' +
         'response_time,opportunities,preferred_attributes,submission_guidelines,' +

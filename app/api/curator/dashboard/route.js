@@ -8,6 +8,7 @@ import { jwtVerify } from 'jose';
 import { Resend } from 'resend';
 import { escapeHtml } from '@/lib/html-escape';
 import { normalizePlacementUrl } from '@/lib/url-normalize';
+import { translateToJapanese } from '@/lib/translate-ja';
 import {
   RESPONSE_STATUSES,
   CLOSED_RESPONSE_ARTIST_NOTE_TEXT,
@@ -153,7 +154,15 @@ export async function PATCH(request) {
 
     // 3. 認可済み — 更新
     const updates = { status };
-    if (feedback_message) updates.feedback_message = feedback_message;
+    if (feedback_message) {
+      updates.feedback_message = feedback_message;
+      // 英文フィードバックの和訳を保存時に1回だけ生成（bfd1982と同方式。
+      // ピッチ詳細PATCHには配線済みだったが、dashboard経由の応答は
+      // ここを通るため未翻訳のまま保存されていた — 2026-10-12修正）。
+      // 原文が日本語なら null。翻訳失敗も null（原文表示フォールバック）で、
+      // 応答の保存自体は絶対に止めない。Vercel対策でレスポンス前に await。
+      updates.feedback_ja = await translateToJapanese(feedback_message, 'feedback');
+    }
     if (status === 'accepted' && normalizedPlacementUrl) {
       updates.placement_url = normalizedPlacementUrl;
       if (placement_platform) updates.placement_platform = placement_platform;
@@ -166,6 +175,7 @@ export async function PATCH(request) {
     if (status === 'sent') {
       updates.responded_at = null;
       updates.feedback_message = null;
+      updates.feedback_ja = null;
     }
     // Undo of an accepted or refunded pitch is refused with 409 here; see
     // lib/pitch-closure.js.
@@ -254,6 +264,7 @@ export async function PATCH(request) {
       const safeCuratorName = escapeHtml(data.curator_name || 'A curator');
       const safeSubject = escapeHtml(data.subject || '');
       const safeFeedback = escapeHtml(data.feedback_message);
+      const safeFeedbackJa = escapeHtml(data.feedback_ja);
       const safeUrl = escapeHtml(data.placement_url);
       const safeCuratorEmail = escapeHtml(curatorEmail);
       const safeCuratorContactUrl = escapeHtml(curatorContactUrl);
@@ -263,7 +274,7 @@ export async function PATCH(request) {
         to: [data.artist_email],
         replyTo: curatorEmail || 'info@otonami.io',
         subject: `OTONAMI — ${data.curator_name || 'A curator'} responded to your pitch`,
-        text: `${data.curator_name || 'A curator'} responded to your pitch "${data.subject || ''}".\n\nStatus: ${statusLabel}${closed ? `\n\n${CLOSED_RESPONSE_ARTIST_NOTE_TEXT}` : ''}${data.feedback_message ? `\n\nFeedback: ${data.feedback_message}` : ''}${data.placement_url ? `\n\nPlacement: ${data.placement_url}` : ''}${curatorEmail ? `\n\nReply directly to ${data.curator_name || 'the curator'}: ${curatorEmail}` : ''}${curatorContactUrl ? `\nContact: ${curatorContactUrl}` : ''}\n\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
+        text: `${data.curator_name || 'A curator'} responded to your pitch "${data.subject || ''}".\n\nStatus: ${statusLabel}${closed ? `\n\n${CLOSED_RESPONSE_ARTIST_NOTE_TEXT}` : ''}${data.feedback_message ? `\n\nFeedback: ${data.feedback_message}` : ''}${data.feedback_ja ? `\n\n和訳（自動翻訳）: ${data.feedback_ja}` : ''}${data.placement_url ? `\n\nPlacement: ${data.placement_url}` : ''}${curatorEmail ? `\n\nReply directly to ${data.curator_name || 'the curator'}: ${curatorEmail}` : ''}${curatorContactUrl ? `\nContact: ${curatorContactUrl}` : ''}\n\nView details: ${APP_URL}\n\nOTONAMI — Connecting Japanese Artists with the World`,
         headers: {
           'List-Unsubscribe': '<mailto:info@otonami.io?subject=unsubscribe>',
         },
@@ -279,6 +290,7 @@ export async function PATCH(request) {
             </div>
             ${closed ? `<div style="background:#13132a;border-radius:10px;padding:12px 18px;margin-bottom:16px;color:#94a3b8;font-size:13px;line-height:1.7;">${CLOSED_RESPONSE_ARTIST_NOTE_HTML}</div>` : ''}
             ${safeFeedback ? `<div style="background:#13132a;border-radius:10px;padding:14px 18px;margin-bottom:16px;color:#ccc;font-size:14px;line-height:1.7;">${safeFeedback}</div>` : ''}
+            ${safeFeedbackJa ? `<div style="background:#13132a;border-radius:10px;padding:14px 18px;margin-bottom:16px;"><div style="color:#555;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:8px;">和訳（自動翻訳）</div><div style="color:#ccc;font-size:14px;line-height:1.7;">${safeFeedbackJa}</div></div>` : ''}
             ${safeUrl ? `<div style="background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.25);border-radius:10px;padding:14px 18px;margin-bottom:16px;"><p style="color:#38bdf8;font-weight:700;margin:0 0 6px;">Your pitch was accepted! / ピッチが承認されました！</p><p style="color:#94a3b8;font-size:13px;line-height:1.6;margin:0 0 8px;">The curator plans to add your track to this playlist:<br>キュレーターがプレイリストへの追加を予定しています:</p><a href="${safeUrl}" style="color:#0ea5e9;font-size:13px;">${safeUrl}</a><p style="color:#64748b;font-size:12px;line-height:1.6;margin:10px 0 0;">It may take some time to appear on the playlist. / 反映までに時間がかかることがあります。</p></div>` : ''}
             ${(safeCuratorEmail || safeCuratorContactUrl) ? `<div style="background:#13132a;border:1px solid #1e1e3a;border-radius:10px;padding:14px 18px;margin-bottom:16px;"><div style="color:#a78bfa;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:8px;">REPLY DIRECTLY / 直接返信</div>${safeCuratorEmail ? `<div style="color:#ccc;font-size:14px;line-height:1.7;">Reply directly to ${safeCuratorName}: <a href="mailto:${safeCuratorEmail}" style="color:#FF6B4A;text-decoration:underline;">${safeCuratorEmail}</a></div>` : ''}${safeCuratorContactUrl ? `<div style="color:#ccc;font-size:13px;line-height:1.7;margin-top:6px;">Contact: <a href="${safeCuratorContactUrl}" style="color:#FF6B4A;text-decoration:underline;word-break:break-all;">${safeCuratorContactUrl}</a></div>` : ''}</div>` : ''}
             <div style="text-align:center;margin-top:24px;">

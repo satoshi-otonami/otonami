@@ -246,15 +246,31 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
   }
 
-  // Attach linked track ai_status for curator-side badge display
+  // Attach linked track info for curator-side display.
+  // title: pitches has no song_title column, so the respond page's track
+  // title must come from artist_tracks (2026-10-12 fix).
+  // service URLs: curators must be able to listen without any streaming
+  // account (2026-10-11 Radio Free Marseille complaint), so expose every
+  // registered service link, not just pitches.song_link.
   let track_ai_status = null;
+  let track_title = null;
+  let track_links = null;
   if (data.track_id) {
     const { data: linkedTrack } = await db
       .from('artist_tracks')
-      .select('ai_status')
+      .select('ai_status, title, youtube_url, spotify_url, soundcloud_url, bandcamp_url')
       .eq('id', data.track_id)
       .maybeSingle();
     track_ai_status = linkedTrack?.ai_status || null;
+    track_title = linkedTrack?.title || null;
+    if (linkedTrack) {
+      track_links = {
+        youtube: linkedTrack.youtube_url || null,
+        spotify: linkedTrack.spotify_url || null,
+        soundcloud: linkedTrack.soundcloud_url || null,
+        bandcamp: linkedTrack.bandcamp_url || null,
+      };
+    }
   }
 
   // Attach Founding Artist info (server-side lookup; pitches table has no FK to artists).
@@ -274,7 +290,7 @@ export async function GET(request, { params }) {
   }
 
   return NextResponse.json({
-    pitch: { ...data, track_ai_status, artist_is_founding, artist_founding_number },
+    pitch: { ...data, track_ai_status, track_title, track_links, artist_is_founding, artist_founding_number },
   });
 }
 

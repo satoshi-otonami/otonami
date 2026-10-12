@@ -15,6 +15,127 @@ function renderBody(text) {
   );
 }
 
+/* ── 試聴セクション ──
+ * Curators must be able to hear the track WITHOUT any streaming account
+ * (2026-10-11 Radio Free Marseille complaint: song_link was a bare Spotify
+ * URL, which needs a login for full playback). Embed priority:
+ *   1. YouTube    — full track, no login
+ *   2. SoundCloud — full track, no login
+ *   3. Spotify    — 30-second preview without login (labelled as such)
+ * plus a button row with every registered service link as a fallback.
+ */
+const LISTEN_PRIORITY = ['youtube', 'soundcloud', 'spotify'];
+
+function classifyListenUrl(raw) {
+  const href = externalHref(raw);
+  if (!href) return null;
+  let u;
+  try { u = new URL(href); } catch { return null; }
+  const host = u.hostname.replace(/^www\./i, '').toLowerCase();
+  if (host === 'youtu.be' || host.endsWith('youtube.com') || host.endsWith('youtube-nocookie.com')) {
+    let id = null;
+    if (host === 'youtu.be') id = u.pathname.split('/')[1] || null;
+    else if (u.pathname.startsWith('/watch')) id = u.searchParams.get('v');
+    else if (/^\/(shorts|embed|live)\//.test(u.pathname)) id = u.pathname.split('/')[2] || null;
+    if (id && !/^[\w-]{6,20}$/.test(id)) id = null;
+    return {
+      service: 'youtube', label: 'YouTube', href,
+      embedUrl: id ? `https://www.youtube-nocookie.com/embed/${id}` : null,
+      embedHeight: null,
+    };
+  }
+  if (host.endsWith('soundcloud.com')) {
+    return {
+      service: 'soundcloud', label: 'SoundCloud', href,
+      embedUrl: `https://w.soundcloud.com/player/?url=${encodeURIComponent(href)}&color=%23ff6b4a&auto_play=false&show_teaser=false`,
+      embedHeight: 166,
+    };
+  }
+  if (host.endsWith('spotify.com')) {
+    // open.spotify.com/(intl-xx/)?(track|album|playlist|artist)/{id}
+    // NOTE: locale segments like /intl-ja/ must be stripped for /embed/.
+    const m = u.pathname.match(/^\/(?:intl-[a-z]{2,3}\/)?(track|album|playlist|artist)\/([A-Za-z0-9]+)/);
+    return {
+      service: 'spotify', label: 'Spotify', href,
+      embedUrl: m ? `https://open.spotify.com/embed/${m[1]}/${m[2]}` : null,
+      embedHeight: m && m[1] === 'track' ? 152 : 352,
+    };
+  }
+  if (host.endsWith('bandcamp.com')) {
+    return { service: 'bandcamp', label: 'Bandcamp', href, embedUrl: null, embedHeight: null };
+  }
+  return { service: 'other', label: 'Listen on the web', href, embedUrl: null, embedHeight: null };
+}
+
+function ListenSection({ pitch }) {
+  const links = pitch.track_links || {};
+  const candidates = [links.youtube, links.soundcloud, links.spotify, links.bandcamp, pitch.song_link];
+  const sources = [];
+  for (const raw of candidates) {
+    const src = classifyListenUrl(raw);
+    if (!src) continue;
+    if (sources.some((x) => x.href.replace(/\/+$/, '') === src.href.replace(/\/+$/, ''))) continue;
+    if (src.service !== 'other' && sources.some((x) => x.service === src.service)) continue;
+    sources.push(src);
+  }
+  if (sources.length === 0) return null;
+
+  let embed = null;
+  for (const svc of LISTEN_PRIORITY) {
+    const hit = sources.find((x) => x.service === svc && x.embedUrl);
+    if (hit) { embed = hit; break; }
+  }
+
+  return (
+    <div style={{
+      background: T.white, border: `1px solid ${T.border}`, borderRadius: T.radiusLg,
+      padding: '20px 22px', marginBottom: 14, boxShadow: T.shadow,
+    }}>
+      <div style={{ color: T.textSub, fontSize: 12, fontWeight: 700, marginBottom: 12, letterSpacing: 1.5, textTransform: 'uppercase', fontFamily: T.font }}>
+        Listen
+      </div>
+      {embed && embed.service === 'youtube' && (
+        <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', marginBottom: 12 }}>
+          <iframe
+            src={embed.embedUrl}
+            title="Track player"
+            allow="encrypted-media; picture-in-picture"
+            allowFullScreen
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0, borderRadius: 12 }}
+          />
+        </div>
+      )}
+      {embed && embed.service !== 'youtube' && (
+        <iframe
+          src={embed.embedUrl}
+          title="Track player"
+          allow="encrypted-media"
+          style={{ width: '100%', height: embed.embedHeight || 166, border: 0, borderRadius: 12, marginBottom: 12, display: 'block' }}
+        />
+      )}
+      {embed && embed.service === 'spotify' && (
+        <div style={{ color: T.textMuted, fontSize: 12, marginBottom: 12, fontFamily: T.font }}>
+          The preview above plays 30 seconds with no account needed. Use the links below for the full track.
+        </div>
+      )}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {sources.map((src) => (
+          <a key={src.href} href={src.href} target="_blank" rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              color: T.accent, fontSize: 13, textDecoration: 'none',
+              padding: '6px 14px', background: T.accentLight,
+              borderRadius: 8, border: `1px solid ${T.accentBorder}`,
+              fontFamily: T.font,
+            }}>
+            ▶ {src.label}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const STATUS_COLORS = {
   sent:     { color: '#fbbf24', bg: 'rgba(234,179,8,0.12)',    label: 'Pending / 未対応' },
   accepted: { color: '#34d399', bg: 'rgba(16,185,129,0.12)',   label: 'Accepted / 承認済み' },
@@ -302,22 +423,10 @@ function PitchView({ pitchId }) {
                 </span>
               )}
             </div>
-            {pitch.song_title && (
+            {(pitch.track_title || pitch.song_title) && (
               <div style={{ color: T.textSub, fontSize: 14, marginBottom: 6, fontFamily: T.font }}>
-                ♪ &ldquo;{pitch.song_title}&rdquo;
+                ♪ &ldquo;{pitch.track_title || pitch.song_title}&rdquo;
               </div>
-            )}
-            {pitch.song_link && (
-              <a href={externalHref(pitch.song_link)} target="_blank" rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  color: T.accent, fontSize: 13, textDecoration: 'none',
-                  padding: '5px 12px', background: T.accentLight,
-                  borderRadius: 8, border: `1px solid ${T.accentBorder}`,
-                  fontFamily: T.font,
-                }}>
-                ▶ Listen to Track
-              </a>
             )}
           </div>
           <div style={{ color: T.textMuted, fontSize: 11, flexShrink: 0, fontFamily: T.font }}>
@@ -329,6 +438,8 @@ function PitchView({ pitchId }) {
           </div>
         </div>
       </div>
+
+      <ListenSection pitch={pitch} />
 
       {/* Pitch body */}
       <div style={{

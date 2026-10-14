@@ -123,6 +123,7 @@ const COPY = {
         { label: 'アーティスト向け', href: '/artist' },
         { label: 'キュレーターログイン', href: '/curator/login' },
         { label: 'アーティストログイン', href: '/artist/login' },
+        { label: 'はじめてのピッチ送信ガイド →', href: '/guide' },
         { label: 'お問い合わせ',     href: 'mailto:info@otonami.io' },
         { label: '特定商取引法に基づく表記', href: '/tokushoho' },
         { label: 'プライバシーポリシー', href: '/privacy' },

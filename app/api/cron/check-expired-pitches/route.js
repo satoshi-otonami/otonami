@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { escapeHtml } from '@/lib/html-escape';
 import { PITCH_FIELDS, claimPitch, finalizeRefund } from '@/lib/pitch-expiry';
+import { expireDueLots } from '@/lib/credit-expiry';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -117,6 +118,74 @@ async function sendInconsistencyAlert(rows) {
   });
 }
 
+// Granted-credit expiry notice (lib/credit-expiry.js). Same layout and
+// bilingual, emoji-free style as the refund notice; sent only when credits
+// actually expired.
+function jstDateTime(iso) {
+  return new Date(iso).toLocaleString('ja-JP', {
+    timeZone: 'Asia/Tokyo', year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function utcDate(iso) {
+  return new Date(iso).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function expiryEmailHtml({ artistName, expired, expiresAt, newBalance }) {
+  const nameJa = escapeHtml(artistName) || 'アーティスト';
+  const nameEn = escapeHtml(artistName) || 'there';
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim();
+  const balanceJa = newBalance != null
+    ? `<p style="color:#6b6560;font-size:15px;line-height:1.7;margin:0 0 4px;">現在の残高は <strong>${newBalance}</strong> クレジットです。</p>`
+    : '';
+  const balanceEn = newBalance != null
+    ? `<p style="color:#9b9590;font-size:14px;line-height:1.7;margin:0 0 4px;">Your current balance is <strong>${newBalance}</strong> credits.</p>`
+    : '';
+  return `
+    <div style="font-family:'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
+      <h1 style="font-size:28px;text-align:center;color:#1a1a1a;margin-bottom:8px;">OTONAMI</h1>
+      <h2 style="font-size:20px;color:#1a1a1a;margin-top:32px;">${nameJa} 様</h2>
+      <p style="color:#6b6560;font-size:15px;line-height:1.7;margin:0 0 16px;">OTONAMI事務局です。<br/>有効期限付きで付与したクレジットが ${jstDateTime(expiresAt)}（日本時間）に有効期限を迎えました。</p>
+      <p style="color:#6b6560;font-size:15px;line-height:1.7;margin:0 0 8px;">付与分のうち未使用だった <strong>${expired}</strong> クレジットが失効しました。ご購入いただいたクレジットや、期限のないクレジットには影響ありません。</p>
+      ${balanceJa}
+      <div style="text-align:center;margin:28px 0;">
+        <a href="${appUrl}/artist/dashboard" style="background:#c4956a;color:#fff;padding:14px 40px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">ダッシュボードへ →</a>
+      </div>
+      <p style="color:#6b6560;font-size:14px;line-height:1.7;margin:0;">今後ともよろしくお願いいたします。<br/>OTONAMI事務局</p>
+      <hr style="border:none;border-top:1px solid #e5e2dc;margin:32px 0;" />
+      <h2 style="font-size:17px;color:#9b9590;">Hi ${nameEn},</h2>
+      <p style="color:#9b9590;font-size:14px;line-height:1.7;margin:0 0 14px;">This is the OTONAMI team. Credits granted to you with an expiry date reached that date on ${utcDate(expiresAt)} (UTC).</p>
+      <p style="color:#9b9590;font-size:14px;line-height:1.7;margin:0 0 8px;"><strong>${expired}</strong> unused credit(s) from that grant have expired. Credits you purchased, and credits without an expiry date, are not affected.</p>
+      ${balanceEn}
+      <p style="text-align:center;color:#9b9590;font-size:12px;margin-top:28px;">Questions? Reply to this email. ご質問はこのメールに返信してください。</p>
+    </div>
+  `;
+}
+
+function expiryEmailText({ artistName, expired, expiresAt, newBalance }) {
+  const nameJa = artistName || 'アーティスト';
+  const nameEn = artistName || 'there';
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim();
+  const balJa = newBalance != null ? `現在の残高は ${newBalance} クレジットです。\n` : '';
+  const balEn = newBalance != null ? `Your current balance is ${newBalance} credits.\n` : '';
+  return `${nameJa} 様\n\nOTONAMI事務局です。有効期限付きで付与したクレジットが ${jstDateTime(expiresAt)}（日本時間）に有効期限を迎え、未使用だった ${expired} クレジットが失効しました。ご購入いただいたクレジットや、期限のないクレジットには影響ありません。\n${balJa}ダッシュボード: ${appUrl}/artist/dashboard\n\n---\n\nHi ${nameEn},\n\nCredits granted to you with an expiry date reached that date on ${utcDate(expiresAt)} (UTC). ${expired} unused credit(s) from that grant have expired. Credits you purchased, and credits without an expiry date, are not affected.\n${balEn}Dashboard: ${appUrl}/artist/dashboard`;
+}
+
+async function notifyExpiry({ artist, expired, lot, newBalance }) {
+  if (!artist.email) return;
+  const baseSubject = 'クレジットの有効期限が終了しました / Your granted OTONAMI credits have expired';
+  const subject = (EMAIL_TEST_MODE ? `[TEST] (→${artist.email}) ` : '') + baseSubject;
+  const args = { artistName: artist.name || null, expired, expiresAt: lot.metadata.expires_at, newBalance };
+  await resend.emails.send({
+    from: FROM,
+    to: EMAIL_TEST_MODE ? EMAIL_TEST_REDIRECT : artist.email,
+    replyTo: 'info@otonami.io',
+    subject,
+    html: expiryEmailHtml(args),
+    text: expiryEmailText(args),
+  });
+}
+
 async function notifyRefund({ pitch, artistId, refundCredits }) {
   if (!pitch.artist_email) return;
   const { data: a } = await supabase
@@ -228,11 +297,29 @@ export async function GET(request) {
 
     console.log(`[cron] Processed ${results.length} expired pitches`, results);
 
+    // ── Granted-credit expiry (lib/credit-expiry.js) ───────────────────────
+    // After the pitch refunds above, so a refund settled in this run is
+    // already in the ledger when a lot's net spend is computed. Off until
+    // CREDIT_EXPIRY_ENABLED=true: switched on once the lot-key unique index is
+    // in place. Never blocks the refund response.
+    let creditExpiry = { enabled: false };
+    if (process.env.CREDIT_EXPIRY_ENABLED === 'true') {
+      try {
+        const r = await expireDueLots(supabase, { onExpired: notifyExpiry });
+        creditExpiry = { enabled: true, processed: r.processed.length, skipped: r.skipped, results: r.processed };
+        console.log(`[cron] Credit expiry: ${r.processed.length} lot(s)`, r.processed);
+      } catch (expiryErr) {
+        console.error('[cron] credit expiry failed:', expiryErr?.message || expiryErr);
+        creditExpiry = { enabled: true, error: expiryErr?.message || String(expiryErr) };
+      }
+    }
+
     return Response.json({
       message: `Processed ${results.length} expired pitches`,
       processed: results.length,
       skipped: skipped.length,
       results,
+      credit_expiry: creditExpiry,
     });
   } catch (error) {
     console.error('[cron] Error processing expired pitches:', error);

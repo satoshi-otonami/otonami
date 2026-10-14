@@ -595,6 +595,9 @@ export default function ArtistRegistrationPage() {
             </>
           )}
         </div>
+        <p style={{ fontSize: 13, color: THEME.textMuted, fontFamily: THEME.font, lineHeight: 1.7, textAlign: 'center', margin: '20px 0 0' }}>
+          レーベル・事務所の方へ: 登録後、ダッシュボードから複数アーティストを追加できます。導入のご相談は <a href="mailto:info@otonami.io" style={{ color: THEME.gold, fontWeight: 600 }}>info@otonami.io</a> まで。
+        </p>
       </div>
     </div>
   );

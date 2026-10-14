@@ -42,7 +42,7 @@ export async function GET(request) {
       credits: tx.amount,
       price: tx.metadata?.amount_total ?? null,
       currency: tx.metadata?.currency || 'jpy',
-      method: 'Stripe Card',
+      method: tx.metadata?.method === 'invoice' ? 'Invoice (bank transfer)' : 'Stripe Card',
       cardLast4: null,
       date: tx.created_at,
       stripe_payment_id: tx.stripe_payment_id,

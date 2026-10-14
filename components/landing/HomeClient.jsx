@@ -496,6 +496,18 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
         : `はい、有料です。1クレジット${yen(CREDIT_PRICE_JPY)}、まとめ買いで${yen(MIN_CREDIT_PRICE_JPY)}まで下がります。1回のピッチに必要なクレジット数はキュレーターごとに決まっており、各キュレーターのカードに表示されます${minTier ? `（現在は${minTier}〜${MAX_TIER}クレジット）` : ''}。`,
     },
     {
+      q: lang === 'en' ? 'Can a label or management company manage several artists together?' : 'レーベルや事務所として、複数のアーティストをまとめて管理できますか？',
+      a: lang === 'en'
+        ? 'Yes. One account (one email address) can register and manage several artists. Add them from "Add artist" on your dashboard; credits and pitch results are recorded per artist.'
+        : 'はい。1つのアカウント（1つのメールアドレス）で複数アーティストを登録・管理できます。ダッシュボードの「アーティストを追加」から追加でき、クレジットとピッチ実績はアーティスト単位で記録されます。',
+    },
+    {
+      q: lang === 'en' ? 'How do payment and bulk purchases work?' : '支払い方法とまとめ買いについて教えてください。',
+      a: lang === 'en'
+        ? 'You pay as you go — there is no subscription. Credits are discounted when bought in bulk, from 120 to 160 yen per credit. Labels and management companies can also pay by invoice (bank transfer); contact info@otonami.io.'
+        : '都度課金で、サブスクリプションはありません。クレジットのまとめ買い割引があり、1クレジットあたり120円から160円です。レーベル・事務所の方には請求書払い（銀行振込）にも対応しています。info@otonami.io までご相談ください。',
+    },
+    {
       q: lang === 'en' ? 'What is a "curator"?' : '「キュレーター」って何ですか？',
       a: lang === 'en'
         ? 'Curators are music professionals who discover and share new music — playlist makers on Spotify/Apple Music, music bloggers, radio DJs, and online music magazines. When they feature your track, it reaches their audience of real music fans.'
@@ -2022,6 +2034,28 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
               <div style={{ marginTop: 24 }}>
                 <RefundInbox lang={lang} />
               </div>
+            </div>
+
+            {/* For labels and management. Feature pitch only: the onboarding
+                grant is offered case by case, never stated on the LP. */}
+            <div id="for-labels" style={{
+              scrollMarginTop: 90,
+              padding: '28px 28px',
+              background: '#fff',
+              borderRadius: 14,
+              border: '1px solid #e5e2dc',
+              marginBottom: 32,
+            }}>
+              <h3 style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a', fontFamily: D.fHead, margin: '0 0 12px' }}>
+                {lang === 'en' ? 'For labels and management companies' : 'レーベル・事務所の方へ'}
+              </h3>
+              <p style={{ fontSize: 15, color: '#6b6560', lineHeight: 1.8, margin: 0 }}>
+                {lang === 'en'
+                  ? 'Manage all your artists from one account. Profiles, tracks and pitch history are recorded per artist, so each artist keeps their own track record. Pitches are translated into English and curator feedback into Japanese automatically. You can pay by credit card or by invoice (bank transfer). To get started, contact us at '
+                  : '1つのアカウントで、所属アーティストをまとめて管理できます。プロフィール・楽曲・ピッチの送信履歴はアーティスト単位で記録されるため、所属アーティストごとの成果がそのまま残ります。ピッチ文の英訳も、キュレーターからのフィードバックの和訳も自動です。お支払いはクレジットカードのほか、請求書払い（銀行振込）にも対応しています。導入のご相談は '}
+                <a href="mailto:info@otonami.io" style={{ color: '#c4956a', fontWeight: 600 }}>info@otonami.io</a>
+                {lang === 'en' ? '.' : ' までご連絡ください。'}
+              </p>
             </div>
 
             {/* CTA */}

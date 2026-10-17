@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
+import { CURATOR_HOME, safeCuratorNext } from '@/lib/curator-login-redirect';
 
 const THEME = {
   bg: '#f8f7f4',
@@ -34,6 +35,27 @@ export default function CuratorLoginPage() {
   const [emailNotVerified, setEmailNotVerified] = useState(false);
   const [resendVerifyStatus, setResendVerifyStatus] = useState('');
   const otpRefs = useRef([]);
+
+  // A curator who is already logged in is sent straight on: reminder emails
+  // link here, and showing the form to someone with a valid token made them
+  // log in again on every visit. Only a 401 means the token is bad — a
+  // network or server error keeps it and just shows the form.
+  const [checkingSession, setCheckingSession] = useState(true);
+  const nextPath = () => {
+    if (typeof window === 'undefined') return CURATOR_HOME;
+    return safeCuratorNext(new URLSearchParams(window.location.search).get('next')) || CURATOR_HOME;
+  };
+  useEffect(() => {
+    const token = localStorage.getItem('curator_token');
+    if (!token) { setCheckingSession(false); return; }
+    fetch('/api/curators/login', { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => {
+        if (r.ok) { window.location.replace(nextPath()); return; }
+        if (r.status === 401) localStorage.removeItem('curator_token');
+        setCheckingSession(false);
+      })
+      .catch(() => setCheckingSession(false));
+  }, []);
 
   // Resend cooldown timer
   useEffect(() => {
@@ -157,7 +179,7 @@ export default function CuratorLoginPage() {
         return;
       }
       localStorage.setItem('curator_token', data.token);
-      window.location.href = '/curator/dashboard';
+      window.location.href = nextPath();
     } catch (e) {
       setOtpError(e.message);
     } finally {
@@ -185,6 +207,12 @@ export default function CuratorLoginPage() {
     fontSize: 16, outline: 'none', marginTop: 6, boxSizing: 'border-box',
     fontFamily: THEME.font, minHeight: 48,
   };
+
+  if (checkingSession) return (
+    <div style={{ minHeight: '100vh', background: THEME.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ color: THEME.textMuted, fontSize: 14, fontFamily: THEME.font }}>Loading... / 読み込み中...</p>
+    </div>
+  );
 
   return (
     <div style={{ minHeight: '100vh', background: THEME.bg, fontFamily: THEME.font }}>

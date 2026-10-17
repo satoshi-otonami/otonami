@@ -1307,23 +1307,18 @@ export default function CuratorDashboard() {
                           }}>{label}</span>
                         );
                       })()}
-                      {pitch.song_link && (
-                        <a href={externalHref(pitch.song_link)} target="_blank" rel="noopener noreferrer"
-                          onClick={() => {
-                            const token = localStorage.getItem('curator_token');
-                            fetch(`/api/curator/pitch/${pitch.id}`, {
-                              method: 'PATCH',
-                              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                              body: JSON.stringify({ action: 'listen' }),
-                            }).catch(() => {});
-                          }}
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 4,
-                            padding: '2px 10px', borderRadius: 10, fontSize: 11, fontWeight: 600,
-                            background: 'rgba(16,185,129,0.1)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)',
-                            textDecoration: 'none', fontFamily: T.font,
-                          }}>▶ Listen</a>
-                      )}
+                      {/* The respond page carries the full-length player (YouTube /
+                          SoundCloud before the Spotify 30-second preview). This
+                          used to open pitch.song_link — almost always Spotify —
+                          directly, so curators without a Spotify account heard
+                          only an excerpt (2026-10-16 Radio Free Marseille). */}
+                      <a href={`/curator/pitch/${pitch.id}`}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          padding: '2px 10px', borderRadius: 10, fontSize: 11, fontWeight: 600,
+                          background: 'rgba(16,185,129,0.1)', color: '#34d399', border: '1px solid rgba(16,185,129,0.25)',
+                          textDecoration: 'none', fontFamily: T.font,
+                        }}>▶ Listen</a>
                     </div>
                   </div>
                   <div className="pitch-actions" style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>

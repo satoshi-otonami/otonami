@@ -4,6 +4,15 @@ import { useParams } from 'next/navigation';
 import { CL as T } from '@/lib/design-tokens';
 import { externalHref } from '@/lib/url';
 import { isResponseClosed } from '@/lib/pitch-closure';
+import { curatorLoginUrl } from '@/lib/curator-login-redirect';
+
+// Not logged in → the real login page (password + email code), then straight
+// back here. The page used to carry its own login form, but it predated the
+// OTP step: the API answers `step: 'otp_required'` with no token, and the
+// form stored the string "undefined" as the token.
+function goToLogin(pitchId) {
+  window.location.replace(curatorLoginUrl(`/curator/pitch/${pitchId}`));
+}
 
 function renderBody(text) {
   if (!text) return null;
@@ -153,128 +162,6 @@ const CLOSED_BANNER_JA =
   'このピッチは回答期限（7日）を過ぎたため期限切れとなり、アーティストのクレジットは自動で返還済みです。' +
   '回答は引き続き送信でき、アーティストに通知されますが、報酬の対象にはなりません。';
 
-/* ── ログインフォーム ── */
-function LoginForm({ onLogin }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [passwordNotSet, setPasswordNotSet] = useState(false);
-
-  const inp = {
-    width: '100%', padding: '12px 16px', borderRadius: 8,
-    border: `1px solid ${T.border}`, background: T.white, color: T.text,
-    fontSize: 14, outline: 'none', marginTop: 6, boxSizing: 'border-box',
-    fontFamily: T.font,
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setPasswordNotSet(false);
-    setLoading(true);
-    try {
-      const res = await fetch('/api/curators/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', email, password }),
-      });
-      const data = await res.json();
-      if (res.status === 409 && data.error === 'password_not_set') {
-        setPasswordNotSet(true);
-        return;
-      }
-      if (!res.ok) { setError(data.error || 'Login failed'); return; }
-      localStorage.setItem('curator_token', data.token);
-      onLogin(data.curator);
-    } catch {
-      setError('Network error. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div style={{
-      minHeight: '100vh', background: T.bg, fontFamily: T.font,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-    }}>
-      <div style={{ width: '100%', maxWidth: 440 }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', justifyContent: 'center', marginBottom: 20 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: T.accentGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 18 }}>O</div>
-            <span style={{ fontFamily: T.fontDisplay, fontSize: 22, fontWeight: 700, color: T.accent }}>OTONAMI</span>
-          </a>
-          <p style={{ color: T.textSub, fontSize: 14, lineHeight: 1.6, fontFamily: T.font }}>
-            Log in to respond to this pitch.<br />
-            <span style={{ fontSize: 12, color: T.textMuted }}>このピッチに返信するにはログインしてください。</span>
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} style={{
-          background: T.white, border: `1px solid ${T.border}`,
-          borderRadius: T.radiusLg, padding: '28px 24px', boxShadow: T.shadow,
-        }}>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', color: T.textMuted, fontSize: 13, fontWeight: 500, marginBottom: 6, fontFamily: T.font }}>
-              Email Address <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>メールアドレス</span>
-            </label>
-            <input
-              type="email" value={email} onChange={e => setEmail(e.target.value)}
-              required autoFocus style={inp} placeholder="your@email.com"
-            />
-          </div>
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', color: T.textMuted, fontSize: 13, fontWeight: 500, marginBottom: 6, fontFamily: T.font }}>
-              Password <span style={{ fontSize: 11, color: T.textMuted, marginLeft: 4 }}>パスワード</span>
-            </label>
-            <input
-              type="password" value={password} onChange={e => setPassword(e.target.value)}
-              required style={inp} placeholder="Your password"
-            />
-          </div>
-          {passwordNotSet && (
-            <div style={{ marginBottom: 16, padding: '14px 16px', background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: 10 }}>
-              <p style={{ color: T.accent, fontSize: 13, margin: '0 0 6px', fontWeight: 700, fontFamily: T.font }}>Password not set / パスワード未設定</p>
-              <p style={{ color: T.textSub, fontSize: 12, margin: '0 0 10px', lineHeight: 1.6, fontFamily: T.font }}>
-                Your account exists but no password has been set yet.
-              </p>
-              <a href="/curator/set-password" style={{
-                display: 'inline-block', padding: '7px 16px',
-                background: T.accent,
-                borderRadius: 8, color: '#fff', textDecoration: 'none', fontSize: 12, fontWeight: 700,
-              }}>Set password →</a>
-            </div>
-          )}
-          {error && (
-            <div style={{ color: '#ef4444', fontSize: 12, marginBottom: 14, padding: '8px 12px', background: 'rgba(239,68,68,0.1)', borderRadius: 8, fontFamily: T.font }}>
-              {error}
-            </div>
-          )}
-          <button
-            type="submit" disabled={loading}
-            style={{
-              width: '100%', padding: '13px', border: 'none', borderRadius: 10, height: 48,
-              background: loading ? T.border : T.accent,
-              color: '#fff', fontWeight: 700, fontSize: 15,
-              cursor: loading ? 'not-allowed' : 'pointer', fontFamily: T.font,
-              transition: 'background 0.15s',
-            }}
-          >{loading ? 'Logging in...' : 'Log In / ログイン'}</button>
-          <div style={{ textAlign: 'center', marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <a href="/curator" style={{ color: T.textMuted, fontSize: 12, textDecoration: 'none', fontFamily: T.font }}>
-              No account? Register as curator →
-            </a>
-            <a href="/curator/set-password" style={{ color: T.textMuted, fontSize: 12, textDecoration: 'none', fontFamily: T.font }}>
-              Forgot password? / パスワードを忘れた方
-            </a>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 /* ── ピッチ詳細ビュー ── */
 function PitchView({ pitchId }) {
   const [pitch, setPitch] = useState(null);
@@ -294,7 +181,14 @@ function PitchView({ pitchId }) {
     fetch(`/api/curator/pitch/${pitchId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then(r => r.json())
+      .then(r => {
+        if (r.status === 401) {
+          localStorage.removeItem('curator_token');
+          goToLogin(pitchId);
+          return new Promise(() => {});   // leave the page in its loading state
+        }
+        return r.json();
+      })
       .then(d => {
         if (d.error) setError(d.error);
         else {
@@ -643,13 +537,23 @@ export default function PitchRespondPage() {
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('curator_token') : null;
-    if (!token) { setAuthState('unauthed'); return; }
+    if (!token) { goToLogin(pitchId); return; }
 
+    // Only a 401 means the token is bad. A 5xx or a dropped connection used to
+    // throw the token away too, logging the curator out for a server hiccup.
     fetch('/api/curators/login', { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(d => { setCurator(d.curator); setAuthState('authed'); })
-      .catch(() => { localStorage.removeItem('curator_token'); setAuthState('unauthed'); });
-  }, []);
+      .then(r => {
+        if (r.status === 401) {
+          localStorage.removeItem('curator_token');
+          goToLogin(pitchId);
+          return null;
+        }
+        if (!r.ok) { setAuthState('error'); return null; }
+        return r.json();
+      })
+      .then(d => { if (d) { setCurator(d.curator); setAuthState('authed'); } })
+      .catch(() => setAuthState('error'));
+  }, [pitchId]);
 
   if (authState === 'loading') return (
     <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -657,8 +561,18 @@ export default function PitchRespondPage() {
     </div>
   );
 
-  if (authState === 'unauthed') return (
-    <LoginForm onLogin={(c) => { setCurator(c); setAuthState('authed'); }} />
+  if (authState === 'error') return (
+    <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ textAlign: 'center' }}>
+        <p style={{ color: T.textSub, fontSize: 14, marginBottom: 16, fontFamily: T.font }}>
+          Could not reach OTONAMI. Please try again. / 接続できませんでした。再読み込みしてください。
+        </p>
+        <button onClick={() => window.location.reload()} style={{
+          padding: '10px 24px', borderRadius: 8, border: `1px solid ${T.accent}`, background: T.white,
+          color: T.accent, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: T.font,
+        }}>Retry / 再読み込み</button>
+      </div>
+    </div>
   );
 
   return (

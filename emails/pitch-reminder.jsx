@@ -14,7 +14,7 @@
  * builders below; the default export renders that exact HTML so
  * `npm run email:dev` can never drift from what is actually delivered.
  *
- * English only, no emoji, plain-text login URL — matching the curator-facing
+ * English only, no emoji, plain-text review URL — matching the curator-facing
  * copy elsewhere in the product.
  */
 
@@ -36,6 +36,20 @@ export function pitchReminderSubject({ count, hoursLeft }) {
   return `${what} waiting for your review — ${timeLeftLabel(hoursLeft)} left`;
 }
 
+// Where "Review your pitches" goes. One pitch → its respond page, which holds
+// the full-length player; several → the dashboard. Both go through
+// /curator/login only when needed: the respond page sends a logged-out curator
+// there itself, and the login page passes a valid session straight on to
+// `next`. This used to be a bare /curator/login link, which always showed the
+// form and always landed on the dashboard (2026-10-16 Radio Free Marseille).
+export function reviewUrl(items = []) {
+  const appUrl = APP_URL();
+  if (items.length === 1 && items[0]?.pitchId) {
+    return `${appUrl}/curator/pitch/${encodeURIComponent(items[0].pitchId)}`;
+  }
+  return `${appUrl}/curator/login?next=${encodeURIComponent('/curator/dashboard')}`;
+}
+
 function itemLines(items) {
   return items.map((it) => {
     const artist = it.artistName || 'An artist';
@@ -46,8 +60,7 @@ function itemLines(items) {
 
 export function pitchReminderHtml({ curatorName, count, hoursLeft, items = [] }) {
   const name = escapeHtml(curatorName) || 'there';
-  const appUrl = APP_URL();
-  const loginUrl = `${appUrl}/curator/login`;
+  const reviewHref = reviewUrl(items);
   const nearest = timeLeftLabel(hoursLeft);
   const subjectLine = count === 1
     ? 'One pitch is waiting for your review.'
@@ -67,10 +80,10 @@ export function pitchReminderHtml({ curatorName, count, hoursLeft, items = [] })
       <p style="color:#6b6560;font-size:15px;line-height:1.7;margin:0 0 16px;">You are paid the same for <strong>any</strong> response — accept, decline, or feedback — as long as you leave a short message with it. A decline with a line about why is a real review, and it is genuinely useful to the artist. There is no reward for the decision itself, only for the reviewing.</p>
       <p style="color:#6b6560;font-size:15px;line-height:1.7;margin:0 0 20px;">Once the deadline passes, the pitch is returned to the artist automatically and the reward for it is gone.</p>
       <div style="text-align:center;margin:28px 0;">
-        <a href="${loginUrl}" style="background:#c4956a;color:#fff;padding:14px 40px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">Review your pitches</a>
+        <a href="${reviewHref}" style="background:#c4956a;color:#fff;padding:14px 40px;border-radius:9999px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">Review your pitches</a>
       </div>
       <p style="color:#9b9590;font-size:13px;line-height:1.7;margin:0 0 4px;">If the button does not work, open this address:</p>
-      <p style="color:#9b9590;font-size:13px;line-height:1.7;margin:0;word-break:break-all;">${escapeHtml(loginUrl)}</p>
+      <p style="color:#9b9590;font-size:13px;line-height:1.7;margin:0;word-break:break-all;">${escapeHtml(reviewHref)}</p>
       <hr style="border:none;border-top:1px solid #e5e2dc;margin:32px 0;" />
       <p style="color:#9b9590;font-size:12px;line-height:1.7;margin:0;">Questions? Reply to this email and it reaches the OTONAMI team.</p>
     </div>
@@ -79,7 +92,7 @@ export function pitchReminderHtml({ curatorName, count, hoursLeft, items = [] })
 
 export function pitchReminderText({ curatorName, count, hoursLeft, items = [] }) {
   const name = curatorName || 'there';
-  const loginUrl = `${APP_URL()}/curator/login`;
+  const reviewHref = reviewUrl(items);
   const head = count === 1
     ? 'One pitch is waiting for your review.'
     : `${count} pitches are waiting for your review.`;
@@ -92,7 +105,7 @@ You are paid the same for any response — accept, decline, or feedback — as l
 
 Once the deadline passes, the pitch is returned to the artist automatically and the reward for it is gone.
 
-Review your pitches: ${loginUrl}
+Review your pitches: ${reviewHref}
 
 Questions? Reply to this email and it reaches the OTONAMI team.`;
 }

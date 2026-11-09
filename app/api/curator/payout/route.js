@@ -160,9 +160,10 @@ export async function POST(request) {
       }
     }
 
-    // Send admin notification
+    // Send admin notification. resend.emails.send resolves with { data, error }
+    // rather than throwing on an API rejection, so both sends below read it.
     try {
-      await resend.emails.send({
+      const { error: adminMailError } = await resend.emails.send({
         from: FROM,
         to: testMode ? safeEmail : 'info@otonami.io',
         replyTo: 'info@otonami.io',
@@ -184,12 +185,15 @@ export async function POST(request) {
         `,
         text: `支払いリクエスト\n\nキュレーター: ${curatorData.name}\n金額: ¥${availableBalance.toLocaleString()}\n支払い方法: ${paymentMethod}\n支払い情報: ${paymentInfo}\n件数: ${earningIds.length}件`,
       });
+      if (adminMailError) {
+        console.error('Payout admin email REJECTED (non-fatal):', { curator_id: curatorId, error: adminMailError });
+      }
     } catch (e) { console.error('Payout admin email failed:', e); }
 
     // Send confirmation to curator
     try {
       const curatorTo = testMode ? safeEmail : curatorData.email;
-      await resend.emails.send({
+      const { error: confirmMailError } = await resend.emails.send({
         from: FROM,
         to: curatorTo,
         replyTo: 'info@otonami.io',
@@ -212,6 +216,9 @@ export async function POST(request) {
         `,
         text: `支払いリクエストを受け付けました\n\n金額: ¥${availableBalance.toLocaleString()}\n支払い方法: ${paymentMethod} — ${paymentInfo}\n\n通常3〜5営業日以内にお支払いします。`,
       });
+      if (confirmMailError) {
+        console.error('Payout confirmation email REJECTED (non-fatal):', { curator_id: curatorId, error: confirmMailError });
+      }
     } catch (e) { console.error('Payout confirmation email failed:', e); }
 
     return NextResponse.json({ success: true, payout });

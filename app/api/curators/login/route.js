@@ -148,7 +148,9 @@ export async function POST(request) {
       const otpSubject = (isTestMode ? `[TEST] (→${email}) ` : '') + 'OTONAMI ログイン認証コード / Your login code';
 
       try {
-        await resend.emails.send({
+        // resend.emails.send resolves with { data, error } rather than
+        // throwing on an API rejection — read it, or a lost code leaves no trace.
+        const { error: otpMailError } = await resend.emails.send({
           from: FROM_EMAIL,
           to: recipientEmail,
           replyTo: 'info@otonami.io',
@@ -169,6 +171,9 @@ export async function POST(request) {
           `,
           text: `OTONAMI ログイン認証コード\n\nコード: ${otp}\n\nこのコードは10分間有効です。\n\n---\n\nYour OTONAMI login code: ${otp}\n\nThis code expires in 10 minutes.`,
         });
+        if (otpMailError) {
+          console.error('[curators/login] OTP email REJECTED (non-fatal):', { error: otpMailError });
+        }
       } catch (e) {
         console.error('OTP email failed:', e);
       }

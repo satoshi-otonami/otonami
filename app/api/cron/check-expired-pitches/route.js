@@ -65,7 +65,9 @@ async function sendRefundEmail({ to, artistName, curatorName, credits, newBalanc
   const baseSubject = '回答期限切れにつきクレジットを返還しました / Your OTONAMI pitch expired — credits returned';
   const subject = (EMAIL_TEST_MODE ? `[TEST] (→${to}) ` : '') + baseSubject;
   const recipient = EMAIL_TEST_MODE ? EMAIL_TEST_REDIRECT : to;
-  await resend.emails.send({
+  // resend.emails.send resolves with { data, error } rather than throwing on
+  // an API rejection, so the error has to be read to be seen at all.
+  const { error } = await resend.emails.send({
     from: FROM,
     to: recipient,
     replyTo: 'info@otonami.io',
@@ -73,6 +75,9 @@ async function sendRefundEmail({ to, artistName, curatorName, credits, newBalanc
     html: refundEmailHtml({ artistName, curatorName, credits, newBalance }),
     text: refundEmailText({ artistName, curatorName, credits, newBalance }),
   });
+  if (error) {
+    console.error('[cron] refund email REJECTED (non-fatal):', { artistName, curatorName, credits, error });
+  }
 }
 
 // Admin alert: pitches that are status='sent' + past deadline yet carry a
@@ -108,7 +113,7 @@ async function sendInconsistencyAlert(rows) {
       })
       .join('')}</ul>` +
     `<p>Review in the DB / curator dashboard before any credit action.</p>`;
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: FROM,
     to: admin,
     replyTo: 'info@otonami.io',
@@ -116,6 +121,9 @@ async function sendInconsistencyAlert(rows) {
     html: htmlBody,
     text: body,
   });
+  if (error) {
+    console.error('[cron] inconsistency alert email REJECTED (non-fatal):', { rows: rows.length, error });
+  }
 }
 
 // Granted-credit expiry notice (lib/credit-expiry.js). Same layout and
@@ -176,7 +184,7 @@ async function notifyExpiry({ artist, expired, lot, newBalance }) {
   const baseSubject = 'クレジットの有効期限が終了しました / Your granted OTONAMI credits have expired';
   const subject = (EMAIL_TEST_MODE ? `[TEST] (→${artist.email}) ` : '') + baseSubject;
   const args = { artistName: artist.name || null, expired, expiresAt: lot.metadata.expires_at, newBalance };
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: FROM,
     to: EMAIL_TEST_MODE ? EMAIL_TEST_REDIRECT : artist.email,
     replyTo: 'info@otonami.io',
@@ -184,6 +192,9 @@ async function notifyExpiry({ artist, expired, lot, newBalance }) {
     html: expiryEmailHtml(args),
     text: expiryEmailText(args),
   });
+  if (error) {
+    console.error('[cron] credit expiry email REJECTED (non-fatal):', { artist_id: artist.id, expired, error });
+  }
 }
 
 async function notifyRefund({ pitch, artistId, refundCredits }) {

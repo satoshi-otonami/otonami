@@ -217,7 +217,9 @@ export async function POST(request) {
     const verifySubject = (testMode ? `[TEST] (→${data.email}) ` : '') +
       'OTONAMIへようこそ — メールアドレスを認証してください / Verify your email';
     try {
-      await resend.emails.send({
+      // resend.emails.send resolves with { data, error } rather than throwing
+      // on an API rejection; the catch below only sees network faults.
+      const { error: verifyMailError } = await resend.emails.send({
         from: FROM,
         to: curatorTo,
         replyTo: 'info@otonami.io',
@@ -239,6 +241,12 @@ export async function POST(request) {
         text: `${data.name}さん、OTONAMIへの登録ありがとうございます。\n\n認証リンク: ${verifyUrl}\n\nこのリンクは24時間有効です。`,
         headers: { 'List-Unsubscribe': '<mailto:info@otonami.io?subject=unsubscribe>' },
       });
+      if (verifyMailError) {
+        console.error(
+          '[curator] verification email REJECTED (non-fatal) — this curator cannot verify without it:',
+          { curator_id: data.id, error: verifyMailError }
+        );
+      }
     } catch (welcomeErr) {
       console.error('Verification email failed (non-fatal):', welcomeErr);
     }

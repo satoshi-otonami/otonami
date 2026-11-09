@@ -96,7 +96,9 @@ export async function POST(request) {
     }
     const { subject, html, text } = buildVerificationEmail(displayName, verificationToken, type);
     const recipientEmail = testMode ? safeEmail : lookupEmail;
-    await resend.emails.send({
+    // resend.emails.send resolves with { data, error } rather than throwing on
+    // an API rejection. Logged, non-fatal — the response is unchanged.
+    const { error: verifyMailError } = await resend.emails.send({
       from: FROM,
       to: recipientEmail,
       replyTo: 'info@otonami.io',
@@ -104,6 +106,9 @@ export async function POST(request) {
       html,
       text,
     });
+    if (verifyMailError) {
+      console.error('[resend-verification] verification email REJECTED (non-fatal):', { type, error: verifyMailError });
+    }
 
     return NextResponse.json({ success: true, message: 'Verification email sent.' });
   } catch (e) {

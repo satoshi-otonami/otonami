@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServiceSupabase } from '@/lib/supabase';
 import { escapeHtml } from '@/lib/html-escape';
 import { buildPersonalLine } from '@/lib/pitch-personalization';
+import { greetingName } from '@/lib/pitch-greeting';
 import { verifyToken } from '@/lib/auth';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
@@ -244,8 +245,12 @@ export async function POST(request) {
           }
         }
 
-        // Track title from pitches.subject — distinct from the AI-generated
-        // email Subject line. Falls back to null (template hides the row).
+        // Track title from the registered track (pitches.track_id →
+        // artist_tracks.title). NOT pitches.subject: lib/db.js mapPitchToDB
+        // fills subject with the AI-generated email Subject line, so the
+        // "Track:" row used to show e.g. "Chill Lo-fi from Japan" instead of
+        // the song. Falls back to null (template hides the row) for pitches
+        // with no track_id.
         //
         // The same row also carries what the per-curator opener needs:
         // curator_id (to resolve the recipient's type/genres) and artist_genre
@@ -253,22 +258,27 @@ export async function POST(request) {
         // rather than queried separately so this stays one round trip.
         let trackTitle = null;
         let personalLine = '';
+        // Greeting: only a confident personal name, else "Hi there,". The
+        // curators row (when found) is preferred over the posted name and
+        // supplies the outlet name the check compares against.
+        let greeting = greetingName({ name: curatorName });
         if (pitchId) {
           try {
             const db = getServiceSupabase();
             const { data: pitchRow } = await db
               .from('pitches')
-              .select('subject, curator_id, artist_genre')
+              .select('curator_id, artist_genre, artist_tracks(title)')
               .eq('id', pitchId)
               .maybeSingle();
-            trackTitle = pitchRow?.subject?.trim() || null;
+            trackTitle = pitchRow?.artist_tracks?.title?.trim() || null;
 
             if (pitchRow?.curator_id) {
               const { data: curatorRow } = await db
                 .from('curators')
-                .select('type, genres, accepts')
+                .select('name, playlist, type, genres, accepts')
                 .eq('id', pitchRow.curator_id)
                 .maybeSingle();
+              if (curatorRow) greeting = greetingName(curatorRow);
               // match_reasons is passed as null on purpose: the column exists on
               // pitches but is NULL on every row in production — nothing writes
               // it — so there is no stored reasoning to draw on.
@@ -319,7 +329,7 @@ export async function POST(request) {
           artistName,
           trackTitle,
           foundingNumber,
-          curatorName,
+          curatorName: greeting,
           pitchBody: cleanBody,
           personalLine,
           artistBio,

@@ -7,17 +7,33 @@ import { INPUT_LIMITS, validateLength } from '@/lib/validate-input';
 import { deadlineFromNow } from '@/lib/response-time';
 import { getAccountArtist, resolveAccountId } from '@/lib/db';
 import { anthropicRequestBase } from '@/lib/anthropic-model';
+import { protectTitles, restoreTitles } from '@/lib/pitch-title-guard';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ひらがな・カタカナ・漢字・全角記号を検出
 const JAPANESE_RE = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\uff01-\uff5e]/;
 
-async function ensureEnglishPitch(pitchContent, artistName, trackTitle) {
-  if (!pitchContent?.trim()) return { text: pitchContent, translated: false };
+async function ensureEnglishPitch(rawContent, artistName, trackTitle) {
+  if (!rawContent?.trim()) return { text: rawContent, translated: false };
+
+  // The song title is the one Japanese string a pitch keeps: swap it for a
+  // token before the check and the translation, restore it afterwards
+  // (lib/pitch-title-guard.js). A body whose only Japanese is the title is
+  // sent as-is.
+  const { text: pitchContent, saved } = protectTitles(rawContent, [trackTitle]);
+  // If the model dropped a token, the title would vanish and leave an empty
+  // pair of quotes — worse than a romanized title. Fall back to the unguarded
+  // translation (the pre-guard behaviour) in that case.
+  const finish = async (text) => {
+    const { text: restored, missing } = restoreTitles(text, saved);
+    if (missing === 0) return { text: restored, translated: true };
+    console.warn(`[pitches] Translation dropped ${missing} protected title token(s); retranslating without the guard`);
+    return ensureEnglishPitch(rawContent, artistName, null);
+  };
 
   const hasJapanese = JAPANESE_RE.test(pitchContent);
-  if (!hasJapanese) return { text: pitchContent, translated: false };
+  if (!hasJapanese) return { text: rawContent, translated: false };
 
   try {
     const response = await anthropic.messages.create({
@@ -34,9 +50,10 @@ STRICT RULES:
 4. Keep the tone friendly, enthusiastic, and professional.
 5. Do NOT add any information not present in the original.
 6. Return ONLY the translated English text. No explanations, no markdown, no quotes.
+7. Placeholders like [[TITLE_0]] stand for song titles. Copy each one into the output exactly as written, in the matching position. Never translate, remove or alter them.
 
 Artist: ${artistName}
-Track: ${trackTitle}
+Track: ${saved.length ? '[[TITLE_0]]' : trackTitle}
 
 Original pitch (may contain mixed Japanese and English):
 ${pitchContent}`,
@@ -54,17 +71,17 @@ ${pitchContent}`,
         max_tokens: 1024,
         messages: [{
           role: 'user',
-          content: `The following text still contains Japanese characters. Rewrite it entirely in English. Remove or translate ALL Japanese text. Return ONLY the English version:\n\n${translated}`,
+          content: `The following text still contains Japanese characters. Rewrite it entirely in English. Remove or translate ALL Japanese text. Keep placeholders like [[TITLE_0]] exactly as written. Return ONLY the English version:\n\n${translated}`,
         }],
       });
       const retried = retry.content.filter(b => b.type === 'text').map(b => b.text).join('');
-      return { text: retried, translated: true };
+      return await finish(retried);
     }
 
-    return { text: translated, translated: true };
+    return await finish(translated);
   } catch (e) {
     console.error('[pitches] Translation failed, using original:', e.message);
-    return { text: pitchContent, translated: false };
+    return { text: rawContent, translated: false };
   }
 }
 
@@ -192,9 +209,27 @@ export async function POST(request) {
 
     const originalBody = row.body || '';
     const artistName = row.artist_name || '';
-    const trackTitle = row.subject || '';
+    // The song title, not row.subject: subject is the AI-generated email
+    // Subject line (lib/db.js mapPitchToDB). song_title comes from the send
+    // form; when it is missing, fall back to the linked track's registered
+    // title (scoped to this artist so a client-supplied track_id cannot
+    // reach another artist's row).
+    let trackTitle = (row.song_title || '').trim();
+    if (!trackTitle && row.track_id) {
+      try {
+        const { data: t } = await getServiceSupabase()
+          .from('artist_tracks')
+          .select('title')
+          .eq('id', row.track_id)
+          .eq('artist_id', payload.artistId)
+          .maybeSingle();
+        trackTitle = t?.title?.trim() || '';
+      } catch (e) {
+        console.warn('[pitches] track title lookup failed (non-fatal):', e?.message);
+      }
+    }
 
-    console.log(`[pitches] Saving pitch for artist="${artistName}" subject="${trackTitle}"`);
+    console.log(`[pitches] Saving pitch for artist="${artistName}" track="${trackTitle}"`);
 
     // 日本語チェックと翻訳
     const { text: englishBody, translated } = await ensureEnglishPitch(

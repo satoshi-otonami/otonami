@@ -28,7 +28,8 @@ function toAbsoluteUrl(url) {
   return `${SITE_ORIGIN}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const params = await props.params;
   const data = await loadEpk(params.slug);
   if (!data) return { title: 'EPK Not Found — OTONAMI' };
 
@@ -62,7 +63,8 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function EpkPage({ params }) {
+export default async function EpkPage(props) {
+  const params = await props.params;
   const data = await loadEpk(params.slug);
   if (!data) notFound();
   const Theme = THEMES[data.epk?.theme] || EditorialDarkTheme;

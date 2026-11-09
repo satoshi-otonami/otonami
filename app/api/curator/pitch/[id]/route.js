@@ -218,7 +218,8 @@ async function checkCuratorAuth(db, curator, pitchCuratorId) {
 }
 
 // GET /api/curator/pitch/[id] — 単一ピッチ取得（自分宛のもののみ）
-export async function GET(request, { params }) {
+export async function GET(request, props) {
+  const params = await props.params;
   const curator = await getAuthCurator(request);
   if (!curator) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -295,7 +296,8 @@ export async function GET(request, { params }) {
 }
 
 // PATCH /api/curator/pitch/[id] — フィードバック送信
-export async function PATCH(request, { params }) {
+export async function PATCH(request, props) {
+  const params = await props.params;
   const curator = await getAuthCurator(request);
   if (!curator) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

@@ -13,7 +13,8 @@ async function authedEpk(request) {
 }
 
 // PATCH /api/epk/press/[id] — update one press row (scoped to the artist's EPK)
-export async function PATCH(request, { params }) {
+export async function PATCH(request, props) {
+  const params = await props.params;
   try {
     const { epk, error, status } = await authedEpk(request);
     if (error) return NextResponse.json({ error }, { status });
@@ -28,7 +29,8 @@ export async function PATCH(request, { params }) {
 }
 
 // DELETE /api/epk/press/[id] — remove one press row (scoped to the artist's EPK)
-export async function DELETE(request, { params }) {
+export async function DELETE(request, props) {
+  const params = await props.params;
   try {
     const { epk, error, status } = await authedEpk(request);
     if (error) return NextResponse.json({ error }, { status });

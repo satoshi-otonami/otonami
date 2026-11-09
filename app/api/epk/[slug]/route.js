@@ -4,7 +4,8 @@ import { getPublicEpk } from '@/lib/epk';
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{1,49}$/;
 
 // GET /api/epk/[slug] — public, published EPK only
-export async function GET(req, { params }) {
+export async function GET(req, props) {
+  const params = await props.params;
   const { slug } = params;
   if (!slug || !SLUG_RE.test(slug)) {
     return NextResponse.json({ error: 'Invalid slug' }, { status: 400 });

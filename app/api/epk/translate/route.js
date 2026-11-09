@@ -4,6 +4,7 @@ import { verifyToken } from '@/lib/auth';
 import { translateRatelimit, checkRatelimit } from '@/lib/ratelimit';
 import { INPUT_LIMITS, validateLength } from '@/lib/validate-input';
 import { anthropicRequestBase } from '@/lib/anthropic-model';
+import { EN_TRANSLATE_SYSTEM_PROMPT } from '@/lib/translate-en';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder' });
 
@@ -18,32 +19,8 @@ const FIELD_CONFIG = {
   tagline: { max_tokens: 300 },
 };
 
-const SYSTEM_PROMPT =
-  'You are a translator for a music EPK (electronic press kit). Translate the ' +
-  'Japanese text into natural, industry-standard English for international playlist ' +
-  'curators and music press. ' +
-  'Proper nouns — band names, person names, song titles, festival names, label names, ' +
-  'and place names. If an established English or romanized form already exists, keep it ' +
-  'exactly as written (e.g. ROUTE14band, SXSW, Bay of Islands Jazz Festival); do not ' +
-  'translate or re-spell it. If a name is written only in Japanese, transcribe it into ' +
-  'Hepburn romaji, surname before given name (e.g. 山崎千裕 → Yamazaki Chihiro); never ' +
-  'leave Japanese characters in the output, and never invent or reinterpret a spelling. ' +
-  'When a proper noun already appears in English elsewhere in the text, match that form ' +
-  'consistently. ' +
-  'Do not make proper nouns more specific than the source — translate or romanize only ' +
-  'what is written, and never supply an official name, stage name, venue, or place name ' +
-  'that the source does not state. The "established English form" rule above applies ONLY ' +
-  'to names the source actually writes; it never licenses you to upgrade a generic ' +
-  'description into an official name. If the source describes something generically ' +
-  '(a stage, a venue, a district), keep it generic in English. Example: a source that ' +
-  'says only "the rookie stage at Fuji Rock" must stay "the rookie stage at Fuji Rock" — ' +
-  "do not replace it with that stage's official name, even if you know it. " +
-  'Preserve ALL numbers, counts, and years exactly as in the source ' +
-  '(e.g. 「SXSWに10回」 → "ten times at SXSW" or "10 times"; never add, drop, or ' +
-  'reinterpret a count). Do not introduce facts, opinions, or detail not present in ' +
-  'the source. Keep the original third-person / editorial voice — do not switch to ' +
-  'first person. A 1–2 sentence tagline must stay concise. ' +
-  'Output ONLY the translated English text — no preamble, no quotation marks, no notes.';
+// Prompt shared with the profile bio_en translation (lib/translate-en.js).
+const SYSTEM_PROMPT = EN_TRANSLATE_SYSTEM_PROMPT;
 
 // POST /api/epk/translate — { field: "bio"|"tagline", text_jp } -> { text_en }
 // Half-automatic: returns a draft the artist reviews/edits before saving. Never

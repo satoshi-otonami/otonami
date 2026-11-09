@@ -14,7 +14,10 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 // ひらがな・カタカナ・漢字・全角記号を検出
 const JAPANESE_RE = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\uff01-\uff5e]/;
 
-async function ensureEnglishPitch(rawContent, artistName, trackTitle) {
+// artistNameEn (artists.name_en) pins the romanization of a Japanese artist
+// name; without it the model romanizes on its own and the spelling can drift
+// from the name the email heading shows.
+async function ensureEnglishPitch(rawContent, artistName, trackTitle, artistNameEn = null) {
   if (!rawContent?.trim()) return { text: rawContent, translated: false };
 
   // The song title is the one Japanese string a pitch keeps: swap it for a
@@ -29,7 +32,7 @@ async function ensureEnglishPitch(rawContent, artistName, trackTitle) {
     const { text: restored, missing } = restoreTitles(text, saved);
     if (missing === 0) return { text: restored, translated: true };
     console.warn(`[pitches] Translation dropped ${missing} protected title token(s); retranslating without the guard`);
-    return ensureEnglishPitch(rawContent, artistName, null);
+    return ensureEnglishPitch(rawContent, artistName, null, artistNameEn);
   };
 
   const hasJapanese = JAPANESE_RE.test(pitchContent);
@@ -52,7 +55,7 @@ STRICT RULES:
 6. Return ONLY the translated English text. No explanations, no markdown, no quotes.
 7. Placeholders like [[TITLE_0]] stand for song titles. Copy each one into the output exactly as written, in the matching position. Never translate, remove or alter them.
 
-Artist: ${artistName}
+Artist: ${artistName}${artistNameEn && artistNameEn !== artistName ? ` (write this name exactly as "${artistNameEn}")` : ''}
 Track: ${saved.length ? '[[TITLE_0]]' : trackTitle}
 
 Original pitch (may contain mixed Japanese and English):
@@ -229,13 +232,28 @@ export async function POST(request) {
       }
     }
 
+    // The artist's registered English name, from the session's artist row
+    // (never the request body).
+    let artistNameEn = null;
+    try {
+      const { data: a } = await getServiceSupabase()
+        .from('artists')
+        .select('name_en')
+        .eq('id', payload.artistId)
+        .maybeSingle();
+      artistNameEn = a?.name_en?.trim() || null;
+    } catch (e) {
+      console.warn('[pitches] name_en lookup failed (non-fatal):', e?.message);
+    }
+
     console.log(`[pitches] Saving pitch for artist="${artistName}" track="${trackTitle}"`);
 
     // 日本語チェックと翻訳
     const { text: englishBody, translated } = await ensureEnglishPitch(
       originalBody,
       artistName,
-      trackTitle
+      trackTitle,
+      artistNameEn
     );
 
     if (translated) {

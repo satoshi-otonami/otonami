@@ -4,6 +4,7 @@ import { getServiceSupabase } from '@/lib/supabase';
 import { escapeHtml } from '@/lib/html-escape';
 import { buildPersonalLine } from '@/lib/pitch-personalization';
 import { greetingName } from '@/lib/pitch-greeting';
+import { JA_RE } from '@/lib/translate-en';
 import { verifyToken } from '@/lib/auth';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
@@ -223,18 +224,27 @@ export async function POST(request) {
         // request body.
         let foundingNumber = null;
         let artistBio = null;
+        // Display name: artists.name_en when set (12 of 65 names are Japanese;
+        // the posted artistName is the form value, which is the Japanese name
+        // for nearly every logged-in artist). Falls back to the posted name.
+        let displayArtistName = artistName;
         const artistSocials = { spotify: null, youtube: null, instagram: null, x: null };
         if (auth.artistId) {
           try {
             const db = getServiceSupabase();
             const { data: artistRow } = await db
               .from('artists')
-              .select('bio, founding_number, is_founding, spotify_url, youtube_url, instagram_url, twitter_url')
+              .select('bio, bio_en, name_en, founding_number, is_founding, spotify_url, youtube_url, instagram_url, twitter_url')
               .eq('id', auth.artistId)
               .maybeSingle();
             if (artistRow) {
               if (artistRow.is_founding) foundingNumber = artistRow.founding_number ?? null;
-              artistBio = artistRow.bio?.trim() || null;
+              displayArtistName = artistRow.name_en?.trim() || artistName;
+              // About the artist: the saved English translation, else the bio
+              // itself only when it has no Japanese (a curator cannot read a
+              // Japanese bio — leave the paragraph out rather than send it).
+              const bio = artistRow.bio?.trim() || null;
+              artistBio = artistRow.bio_en?.trim() || (bio && !JA_RE.test(bio) ? bio : null);
               artistSocials.spotify = artistRow.spotify_url || null;
               artistSocials.youtube = artistRow.youtube_url || null;
               artistSocials.instagram = artistRow.instagram_url || null;
@@ -294,7 +304,7 @@ export async function POST(request) {
         // Extract email Subject line from AI output if caller didn't provide one
         if (!emailSubject && pitchText) {
           const subMatch = pitchText.match(/^Subject:\s*(.+)/m);
-          emailSubject = subMatch ? subMatch[1].trim() : `Music Pitch: ${artistName}`;
+          emailSubject = subMatch ? subMatch[1].trim() : `Music Pitch: ${displayArtistName}`;
         }
 
         // Strip the "Subject: ..." prefix and any leading "Hi [Curator Name],"
@@ -326,7 +336,7 @@ export async function POST(request) {
         void trackUrl;
 
         htmlBody = pitchEmailHtml({
-          artistName,
+          artistName: displayArtistName,
           trackTitle,
           foundingNumber,
           curatorName: greeting,

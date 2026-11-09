@@ -13,6 +13,7 @@ import {
   getArtistTracks,
   normalizeEmail,
 } from '@/lib/db';
+import { bioEnForSave } from '@/lib/translate-en';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM = `OTONAMI <${process.env.EMAIL_FROM || 'info@otonami.io'}>`;
@@ -132,6 +133,7 @@ export async function POST(request) {
       verification_expires_at,
       artist_type: rest.artist_type || 'solo',
       bio: rest.bio || null,
+      bio_en: rest.bio ? await bioEnForSave({ bio: rest.bio, name, label_name: rest.label_name }) : null,
       hot_news: rest.hot_news || null,
       avatar_url: rest.avatar_url || null,
       cover_url: rest.cover_url || null,
@@ -439,6 +441,14 @@ export async function PATCH(request) {
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+    }
+
+    // Keep bio_en in step with a changed bio (translated here, once, so every
+    // pitch email shows the same English text).
+    if (updateData.bio !== undefined) {
+      const current = await getArtistById(payload.artistId);
+      const bioEn = await bioEnForSave(updateData, current);
+      if (bioEn !== undefined) updateData.bio_en = bioEn;
     }
 
     const updated = await updateArtist(payload.artistId, updateData);

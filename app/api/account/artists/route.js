@@ -10,6 +10,7 @@ import {
   normalizeEmail,
   MAX_ARTISTS_PER_ACCOUNT,
 } from '@/lib/db';
+import { bioEnForSave } from '@/lib/translate-en';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM = `OTONAMI <${process.env.EMAIL_FROM || 'info@otonami.io'}>`;
@@ -119,6 +120,9 @@ export async function POST(request) {
     };
     for (const key of ALLOWED) {
       if (body[key] !== undefined) insertData[key] = body[key];
+    }
+    if (insertData.bio) {
+      insertData.bio_en = await bioEnForSave({ bio: insertData.bio, name, label_name: insertData.label_name });
     }
 
     const db = getServiceSupabase();

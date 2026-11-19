@@ -11,6 +11,7 @@ import RefundInbox from '@/components/landing/RefundInbox';
 /* OTONAMIPromo import kept for when promo section is restored */
 // import OTONAMIPromo from '@/components/OTONAMIPromo';
 import { DT as D } from '@/lib/design-tokens';
+import { persistUrlLocale, dropUrlLocale, rescrollToHash } from '@/lib/locale';
 import { CREDIT_PRICE_JPY, RESPONSE_WINDOW_DAYS } from '@/lib/pricing';
 import { EXTENDED_DEADLINE_DAYS } from '@/lib/response-time';
 
@@ -357,11 +358,17 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
   }, []);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('otonami_locale');
-      if (saved === 'ja' || saved === 'en') { setLang(saved); return; }
-      setLang(navigator.language?.startsWith('ja') ? 'ja' : 'en');
-    } catch {}
+    // ?lang= (saved like the toggle) → saved choice → browser language.
+    let next = persistUrlLocale();
+    if (!next) {
+      try {
+        const saved = localStorage.getItem('otonami_locale');
+        next = saved === 'ja' || saved === 'en' ? saved : (navigator.language?.startsWith('ja') ? 'ja' : 'en');
+      } catch {}
+    }
+    if (!next) return;
+    setLang(next);
+    if (next !== 'ja') rescrollToHash();
   }, []);
 
   useEffect(() => {
@@ -452,7 +459,7 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
     })();
   }, []);
 
-  const switchLang = (l) => { setLang(l); try { localStorage.setItem('otonami_locale', l); } catch {} };
+  const switchLang = (l) => { setLang(l); try { localStorage.setItem('otonami_locale', l); } catch {} dropUrlLocale(); };
   const t = COPY[lang];
 
   /* FAQ data */
@@ -1241,6 +1248,7 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
       {/* ========== SECTION 5: FOR CURATORS ========== */}
       <AnimatedSection>
         <section id="for-curators" className="for-curators-section" style={{
+          scrollMarginTop: 90,
           padding: '80px 20px',
           background: '#1a1715',
           color: '#fff',

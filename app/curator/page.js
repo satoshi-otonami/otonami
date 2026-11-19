@@ -5,6 +5,7 @@ import { supabaseStorage } from '@/lib/supabase';
 // 回答時間の選択肢は pitches.deadline_at の算出元。lib/response-time.js が正。
 import { RESPONSE_TIME_OPTIONS } from '@/lib/response-time';
 import { resolveReferralSource } from '@/lib/referral-source';
+import { persistUrlLocale, dropUrlLocale } from '@/lib/locale';
 import { curatorPerReviewJpy } from '@/lib/pricing';
 
 // Persist curator registration progress so a mobile reload / tab switch
@@ -116,6 +117,8 @@ export default function CuratorRegistrationPage() {
   const draftSaveReady = useRef(false);
 
   useEffect(() => {
+    const fromUrl = persistUrlLocale();
+    if (fromUrl) { setLang(fromUrl); return; }
     try {
       const saved = localStorage.getItem('otonami_locale');
       if (saved === 'ja' || saved === 'en') { setLang(saved); return; }
@@ -188,7 +191,7 @@ export default function CuratorRegistrationPage() {
     return () => clearTimeout(timer);
   }, [loginResendCooldown]);
 
-  const switchLang = (l) => { setLang(l); try { localStorage.setItem('otonami_locale', l); } catch {} };
+  const switchLang = (l) => { setLang(l); try { localStorage.setItem('otonami_locale', l); } catch {} dropUrlLocale(); };
   const set = (key, val) => {
     setForm(f => ({ ...f, [key]: val }));
     if (fieldErrors[key]) setFieldErrors(fe => { const n = { ...fe }; delete n[key]; return n; });

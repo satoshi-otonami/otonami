@@ -259,8 +259,9 @@ section {
   }
 
   /* Section common */
+  /* 72px top: the heading clears the 64px fixed header on #for-curators links */
   .for-curators-section {
-    padding: 48px 16px !important;
+    padding: 72px 16px 48px !important;
   }
 
   .for-artists-section {

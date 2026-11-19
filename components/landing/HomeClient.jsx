@@ -1248,7 +1248,6 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
       {/* ========== SECTION 5: FOR CURATORS ========== */}
       <AnimatedSection>
         <section id="for-curators" className="for-curators-section" style={{
-          scrollMarginTop: 90,
           padding: '80px 20px',
           background: '#1a1715',
           color: '#fff',

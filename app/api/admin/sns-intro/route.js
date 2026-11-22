@@ -48,7 +48,7 @@ function buildSummaryLines(audit, accounts, names) {
     hashtags: `ハッシュタグ数: ${tagLine}`,
     mentions: ORDER.map((k) => `${PLATFORM_LABELS[k]}: ${mentionOf(k)}`),
     emoji: `絵文字: ${audit.hasEmoji ? 'あり(要確認)' : 'なし'}${names.emojiRemoved ? '（名前の絵文字を除去）' : ''}`,
-    xLength: `X の文字数: ${audit.xLength} / ${X_MAX_WEIGHTED}（日本語1文字=2、URL=23）${audit.xTagsRemoved?.length ? `／超過のため外したタグ: ${audit.xTagsRemoved.join(' ')}` : ''}${audit.xRewrites?.length ? `／長すぎたため X だけ${audit.xRewrites.length}回作り直し` : ''}`,
+    xLength: `X の文字数: ${audit.xLength} / ${X_MAX_WEIGHTED}（日本語1文字=2、URL=23）${audit.xTagsRemoved?.length ? `／超過のため外したタグ: ${audit.xTagsRemoved.join(' ')}` : ''}${audit.xRewrites?.length ? `／長すぎたため X だけ${audit.xRewrites.length}回作り直し（採用${audit.xRewrites.filter((r) => !r.rejected).length}）` : ''}`,
     xWarning: audit.xOverLimit
       ? `警告: X 用キャプションが ${audit.xLength - X_MAX_WEIGHTED} 超過しています（${audit.xLength} / ${X_MAX_WEIGHTED}）。このままでは X に投稿できないので、本文を短くしてから貼ってください。`
       : null,

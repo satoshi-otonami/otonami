@@ -3,6 +3,7 @@ import { getServiceSupabase } from '@/lib/supabase';
 import { signToken, signArtistSession } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { getAccountByEmail, getArtistsByAccountId, normalizeEmail } from '@/lib/db';
+import { consumePendingCurator } from '@/lib/pending-curator';
 import { SignJWT } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -112,9 +113,14 @@ export async function POST(request) {
         email: account.email,
       });
 
+      // One-time handoff from a /submit/<curatorId> signup (lib/pending-curator.js):
+      // a /studio URL built server-side, or null. Cleared on this login either way.
+      const next = await consumePendingCurator(supabase, account);
+
       return NextResponse.json({
         success: true,
         token,
+        next,
         artist: { id: artist.id, name: artist.name, email: artist.email, avatar_url: artist.avatar_url },
         account: { id: account.id, email: account.email },
         artists: artists.map((a) => ({ id: a.id, name: a.name, avatar_url: a.avatar_url })),

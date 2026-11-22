@@ -12,7 +12,9 @@ export default function CuratorSubmitPage() {
   // through /artist/login, which returns to that URL via ?next=. The token is
   // read after mount (localStorage), so the first paint uses the login route.
   const studioUrl = `/studio?curator_id=${encodeURIComponent(curatorId || '')}`;
-  const loginUrl = `/artist/login?next=${encodeURIComponent(studioUrl)}`;
+  // curator_id rides along so the login page's signup link can hand it to
+  // /artist, which stores it on the new account (lib/pending-curator.js).
+  const loginUrl = `/artist/login?next=${encodeURIComponent(studioUrl)}&curator_id=${encodeURIComponent(curatorId || '')}`;
   const [submitHref, setSubmitHref] = useState(loginUrl);
   useEffect(() => {
     let loggedIn = false;
@@ -125,15 +127,26 @@ export default function CuratorSubmitPage() {
           </p>
         )}
 
-        {/* CTA Button */}
-        <a href={submitHref} style={{
-          display: 'inline-block', padding: '15px 44px', borderRadius: 30,
-          background: 'linear-gradient(135deg,#FF6B4A,#FF3D6E)',
-          color: '#fff', fontWeight: 700, fontSize: '1.05rem', textDecoration: 'none',
-          boxShadow: '0 4px 24px rgba(255,107,74,0.3)', transition: 'transform 0.2s, box-shadow 0.2s',
-        }}>
-          Submit Your Music →
-        </a>
+        {/* CTA Button — replaced by a notice while the curator has paused intake */}
+        {curator.is_paused ? (
+          <p style={{
+            display: 'inline-block', padding: '14px 28px', borderRadius: 14,
+            border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.04)',
+            color: 'rgba(255,255,255,0.75)', fontSize: '0.95rem', lineHeight: 1.6, margin: 0,
+          }}>
+            現在は受付を停止しています<br />
+            <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.5)' }}>This curator is not accepting submissions right now.</span>
+          </p>
+        ) : (
+          <a href={submitHref} style={{
+            display: 'inline-block', padding: '15px 44px', borderRadius: 30,
+            background: 'linear-gradient(135deg,#FF6B4A,#FF3D6E)',
+            color: '#fff', fontWeight: 700, fontSize: '1.05rem', textDecoration: 'none',
+            boxShadow: '0 4px 24px rgba(255,107,74,0.3)', transition: 'transform 0.2s, box-shadow 0.2s',
+          }}>
+            Submit Your Music →
+          </a>
+        )}
 
         <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.78rem', marginTop: 48 }}>
           Powered by <a href="https://otonami.io" style={{ color: '#FF6B4A', textDecoration: 'none' }}>OTONAMI</a>

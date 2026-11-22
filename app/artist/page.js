@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { supabaseStorage } from '@/lib/supabase';
 import SavannahBanner from '@/components/SavannahBanner';
 import TrustBar from '@/components/landing/TrustBar';
@@ -44,6 +44,18 @@ const MOOD_OPTIONS = [
 
 export default function ArtistRegistrationPage() {
   const [step, setStep] = useState(1);
+  // ?curator_id= from /submit/<id> (via /artist/login). Sent with the signup so
+  // the server can remember it on the account; the server re-validates it.
+  const [pendingCuratorId, setPendingCuratorId] = useState(null);
+  useEffect(() => {
+    try {
+      const cid = new URLSearchParams(window.location.search).get('curator_id');
+      if (cid && /^[a-z0-9][a-z0-9-]{0,127}$/.test(cid)) setPendingCuratorId(cid);
+    } catch {}
+  }, []);
+  const loginHref = pendingCuratorId
+    ? `/artist/login?next=${encodeURIComponent(`/studio?curator_id=${pendingCuratorId}`)}&curator_id=${encodeURIComponent(pendingCuratorId)}`
+    : '/artist/login';
   const avatarInputRef = useRef(null);
   const coverInputRef = useRef(null);
 
@@ -168,6 +180,7 @@ export default function ArtistRegistrationPage() {
       }
 
       const payload = { ...form };
+      if (pendingCuratorId) payload.pendingCuratorId = pendingCuratorId;
       if (avatarUrl) payload.avatar_url = avatarUrl;
       if (coverUrl) payload.cover_url = coverUrl;
       // Referral source: ?ref= is already captured site-wide by
@@ -556,7 +569,7 @@ export default function ArtistRegistrationPage() {
                   <p style={{ fontSize: 14, color: '#6b6560', marginBottom: 12, lineHeight: 1.6 }}>
                     This email is already registered.<br/>このメールアドレスは既に登録されています。
                   </p>
-                  <a href="/artist/login" style={{ display: 'inline-block', background: '#c4956a', color: '#fff', borderRadius: 9999, padding: '10px 24px', fontSize: 14, fontWeight: 600, textDecoration: 'none', fontFamily: THEME.font }}>
+                  <a href={loginHref} style={{ display: 'inline-block', background: '#c4956a', color: '#fff', borderRadius: 9999, padding: '10px 24px', fontSize: 14, fontWeight: 600, textDecoration: 'none', fontFamily: THEME.font }}>
                     Login instead / ログインへ →
                   </a>
                 </div>
@@ -620,7 +633,7 @@ export default function ArtistRegistrationPage() {
           <span style={{ fontSize: 13, color: THEME.textMuted, fontFamily: THEME.font }}>
             <span className="hide-mobile">すでにアカウントをお持ちの方</span>
           </span>
-          <a href="/artist/login" style={{ padding: '8px 20px', borderRadius: 100, border: `1.5px solid ${THEME.gold}`, color: THEME.gold, textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font, transition: 'all var(--t-ui) var(--t-ui-ease)' }}>ログイン</a>
+          <a href={loginHref} style={{ padding: '8px 20px', borderRadius: 100, border: `1.5px solid ${THEME.gold}`, color: THEME.gold, textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font, transition: 'all var(--t-ui) var(--t-ui-ease)' }}>ログイン</a>
         </div>
       </header>
     );

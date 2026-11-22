@@ -38,6 +38,7 @@ The actual Supabase columns differ from schema.sql:
 - curators.bio_ja (TEXT, 2026-10-11): auto-JA translation of curator bio, generated on register/update; backfill via scripts/backfill-ja.mjs
 - artists.name_en (TEXT, 2026-11-09): English/romaji artist name, set by hand (no UI yet); pitch emails use it over artists.name
 - artists.bio_en (TEXT, 2026-11-09): auto-EN translation of artists.bio (lib/translate-en.js), regenerated only when bio changes; pitch emails show bio_en, else bio only if it has no Japanese
+- accounts.pending_curator_id (TEXT) / pending_curator_set_at (TIMESTAMPTZ) (2026-11-22): curator a /submit/<id> visitor signed up for; set by POST /api/artists, consumed once (14-day window) by the artist OTP login (lib/pending-curator.js). No FK.
 
 Curator earnings: tier × ¥160 × 0.7 (accepted) or tier × ¥160 × 0.5 (feedback/declined)
 JWT contains curator_id; old tokens fall back to email lookup.

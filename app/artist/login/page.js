@@ -22,6 +22,15 @@ export default function ArtistLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Signup link: carry ?curator_id= (set by /submit/<id>) into /artist so the
+  // account remembers the curator across browsers (lib/pending-curator.js).
+  const [signupHref, setSignupHref] = useState('/artist');
+  useEffect(() => {
+    try {
+      const cid = new URLSearchParams(window.location.search).get('curator_id');
+      if (cid && /^[a-z0-9][a-z0-9-]{0,127}$/.test(cid)) setSignupHref(`/artist?curator_id=${encodeURIComponent(cid)}`);
+    } catch {}
+  }, []);
 
   // OTP state
   const [loginStep, setLoginStep] = useState(1);
@@ -154,10 +163,14 @@ export default function ArtistLoginPage() {
       localStorage.setItem('artist_token', data.token);
       // Honour a ?next= handoff (e.g. /curators → login → /studio?curator_id=…).
       // Only same-origin absolute paths are allowed, to avoid open redirects.
+      // Without one, use the server's one-time handoff from a /submit/<id>
+      // signup (built server-side as /studio?curator_id=…; null otherwise).
       let dest = '/artist/dashboard';
+      const isSafePath = (p) => typeof p === 'string' && p.startsWith('/') && !p.startsWith('//');
       try {
         const next = new URLSearchParams(window.location.search).get('next');
-        if (next && next.startsWith('/') && !next.startsWith('//')) dest = next;
+        if (isSafePath(next)) dest = next;
+        else if (isSafePath(data.next)) dest = data.next;
       } catch {}
       window.location.href = dest;
     } catch (e) {
@@ -217,7 +230,7 @@ export default function ArtistLoginPage() {
           <svg width="36" height="36" viewBox="0 0 40 40" style={{ flexShrink: 0 }}><circle cx="20" cy="20" r="16" fill="none" stroke="#FF6B4A" strokeWidth="5"/><g style={{clipPath:'circle(32.5% at 50% 50%)'}} fill="#FF6B4A"><rect x="8" y="17" width="2" height="6" rx="1"/><rect x="12" y="14" width="2" height="12" rx="1"/><rect x="16" y="11" width="2" height="18" rx="1"/><rect x="20" y="8" width="2" height="24" rx="1"/><rect x="24" y="11" width="2" height="18" rx="1"/><rect x="28" y="14" width="2" height="12" rx="1"/><rect x="32" y="17" width="2" height="6" rx="1"/></g></svg>
           <span style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 20, letterSpacing: '3px', color: '#1a1a1a' }}>OTONAMI</span>
         </a>
-        <a href="/artist" style={{ padding: '8px 20px', borderRadius: 100, border: `1.5px solid ${THEME.gold}`, color: THEME.gold, textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font }}>新規登録</a>
+        <a href={signupHref} style={{ padding: '8px 20px', borderRadius: 100, border: `1.5px solid ${THEME.gold}`, color: THEME.gold, textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: THEME.font }}>新規登録</a>
       </header>
 
       {/* Centered card */}
@@ -278,7 +291,7 @@ export default function ArtistLoginPage() {
                 <div style={{ flex: 1, height: 1, background: THEME.border }} />
               </div>
 
-              <a href="/artist" style={{
+              <a href={signupHref} style={{
                 display: 'block', textAlign: 'center', padding: '12px', borderRadius: 100,
                 border: `1.5px solid ${THEME.gold}`, color: THEME.gold,
                 textDecoration: 'none', fontSize: 14, fontWeight: 600, fontFamily: THEME.font,

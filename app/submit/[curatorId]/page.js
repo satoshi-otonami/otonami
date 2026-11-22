@@ -7,6 +7,18 @@ export default function CuratorSubmitPage() {
   const [curator, setCurator] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  // Same handoff as the /curators "Start Campaign" button: a signed-in artist
+  // goes straight to /studio with this curator selected; anyone else goes
+  // through /artist/login, which returns to that URL via ?next=. The token is
+  // read after mount (localStorage), so the first paint uses the login route.
+  const studioUrl = `/studio?curator_id=${encodeURIComponent(curatorId || '')}`;
+  const loginUrl = `/artist/login?next=${encodeURIComponent(studioUrl)}`;
+  const [submitHref, setSubmitHref] = useState(loginUrl);
+  useEffect(() => {
+    let loggedIn = false;
+    try { loggedIn = !!localStorage.getItem('artist_token'); } catch {}
+    setSubmitHref(loggedIn ? studioUrl : loginUrl);
+  }, [studioUrl, loginUrl]);
 
   useEffect(() => {
     if (!curatorId) return;
@@ -114,7 +126,7 @@ export default function CuratorSubmitPage() {
         )}
 
         {/* CTA Button */}
-        <a href={`/artist?submit_to=${encodeURIComponent(curatorId)}`} style={{
+        <a href={submitHref} style={{
           display: 'inline-block', padding: '15px 44px', borderRadius: 30,
           background: 'linear-gradient(135deg,#FF6B4A,#FF3D6E)',
           color: '#fff', fontWeight: 700, fontSize: '1.05rem', textDecoration: 'none',

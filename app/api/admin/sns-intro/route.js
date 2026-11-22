@@ -7,7 +7,8 @@ import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { pickUnintroducedCurator, setIntroMarkToken } from '@/lib/db';
-import { generateSnsIntroCaptions } from '@/lib/sns-intro-caption';
+import { generateSnsIntroCaptions, PLATFORM_ORDER, X_MAX_WEIGHTED } from '@/lib/sns-intro-caption';
+import { getServiceSupabase } from '@/lib/supabase';
 import { renderCuratorCard } from '@/lib/sns-intro-card';
 import { escapeHtml } from '@/lib/html-escape';
 
@@ -32,9 +33,30 @@ const PLATFORM_LABELS = {
   facebook: 'Facebook',
   linkedin: 'LinkedIn',
 };
-const ORDER = ['x', 'instagram', 'threads', 'facebook', 'linkedin'];
+const ORDER = PLATFORM_ORDER;
 
-function buildDraftEmail(curator, captions, audit, markUrl) {
+// 下書き冒頭の要約: 媒体ごとのタグ数 / タグ付け先 / 絵文字。
+// Facebook / LinkedIn は貼り付けた文字列ではタグ付けにならないので、URLを出して投稿時に手で選んでもらう。
+function buildSummaryLines(audit, accounts, names) {
+  const tagLine = ORDER.map((k) => `${PLATFORM_LABELS[k]} ${audit.perPlatform[k].hashtagCount}`).join(' / ');
+  const mentionOf = (k) => {
+    const v = accounts[k];
+    if (!v) return '登録なし';
+    return k === 'facebook' || k === 'linkedin' ? `${v}（投稿時に手でタグ付け）` : `@${v}`;
+  };
+  return {
+    hashtags: `ハッシュタグ数: ${tagLine}`,
+    mentions: ORDER.map((k) => `${PLATFORM_LABELS[k]}: ${mentionOf(k)}`),
+    emoji: `絵文字: ${audit.hasEmoji ? 'あり(要確認)' : 'なし'}${names.emojiRemoved ? '（名前の絵文字を除去）' : ''}`,
+    xLength: `X の文字数: ${audit.xLength} / ${X_MAX_WEIGHTED}（日本語1文字=2、URL=23）${audit.xTagsRemoved?.length ? `／超過のため外したタグ: ${audit.xTagsRemoved.join(' ')}` : ''}${audit.xRewrites?.length ? `／長すぎたため X だけ${audit.xRewrites.length}回作り直し` : ''}`,
+    xWarning: audit.xOverLimit
+      ? `警告: X 用キャプションが ${audit.xLength - X_MAX_WEIGHTED} 超過しています（${audit.xLength} / ${X_MAX_WEIGHTED}）。このままでは X に投稿できないので、本文を短くしてから貼ってください。`
+      : null,
+  };
+}
+
+function buildDraftEmail(curator, captions, audit, markUrl, accounts, names) {
+  const summary = buildSummaryLines(audit, accounts, names);
   const sections = ORDER.map((k) => {
     const label = PLATFORM_LABELS[k];
     const body = escapeHtml(captions[k] || '(なし)').replace(/\n/g, '<br>');
@@ -54,11 +76,20 @@ function buildDraftEmail(curator, captions, audit, markUrl) {
         </td></tr>
         <tr><td style="padding:24px;">
           <p style="margin:0 0 6px;font-size:13px;color:#6b665d;">紹介対象キュレーター</p>
-          <p style="margin:0 0 4px;font-size:20px;font-weight:600;color:#1a1612;">${escapeHtml(curator.name)}</p>
+          <p style="margin:0 0 4px;font-size:20px;font-weight:600;color:#1a1612;">${escapeHtml(names.name)}</p>
           <p style="margin:0 0 18px;font-size:13px;color:#6b665d;">
             ${escapeHtml(curator.platform || '-')}${curator.region ? ' / ' + escapeHtml(curator.region) : ''}${curator.type ? ' / ' + escapeHtml(curator.type) : ''}
           </p>
-          <p style="margin:0 0 18px;font-size:12px;color:#9b9590;">そのままコピペして各SNSに貼ってください。ハッシュタグ総数: ${audit.hashtagCount} / 絵文字: ${audit.hasEmoji ? 'あり(要確認)' : 'なし'}</p>
+          ${summary.xWarning ? `<div style="margin:0 0 12px;padding:12px 14px;font-size:14px;line-height:1.7;font-weight:600;color:#b4462f;background:#fdf1ee;border:1px solid #f0c9bf;border-radius:8px;">${escapeHtml(summary.xWarning)}</div>` : ''}
+          <div style="margin:0 0 18px;padding:12px 14px;font-size:13px;line-height:1.7;color:#1a1612;background:#f9f7f2;border:1px solid #e8e6e0;border-radius:8px;">
+            <div>${escapeHtml(summary.hashtags)}</div>
+            <div>${escapeHtml(summary.xLength)}</div>
+            <div style="margin-top:6px;">タグ付け先:</div>
+            ${summary.mentions.map((m) => `<div style="padding-left:12px;">${escapeHtml(m)}</div>`).join('')}
+            <div style="margin-top:6px;">${escapeHtml(summary.emoji)}</div>
+            ${audit.labelLeaks ? '<div style="margin-top:6px;color:#b4462f;">内部の項目名が本文に残っています（要確認）</div>' : ''}
+          </div>
+          <p style="margin:0 0 18px;font-size:12px;color:#9b9590;">そのままコピペして各SNSに貼ってください。</p>
           ${sections}
           <div style="margin:8px 0 0;padding:18px;background:#f9f7f2;border:1px solid #e8e6e0;border-radius:8px;">
             <p style="margin:0 0 12px;font-size:14px;line-height:1.7;color:#1a1612;">この内容で各SNSに投稿したら、次のリンクをタップして掲載済みにしてください（次回の紹介対象から自動で外れます）。</p>
@@ -73,9 +104,15 @@ function buildDraftEmail(curator, captions, audit, markUrl) {
   const text = [
     `OTONAMI — SNS紹介 下書き`,
     ``,
-    `紹介対象: ${curator.name}`,
+    ...(summary.xWarning ? [summary.xWarning, ``] : []),
+    `紹介対象: ${names.name}`,
     `媒体/地域/種別: ${curator.platform || '-'} / ${curator.region || '-'} / ${curator.type || '-'}`,
-    `ハッシュタグ総数: ${audit.hashtagCount} / 絵文字: ${audit.hasEmoji ? 'あり' : 'なし'}`,
+    summary.hashtags,
+    summary.xLength,
+    `タグ付け先:`,
+    ...summary.mentions.map((m) => `  ${m}`),
+    summary.emoji,
+    ...(audit.labelLeaks ? ['内部の項目名が本文に残っています（要確認）'] : []),
     ``,
     ...ORDER.flatMap((k) => [`■ ${PLATFORM_LABELS[k]}`, captions[k] || '(なし)', '']),
     `各SNSに投稿したら、次のリンクをタップして掲載済みにしてください（次回の紹介対象から外れます）:`,
@@ -112,8 +149,18 @@ async function handle(request) {
       });
     }
 
-    // 2) キャプション生成
-    const { captions, audit } = await generateSnsIntroCaptions(curator);
+    // 1.5) SNSアカウント（social_links / url / playlist_url）を読み取りで足す。
+    //      pick 側（lib/db.js）は social_links を返さないため、ここで1行だけ読む。
+    const { data: extraRows, error: extraErr } = await getServiceSupabase()
+      .from('curators')
+      .select('social_links, url, playlist_url')
+      .eq('id', curator.id)
+      .limit(1);
+    if (extraErr) throw new Error(extraErr.message);
+    Object.assign(curator, extraRows?.[0] || {});
+
+    // 2) キャプション生成（タグ・メンション・名前の絵文字除去はコード側）
+    const { captions, audit, accounts, names } = await generateSnsIntroCaptions(curator);
 
     // 2.5) ワンタップ確定トークンを発行・保存（pick毎に上書き＝古い下書きリンクは無効化）。
     const markToken = crypto.randomBytes(32).toString('hex'); // 64 hex chars
@@ -123,13 +170,13 @@ async function handle(request) {
     )}&token=${markToken}`;
 
     // 3) 下書きメール送信（Resend。SDKは4xxでthrowしないので result.error を明示チェック）
-    const { html, text } = buildDraftEmail(curator, captions, audit, markUrl);
-    const subject = `[OTONAMI SNS下書き] 新規キュレーター紹介: ${curator.name}`;
+    const { html, text } = buildDraftEmail(curator, captions, audit, markUrl, accounts, names);
+    const subject = `[OTONAMI SNS下書き] 新規キュレーター紹介: ${names.name}`;
 
     // 3.5) ブランドカード画像(1080×1080 PNG)を添付。生成失敗してもメール本体は送る。
     let attachments = [];
     try {
-      const cardBuffer = await renderCuratorCard(curator);
+      const cardBuffer = await renderCuratorCard({ ...curator, name: names.name });
       if (cardBuffer) {
         attachments = [{ filename: 'curator-card.png', content: cardBuffer }];
       }
@@ -151,7 +198,7 @@ async function handle(request) {
     if (error) {
       console.error('SNS intro draft: Resend returned error:', JSON.stringify(error));
       return NextResponse.json(
-        { ok: false, curator, captions, audit, emailError: error.message || error },
+        { ok: false, curator, captions, audit, accounts, emailError: error.message || error },
         { status: 502 }
       );
     }
@@ -161,7 +208,8 @@ async function handle(request) {
       ok: true,
       curator,
       captions,
-      audit,            // { hasEmoji, hashtagCount, hashtags }
+      audit,            // { hasEmoji, labelLeaks, hashtagCount, perPlatform }
+      accounts,
       emailId: data?.id || null,
       draftTo: DRAFT_TO,
       note: 'introduced_at is intentionally not updated in Phase 2a.',

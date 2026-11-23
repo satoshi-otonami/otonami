@@ -2994,6 +2994,8 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
           followers,
           userName: user.name,
           trackFeatures: trackData?.audioFeatures || null,
+          // Lets /api/pitch read the track's release date (new vs older wording).
+          trackId: linkedTrackId || null,
         }),
       });
       const result = await res.json();

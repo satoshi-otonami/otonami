@@ -44,19 +44,23 @@ export async function POST(request) {
     // fetch the DB bio here and merge it into the prompt — without this, a
     // user with a rich SXSW/Ghibli-grade bio in their profile sees a generic
     // pitch because only the empty pitch-form description reaches Claude.
+    // hot_news (artists.hot_news) is deliberately NOT read: fed in as a bare
+    // "Latest Activity" line it made the model present a different release as the
+    // key track's album (α波オルゴール × ゆりかごのうた → "latest release, a Studio
+    // Ghibli best collection"; 鳳レオ × 夏哀れ → "my debut single"). Re-enable it
+    // only together with rules that keep it a separate work from the key track
+    // (buildPitchPrompt still accepts artistDbHotNews for that).
     let artistDbBio = null;
-    let artistDbHotNews = null;
     let artistDbInfluences = null;
     try {
       const sb = getServiceSupabase();
       const { data: artistRow } = await sb
         .from('artists')
-        .select('bio, hot_news, influences')
+        .select('bio, influences')
         .eq('id', payload.artistId)
         .maybeSingle();
       if (artistRow) {
         artistDbBio = artistRow.bio?.trim() || null;
-        artistDbHotNews = artistRow.hot_news?.trim() || null;
         artistDbInfluences = Array.isArray(artistRow.influences) && artistRow.influences.length
           ? artistRow.influences.join(', ')
           : null;
@@ -95,7 +99,6 @@ export async function POST(request) {
       userName,
       trackFeatures,
       artistDbBio,
-      artistDbHotNews,
       artistDbInfluences,
     });
 

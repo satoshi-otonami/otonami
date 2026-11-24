@@ -469,6 +469,7 @@ export default function App() {
   // "auth"/"landing"; after async auto-login resolves we use this ref to
   // normalize `page` to the tab the user actually asked for.
   const handoffIntentRef = useRef(null);
+  const redirectingToLoginRef = useRef(false);
   if (handoffIntentRef.current === null) {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -476,8 +477,12 @@ export default function App() {
       handoffIntentRef.current = {
         tab: (tab && ARTIST_TABS.includes(tab)) ? tab : null,
         autoAnalyze: params.get('auto_analyze') === 'true',
+        // The full URL as it arrived (curator_id etc. included), for the login
+        // redirect when the stored token turns out to be expired.
+        url: window.location.pathname + window.location.search,
+        curatorId: params.get('curator_id'),
       };
-    } catch { handoffIntentRef.current = { tab: null, autoAnalyze: false }; }
+    } catch { handoffIntentRef.current = { tab: null, autoAnalyze: false, url: null, curatorId: null }; }
   }
 
   const notify = (msg, type="success") => { setNotif({msg,type}); setTimeout(()=>setNotif(null),4000); };
@@ -524,8 +529,9 @@ export default function App() {
     let token = null;
     try { token = localStorage.getItem('artist_token'); } catch {}
     if (!token) { setIsAuthLoading(false); return; }
+    let rejected = false;
     fetch('/api/artists', { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.ok ? res.json() : null)
+      .then(res => { rejected = res.status === 401 || res.status === 403; return res.ok ? res.json() : null; })
       .then(data => {
         if (data?.artist) {
           setLoggedInArtist(data.artist);
@@ -587,13 +593,26 @@ export default function App() {
           // Token rejected (expired/invalid) — drop it so we don't loop
           // through the loading screen on every navigation.
           try { localStorage.removeItem('artist_token'); } catch {}
+          if (rejected) {
+            // Expired session: go to login and come back to the URL that was
+            // asked for (e.g. /studio?curator_id=… from /submit or /curators),
+            // instead of painting an empty studio with the curator dropped.
+            // otonami-user is dropped too — without the token it is not a session.
+            try { localStorage.removeItem('otonami-user'); } catch {}
+            const intent = handoffIntentRef.current || {};
+            const next = intent.url && intent.url.startsWith('/studio') ? intent.url : '/studio';
+            const cid = intent.curatorId && /^[a-z0-9][a-z0-9,-]{0,512}$/.test(intent.curatorId) ? intent.curatorId : null;
+            redirectingToLoginRef.current = true;
+            window.location.replace(`/artist/login?next=${encodeURIComponent(next)}${cid ? `&curator_id=${encodeURIComponent(cid.split(',')[0])}` : ''}`);
+          }
         }
       })
       .catch(err => {
         console.error('Failed to load artist profile:', err);
         try { localStorage.removeItem('artist_token'); } catch {}
       })
-      .finally(() => { setIsAuthLoading(false); });
+      // Keep the loading screen while the login redirect is on its way.
+      .finally(() => { if (!redirectingToLoginRef.current) setIsAuthLoading(false); });
   }, []); // eslint-disable-line
 
   // Load data from storage
@@ -1027,6 +1046,13 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
   // ── Auto-fill from URL params (dashboard → studio handoff) ──
   const [pendingCuratorId, setPendingCuratorId] = useState(null);
   const [pendingCuratorName, setPendingCuratorName] = useState(null);
+  // Curators the artist arrived for (/submit/<id> or /curators → curator_id=…):
+  // shown pinned at the top of the list with a "you're submitting to" notice.
+  const [arrivalCuratorIds, setArrivalCuratorIds] = useState([]);
+  // Credits still missing when the shop is opened from a shortage notice; the
+  // shop opens with exactly that many selected (custom).
+  const [shopNeed, setShopNeed] = useState(null);
+  const openShop = (need) => { setShopNeed(need > 0 ? need : null); setPage('shop'); };
 
   const readUrlParams = useCallback(() => {
     try {
@@ -1106,6 +1132,7 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
         .map(c => c.id);
       if (matched.length) {
         setSelected(prev => [...prev, ...matched.filter(id => !prev.includes(id))]);
+        setArrivalCuratorIds(matched);
       }
       setPendingCuratorId(null);
     } else if (pendingCuratorName) {
@@ -1362,11 +1389,11 @@ function ArtistApp({user, curators, pitches, credits, page, setPage, savePitches
     )}
     <main style={css.main}>
       {page==="dashboard" && <ArtistDash user={user} pitches={myPitches} curators={curators} credits={credits} setPage={setPage} notify={notify} loggedInArtist={loggedInArtist}/>}
-      {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist} pitchedCuratorIds={pitchedCuratorIds} credits={credits}/>}
-      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitchedCuratorIds={pitchedCuratorIds} pitches={pitches} savePitches={savePitches} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches} linkedTrackId={linkedTrackId} linkedTrackAiStatus={linkedTrackAiStatus}/>}
+      {page==="curators" && <CuratorBrowser curators={curators} selected={selected} setSelected={setSelected} setPage={setPage} trackData={trackData} setTrackData={setTrackData} notify={notify} artist={artist} pitchedCuratorIds={pitchedCuratorIds} credits={credits} arrivalCuratorIds={arrivalCuratorIds} openShop={openShop}/>}
+      {page==="pitch" && <PitchCreator user={user} curators={curators} selected={selected} setSelected={setSelected} pitchedCuratorIds={pitchedCuratorIds} pitches={pitches} savePitches={savePitches} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage} setTrackData={setTrackData} trackData={trackData} artist={artist} setArtist={setArtist} links={links} setLinks={setLinks} followers={followers} setFollowers={setFollowers} clearArtistDraft={clearArtistDraft} refreshPitches={refreshPitches} linkedTrackId={linkedTrackId} linkedTrackAiStatus={linkedTrackAiStatus} openShop={openShop}/>}
       {page==="tracking" && <Tracking pitches={myPitches} curators={curators} notify={notify} savePitches={savePitches} allPitches={pitches} refreshPitches={refreshPitches}/>}
       {page==="analytics" && <Analytics pitches={myPitches} refreshPitches={refreshPitches}/>}
-      {page==="shop" && <CreditShop user={user} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage}/>}
+      {page==="shop" && <CreditShop user={user} credits={credits} setCredits={setCredits} notify={notify} setPage={setPage} need={shopNeed} onNeedUsed={() => setShopNeed(null)}/>}
       {/* Safety net: if `page` is ever a value none of the branches above
           handle (e.g. a stale "auth"/"landing" left over after async
           auto-login), fall back to the dashboard so <main> is never blank. */}
@@ -1834,7 +1861,7 @@ function getMatchCircleStyle(score) {
 }
 
 // ─── Curator Browser ───
-function CuratorBrowser({curators, selected, setSelected, setPage, trackData, setTrackData, notify, artist, pitchedCuratorIds, credits = 0}) {
+function CuratorBrowser({curators, selected, setSelected, setPage, trackData, setTrackData, notify, artist, pitchedCuratorIds, credits = 0, arrivalCuratorIds = [], openShop}) {
   const isPitched = (id) => !!pitchedCuratorIds?.has(id);
   const [q, setQ] = useState(""); const [genre, setGenre] = useState(""); const [type, setType] = useState("");
   const [sortByMatch, setSortByMatch] = useState(false);
@@ -1994,7 +2021,24 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
     return [...scoredCurators].sort(compareByMatch);
   }, [scoredCurators, sortByMatch]);
 
-  const list = ranked.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||c.platform.toLowerCase().includes(q.toLowerCase())).filter(c=>!genre||c.genres.includes(genre)).filter(c=>!type||c.type===type);
+  // Curators the artist arrived for (/submit or /curators handoff) and still has
+  // selected: pinned in a 選択中 block above the list, outside search / filters /
+  // sorting. Curators selected on this page stay where they are in the list, so
+  // a card never jumps away from under the finger.
+  const pinnedIds = arrivalCuratorIds.filter(id => selected.includes(id));
+  const pinned = pinnedIds.map(id => ranked.find(c => c.id === id)).filter(Boolean);
+  const list = ranked.filter(c=>!pinnedIds.includes(c.id)).filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||c.platform.toLowerCase().includes(q.toLowerCase())).filter(c=>!genre||c.genres.includes(genre)).filter(c=>!type||c.type===type);
+  // Selection summary for the two action bars: who it goes to, cost, shortage.
+  const selectedCurators = selected.map(id => curators.find(c => c.id === id)).filter(Boolean);
+  const leadCurator = pinned[0] || selectedCurators[0] || null;
+  const selCost = selectedCurators.reduce((s,c)=>s+(c.creditCost||2),0);
+  const shortBy = Math.max(0, selCost - (credits || 0));
+  const sendToLabel = !leadCurator ? `${selected.length}人選択中`
+    : selectedCurators.length <= 1 ? `${leadCurator.name} に送る`
+    : `${leadCurator.name} ほか${selectedCurators.length - 1}人`;
+  const [uiLocale, setUiLocale] = useState("ja");
+  useEffect(() => { try { const l = localStorage.getItem("otonami_locale"); if (l === "ja" || l === "en") setUiLocale(l); } catch {} }, []);
+  const [arrivalNoticeClosed, setArrivalNoticeClosed] = useState(false);
   // Selecting a curator who already has a live pitch for this track is a dead
   // end — the server would skip the send as a same-contact duplicate. Refuse it
   // here (both the card and the detail modal route through this) and say why.
@@ -2011,6 +2055,19 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   return <div>
     <style>{`.curator-list-card { flex-direction: row !important; } @media (max-width: 480px) { .curator-list-card { flex-direction: column !important; } } @media (max-width: 768px) { .pitch-step-labels { display: none !important; } } @keyframes curatorModalIn { from { opacity: 0; transform: scale(0.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }`}</style>
     <PreLaunchBanner variant="curators" />
+    {pinned.length > 0 && !arrivalNoticeClosed && (
+      <div role="status" style={{display:"flex",alignItems:"flex-start",gap:10,background:"rgba(196,149,106,0.1)",border:"1px solid rgba(196,149,106,0.45)",borderRadius:12,padding:"12px 14px",marginBottom:"1rem"}}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{flexShrink:0,marginTop:1}}><path d="M3 11.5L21 3l-6.5 18-3.2-7.3L3 11.5z" stroke="#c4956a" strokeWidth="1.8" strokeLinejoin="round"/><path d="M11.3 13.7L21 3" stroke="#c4956a" strokeWidth="1.8" strokeLinecap="round"/></svg>
+        <div style={{flex:1,minWidth:0,fontSize:14,lineHeight:1.6,color:"#1a1a1a",fontFamily:"'DM Sans',sans-serif"}}>
+          {uiLocale === "en" ? (
+            <><strong>You're submitting to {pinned[0].name}{pinned.length > 1 ? ` and ${pinned.length - 1} more` : ""}.</strong> Tap “ピッチ作成へ” (Create pitch), then add the link to the song you're sending.</>
+          ) : (
+            <><strong>{pinned[0].name}{pinned.length > 1 ? ` ほか${pinned.length - 1}人` : ""} への応募です。</strong>『ピッチ作成へ』を押して、送る曲のURLを入れてください。</>
+          )}
+        </div>
+        <button onClick={()=>setArrivalNoticeClosed(true)} aria-label={uiLocale === "en" ? "Close" : "閉じる"} style={{background:"transparent",border:"none",color:"#9a958e",fontSize:18,lineHeight:1,cursor:"pointer",padding:"0 2px",flexShrink:0}}>×</button>
+      </div>
+    )}
     <div style={{marginBottom:"1.2rem"}}>
       <div style={{fontSize:11,letterSpacing:"2px",color:"#6b6560",marginBottom:6,textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif"}}>CURATORS</div>
       <h1 style={{fontSize:28,fontWeight:800,margin:0,fontFamily:"'Playfair Display',Georgia,serif",color:"#1a1a1a",lineHeight:1.1}}>あなたの曲に合うメディアを探そう</h1>
@@ -2158,7 +2215,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       <select style={{...css.filterSelect,flex:"1 1 120px",fontSize:14,height:40}} value={genre} onChange={e=>setGenre(e.target.value)}><option value="">全ジャンル</option>{GENRES.map(g=><option key={g}>{g}</option>)}</select>
       <select style={{...css.filterSelect,flex:"1 1 120px",fontSize:14,height:40}} value={type} onChange={e=>setType(e.target.value)}><option value="">全タイプ</option>{CURATOR_TYPES.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>
     </div>
-    {selected.length > 0 && <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.4)",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600}}>{selected.length}人選択中 · 合計{curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}クレジット (¥{creditsToJpy(curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0))})</span><div style={{display:"flex",gap:6}}><button onClick={()=>{ if (isPreLaunch()) { notify(`ピッチ送信は${LAUNCH_DATE_LABEL_JA}のローンチ後に利用可能になります`, "error"); return; } setPage("pitch"); }} disabled={isPreLaunch()} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem",opacity:isPreLaunch()?0.5:1,cursor:isPreLaunch()?"not-allowed":"pointer"}}>{isPreLaunch() ? "ローンチ後に利用可" : "ピッチ作成へ →"}</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
+    {selected.length > 0 && <div style={{background:"rgba(196,149,106,0.08)",border:"1px solid rgba(196,149,106,0.4)",borderRadius:12,padding:"0.6rem 1rem",marginBottom:"1rem",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:"0.82rem",color:"#c4956a",fontWeight:600,minWidth:0}}>{sendToLabel}・{selectedCurators.length > 1 ? "合計" : ""}{selCost}クレジット（¥{creditsToJpy(selCost).toLocaleString()}）{shortBy > 0 && <span style={{display:"block",color:"#e85d3a",fontWeight:600,fontSize:"0.76rem",marginTop:2}}>残高 {credits} · あと {shortBy} クレジット必要 <button onClick={()=>openShop?.(shortBy)} style={{background:"transparent",border:"none",color:"#c4956a",textDecoration:"underline",cursor:"pointer",padding:0,font:"inherit"}}>購入</button></span>}</span><div style={{display:"flex",gap:6}}><button onClick={()=>{ if (isPreLaunch()) { notify(`ピッチ送信は${LAUNCH_DATE_LABEL_JA}のローンチ後に利用可能になります`, "error"); return; } setPage("pitch"); }} disabled={isPreLaunch()} style={{...css.btnPrimary,fontSize:"0.75rem",padding:"0.4rem 0.8rem",opacity:isPreLaunch()?0.5:1,cursor:isPreLaunch()?"not-allowed":"pointer"}}>{isPreLaunch() ? "ローンチ後に利用可" : "ピッチ作成へ →"}</button><button onClick={()=>setSelected([])} style={{...css.btnSm,color:"#ef4444"}}>クリア</button></div></div>}
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
       {(() => {
         const avatarColors = [
@@ -2272,17 +2329,26 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
         const isRecommendable = (c) => typeof c.matchScore === 'number' && c.matchScore >= 50 && !c.matchExcluded?.length;
         const recommended = hasAnalysis ? list.filter(isRecommendable) : [];
         const others = hasAnalysis ? list.filter(c => !isRecommendable(c)) : list;
+        const pinnedBlock = pinned.length > 0 && (<>
+          <div style={{display:'flex',alignItems:'center',gap:8,margin:'8px 0 12px'}}>
+            <span style={{fontSize:14,fontWeight:600,color:'#c4956a'}}>選択中</span>
+            <span style={{fontSize:12,color:'#6b6560'}}>— 応募先のキュレーター</span>
+          </div>
+          {pinned.map(c => renderCard(c, false))}
+          <div style={{borderTop:'1px solid #f0ede6',margin:'16px 0 4px'}}/>
+        </>);
         if (list.length === 0 && curators.length > 0) {
-          return (
+          return (<>{pinnedBlock}
             <div style={{textAlign:'center',padding:'3rem 1.5rem'}}>
               <div style={{width:48,height:2,background:'#c4956a',borderRadius:1,margin:'0 auto 14px'}}/>
               <p style={{color:'#6b6560',fontSize:14,lineHeight:1.7,margin:0}}>
                 この条件では静かなようです。ジャンルを1つ外すと候補が増えます。
               </p>
             </div>
-          );
+          </>);
         }
         return (<>
+          {pinnedBlock}
           {recommended.length > 0 && (<>
             <div style={{display:'flex',alignItems:'center',gap:8,margin:'20px 0 12px'}}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l2.12 4.3 4.74.69-3.43 3.34.81 4.72L8 11.77l-4.24 2.23.81-4.72L1.14 5.94l4.74-.69L8 1z" fill="#c4956a"/></svg>
@@ -2308,8 +2374,10 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(248,247,244,0.96)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",borderTop:"1px solid rgba(196,149,106,0.25)",boxShadow:"0 -4px 20px rgba(0,0,0,0.06)",padding:"0.75rem 1rem",zIndex:50}}>
         <div style={{maxWidth:680,margin:"0 auto",display:"flex",gap:8,alignItems:"center"}}>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:"0.78rem",fontWeight:700,color:"#c4956a",lineHeight:1.3}}>{selected.length}人選択中 · {curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0)}クレジット</div>
-            <div style={{fontSize:"0.62rem",color:"#9a958e",lineHeight:1.3}}>¥{creditsToJpy(curators.filter(c=>selected.includes(c.id)).reduce((s,c)=>s+(c.creditCost||2),0))}相当</div>
+            <div style={{fontSize:"0.78rem",fontWeight:700,color:"#c4956a",lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{sendToLabel}・{selCost}クレジット</div>
+            {shortBy > 0
+              ? <div style={{fontSize:"0.66rem",color:"#e85d3a",fontWeight:600,lineHeight:1.3}}>残高 {credits} · あと {shortBy} クレジット必要</div>
+              : <div style={{fontSize:"0.62rem",color:"#9a958e",lineHeight:1.3}}>¥{creditsToJpy(selCost).toLocaleString()}相当</div>}
           </div>
           {isPreLaunch() ? (
             <button disabled style={{...css.btnPrimary,padding:"0.7rem 1.1rem",fontSize:"0.82rem",opacity:0.5,cursor:"not-allowed",background:"#e5e2dc",color:"#6b6560",whiteSpace:"nowrap"}}>{LAUNCH_DATE_LABEL_JA}ローンチ後</button>
@@ -2513,7 +2581,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
 }
 
 // ─── Pitch Creator (Template Engine + Social Links + Followers) ───
-function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds, pitches, savePitches, credits, setCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft, refreshPitches, linkedTrackId, linkedTrackAiStatus}) {
+function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds, pitches, savePitches, credits, setCredits, notify, setPage, setTrackData, trackData, artist, setArtist, links, setLinks, followers, setFollowers, clearArtistDraft, refreshPitches, linkedTrackId, linkedTrackAiStatus, openShop}) {
   // Wizard progress restored from sessionStorage (see loadPitchWizard). Read once
   // at mount so a reload — or a hop over to the curators tab and back — resumes
   // where the user left off instead of resetting to step 0.
@@ -3391,6 +3459,13 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
           </div>
         ))}
       </div>
+      {/* Shortage shown from the first step, not only at ピッチの設定. */}
+      {step === 0 && insufficientCredits && (
+        <div style={{marginTop:12,padding:"10px 14px",background:"rgba(232,93,58,0.06)",borderLeft:"3px solid #e85d3a",borderRadius:4,fontSize:13,color:"#e85d3a",fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>
+          クレジットが足りません: 残高 {credits} · あと {cost-credits} クレジット必要（送信先 {cost} クレジット）
+          <div style={{fontSize:12,color:"#6b6560",fontWeight:400,marginTop:4}}>入力はこのまま進められます。<button onClick={()=>openShop ? openShop(cost-credits) : setPage("shop")} style={{background:"transparent",border:"none",color:"#c4956a",textDecoration:"underline",cursor:"pointer",padding:0,font:"inherit"}}>足りない {cost-credits} クレジットを購入</button></div>
+        </div>
+      )}
     </div>}
 
     {/* ═══ STEP 0 ═══ */}
@@ -3715,7 +3790,7 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
       <div style={{fontSize:14,fontWeight:700,marginBottom:5,borderLeft:"3px solid #c4956a",paddingLeft:10}}>送信先 ({targets.length}人)</div>
       {targets.map(c => <div key={c.id} style={{display:"flex",alignItems:"center",gap:6,padding:"0.4rem 0",borderBottom:"1px solid rgba(0,0,0,0.05)"}}><span>{c.avatar}</span><span style={{fontWeight:500,fontSize:14,color:"#1a1a1a"}}>{c.name}</span><span style={{fontSize:13,color:"#6b6560"}}>{c.platform}</span><span style={{fontSize:13,color:"#9a958e",marginLeft:"auto",fontStyle:"italic"}}>{c.type}</span></div>)}
       {insufficientCredits ? (
-        <div style={{background:"rgba(232,93,58,0.06)",borderLeft:"3px solid #e85d3a",borderRadius:4,padding:"12px 16px",marginTop:"0.6rem",fontSize:14,color:"#e85d3a",fontWeight:600}}>クレジット不足: あと {cost-credits}cr 必要（残 {credits}cr / 必要 {cost}cr）<div style={{fontSize:12,color:"#6b6560",fontWeight:400,marginTop:6}}><button onClick={()=>setPage("shop")} style={{background:"transparent",border:"none",color:"#c4956a",textDecoration:"underline",cursor:"pointer",padding:0,font:"inherit"}}>クレジットを追加購入</button>するか、送信先を減らしてください。</div></div>
+        <div style={{background:"rgba(232,93,58,0.06)",borderLeft:"3px solid #e85d3a",borderRadius:4,padding:"12px 16px",marginTop:"0.6rem",fontSize:14,color:"#e85d3a",fontWeight:600}}>クレジット不足: あと {cost-credits}cr 必要（残 {credits}cr / 必要 {cost}cr）<div style={{fontSize:12,color:"#6b6560",fontWeight:400,marginTop:6}}><button onClick={()=>openShop ? openShop(cost-credits) : setPage("shop")} style={{background:"transparent",border:"none",color:"#c4956a",textDecoration:"underline",cursor:"pointer",padding:0,font:"inherit"}}>クレジットを追加購入</button>するか、送信先を減らしてください。</div></div>
       ) : (
         <div style={{background:"linear-gradient(135deg, rgba(196,149,106,0.12), rgba(196,149,106,0.06))",borderLeft:"3px solid #c4956a",borderRadius:4,padding:"12px 16px",marginTop:"0.6rem",fontSize:14,color:"#c4956a",fontWeight:500}}>消費 {cost}cr（残: {credits}→{remaining}）</div>
       )}
@@ -3812,7 +3887,7 @@ function PitchCreator({user, curators, selected, setSelected, pitchedCuratorIds,
               {sendProgress.phase === 'email' ? 'キュレーターへメールを配信しています。' : 'ピッチを保存しています。'}この画面を閉じずにお待ちください。
             </p>
           )}
-          {insufficientCredits && <p style={{fontSize:13,color:"#6b6560",marginTop:10,textAlign:"center",lineHeight:1.6}}><button onClick={()=>setPage("shop")} style={{background:"transparent",border:"none",color:"#c4956a",textDecoration:"underline",cursor:"pointer",padding:0,font:"inherit"}}>クレジットを追加購入</button>するか、送信先を減らしてください。</p>}
+          {insufficientCredits && <p style={{fontSize:13,color:"#6b6560",marginTop:10,textAlign:"center",lineHeight:1.6}}><button onClick={()=>openShop ? openShop(cost-credits) : setPage("shop")} style={{background:"transparent",border:"none",color:"#c4956a",textDecoration:"underline",cursor:"pointer",padding:0,font:"inherit"}}>クレジットを追加購入</button>するか、送信先を減らしてください。</p>}
         </div>
       )}
     </div>}
@@ -3832,9 +3907,13 @@ const CURATOR_PAY = {
   // backwards compatibility with existing call sites but is ignored.
   calc: (creditCost, _accepted) => Math.round(creditCost * CREDIT_PRICE * 0.5),
 };
-function CreditShop({ user, credits, setCredits, notify, setPage }) {
-  const [selectedPkg, setSelectedPkg] = useState(null);
-  const [customCredits, setCustomCredits] = useState("");
+function CreditShop({ user, credits, setCredits, notify, setPage, need = null, onNeedUsed }) {
+  // Opened from a shortage notice: start on "custom" with exactly the missing
+  // credits selected, and say how many are missing.
+  const [neededAtOpen] = useState(() => (need > 0 ? need : null));
+  const [selectedPkg, setSelectedPkg] = useState(() => (need > 0 ? { id: "custom", credits: need, price: need * CREDIT_PRICE, label: { ja: "カスタム", en: "Custom" } } : null));
+  const [customCredits, setCustomCredits] = useState(() => (need > 0 ? String(need) : ""));
+  useEffect(() => { if (need) onNeedUsed?.(); }, []); // eslint-disable-line
   const [history, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [locale, setLocale] = useState("ja");
@@ -3929,6 +4008,13 @@ function CreditShop({ user, credits, setCredits, notify, setPage }) {
         <span style={{ color: "#c4956a", fontWeight: 700 }}>{credits}</span>
         {isJa ? " クレジット" : " credits"}
       </p>
+      {neededAtOpen && (
+        <p style={{ color: "#e85d3a", fontSize: "0.85rem", fontWeight: 700, margin: "0.4rem 0 0", fontFamily: "'DM Sans', sans-serif" }}>
+          {isJa
+            ? `送信にはあと ${neededAtOpen} クレジット必要です。足りない分（${neededAtOpen} クレジット・¥${(neededAtOpen * CREDIT_PRICE).toLocaleString()}）を選んでいます。`
+            : `You need ${neededAtOpen} more credit${neededAtOpen > 1 ? "s" : ""} to send. The missing amount (${neededAtOpen} credit${neededAtOpen > 1 ? "s" : ""}, ¥${(neededAtOpen * CREDIT_PRICE).toLocaleString()}) is selected.`}
+        </p>
+      )}
     </div>
 
     {/* Package Cards */}

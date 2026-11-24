@@ -2027,7 +2027,7 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
   // a card never jumps away from under the finger.
   const pinnedIds = arrivalCuratorIds.filter(id => selected.includes(id));
   const pinned = pinnedIds.map(id => ranked.find(c => c.id === id)).filter(Boolean);
-  const list = ranked.filter(c=>!pinnedIds.includes(c.id)).filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||c.platform.toLowerCase().includes(q.toLowerCase())).filter(c=>!genre||c.genres.includes(genre)).filter(c=>!type||c.type===type);
+  const list = ranked.filter(c=>!pinnedIds.includes(c.id)).filter(c=>!q||(c.name||'').toLowerCase().includes(q.toLowerCase())||(c.platform||'').toLowerCase().includes(q.toLowerCase())).filter(c=>!genre||c.genres.includes(genre)).filter(c=>!type||c.type===type);
   // Selection summary for the two action bars: who it goes to, cost, shortage.
   const selectedCurators = selected.map(id => curators.find(c => c.id === id)).filter(Boolean);
   const leadCurator = pinned[0] || selectedCurators[0] || null;

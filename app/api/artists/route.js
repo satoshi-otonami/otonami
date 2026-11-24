@@ -15,6 +15,7 @@ import {
 } from '@/lib/db';
 import { bioEnForSave } from '@/lib/translate-en';
 import { pendingCuratorColumns } from '@/lib/pending-curator';
+import { sanitizeReferralSource } from '@/lib/referral-source';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM = `OTONAMI <${process.env.EMAIL_FROM || 'info@otonami.io'}>`;
@@ -59,7 +60,7 @@ async function pickFoundingSlot(adminDb, limit, deadline) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, email, password, pendingCuratorId, ...rest } = body;
+    const { name, email, password, pendingCuratorId, referralSource, ...rest } = body;
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -107,6 +108,14 @@ export async function POST(request) {
     // when verification happens in another browser. Only an existing public
     // curator is accepted; anything else is dropped silently.
     const pendingCurator = await pendingCuratorColumns(adminDb, pendingCuratorId);
+    // Kept for counting later (never cleared, unlike pending_curator_id which
+    // the first login consumes): the curator this signup came from, and ?ref=.
+    const signupRef = sanitizeReferralSource(referralSource);
+    const signupColumns = {
+      ...pendingCurator,
+      ...(pendingCurator.pending_curator_id ? { signup_curator_id: pendingCurator.pending_curator_id } : {}),
+      ...(signupRef ? { signup_ref: signupRef } : {}),
+    };
 
     let account;
     try {
@@ -116,7 +125,7 @@ export async function POST(request) {
         email_verified: false,
         verification_token,
         verification_expires_at,
-        extra: pendingCurator,
+        extra: signupColumns,
       });
     } catch (e) {
       // The duplicate check above can lose a race (a double-submitted form is

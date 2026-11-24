@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabaseStorage } from '@/lib/supabase';
 import SavannahBanner from '@/components/SavannahBanner';
+import { resolveReferralSource } from '@/lib/referral-source';
 import TrustBar from '@/components/landing/TrustBar';
 
 const THEME = {
@@ -183,15 +184,11 @@ export default function ArtistRegistrationPage() {
       if (pendingCuratorId) payload.pendingCuratorId = pendingCuratorId;
       if (avatarUrl) payload.avatar_url = avatarUrl;
       if (coverUrl) payload.cover_url = coverUrl;
-      // Referral source: ?ref= is already captured site-wide by
-      // components/ReferralCapture.jsx, so resolveReferralSource() returns the
-      // channel for this visitor here too. It is deliberately NOT sent yet —
-      // artists has no referral_source column, and POST /api/artists would drop
-      // the field silently, which reads as "attribution works" when it doesn't.
-      // Wire it up in the same commit as the ALTER TABLE:
-      //   ALTER TABLE artists ADD COLUMN referral_source text;
-      //   const ref = resolveReferralSource(); if (ref) payload.referralSource = ref;
-      // (the API must sanitize it the same way app/api/curator/route.js does).
+      // Referral source: ?ref= is captured site-wide by
+      // components/ReferralCapture.jsx (first touch wins). POST /api/artists
+      // stores it once on the account (accounts.signup_ref).
+      const ref = resolveReferralSource();
+      if (ref) payload.referralSource = ref;
 
       const res = await fetch('/api/artists', {
         method: 'POST',

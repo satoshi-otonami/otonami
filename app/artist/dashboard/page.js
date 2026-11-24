@@ -261,6 +261,8 @@ export default function ArtistDashboard() {
     try { return new URLSearchParams(window.location.search).get('add') === '1'; } catch { return false; }
   });
   const [showEditProfile, setShowEditProfile] = useState(false);
+  // Message after a profile save about the English bio (kept / saved).
+  const [bioEnNotice, setBioEnNotice] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [trackMenu, setTrackMenu] = useState(null);
   const [editTrack, setEditTrack] = useState(null);
@@ -829,10 +831,22 @@ export default function ArtistDashboard() {
                 <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.6, margin: 0 }}>{artist.hot_news}</p>
               </div>
             )}
+            {bioEnNotice && (
+              <div role="status" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: '#fffbeb', border: `1px solid ${THEME.gold}`, borderRadius: 12, padding: '12px 16px', fontSize: 13, color: THEME.text, lineHeight: 1.6, fontFamily: THEME.font }}>
+                <span style={{ flex: 1 }}>{bioEnNotice}</span>
+                <button onClick={() => setBioEnNotice('')} aria-label="閉じる" style={{ background: 'transparent', border: 'none', color: THEME.textMuted, fontSize: 16, cursor: 'pointer', lineHeight: 1 }}>×</button>
+              </div>
+            )}
             {artist.bio && (
               <div style={{ background: THEME.card, border: `1px solid ${THEME.border}`, borderRadius: 16, padding: '20px 24px' }}>
                 <h3 style={{ fontSize: 14, fontWeight: 700, color: THEME.text, margin: '0 0 8px', fontFamily: THEME.font }}>Bio</h3>
                 <p style={{ fontSize: 14, color: THEME.textSub, lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>{artist.bio}</p>
+                {artist.bio_en && (
+                  <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${THEME.border}` }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: THEME.textMuted, marginBottom: 4, fontFamily: THEME.font }}>English（キュレーター向け）</div>
+                    <p style={{ fontSize: 13, color: THEME.textSub, lineHeight: 1.6, margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{artist.bio_en}</p>
+                  </div>
+                )}
               </div>
             )}
             {artist.influences?.length > 0 && (
@@ -1408,7 +1422,7 @@ export default function ArtistDashboard() {
           token={token}
           artist={artist}
           onClose={() => setShowEditProfile(false)}
-          onSuccess={() => { setShowEditProfile(false); fetchProfile(token); }}
+          onSuccess={(notice) => { setShowEditProfile(false); setBioEnNotice(notice || ''); fetchProfile(token); }}
         />
       )}
 
@@ -2746,6 +2760,7 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
   const [form, setForm] = useState({
     name: artist.name || '',
     bio: artist.bio || '',
+    bio_en: artist.bio_en || '',
     hot_news: artist.hot_news || '',
     genres: artist.genres || [],
     moods: artist.moods || [],
@@ -2768,6 +2783,30 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
   const coverFileInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // English bio: true while the field holds an unedited 「日本語から作り直す」 result.
+  const [bioEnRegenerated, setBioEnRegenerated] = useState(false);
+  const [confirmRegen, setConfirmRegen] = useState(false);
+  const [regenBusy, setRegenBusy] = useState(false);
+  const [regenError, setRegenError] = useState('');
+  const editedAt = artist.bio_en_edited_at ? new Date(artist.bio_en_edited_at) : null;
+  const editedLabel = editedAt
+    ? `${editedAt.toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo', month: 'numeric', day: 'numeric' })}`
+    : '';
+  const regenerateBioEn = async () => {
+    setConfirmRegen(false); setRegenBusy(true); setRegenError('');
+    try {
+      const res = await fetch('/api/artists/bio-en', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ bio: form.bio }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.bio_en) throw new Error(data.error || '英語版を作れませんでした');
+      setForm(f => ({ ...f, bio_en: data.bio_en }));
+      setBioEnRegenerated(true);
+    } catch (e) { setRegenError(e.message); }
+    finally { setRegenBusy(false); }
+  };
 
   const handleCoverFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -2843,11 +2882,16 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
       const res = await fetch('/api/artists', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, bio_en_regenerated: bioEnRegenerated }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
-      onSuccess();
+      const enChangedByHand = !bioEnRegenerated && (form.bio_en || '').trim() !== (artist.bio_en || '').trim();
+      onSuccess(
+        data.bioEn?.kept
+          ? '日本語の自己紹介が変わりました。英語版は手直し済みのため、そのままにしています。作り直すときは『日本語から作り直す』を押してください'
+          : enChangedByHand ? '英語版を保存しました' : ''
+      );
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
   };
@@ -2901,6 +2945,36 @@ function EditProfileModal({ token, artist, onClose, onSuccess }) {
           <textarea className="modal-input" style={{ ...inp, minHeight: 100, resize: 'vertical' }} value={form.bio} onChange={e => { if (e.target.value.length <= 1000) set('bio', e.target.value); }} placeholder="自己紹介..." />
           <div style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 10, color: form.bio.length > 900 ? THEME.coral : THEME.textMuted }}>{form.bio.length}/1000</div>
         </div>
+
+        <label style={lbl}>
+          キュレーターに届く英語版（自動翻訳）
+          {editedLabel && !bioEnRegenerated && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: THEME.gold, border: `1px solid ${THEME.gold}`, borderRadius: 9999, padding: '1px 8px' }}>手直し済み（{editedLabel}）</span>}
+        </label>
+        <p style={{ fontSize: 12, color: THEME.textMuted, lineHeight: 1.6, margin: '4px 0 0', fontFamily: THEME.font }}>
+          ピッチメールの『About』欄に、この英文がそのまま載ります。日本語の自己紹介から自動で作っています。名前や表記が違うときは、ここで直してください。
+        </p>
+        <div style={{ position: 'relative' }}>
+          <textarea className="modal-input" style={{ ...inp, minHeight: 100, resize: 'vertical' }} value={form.bio_en}
+            onChange={e => { if (e.target.value.length <= 2000) { set('bio_en', e.target.value); setBioEnRegenerated(false); } }}
+            placeholder="まだ英語版がありません。日本語の自己紹介を保存すると、自動で作られます。" />
+          <div style={{ position: 'absolute', bottom: 8, right: 12, fontSize: 10, color: form.bio_en.length > 1800 ? THEME.coral : THEME.textMuted }}>{form.bio_en.length}/2000</div>
+        </div>
+        {confirmRegen ? (
+          <div style={{ marginTop: 8, padding: '10px 12px', background: '#fffbeb', border: `1px solid ${THEME.gold}`, borderRadius: 10, fontSize: 13, color: THEME.text, lineHeight: 1.6, fontFamily: THEME.font }}>
+            いまの英語版を、日本語の自己紹介から作り直します。手直しした内容は消えます。よろしいですか？
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <button type="button" onClick={regenerateBioEn} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: THEME.gold, color: '#fff', fontWeight: 600, cursor: 'pointer', fontFamily: THEME.font }}>作り直す</button>
+              <button type="button" onClick={() => setConfirmRegen(false)} style={{ padding: '6px 14px', borderRadius: 8, border: `1px solid ${THEME.border}`, background: 'transparent', color: THEME.textSub, cursor: 'pointer', fontFamily: THEME.font }}>やめる</button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" disabled={regenBusy || !form.bio.trim()} onClick={() => (form.bio_en.trim() ? setConfirmRegen(true) : regenerateBioEn())}
+            style={{ marginTop: 8, padding: '6px 14px', borderRadius: 8, border: `1px solid ${THEME.gold}`, background: 'transparent', color: THEME.gold, fontWeight: 600, fontSize: 13, cursor: regenBusy || !form.bio.trim() ? 'not-allowed' : 'pointer', opacity: regenBusy || !form.bio.trim() ? 0.5 : 1, fontFamily: THEME.font }}>
+            {regenBusy ? '作り直しています…' : '日本語から作り直す'}
+          </button>
+        )}
+        {regenError && <div style={{ marginTop: 6, fontSize: 12, color: THEME.coral, fontFamily: THEME.font }}>{regenError}</div>}
+        {bioEnRegenerated && <div style={{ marginTop: 6, fontSize: 12, color: THEME.textMuted, fontFamily: THEME.font }}>作り直した英語版です。「保存する」で反映されます。</div>}
 
         <label style={lbl}>Hot News</label>
         <input className="modal-input" style={inp} value={form.hot_news} onChange={e => set('hot_news', e.target.value)} placeholder="最新情報..." />

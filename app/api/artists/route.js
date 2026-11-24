@@ -16,6 +16,7 @@ import {
 import { bioEnForSave } from '@/lib/translate-en';
 import { pendingCuratorColumns } from '@/lib/pending-curator';
 import { sanitizeReferralSource } from '@/lib/referral-source';
+import { decideBioEn } from '@/lib/bio-en-edit';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 'placeholder');
 const FROM = `OTONAMI <${process.env.EMAIL_FROM || 'info@otonami.io'}>`;
@@ -456,21 +457,35 @@ export async function PATCH(request) {
       if (body[key] !== undefined) updateData[key] = body[key];
     }
 
+    // English bio (lib/bio-en-edit.js): a hand-edited English version is saved
+    // as written and is not re-translated when the Japanese bio changes; an
+    // untouched one is re-translated as before (translated here, once, so every
+    // pitch email shows the same English text).
+    const bioEn = { regenerated: false, kept: false };
+    if (body.bio !== undefined || (body.bio_en !== undefined && body.bio_en !== null)) {
+      const current = await getArtistById(payload.artistId);
+      const hasEditedColumn = !!current && Object.prototype.hasOwnProperty.call(current, 'bio_en_edited_at');
+      const d = decideBioEn({ body, current, hasEditedColumn });
+      if (d.error) return NextResponse.json({ error: d.error }, { status: 400 });
+      Object.assign(updateData, d.patch);
+      if (d.regenerate) {
+        const next = await bioEnForSave(updateData, current);
+        if (next !== undefined) {
+          updateData.bio_en = next;
+          if (hasEditedColumn) updateData.bio_en_edited_at = null;
+          bioEn.regenerated = true;
+        }
+      }
+      bioEn.kept = d.kept;
+    }
+
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
     }
 
-    // Keep bio_en in step with a changed bio (translated here, once, so every
-    // pitch email shows the same English text).
-    if (updateData.bio !== undefined) {
-      const current = await getArtistById(payload.artistId);
-      const bioEn = await bioEnForSave(updateData, current);
-      if (bioEn !== undefined) updateData.bio_en = bioEn;
-    }
-
     const updated = await updateArtist(payload.artistId, updateData);
     const { password_hash, ...safeArtist } = updated;
-    return NextResponse.json({ success: true, artist: safeArtist });
+    return NextResponse.json({ success: true, artist: safeArtist, bioEn });
   } catch (e) {
     console.error('Artist PATCH error:', e);
     return NextResponse.json({ error: e.message }, { status: 500 });

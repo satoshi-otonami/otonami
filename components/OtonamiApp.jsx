@@ -2374,10 +2374,11 @@ function CuratorBrowser({curators, selected, setSelected, setPage, trackData, se
       <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(248,247,244,0.96)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",borderTop:"1px solid rgba(196,149,106,0.25)",boxShadow:"0 -4px 20px rgba(0,0,0,0.06)",padding:"0.75rem 1rem",zIndex:50}}>
         <div style={{maxWidth:680,margin:"0 auto",display:"flex",gap:8,alignItems:"center"}}>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:"0.78rem",fontWeight:700,color:"#c4956a",lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{sendToLabel}・{selCost}クレジット</div>
+            {/* Two lines so a long name never hides the cost: name, then amount. */}
+            <div style={{fontSize:"0.78rem",fontWeight:700,color:"#c4956a",lineHeight:1.3,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{sendToLabel}</div>
             {shortBy > 0
-              ? <div style={{fontSize:"0.66rem",color:"#e85d3a",fontWeight:600,lineHeight:1.3}}>残高 {credits} · あと {shortBy} クレジット必要</div>
-              : <div style={{fontSize:"0.62rem",color:"#9a958e",lineHeight:1.3}}>¥{creditsToJpy(selCost).toLocaleString()}相当</div>}
+              ? <div style={{fontSize:"0.68rem",color:"#e85d3a",fontWeight:600,lineHeight:1.3}}>{selCost}クレジット · 残高 {credits} · あと {shortBy} 必要</div>
+              : <div style={{fontSize:"0.68rem",color:"#9a958e",lineHeight:1.3}}>{selCost}クレジット（¥{creditsToJpy(selCost).toLocaleString()}）</div>}
           </div>
           {isPreLaunch() ? (
             <button disabled style={{...css.btnPrimary,padding:"0.7rem 1.1rem",fontSize:"0.82rem",opacity:0.5,cursor:"not-allowed",background:"#e5e2dc",color:"#6b6560",whiteSpace:"nowrap"}}>{LAUNCH_DATE_LABEL_JA}ローンチ後</button>
@@ -3979,6 +3980,8 @@ function CreditShop({ user, credits, setCredits, notify, setPage, need = null, o
         body: JSON.stringify({
           packageId: isCustom ? "custom" : selectedPkg.id,
           credits: isCustom ? customN : undefined,
+          // Opened from a shortage notice → come back to the pitch screen.
+          returnTo: neededAtOpen ? "pitch" : undefined,
         }),
       });
       const data = await res.json();

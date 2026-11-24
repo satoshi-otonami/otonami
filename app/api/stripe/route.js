@@ -32,7 +32,10 @@ export async function POST(request) {
     const artistId = payload.artistId;
     const artistEmail = payload.email;
 
-    const { packageId, credits: customCredits } = await request.json();
+    const { packageId, credits: customCredits, returnTo } = await request.json();
+    // Where the browser lands after Checkout. Only 'pitch' is accepted (a fixed
+    // value, never a URL), so this cannot become an open redirect.
+    const returnParam = returnTo === 'pitch' ? '&return=pitch' : '';
 
     let credits, price, label, packageName;
     if (packageId === 'custom') {
@@ -67,8 +70,8 @@ export async function POST(request) {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `${(process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim()}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${(process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim()}?payment=cancel`,
+      success_url: `${(process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim()}?payment=success&session_id={CHECKOUT_SESSION_ID}${returnParam}`,
+      cancel_url: `${(process.env.NEXT_PUBLIC_APP_URL || 'https://otonami.io').trim()}?payment=cancel${returnParam}`,
       metadata: {
         artistId,
         credits: String(credits),

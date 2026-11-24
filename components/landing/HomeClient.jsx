@@ -423,12 +423,17 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
     const paymentStatus = params.get('payment');
     const sessionId = params.get('session_id');
     if (!paymentStatus) return;
+    // Bought from a shortage notice in the pitch flow: go back to the pitch
+    // screen (selection and inputs are restored from session/local storage;
+    // if they are gone, that screen says to pick a curator).
+    const backTo = params.get('return') === 'pitch' ? '/studio?tab=pitch' : '/studio';
 
     const cleanUrl = () => window.history.replaceState({}, '', window.location.pathname);
 
     if (paymentStatus === 'cancel') {
       alert('決済をキャンセルしました / Payment cancelled');
       cleanUrl();
+      if (backTo !== '/studio') window.location.href = backTo;
       return;
     }
     if (paymentStatus !== 'success' || !sessionId) return;
@@ -447,7 +452,7 @@ export default function HomeClient({ curatorMarquee, siteUpdates, lpCases }) {
             ? `すでに処理済みです / Already processed.\n現在の残高: ${data.credits} クレジット`
             : `決済完了！${data.added} クレジットを付与しました。\nPayment successful! Added ${data.added} credits.\n新しい残高 / New balance: ${data.credits}`;
           alert(msg);
-          window.location.href = '/studio';
+          window.location.href = backTo;
         } else {
           alert(`決済確認エラー / Payment verification error:\n${data.error || 'unknown'}\n\nお問い合わせください: info@otonami.io`);
           cleanUrl();

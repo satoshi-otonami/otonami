@@ -13,6 +13,7 @@ import {
   neutralizeReleaseClaims,
   todayJst,
 } from '@/lib/pitch-release';
+import { resolveIdentity, applySignOff, applyArtistName } from '@/lib/pitch-identity';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder' });
 
@@ -95,17 +96,26 @@ export async function POST(request) {
     // Ghibli best collection"; 鳳レオ × 夏哀れ → "my debut single"). Re-enable it
     // only together with rules that keep it a separate work from the key track
     // (buildPitchPrompt still accepts artistDbHotNews for that).
+    // name / name_en / label_name / bio_en: the registered spellings
+    // (lib/pitch-identity.js). bio_en goes in next to the Japanese bio, as the
+    // reference for how names are spelled (it is translated with name_en and
+    // label_name pinned — the bio's 「デラ」 otherwise came out as "Dera"). It does
+    // not replace the bio: a machine translation can get the meaning wrong.
     let artistDbBio = null;
+    let artistDbBioEn = null;
     let artistDbInfluences = null;
+    let artistRowForNames = null;
     try {
       const sb = getServiceSupabase();
       const { data: artistRow } = await sb
         .from('artists')
-        .select('bio, influences')
+        .select('bio, bio_en, influences, name, name_en, label_name')
         .eq('id', payload.artistId)
         .maybeSingle();
       if (artistRow) {
         artistDbBio = artistRow.bio?.trim() || null;
+        artistDbBioEn = (artistDbBio && artistRow.bio_en?.trim()) || null;
+        artistRowForNames = artistRow;
         artistDbInfluences = Array.isArray(artistRow.influences) && artistRow.influences.length
           ? artistRow.influences.join(', ')
           : null;
@@ -152,6 +162,8 @@ export async function POST(request) {
     const release = releaseStatus(keyTrack?.release_date || null, today);
     const keyTrackTitle = artist.songTitle || keyTrack?.title || '';
 
+    const identity = resolveIdentity(artistRowForNames, artist);
+
     const prompt = buildPitchPrompt({
       artist,
       style,
@@ -160,8 +172,10 @@ export async function POST(request) {
       userName,
       trackFeatures,
       artistDbBio,
+      artistDbBioEn,
       artistDbInfluences,
       keyTrackRelease: releasePromptBlock(keyTrackTitle || 'the key track', release, today),
+      identity,
     });
 
     // Strip any Japanese text in parentheses that may have leaked through
@@ -214,8 +228,10 @@ export async function POST(request) {
         });
       }
     }
-    const pitch = gen.pitch;
-    const epk = gen.epk;
+    // The sign-off is written here, from the registered name (name_en, else the
+    // name as registered — Japanese included), never by the model.
+    const pitch = applySignOff(gen.pitch, identity.signName);
+    const epk = applyArtistName(gen.epk, identity.signName);
 
     // Persist the achievements/description the artist actually used, so the next
     // pitch (e.g. re-pitching the same track to another curator) prefills them

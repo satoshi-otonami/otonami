@@ -8,6 +8,7 @@ import { deadlineFromNow } from '@/lib/response-time';
 import { getAccountArtist, resolveAccountId } from '@/lib/db';
 import { anthropicRequestBase } from '@/lib/anthropic-model';
 import { protectTitles, restoreTitles } from '@/lib/pitch-title-guard';
+import { ARTIST_NAME_TOKEN, cleanName } from '@/lib/pitch-identity';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -17,8 +18,21 @@ const JAPANESE_RE = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\uff01
 // artistNameEn (artists.name_en) pins the romanization of a Japanese artist
 // name; without it the model romanizes on its own and the spelling can drift
 // from the name the email heading shows.
-async function ensureEnglishPitch(rawContent, artistName, trackTitle, artistNameEn = null) {
+// keepName: a Japanese artist name with no registered English form. /api/pitch
+// writes it as is in the sign-off (lib/pitch-identity.js); it is kept out of
+// the translation the same way as the song title, so it is not romanized here.
+async function ensureEnglishPitch(rawContent, artistName, trackTitle, artistNameEn = null, keepName = null) {
   if (!rawContent?.trim()) return { text: rawContent, translated: false };
+  if (keepName && rawContent.includes(keepName)) {
+    const guarded = rawContent.split(keepName).join(ARTIST_NAME_TOKEN);
+    const r = await ensureEnglishPitch(guarded, artistName, trackTitle, artistNameEn, null);
+    if (r.text.includes(ARTIST_NAME_TOKEN)) {
+      return { ...r, text: r.text.split(ARTIST_NAME_TOKEN).join(keepName) };
+    }
+    if (!r.translated) return { text: rawContent, translated: false };
+    console.warn('[pitches] Translation dropped the artist name token; using the unguarded translation');
+    return ensureEnglishPitch(rawContent, artistName, trackTitle, artistNameEn, null);
+  }
 
   // The song title is the one Japanese string a pitch keeps: swap it for a
   // token before the check and the translation, restore it afterwards
@@ -53,7 +67,7 @@ STRICT RULES:
 4. Keep the tone friendly, enthusiastic, and professional.
 5. Do NOT add any information not present in the original.
 6. Return ONLY the translated English text. No explanations, no markdown, no quotes.
-7. Placeholders like [[TITLE_0]] stand for song titles. Copy each one into the output exactly as written, in the matching position. Never translate, remove or alter them.
+7. Placeholders like [[TITLE_0]] stand for song titles, and ${ARTIST_NAME_TOKEN} stands for the artist's name. Copy each one into the output exactly as written, in the matching position. Never translate, remove or alter them.
 
 Artist: ${artistName}${artistNameEn && artistNameEn !== artistName ? ` (write this name exactly as "${artistNameEn}")` : ''}
 Track: ${saved.length ? '[[TITLE_0]]' : trackTitle}
@@ -74,7 +88,7 @@ ${pitchContent}`,
         max_tokens: 1024,
         messages: [{
           role: 'user',
-          content: `The following text still contains Japanese characters. Rewrite it entirely in English. Remove or translate ALL Japanese text. Keep placeholders like [[TITLE_0]] exactly as written. Return ONLY the English version:\n\n${translated}`,
+          content: `The following text still contains Japanese characters. Rewrite it entirely in English. Remove or translate ALL Japanese text. Keep placeholders like [[TITLE_0]] and ${ARTIST_NAME_TOKEN} exactly as written. Return ONLY the English version:\n\n${translated}`,
         }],
       });
       const retried = retry.content.filter(b => b.type === 'text').map(b => b.text).join('');
@@ -235,13 +249,16 @@ export async function POST(request) {
     // The artist's registered English name, from the session's artist row
     // (never the request body).
     let artistNameEn = null;
+    let keepName = null;
     try {
       const { data: a } = await getServiceSupabase()
         .from('artists')
-        .select('name_en')
+        .select('name, name_en')
         .eq('id', payload.artistId)
         .maybeSingle();
-      artistNameEn = a?.name_en?.trim() || null;
+      artistNameEn = cleanName(a?.name_en) || null;
+      const registered = cleanName(a?.name);
+      if (!artistNameEn && JAPANESE_RE.test(registered)) keepName = registered;
     } catch (e) {
       console.warn('[pitches] name_en lookup failed (non-fatal):', e?.message);
     }
@@ -253,7 +270,8 @@ export async function POST(request) {
       originalBody,
       artistName,
       trackTitle,
-      artistNameEn
+      artistNameEn,
+      keepName
     );
 
     if (translated) {

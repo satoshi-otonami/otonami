@@ -118,7 +118,8 @@ test('neutralize: replaces the opening with the fixed opener and drops other off
   const out = neutralizeReleaseClaims(pitch, claims, '風の中を…');
   assert.match(out, /^Subject: Healing Piano from Japan/);
   assert.match(out, /Hi \[Curator Name\],/);
-  assert.ok(out.includes('I\'m reaching out from Japan to share a track of mine, "風の中を…".'));
+  assert.ok(out.includes('I\'d like to share a track of mine, "風の中を…".'));
+  assert.ok(!/from Japan/.test(out.split('\n').slice(2).join('\n')));
   assert.ok(out.includes('It carries a gentle, nostalgic warmth.'));
   assert.ok(out.includes('I hope you enjoy it.'));
   assert.ok(!/new track/i.test(out));
@@ -129,7 +130,7 @@ test('neutralize: replaces the opening with the fixed opener and drops other off
 test('neutralize: an offending sentence later in the body still yields the fixed opener', () => {
   const pitch = 'Hi [Curator Name],\n\nI write healing piano music.\n\nMy latest release is "X". Thanks for listening.';
   const out = neutralizeReleaseClaims(pitch, findReleaseClaims(pitch, OLDER), 'X');
-  assert.match(out, /^Hi \[Curator Name\],\n\nI'm reaching out from Japan to share a track of mine, "X"\./);
+  assert.match(out, /^Hi \[Curator Name\],\n\nI'd like to share a track of mine, "X"\./);
   assert.ok(!/latest/i.test(out));
   assert.ok(out.includes('Thanks for listening.'));
 });
